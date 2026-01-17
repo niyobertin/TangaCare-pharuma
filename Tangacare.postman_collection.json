@@ -1,0 +1,2145 @@
+{
+    "info": {
+        "name": "Tangacare API",
+        "_postman_id": "tangacare-api-collection",
+        "description": "Complete API collection for Tangacare Telemedicine Platform",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000",
+            "type": "string"
+        },
+        {
+            "key": "access_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "refresh_token",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Authentication",
+            "item": [
+                {
+                    "name": "Register User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"phone_number\": \"+250788123456\",\n  \"email\": \"patient@example.com\",\n  \"password\": \"SecurePass123\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"date_of_birth\": \"1990-01-15\",\n  \"gender\": \"male\",\n  \"preferred_language\": \"en\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const response = pm.response.json();",
+                                    "if (response.data && response.data.tokens) {",
+                                    "  pm.environment.set('access_token', response.data.tokens.accessToken);",
+                                    "  pm.environment.set('refresh_token', response.data.tokens.refreshToken);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"identifier\": \"+250788123456\",\n  \"password\": \"SecurePass123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "me"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Refresh Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/refresh-token",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "refresh-token"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Verify OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"phone_number\": \"+250788123456\",\n  \"otp\": \"1234\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/verify-otp",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "verify-otp"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Smith\",\n  \"gender\": \"male\",\n  \"address\": \"123 Main St, Kigali\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "me"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Account",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/auth/me",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "me"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Doctors",
+            "item": [
+                {
+                    "name": "List Doctors",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/doctors?specialization=Cardiology&is_available=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "doctors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "specialization",
+                                    "value": "Cardiology"
+                                },
+                                {
+                                    "key": "is_available",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Doctor Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/doctors/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "doctors",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Specializations",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/doctors/specializations",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "doctors",
+                                "specializations"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Doctor Profile",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"license_number\": \"RMDC-002/2026\",\n  \"specialization\": \"Cardiology\",\n  \"years_of_experience\": 10,\n  \"consultation_fee\": 10000,\n  \"is_available\": true,\n  \"bio\": \"Specialist in cardiovascular diseases\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/doctors",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "doctors"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Doctor Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"specialization\": \"Internal Medicine\",\n  \"is_available\": false\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/doctors/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "doctors",
+                                "1"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Appointments",
+            "item": [
+                {
+                    "name": "Create Appointment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"doctor_id\": 1,\n  \"appointment_date\": \"2026-01-15T10:00:00Z\",\n  \"duration_minutes\": 30,\n  \"consultation_type\": \"video\",\n  \"notes\": \"First consultation for chest pain\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/appointments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "appointments"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Appointments",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/appointments?status=scheduled",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "appointments"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "scheduled"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Appointment",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"completed\",\n  \"notes\": \"Consultation completed successfully\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/appointments/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "appointments",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Check Availability",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/appointments/availability?doctor_id=1&date=2026-01-15",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "appointments",
+                                "availability"
+                            ],
+                            "query": [
+                                {
+                                    "key": "doctor_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "date",
+                                    "value": "2026-01-15"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Appointment Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/appointments/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "appointments",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Cancel Appointment",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/appointments/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "appointments",
+                                "1"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Prescriptions",
+            "item": [
+                {
+                    "name": "Create Prescription",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"appointment_id\": 1,\n  \"doctor_id\": 1,\n  \"patient_id\": 1,\n  \"prescription_text\": \"Amoxicillin 500mg - Take 1 tablet 3 times daily for 7 days\",\n  \"diagnosis\": \"Bacterial infection\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/prescriptions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prescriptions"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Prescriptions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/prescriptions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prescriptions"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Prescription Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/prescriptions/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prescriptions",
+                                "1"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Payments",
+            "item": [
+                {
+                    "name": "Initiate Payment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"appointment_id\": 1,\n  \"amount\": 5000,\n  \"payment_method\": \"mobile_money\",\n  \"payment_gateway\": \"flutterwave\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/payments/initiate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments",
+                                "initiate"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Payments",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/payments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Payment Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/payments/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Payment Webhook",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"success\",\n  \"transaction_id\": \"TXN-123\",\n  \"amount\": 5000\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/payments/webhook",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "payments",
+                                "webhook"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Health Records",
+            "item": [
+                {
+                    "name": "Create Health Record",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"record_type\": \"allergy\",\n  \"name\": \"Penicillin\",\n  \"description\": \"Severe allergic reaction\",\n  \"severity\": \"high\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/health-records",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "health-records"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Health Records",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/health-records",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "health-records"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Health Tips",
+            "item": [
+                {
+                    "name": "List Health Tips",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/health-tips?category=nutrition&language=en",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "health-tips"
+                            ],
+                            "query": [
+                                {
+                                    "key": "category",
+                                    "value": "nutrition"
+                                },
+                                {
+                                    "key": "language",
+                                    "value": "en"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Health Tip",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/health-tips/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "health-tips",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Health Tip",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Stay Hydrated\",\n  \"content\": \"Drink at least 8 glasses of water a day for better kidney health.\",\n  \"category\": \"general\",\n  \"language\": \"en\",\n  \"is_published\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/health-tips",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "health-tips"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Facilities",
+            "item": [
+                {
+                    "name": "Create Facility",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"City Hospital\",\n  \"type\": \"hospital\",\n  \"address\": \"123 Main Street\",\n  \"phone\": \"+250788123456\",\n  \"email\": \"info@cityhospital.com\",\n  \"departments_enabled\": true,\n  \"controlled_drug_rules_enabled\": true,\n  \"min_stock_threshold_percentage\": 10,\n  \"expiry_alert_days\": 30\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/facilities",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "facilities"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Facilities",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/facilities?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "facilities"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Facility",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/facilities/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "facilities",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Facility",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"min_stock_threshold_percentage\": 15,\n  \"expiry_alert_days\": 45\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/facilities/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "facilities",
+                                "1"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Medicines",
+            "item": [
+                {
+                    "name": "Create Medicine",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"code\": \"PARA-500MG-TAB\",\n  \"name\": \"Paracetamol\",\n  \"brand_name\": \"Tylenol\",\n  \"strength\": \"500mg\",\n  \"dosage_form\": \"tablet\",\n  \"unit\": \"tablets\",\n  \"storage_conditions\": \"Store in a cool, dry place\",\n  \"is_controlled_drug\": false,\n  \"cost_price\": 50,\n  \"selling_price\": 100\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/medicines",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "medicines"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Medicines",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/medicines?page=1&limit=10&search=paracetamol",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "medicines"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "paracetamol"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Medicine by Code",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/medicines/code/PARA-500MG-TAB",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "medicines",
+                                "code",
+                                "PARA-500MG-TAB"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Batches",
+            "item": [
+                {
+                    "name": "Create Batch",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"medicine_id\": 1,\n  \"batch_number\": \"BATCH-2024-001\",\n  \"expiry_date\": \"2025-12-31\",\n  \"manufacturing_date\": \"2024-01-01\",\n  \"initial_quantity\": 1000,\n  \"unit_cost\": 45\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/batches",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "batches"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Batches",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/batches?medicine_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "batches"
+                            ],
+                            "query": [
+                                {
+                                    "key": "medicine_id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Expiring Batches",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/batches/expiring?days=30",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "batches",
+                                "expiring"
+                            ],
+                            "query": [
+                                {
+                                    "key": "days",
+                                    "value": "30"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Stock",
+            "item": [
+                {
+                    "name": "Get Stock",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/stock?facility_id=1&page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "stock"
+                            ],
+                            "query": [
+                                {
+                                    "key": "facility_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Low Stock",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/stock?facility_id=1&low_stock_only=true",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "stock"
+                            ],
+                            "query": [
+                                {
+                                    "key": "facility_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "low_stock_only",
+                                    "value": "true"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Suppliers",
+            "item": [
+                {
+                    "name": "Create Supplier",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"ABC Pharmaceuticals Ltd\",\n  \"contact_person\": \"John Smith\",\n  \"phone\": \"+250788123456\",\n  \"email\": \"contact@abcpharma.com\",\n  \"address\": \"123 Business Park\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/suppliers",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "suppliers"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Suppliers",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/suppliers?page=1&limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "suppliers"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Procurement",
+            "item": [
+                {
+                    "name": "Create Purchase Order",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"facility_id\": 1,\n  \"supplier_id\": 1,\n  \"order_date\": \"2024-01-15\",\n  \"expected_delivery_date\": \"2024-01-25\",\n  \"items\": [\n    {\n      \"medicine_id\": 1,\n      \"quantity_ordered\": 500,\n      \"unit_price\": 45,\n      \"notes\": \"Urgent order\"\n    }\n  ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/procurement",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "procurement"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Purchase Orders",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/procurement?facility_id=1&status=pending",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "procurement"
+                            ],
+                            "query": [
+                                {
+                                    "key": "facility_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "pending"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Receive Purchase Order",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"received_items\": [\n    {\n      \"item_id\": 1,\n      \"quantity_received\": 500,\n      \"batch_number\": \"BATCH-2024-002\",\n      \"expiry_date\": \"2025-12-31\",\n      \"manufacturing_date\": \"2024-01-01\"\n    }\n  ],\n  \"received_date\": \"2024-01-20\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/procurement/1/receive",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "procurement",
+                                "1",
+                                "receive"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Dispensing",
+            "item": [
+                {
+                    "name": "Dispense Medicine",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"facility_id\": 1,\n  \"medicine_id\": 1,\n  \"batch_id\": 1,\n  \"quantity\": 10,\n  \"dispense_type\": \"prescription\",\n  \"patient_id\": 1,\n  \"prescription_id\": 1,\n  \"unit_price\": 100\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/dispensing",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "dispensing"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Dispense Transactions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/dispensing?facility_id=1&patient_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "dispensing"
+                            ],
+                            "query": [
+                                {
+                                    "key": "facility_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "patient_id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Alerts",
+            "item": [
+                {
+                    "name": "List Alerts",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/alerts?facility_id=1&status=active",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "alerts"
+                            ],
+                            "query": [
+                                {
+                                    "key": "facility_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "active"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Alert",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"acknowledged\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/alerts/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "alerts",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Run Alert Checks",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/alerts/check/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "alerts",
+                                "check",
+                                "1"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Departments",
+            "item": [
+                {
+                    "name": "Create Department",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"facility_id\": 1,\n  \"name\": \"ICU\",\n  \"description\": \"Intensive Care Unit\",\n  \"location\": \"Building A, Floor 2\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/departments",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "departments"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Departments",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/departments?facility_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "departments"
+                            ],
+                            "query": [
+                                {
+                                    "key": "facility_id",
+                                    "value": "1"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Stock Transfers",
+            "item": [
+                {
+                    "name": "Create Stock Transfer",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"facility_id\": 1,\n  \"from_department_id\": null,\n  \"to_department_id\": 1,\n  \"transfer_date\": \"2024-01-20\",\n  \"items\": [\n    {\n      \"medicine_id\": 1,\n      \"batch_id\": 1,\n      \"quantity\": 50\n    }\n  ],\n  \"notes\": \"Transfer to ICU department\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/stock-transfers",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "stock-transfers"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Stock Transfers",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/stock-transfers?facility_id=1&status=pending",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "stock-transfers"
+                            ],
+                            "query": [
+                                {
+                                    "key": "facility_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "pending"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Stock Transfer",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/stock-transfers/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "stock-transfers",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Complete Stock Transfer",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/stock-transfers/1/complete",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "stock-transfers",
+                                "1",
+                                "complete"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Cancel Stock Transfer",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/stock-transfers/1/cancel",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "stock-transfers",
+                                "1",
+                                "cancel"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Pharmacy - Reports",
+            "item": [
+                {
+                    "name": "Get Stock Report",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/reports/stock/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "reports",
+                                "stock",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Dispensing Report",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/reports/dispensing/1?start_date=2024-01-01&end_date=2024-01-31",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "reports",
+                                "dispensing",
+                                "1"
+                            ],
+                            "query": [
+                                {
+                                    "key": "start_date",
+                                    "value": "2024-01-01"
+                                },
+                                {
+                                    "key": "end_date",
+                                    "value": "2024-01-31"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Procurement Report",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/reports/procurement/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "reports",
+                                "procurement",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Expiry Report",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/reports/expiry/1?days=30",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "reports",
+                                "expiry",
+                                "1"
+                            ],
+                            "query": [
+                                {
+                                    "key": "days",
+                                    "value": "30"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Inventory Value Report",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/reports/inventory-value/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "reports",
+                                "inventory-value",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Sales Report",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/pharmacy/reports/sales/1?start_date=2024-01-01&end_date=2024-01-31",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "pharmacy",
+                                "reports",
+                                "sales",
+                                "1"
+                            ],
+                            "query": [
+                                {
+                                    "key": "start_date",
+                                    "value": "2024-01-01"
+                                },
+                                {
+                                    "key": "end_date",
+                                    "value": "2024-01-31"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Doctor Reviews",
+            "item": [
+                {
+                    "name": "Create Review",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"appointment_id\": 1,\n  \"rating\": 5,\n  \"review_text\": \"Excellent doctor! Very professional and caring.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/reviews",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reviews"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Doctor Reviews",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/reviews/doctor/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reviews",
+                                "doctor",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Featured Reviews (Success Stories)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/reviews/featured?limit=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reviews",
+                                "featured"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Review",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"rating\": 4,\n  \"review_text\": \"Updated review text\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/reviews/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reviews",
+                                "1"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Review",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{access_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/reviews/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reviews",
+                                "1"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Search",
+            "item": [
+                {
+                    "name": "Global Search",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{base_url}}/api/search?q=cardiology",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "search"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "cardiology"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
