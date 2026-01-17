@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, Link } from '@tanstack/react-router';
+import { Outlet, Link, useNavigate } from '@tanstack/react-router';
 import {
     BarChart3,
     Package,
@@ -16,7 +16,7 @@ import {
     TrendingUp,
     ShoppingCart,
     Factory,
-    Database
+    Database,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -27,15 +27,133 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+interface NavItem {
+    to: string;
+    icon: React.ComponentType<{ size: number }>;
+    label: string;
+    allowedRoles?: string[];
+}
+
+const NAV_ITEMS: NavItem[] = [
+    { to: '/app', icon: BarChart3, label: 'Dashboard' },
+    {
+        to: '/app/facilities',
+        icon: Factory,
+        label: 'Facilities',
+        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'AUDITOR'],
+    },
+    {
+        to: '/app/procurement',
+        icon: ShoppingCart,
+        label: 'Procurement',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'STORE_MANAGER',
+            'STORE MANAGER',
+            'AUDITOR',
+            'ADMIN',
+        ],
+    },
+    {
+        to: '/app/dispensing',
+        icon: Zap,
+        label: 'Dispensing',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'PHARMACIST',
+            'AUDITOR',
+            'ADMIN',
+        ],
+    },
+    {
+        to: '/app/inventory',
+        icon: Package,
+        label: 'Medicines',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'STORE_MANAGER',
+            'STORE MANAGER',
+            'PHARMACIST',
+            'AUDITOR',
+            'ADMIN',
+            'DOCTOR',
+        ], // All except Patient
+    },
+    {
+        to: '/app/stock',
+        icon: Database,
+        label: 'Stock & Batches',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'STORE_MANAGER',
+            'STORE MANAGER',
+            'PHARMACIST',
+            'AUDITOR',
+            'ADMIN',
+        ],
+    },
+    {
+        to: '/app/alerts',
+        icon: Bell,
+        label: 'Alerts',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'STORE_MANAGER',
+            'STORE MANAGER',
+            'PHARMACIST',
+            'AUDITOR',
+            'ADMIN',
+        ],
+    },
+    {
+        to: '/app/patients',
+        icon: Users,
+        label: 'Customers',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'PHARMACIST',
+            'STORE_MANAGER',
+            'STORE MANAGER',
+            'AUDITOR',
+            'ADMIN',
+        ],
+    },
+    {
+        to: '/app/audit-logs',
+        icon: TrendingUp,
+        label: 'Audit Logs',
+        allowedRoles: ['SUPER_ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'AUDITOR', 'ADMIN'],
+    },
+    {
+        to: '/app/settings',
+        icon: Settings,
+        label: 'Settings',
+        allowedRoles: ['SUPER_ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'ADMIN'],
+    },
+];
+
 export const MainLayout: React.FC = () => {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isDark, setIsDark] = useState(false);
     const role = user?.role?.toUpperCase();
 
     const handleLogout = async () => {
         await logout();
-        window.location.href = '/auth/login';
+        navigate({ to: '/auth/login' });
     };
 
     const toggleTheme = () => {
@@ -48,21 +166,25 @@ export const MainLayout: React.FC = () => {
     };
 
     return (
-        <div className={cn(
-            "flex h-screen bg-healthcare-surface font-sans transition-colors duration-300",
-            isDark && "dark"
-        )}>
+        <div
+            className={cn(
+                'flex h-screen bg-healthcare-surface font-sans transition-colors duration-300',
+                isDark && 'dark',
+            )}
+        >
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "glass-card m-3 rounded-xl flex flex-col overflow-hidden border-slate-200 transition-all duration-300 ease-in-out shadow-sm",
-                    isCollapsed ? "w-20" : "w-60"
+                    'glass-card m-3 rounded-xl flex flex-col overflow-hidden border-slate-200 transition-all duration-300 ease-in-out shadow-sm',
+                    isCollapsed ? 'w-20' : 'w-60',
                 )}
             >
-                <div className={cn(
-                    "p-5 flex items-center transition-all duration-300",
-                    isCollapsed ? "justify-center px-0" : "gap-3"
-                )}>
+                <div
+                    className={cn(
+                        'p-5 flex items-center transition-all duration-300',
+                        isCollapsed ? 'justify-center px-0' : 'gap-3',
+                    )}
+                >
                     <div className="bg-white dark:bg-slate-800 p-1 rounded-lg flex-shrink-0 border border-teal-50 dark:border-slate-700 overflow-hidden shadow-sm">
                         <img src={logo} alt="TangaCare Logo" className="w-7 h-7 object-contain" />
                     </div>
@@ -74,61 +196,36 @@ export const MainLayout: React.FC = () => {
                 </div>
 
                 <nav className="flex-1 px-2 space-y-1 py-4 overflow-y-auto custom-scrollbar">
-                    <SidebarLink to="/app" icon={<BarChart3 size={18} />} label="Dashboard" isCollapsed={isCollapsed} />
+                    {user &&
+                        NAV_ITEMS.map((item) => {
+                            const isAllowed =
+                                !item.allowedRoles || item.allowedRoles.includes(role || '');
+                            if (!isAllowed) return null;
 
-                    {/* Facility Management - Super Admin & Auditor */}
-                    {(role === 'SUPER_ADMIN' || role === 'SUPER ADMIN' || role === 'AUDITOR') && (
-                        <SidebarLink to="/app/facilities" icon={<Factory size={18} />} label="Facilities" isCollapsed={isCollapsed} />
-                    )}
-
-                    {/* Procurement - Super Admin, Facility Admin, Store Manager, Auditor */}
-                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'STORE_MANAGER' || role === 'STORE MANAGER' || role === 'AUDITOR' || role === 'ADMIN') && (
-                        <SidebarLink to="/app/procurement" icon={<ShoppingCart size={18} />} label="Procurement" isCollapsed={isCollapsed} />
-                    )}
-
-                    {/* Dispensing - Super Admin, Facility Admin, Pharmacist, Auditor */}
-                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'PHARMACIST' || role === 'AUDITOR' || role === 'ADMIN') && (
-                        <SidebarLink to="/app/dispensing" icon={<Zap size={18} />} label="Dispensing" isCollapsed={isCollapsed} />
-                    )}
-
-                    {/* Inventory/Medicines - All except Patient */}
-                    {role !== 'PATIENT' && role !== 'Patient' && (
-                        <SidebarLink to="/app/inventory" icon={<Package size={18} />} label="Medicines" isCollapsed={isCollapsed} />
-                    )}
-
-                    {/* Stock & Batches - Super Admin, Facility Admin, Store Manager, Pharmacist, Auditor */}
-                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'STORE_MANAGER' || role === 'STORE MANAGER' || role === 'PHARMACIST' || role === 'AUDITOR' || role === 'ADMIN') && (
-                        <SidebarLink to="/app/stock" icon={<Database size={18} />} label="Stock & Batches" isCollapsed={isCollapsed} />
-                    )}
-
-                    {/* Alerts - Super Admin, Facility Admin, Store Manager, Pharmacist, Auditor */}
-                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'STORE_MANAGER' || role === 'STORE MANAGER' || role === 'PHARMACIST' || role === 'AUDITOR' || role === 'ADMIN') && (
-                        <SidebarLink to="/app/alerts" icon={<Bell size={18} />} label="Alerts" isCollapsed={isCollapsed} />
-                    )}
-
-                    {/* CRM/Customers - Super Admin, Facility Admin, Pharmacist, Store Manager, Auditor */}
-                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'PHARMACIST' || role === 'STORE_MANAGER' || role === 'STORE MANAGER' || role === 'AUDITOR' || role === 'ADMIN') && (
-                        <SidebarLink to="/app/patients" icon={<Users size={18} />} label="Customers" isCollapsed={isCollapsed} />
-                    )}
-
-                    {/* Audit Logs - Super Admin, Facility Admin, Auditor */}
-                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'AUDITOR' || role === 'ADMIN') && (
-                        <SidebarLink to="/app/audit-logs" icon={<TrendingUp size={18} />} label="Audit Logs" isCollapsed={isCollapsed} />
-                    )}
+                            return (
+                                <SidebarLink
+                                    key={item.to}
+                                    to={item.to}
+                                    icon={<item.icon size={18} />}
+                                    label={item.label}
+                                    isCollapsed={isCollapsed}
+                                />
+                            );
+                        })}
                 </nav>
 
                 <div className="p-2 border-t border-slate-200 dark:border-slate-800">
-                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'ADMIN') && (
-                        <SidebarLink to="/app/settings" icon={<Settings size={18} />} label="Settings" isCollapsed={isCollapsed} />
-                    )}
                     <button
                         onClick={handleLogout}
                         className={cn(
-                            "flex items-center gap-3 px-4 py-2.5 w-full text-left text-healthcare-danger hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-all group font-bold text-sm",
-                            isCollapsed && "justify-center px-0"
+                            'flex items-center gap-3 px-4 py-2.5 w-full text-left text-healthcare-danger hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-all group font-bold text-sm',
+                            isCollapsed && 'justify-center px-0',
                         )}
                     >
-                        <LogOut size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                        <LogOut
+                            size={18}
+                            className="group-hover:translate-x-0.5 transition-transform"
+                        />
                         {!isCollapsed && <span>Logout</span>}
                     </button>
                 </div>
@@ -146,7 +243,10 @@ export const MainLayout: React.FC = () => {
                         </button>
 
                         <div className="relative max-w-sm w-full hidden md:block">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <Search
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                size={16}
+                            />
                             <input
                                 type="text"
                                 placeholder="Search..."
@@ -172,14 +272,18 @@ export const MainLayout: React.FC = () => {
                         <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-800">
                             <div className="flex flex-col items-end">
                                 <span className="font-bold text-healthcare-dark text-xs uppercase tracking-tight">
-                                    {user ? `${user.firstName || user.first_name} ${user.lastName || user.last_name}` : 'Loading...'}
+                                    {user
+                                        ? `${user.firstName || user.first_name} ${user.lastName || user.last_name}`
+                                        : 'Loading...'}
                                 </span>
                                 <span className="text-[9px] text-healthcare-primary font-black uppercase tracking-widest">
                                     {user?.role || 'User'}
                                 </span>
                             </div>
                             <div className="w-8 h-8 rounded-lg bg-healthcare-primary/10 border border-healthcare-primary/20 flex items-center justify-center text-healthcare-primary text-xs font-black shadow-sm uppercase">
-                                {user ? `${(user.firstName || user.first_name || '?')[0]}${(user.lastName || user.last_name || '?')[0]}` : '??'}
+                                {user
+                                    ? `${(user.firstName || user.first_name || '?')[0]}${(user.lastName || user.last_name || '?')[0]}`
+                                    : '??'}
                             </div>
                         </div>
                     </div>
@@ -204,10 +308,13 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isCollapsed 
     return (
         <Link
             to={to}
-            activeProps={{ className: 'bg-healthcare-primary/10 text-healthcare-primary dark:bg-healthcare-primary shadow-none' }}
+            activeProps={{
+                className:
+                    'bg-healthcare-primary/10 text-healthcare-primary dark:bg-healthcare-primary shadow-none',
+            }}
             className={cn(
-                "flex items-center px-4 py-2.5 text-slate-500 hover:bg-teal-50 dark:hover:bg-teal-900 hover:text-healthcare-primary rounded-lg transition-all group",
-                isCollapsed ? "justify-center px-0 mx-auto w-10" : "gap-3"
+                'flex items-center px-4 py-2.5 text-slate-500 hover:bg-teal-50 dark:hover:bg-teal-900 hover:text-healthcare-primary rounded-lg transition-all group',
+                isCollapsed ? 'justify-center px-0 mx-auto w-10' : 'gap-3',
             )}
         >
             <span className="group-hover:scale-105 transition-transform flex-shrink-0">{icon}</span>

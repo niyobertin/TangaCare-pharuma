@@ -1,12 +1,20 @@
 export type UserRole =
-    | 'Patient' | 'PATIENT'
-    | 'Doctor' | 'DOCTOR'
-    | 'Admin' | 'ADMIN'
-    | 'Pharmacist' | 'PHARMACIST'
-    | 'Super Admin' | 'SUPER_ADMIN'
-    | 'Store Manager' | 'STORE_MANAGER'
-    | 'Auditor' | 'AUDITOR'
-    | 'Facility Admin' | 'FACILITY_ADMIN';
+    | 'Patient'
+    | 'PATIENT'
+    | 'Doctor'
+    | 'DOCTOR'
+    | 'Admin'
+    | 'ADMIN'
+    | 'Pharmacist'
+    | 'PHARMACIST'
+    | 'Super Admin'
+    | 'SUPER_ADMIN'
+    | 'Store Manager'
+    | 'STORE_MANAGER'
+    | 'Auditor'
+    | 'AUDITOR'
+    | 'Facility Admin'
+    | 'FACILITY_ADMIN';
 
 export interface User {
     id: number;

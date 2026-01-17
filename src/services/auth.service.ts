@@ -6,7 +6,7 @@ export const authService = {
         // Map email to identifier as expected by backend
         const response = await api.post<AuthResponse>('/auth/login', {
             identifier: credentials.email,
-            password: credentials.password
+            password: credentials.password,
         });
         if (response.data.data.tokens) {
             localStorage.setItem('access_token', response.data.data.tokens.accessToken);
@@ -47,5 +47,5 @@ export const authService = {
     async resetPassword(data: any): Promise<any> {
         const response = await api.post('/auth/reset-password', data);
         return response.data;
-    }
+    },
 };

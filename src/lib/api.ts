@@ -16,7 +16,7 @@ api.interceptors.request.use(
         }
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
 );
 
 // Response interceptor for token refresh or error handling
@@ -31,9 +31,12 @@ api.interceptors.response.use(
 
             if (refreshToken) {
                 try {
-                    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/refresh-token`, {
-                        refreshToken,
-                    });
+                    const response = await axios.post(
+                        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/refresh-token`,
+                        {
+                            refreshToken,
+                        },
+                    );
 
                     const { accessToken } = response.data.data.tokens;
                     localStorage.setItem('access_token', accessToken);
@@ -50,7 +53,7 @@ api.interceptors.response.use(
         }
 
         return Promise.reject(error);
-    }
+    },
 );
 
 export default api;
