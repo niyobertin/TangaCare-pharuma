@@ -50,9 +50,9 @@ export function ResetPasswordPage() {
         setLoading(true);
         try {
             await authService.resetPassword({
-                email,
+                identifier: email,
                 otp,
-                password: data.password,
+                newPassword: data.password,
             });
             toast.success('Password reset successful! Please login.');
             navigate({ to: '/auth/login' });

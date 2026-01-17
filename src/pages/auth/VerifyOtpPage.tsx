@@ -9,14 +9,19 @@ export function VerifyOtpPage() {
     const navigate = useNavigate();
     const search = useSearch({ from: '/auth/verify-otp' }) as any;
     const email = search.email;
+    const type = search.type || 'reset'; // Default to reset for backward compatibility if needed, or based on route
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     useEffect(() => {
         if (!email) {
-            toast.error('Session expired. Please try again.');
-            navigate({ to: '/auth/forgot-password' });
+            if (type === 'register') {
+                navigate({ to: '/auth/register' });
+            } else {
+                toast.error('Session expired. Please try again.');
+                navigate({ to: '/auth/forgot-password' });
+            }
         }
     }, [email, navigate]);
 
@@ -47,9 +52,15 @@ export function VerifyOtpPage() {
 
         setLoading(true);
         try {
-            await authService.verifyOtp(email, otpValue);
-            toast.success('OTP verified successfully!');
-            navigate({ to: '/auth/reset-password', search: { email, otp: otpValue } as any });
+            if (type === 'register') {
+                await authService.verifyRegistrationOtp(email, otpValue);
+                toast.success('Account verified! Please login.');
+                navigate({ to: '/auth/login' });
+            } else {
+                await authService.verifyResetOtp(email, otpValue);
+                toast.success('OTP verified successfully!');
+                navigate({ to: '/auth/reset-password', search: { email, otp: otpValue } as any });
+            }
         } catch (err: any) {
             const message = err.response?.data?.message || 'Invalid OTP. Please try again.';
             toast.error(message);
@@ -116,10 +127,16 @@ export function VerifyOtpPage() {
                     <div className="text-center">
                         <button
                             type="button"
-                            onClick={() => navigate({ to: '/auth/forgot-password' })}
+                            onClick={() => {
+                                if (type === 'register') {
+                                    navigate({ to: '/auth/register' });
+                                } else {
+                                    navigate({ to: '/auth/forgot-password' });
+                                }
+                            }}
                             className="text-xs font-bold text-healthcare-primary hover:underline flex items-center justify-center mx-auto gap-1"
                         >
-                            <ChevronLeft size={16} /> Back
+                            <ChevronLeft size={16} /> {type === 'register' ? 'Back to Register' : 'Back'}
                         </button>
                     </div>
                 </form>

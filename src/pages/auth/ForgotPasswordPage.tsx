@@ -39,7 +39,7 @@ export function ForgotPasswordPage() {
         try {
             await authService.forgotPassword(data.email);
             toast.success('OTP sent to your email!');
-            navigate({ to: '/auth/verify-otp', search: { email: data.email } as any });
+            navigate({ to: '/auth/verify-otp', search: { email: data.email, type: 'reset' } as any });
         } catch (err: any) {
             const message = err.response?.data?.message || 'Failed to send OTP. Please try again.';
             toast.error(message);

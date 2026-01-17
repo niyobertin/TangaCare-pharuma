@@ -35,16 +35,25 @@ export const authService = {
     },
 
     async forgotPassword(email: string): Promise<any> {
-        const response = await api.post('/auth/forgot-password', { email });
+        // Backend likely expects identifier based on other endpoints, but let's send both or map it if needed.
+        // Keeping as email for now if that matches api, otherwise:
+        const response = await api.post('/auth/forgot-password', { identifier: email });
         return response.data;
     },
 
-    async verifyOtp(email: string, otp: string): Promise<any> {
-        const response = await api.post('/auth/verify-otp', { email, otp });
+    async verifyResetOtp(identifier: string, otp: string): Promise<any> {
+        const response = await api.post('/auth/verify-reset-otp', { identifier, otp });
         return response.data;
     },
 
-    async resetPassword(data: any): Promise<any> {
+    async verifyRegistrationOtp(email: string, otp: string): Promise<any> {
+        // Using /auth/verify-otp as per plan for account verification
+        // User confirmed payload uses "identifier"
+        const response = await api.post('/auth/verify-otp', { identifier: email, otp });
+        return response.data;
+    },
+
+    async resetPassword(data: { identifier: string; otp: string; newPassword: string }): Promise<any> {
         const response = await api.post('/auth/reset-password', data);
         return response.data;
     },
