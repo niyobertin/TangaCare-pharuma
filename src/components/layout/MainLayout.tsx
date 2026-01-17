@@ -3,7 +3,6 @@ import { Outlet, Link } from '@tanstack/react-router';
 import {
     BarChart3,
     Package,
-    ShoppingCart,
     Users,
     Settings,
     LogOut,
@@ -12,9 +11,15 @@ import {
     Search,
     Bell,
     Moon,
-    Sun
+    Sun,
+    Zap,
+    TrendingUp,
+    ShoppingCart,
+    Factory,
+    Database
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
+import { useAuth } from '../../context/AuthContext';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -23,8 +28,15 @@ function cn(...inputs: ClassValue[]) {
 }
 
 export const MainLayout: React.FC = () => {
+    const { user, logout } = useAuth();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isDark, setIsDark] = useState(false);
+    const role = user?.role?.toUpperCase();
+
+    const handleLogout = async () => {
+        await logout();
+        window.location.href = '/auth/login';
+    };
 
     const toggleTheme = () => {
         setIsDark(!isDark);
@@ -61,17 +73,56 @@ export const MainLayout: React.FC = () => {
                     )}
                 </div>
 
-                <nav className="flex-1 px-2 space-y-1 py-4">
-                    <SidebarLink to="/" icon={<BarChart3 size={18} />} label="Dashboard" isCollapsed={isCollapsed} />
-                    <SidebarLink to="/inventory" icon={<Package size={18} />} label="Inventory" isCollapsed={isCollapsed} />
-                    <SidebarLink to="/orders" icon={<ShoppingCart size={18} />} label="Orders" isCollapsed={isCollapsed} />
-                    <SidebarLink to="/patients" icon={<Users size={18} />} label="Patients" isCollapsed={isCollapsed} />
-                    <SidebarLink to="/reports" icon={<BarChart3 size={18} />} label="Reports" isCollapsed={isCollapsed} />
+                <nav className="flex-1 px-2 space-y-1 py-4 overflow-y-auto custom-scrollbar">
+                    <SidebarLink to="/app" icon={<BarChart3 size={18} />} label="Dashboard" isCollapsed={isCollapsed} />
+
+                    {/* Facility Management - Super Admin & Auditor */}
+                    {(role === 'SUPER_ADMIN' || role === 'SUPER ADMIN' || role === 'AUDITOR') && (
+                        <SidebarLink to="/app/facilities" icon={<Factory size={18} />} label="Facilities" isCollapsed={isCollapsed} />
+                    )}
+
+                    {/* Procurement - Super Admin, Facility Admin, Store Manager, Auditor */}
+                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'STORE_MANAGER' || role === 'STORE MANAGER' || role === 'AUDITOR' || role === 'ADMIN') && (
+                        <SidebarLink to="/app/procurement" icon={<ShoppingCart size={18} />} label="Procurement" isCollapsed={isCollapsed} />
+                    )}
+
+                    {/* Dispensing - Super Admin, Facility Admin, Pharmacist, Auditor */}
+                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'PHARMACIST' || role === 'AUDITOR' || role === 'ADMIN') && (
+                        <SidebarLink to="/app/dispensing" icon={<Zap size={18} />} label="Dispensing" isCollapsed={isCollapsed} />
+                    )}
+
+                    {/* Inventory/Medicines - All except Patient */}
+                    {role !== 'PATIENT' && role !== 'Patient' && (
+                        <SidebarLink to="/app/inventory" icon={<Package size={18} />} label="Medicines" isCollapsed={isCollapsed} />
+                    )}
+
+                    {/* Stock & Batches - Super Admin, Facility Admin, Store Manager, Pharmacist, Auditor */}
+                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'STORE_MANAGER' || role === 'STORE MANAGER' || role === 'PHARMACIST' || role === 'AUDITOR' || role === 'ADMIN') && (
+                        <SidebarLink to="/app/stock" icon={<Database size={18} />} label="Stock & Batches" isCollapsed={isCollapsed} />
+                    )}
+
+                    {/* Alerts - Super Admin, Facility Admin, Store Manager, Pharmacist, Auditor */}
+                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'STORE_MANAGER' || role === 'STORE MANAGER' || role === 'PHARMACIST' || role === 'AUDITOR' || role === 'ADMIN') && (
+                        <SidebarLink to="/app/alerts" icon={<Bell size={18} />} label="Alerts" isCollapsed={isCollapsed} />
+                    )}
+
+                    {/* CRM/Customers - Super Admin, Facility Admin, Pharmacist, Store Manager, Auditor */}
+                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'PHARMACIST' || role === 'STORE_MANAGER' || role === 'STORE MANAGER' || role === 'AUDITOR' || role === 'ADMIN') && (
+                        <SidebarLink to="/app/patients" icon={<Users size={18} />} label="Customers" isCollapsed={isCollapsed} />
+                    )}
+
+                    {/* Audit Logs - Super Admin, Facility Admin, Auditor */}
+                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'AUDITOR' || role === 'ADMIN') && (
+                        <SidebarLink to="/app/audit-logs" icon={<TrendingUp size={18} />} label="Audit Logs" isCollapsed={isCollapsed} />
+                    )}
                 </nav>
 
                 <div className="p-2 border-t border-slate-200 dark:border-slate-800">
-                    <SidebarLink to="/settings" icon={<Settings size={18} />} label="Settings" isCollapsed={isCollapsed} />
+                    {(role === 'SUPER_ADMIN' || role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'ADMIN') && (
+                        <SidebarLink to="/app/settings" icon={<Settings size={18} />} label="Settings" isCollapsed={isCollapsed} />
+                    )}
                     <button
+                        onClick={handleLogout}
                         className={cn(
                             "flex items-center gap-3 px-4 py-2.5 w-full text-left text-healthcare-danger hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-all group font-bold text-sm",
                             isCollapsed && "justify-center px-0"
@@ -120,11 +171,15 @@ export const MainLayout: React.FC = () => {
 
                         <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-800">
                             <div className="flex flex-col items-end">
-                                <span className="font-bold text-healthcare-dark text-xs uppercase tracking-tight">John Doe</span>
-                                <span className="text-[9px] text-healthcare-primary font-black uppercase tracking-widest">Admin</span>
+                                <span className="font-bold text-healthcare-dark text-xs uppercase tracking-tight">
+                                    {user ? `${user.firstName || user.first_name} ${user.lastName || user.last_name}` : 'Loading...'}
+                                </span>
+                                <span className="text-[9px] text-healthcare-primary font-black uppercase tracking-widest">
+                                    {user?.role || 'User'}
+                                </span>
                             </div>
-                            <div className="w-8 h-8 rounded-lg bg-healthcare-primary/10 border border-healthcare-primary/20 flex items-center justify-center text-healthcare-primary text-xs font-black shadow-sm">
-                                JD
+                            <div className="w-8 h-8 rounded-lg bg-healthcare-primary/10 border border-healthcare-primary/20 flex items-center justify-center text-healthcare-primary text-xs font-black shadow-sm uppercase">
+                                {user ? `${(user.firstName || user.first_name || '?')[0]}${(user.lastName || user.last_name || '?')[0]}` : '??'}
                             </div>
                         </div>
                     </div>
