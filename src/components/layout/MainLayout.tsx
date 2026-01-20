@@ -144,12 +144,20 @@ const NAV_ITEMS: NavItem[] = [
     },
 ];
 
+import { CreateFacilityModal } from '../facility/CreateFacilityModal';
+import { FacilityEmptyState } from '../facility/FacilityEmptyState';
+
 export const MainLayout: React.FC = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isDark, setIsDark] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
     const role = user?.role?.toUpperCase();
+
+    // Check if user is Facility Admin but has no facility
+    const isUnassignedAdmin =
+        role === 'FACILITY_ADMIN' && !user?.facility_id && !user?.facility;
 
     const handleLogout = async () => {
         await logout();
@@ -198,9 +206,13 @@ export const MainLayout: React.FC = () => {
                 <nav className="flex-1 px-2 space-y-1 py-4 overflow-y-auto custom-scrollbar">
                     {user &&
                         NAV_ITEMS.map((item) => {
+                            // Check user role
                             const isAllowed =
                                 !item.allowedRoles || item.allowedRoles.includes(role || '');
                             if (!isAllowed) return null;
+
+                            // HIDE SIDEBAR ITEMS IF NO FACILITY (for Facility Admins)
+                            if (isUnassignedAdmin) return null;
 
                             return (
                                 <SidebarLink
@@ -290,7 +302,14 @@ export const MainLayout: React.FC = () => {
                 </header>
 
                 <div className="flex-1 overflow-auto rounded-xl">
-                    <Outlet />
+                    {isUnassignedAdmin ? (
+                        <>
+                            <FacilityEmptyState onCreateClick={() => setShowCreateModal(true)} />
+                            {showCreateModal && <CreateFacilityModal onClose={() => setShowCreateModal(false)} />}
+                        </>
+                    ) : (
+                        <Outlet />
+                    )}
                 </div>
             </main>
         </div>

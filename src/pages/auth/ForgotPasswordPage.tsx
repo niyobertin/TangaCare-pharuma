@@ -8,17 +8,7 @@ import toast from 'react-hot-toast';
 import { authService } from '../../services/auth.service';
 import authBg from '../../assets/auth-bg.png';
 
-const forgotPasswordSchema = yup
-    .object({
-        email: yup
-            .string()
-            .matches(
-                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                'Please enter a valid email address',
-            )
-            .required('Email address is required'),
-    })
-    .required();
+import { forgotPasswordSchema } from '../../validations/auth.validation';
 
 type ForgotPasswordForm = yup.InferType<typeof forgotPasswordSchema>;
 

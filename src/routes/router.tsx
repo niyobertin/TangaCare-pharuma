@@ -84,6 +84,7 @@ const authLayoutRoute = createRoute({
 
 import { AlertsPage } from '../pages/dashboard/AlertsPage';
 import { SuppliersPage } from '../pages/dashboard/SuppliersPage';
+import { FacilitiesPage } from '../pages/facilities/FacilitiesPage';
 
 const indexRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -103,7 +104,7 @@ const dispensingRoute = createRoute({
 const facilitiesRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'facilities',
-    component: FacilityManagementPage,
+    component: FacilitiesPage,
 });
 const procurementRoute = createRoute({
     getParentRoute: () => appLayoutRoute,

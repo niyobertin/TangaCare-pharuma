@@ -42,6 +42,29 @@ export function VerifyOtpPage() {
         }
     };
 
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        const pastedData = e.clipboardData.getData('text');
+
+        // Filter out non-numeric characters
+        const digits = pastedData.replace(/\D/g, '').slice(0, 6).split('');
+
+        if (digits.length === 0) return;
+
+        const newOtp = [...otp];
+        digits.forEach((digit, index) => {
+            if (index < 6) {
+                newOtp[index] = digit;
+            }
+        });
+
+        setOtp(newOtp);
+
+        // Focus the appropriate input
+        const focusIndex = Math.min(digits.length, 5);
+        inputRefs.current[focusIndex]?.focus();
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const otpValue = otp.join('');
@@ -107,6 +130,7 @@ export function VerifyOtpPage() {
                                 value={data}
                                 onChange={(e) => handleChange(e.target, index)}
                                 onKeyDown={(e) => handleKeyDown(e, index)}
+                                onPaste={handlePaste}
                                 className="w-10 h-14 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-center text-xl font-black text-healthcare-dark focus:border-healthcare-primary focus:outline-none transition-all"
                             />
                         ))}

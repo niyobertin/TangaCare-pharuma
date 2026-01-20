@@ -1,20 +1,16 @@
-export type UserRole =
-    | 'Patient'
-    | 'PATIENT'
-    | 'Doctor'
-    | 'DOCTOR'
-    | 'Admin'
-    | 'ADMIN'
-    | 'Pharmacist'
-    | 'PHARMACIST'
-    | 'Super Admin'
-    | 'SUPER_ADMIN'
-    | 'Store Manager'
-    | 'STORE_MANAGER'
-    | 'Auditor'
-    | 'AUDITOR'
-    | 'Facility Admin'
-    | 'FACILITY_ADMIN';
+export const UserRole = {
+    PATIENT: 'patient',
+    DOCTOR: 'doctor',
+    ADMIN: 'admin',
+    // Pharmacy Inventory Roles
+    SUPER_ADMIN: 'super_admin',
+    FACILITY_ADMIN: 'facility_admin',
+    PHARMACIST: 'pharmacist',
+    STORE_MANAGER: 'store_manager',
+    AUDITOR: 'auditor',
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface User {
     id: number;
@@ -35,6 +31,12 @@ export interface User {
     isActive?: boolean;
     created_at?: string;
     updated_at?: string;
+    facility_id?: number;
+    facility?: {
+        id: number;
+        name: string;
+        type: string;
+    };
 }
 
 export interface AuthTokens {

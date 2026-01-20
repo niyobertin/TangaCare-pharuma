@@ -85,6 +85,11 @@ export const pharmacyService = {
         return normalizePaginatedResponse<Facility>(response.data);
     },
 
+    async createFacility(data: import('../types/pharmacy').CreateFacilityDto): Promise<Facility> {
+        const response = await api.post<{ data: Facility }>('/pharmacy/facilities', data);
+        return response.data.data;
+    },
+
     // Batches
     async getBatches(params?: { medicine_id?: number }): Promise<Batch[]> {
         const response = await api.get<{ data: Batch[] }>('/pharmacy/batches', { params });

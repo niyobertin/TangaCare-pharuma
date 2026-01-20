@@ -44,12 +44,22 @@ export interface Medicine {
 export interface Facility {
     id: number;
     name: string;
-    type: 'hospital' | 'clinic' | 'pharmacy';
+    type: 'hospital' | 'clinic' | 'pharmacy_shop';
     address: string;
     phone: string;
     email: string;
     status: 'Active' | 'Inactive';
     admin_name?: string;
+}
+
+// ... (skipping unchanged parts)
+
+export interface CreateFacilityDto {
+    name: string;
+    type: 'hospital' | 'clinic' | 'pharmacy_shop';
+    address: string;
+    phone: string;
+    email: string;
 }
 
 export interface Batch {
@@ -121,3 +131,5 @@ export interface CreateMedicineDto {
     cost_price: number;
     selling_price: number;
 }
+
+

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from '@tanstack/react-router';
+import { UserRole } from '../../types/auth';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -8,29 +9,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import authBg from '../../assets/auth-bg.png';
 
-const registerSchema = yup
-    .object({
-        first_name: yup.string().required('First name is required'),
-        last_name: yup.string().required('Last name is required'),
-        email: yup
-            .string()
-            .matches(
-                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                'Please enter a valid email address',
-            )
-            .required('Email address is required'),
-        phone_number: yup
-            .string()
-            .matches(/^(\+2507[8923]\d{7})$/, 'Phone must be in format +2507XXXXXXXX')
-            .optional()
-            .nullable()
-            .transform((value) => (value === '' ? null : value)),
-        password: yup
-            .string()
-            .min(6, 'Password must be at least 6 characters')
-            .required('Password is required'),
-    })
-    .required();
+import { registerSchema } from '../../validations/auth.validation';
 
 type RegisterForm = yup.InferType<typeof registerSchema>;
 
@@ -57,6 +36,7 @@ export function RegisterPage() {
             await registerUser({
                 ...rest,
                 phone_number: phone_number || undefined,
+                role: UserRole.FACILITY_ADMIN,
             });
             toast.success('Registration successful! Please verify your email.');
             navigate({ to: '/auth/verify-otp', search: { email: data.email, type: 'register' } as any });

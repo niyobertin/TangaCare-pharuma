@@ -8,21 +8,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import authBg from '../../assets/auth-bg.png';
 
-const loginSchema = yup
-    .object({
-        email: yup
-            .string()
-            .matches(
-                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                'Please enter a valid email address',
-            )
-            .required('Email address is required'),
-        password: yup
-            .string()
-            .min(6, 'Password must be at least 6 characters')
-            .required('Password is required'),
-    })
-    .required();
+import { loginSchema } from '../../validations/auth.validation';
 
 type LoginForm = yup.InferType<typeof loginSchema>;
 
