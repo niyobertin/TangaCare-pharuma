@@ -9,6 +9,7 @@ import {
     Pill,
     ChevronLeft,
     ChevronRight,
+    ArrowRightLeft,
 } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import type { Medicine } from '../../types/pharmacy';
@@ -17,12 +18,15 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { TableSkeleton } from '../../components/shared/Skeleton';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useAuth } from '../../context/AuthContext';
+import { StockTransferModal } from '../../components/inventory/StockTransferModal';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
 export function InventoryPage() {
+    const { user } = useAuth();
     const [medicines, setMedicines] = useState<Medicine[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -31,6 +35,7 @@ export function InventoryPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [limit, setLimit] = useState(10);
+    const [selectedMedForTransfer, setSelectedMedForTransfer] = useState<Medicine | null>(null);
 
     const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -40,7 +45,9 @@ export function InventoryPage() {
             const response = await pharmacyService.getMedicines({
                 page,
                 limit,
+
                 search: debouncedSearch,
+                ...(user?.facility_id ? { facility_id: user.facility_id } : {}),
             });
             setMedicines(response?.data || []);
             setTotalPages(response?.meta?.totalPages || 1);
@@ -72,13 +79,11 @@ export function InventoryPage() {
     return (
         <ProtectedRoute
             allowedRoles={[
-                'Admin',
-                'Pharmacist',
-                'Super Admin',
-                'ADMIN',
-                'PHARMACIST',
-                'SUPER_ADMIN',
-                'SUPER_ADMIN',
+                'admin',
+                'pharmacist',
+                'super_admin',
+                'store_manager',
+                'facility_admin',
             ]}
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -157,6 +162,7 @@ export function InventoryPage() {
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-slate-800 text-[11px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                                    <th className="px-6 py-4">ID</th>
                                     <th className="px-6 py-4">Medicine Info</th>
                                     <th className="px-6 py-4">Category</th>
                                     <th className="px-6 py-4">Stock Level</th>
@@ -168,8 +174,8 @@ export function InventoryPage() {
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[13px] font-medium">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-8">
-                                            <TableSkeleton rows={5} columns={6} />
+                                        <td colSpan={7} className="px-6 py-8">
+                                            <TableSkeleton rows={5} columns={7} />
                                         </td>
                                     </tr>
                                 ) : medicines.length > 0 ? (
@@ -178,6 +184,9 @@ export function InventoryPage() {
                                             key={med.id}
                                             className="group hover:bg-teal-50/30 dark:hover:bg-teal-900/10 transition-all"
                                         >
+                                            <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                                                #{med.id}
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-slate-800 flex items-center justify-center text-healthcare-primary shadow-sm border border-teal-100 dark:border-slate-700">
@@ -239,8 +248,8 @@ export function InventoryPage() {
                                                         (med.stock_quantity || 0) === 0
                                                             ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30'
                                                             : (med.stock_quantity || 0) <= 20
-                                                              ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/30'
-                                                              : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-teal-200 dark:border-teal-900/30',
+                                                                ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/30'
+                                                                : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-teal-200 dark:border-teal-900/30',
                                                     )}
                                                 >
                                                     <div
@@ -249,19 +258,26 @@ export function InventoryPage() {
                                                             (med.stock_quantity || 0) === 0
                                                                 ? 'bg-red-500 animate-pulse'
                                                                 : (med.stock_quantity || 0) <= 20
-                                                                  ? 'bg-amber-500'
-                                                                  : 'bg-emerald-500',
+                                                                    ? 'bg-amber-500'
+                                                                    : 'bg-emerald-500',
                                                         )}
                                                     ></div>
                                                     {(med.stock_quantity || 0) === 0
                                                         ? 'Out of Stock'
                                                         : (med.stock_quantity || 0) <= 20
-                                                          ? 'Low Stock'
-                                                          : 'In Stock'}
+                                                            ? 'Low Stock'
+                                                            : 'In Stock'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => setSelectedMedForTransfer(med)}
+                                                        className="p-2 text-slate-400 hover:text-healthcare-primary hover:bg-teal-50 dark:hover:bg-slate-800 rounded-lg transition-all border border-transparent hover:border-teal-100 dark:hover:border-slate-700"
+                                                        title="Transfer Stock"
+                                                    >
+                                                        <ArrowRightLeft size={16} />
+                                                    </button>
                                                     <button className="p-2 text-slate-400 hover:text-healthcare-primary hover:bg-teal-50 dark:hover:bg-slate-800 rounded-lg transition-all border border-transparent hover:border-teal-100 dark:hover:border-slate-700">
                                                         <MoreVertical size={16} />
                                                     </button>
@@ -330,6 +346,18 @@ export function InventoryPage() {
                     </div>
                 </div>
             </div>
+
+            {selectedMedForTransfer && user?.facility_id && (
+                <StockTransferModal
+                    medicine={selectedMedForTransfer}
+                    facilityId={user.facility_id}
+                    onClose={() => setSelectedMedForTransfer(null)}
+                    onSuccess={() => {
+                        fetchMedicines();
+                        // Additional refresh/toast handled in modal
+                    }}
+                />
+            )}
         </ProtectedRoute>
     );
 }

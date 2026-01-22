@@ -12,8 +12,8 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { InventoryPage } from '../pages/dashboard/InventoryPage';
 import { DispensingPage } from '../pages/dashboard/DispensingPage';
-import { FacilityManagementPage } from '../pages/dashboard/FacilityManagement';
-import { ProcurementPage } from '../pages/dashboard/ProcurementPage';
+
+
 import { BatchStockPage } from '../pages/dashboard/BatchStockPage';
 import { AuditLogsPage } from '../pages/dashboard/AuditLogsPage';
 import { ModulePlaceholder } from '../pages/shared/ModulePlaceholder';
@@ -83,8 +83,12 @@ const authLayoutRoute = createRoute({
 // --- Application Routes ---
 
 import { AlertsPage } from '../pages/dashboard/AlertsPage';
-import { SuppliersPage } from '../pages/dashboard/SuppliersPage';
+import { ReportsPage } from '../pages/dashboard/ReportsPage';
+// import { SuppliersPage } from '../pages/dashboard/SuppliersPage'; // Removed old import
+import { SuppliersPage } from '../pages/procurement/SuppliersPage';
+import { OrdersPage } from '../pages/procurement/OrdersPage';
 import { FacilitiesPage } from '../pages/facilities/FacilitiesPage';
+import { FacilitySettingsPage } from '../pages/dashboard/FacilitySettingsPage';
 
 const indexRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -109,7 +113,7 @@ const facilitiesRoute = createRoute({
 const procurementRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'procurement',
-    component: ProcurementPage,
+    component: OrdersPage, // Default procurement view is Orders
 });
 const stockRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -123,9 +127,9 @@ const auditLogsRoute = createRoute({
 });
 
 // --- Application Routes (Integrated) ---
-const manufacturerRoute = createRoute({
+const suppliersRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
-    path: 'manufacturers',
+    path: 'suppliers',
     component: SuppliersPage,
 });
 const alertsRoute = createRoute({
@@ -158,12 +162,7 @@ const patientsRoute = createRoute({
 const analyticsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'analytics',
-    component: () => (
-        <ModulePlaceholder
-            title="Pharmacy Reports"
-            description="Detailed sales and performance reports."
-        />
-    ),
+    component: ReportsPage,
 });
 const employeeRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -242,18 +241,25 @@ const resetPasswordRoute = createRoute({
 
 // --- Route Tree Construction ---
 
+const facilitySettingsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'facility/$facilityId/settings',
+    component: FacilitySettingsPage,
+});
+
 const appRouteTree = appLayoutRoute.addChildren([
     indexRoute,
     inventoryRoute,
     dispensingRoute,
     facilitiesRoute,
+    facilitySettingsRoute,
     procurementRoute,
     stockRoute,
     auditLogsRoute,
     prescriptionsRoute,
     patientsRoute,
     analyticsRoute,
-    manufacturerRoute,
+    suppliersRoute,
     employeeRoute,
     settingsRoute,
     alertsRoute,

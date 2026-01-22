@@ -50,6 +50,23 @@ export interface Facility {
     email: string;
     status: 'Active' | 'Inactive';
     admin_name?: string;
+    facility_admin?: import('./auth').User;
+    // Configuration fields
+    departments_enabled: boolean;
+    controlled_drug_rules_enabled: boolean;
+    min_stock_threshold_percentage: number;
+    expiry_alert_days: number;
+}
+
+export interface Department {
+    id: number;
+    facility_id: number;
+    name: string;
+    type: 'store' | 'dispensary' | 'ward' | 'theatre' | 'other';
+    head_user_id?: number;
+    description?: string;
+    is_main_store: boolean;
+    status: 'active' | 'inactive';
 }
 
 // ... (skipping unchanged parts)
@@ -60,6 +77,12 @@ export interface CreateFacilityDto {
     address: string;
     phone: string;
     email: string;
+    // Configuration fields
+    departments_enabled?: boolean;
+    controlled_drug_rules_enabled?: boolean;
+    min_stock_threshold_percentage?: number;
+    expiry_alert_days?: number;
+    status?: 'Active' | 'Inactive';
 }
 
 export interface Batch {
@@ -71,15 +94,18 @@ export interface Batch {
     initial_quantity: number;
     current_quantity: number;
     unit_cost: number;
+    status: 'active' | 'expired' | 'depleted' | 'quarantined';
 }
 
 export interface Stock {
     id: number;
     facility_id: number;
+    department_id?: number | null; // Null indicates Central Store (for Hospitals) or Main Stock (for others)
     medicine_id: number;
     quantity: number;
     min_threshold: number;
     medicine?: Medicine;
+    department?: Department;
 }
 
 export interface Supplier {
@@ -89,17 +115,32 @@ export interface Supplier {
     phone: string;
     email: string;
     address: string;
+    tax_id?: string;
+    is_active: boolean;
+}
+
+export interface ProcurementOrderItem {
+    id: number;
+    medicine_id: number;
+    quantity_ordered: number;
+    quantity_received?: number;
+    unit_price: number;
+    total_price: number;
+    medicine?: Medicine;
 }
 
 export interface ProcurementOrder {
     id: number;
+    order_number: string;
     facility_id: number;
     supplier_id: number;
     order_date: string;
-    status: 'pending' | 'ordered' | 'received' | 'cancelled';
-    total_amount: number;
+    status: 'PENDING' | 'APPROVED' | 'ORDERED' | 'RECEIVED' | 'PARTIAL' | 'CANCELLED';
+    total_amount: number; // Used interchangeably with total_cost, keeping total_amount as db field
+    total_cost?: number; // Frontend alias if needed
     items_count: number;
     supplier?: Supplier;
+    items?: ProcurementOrderItem[];
 }
 
 export interface Alert {

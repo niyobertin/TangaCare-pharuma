@@ -912,7 +912,7 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}/api/pharmacy/facilities?page=1&limit=10",
+                            "raw": "{{base_url}}/api/pharmacy/facilities?page=1&limit=10&search=",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -929,6 +929,10 @@
                                 {
                                     "key": "limit",
                                     "value": "10"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": ""
                                 }
                             ]
                         }

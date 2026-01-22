@@ -40,7 +40,7 @@ const NAV_ITEMS: NavItem[] = [
         to: '/app/facilities',
         icon: Factory,
         label: 'Facilities',
-        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'AUDITOR'],
+        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'AUDITOR', 'FACILITY_ADMIN', 'FACILITY ADMIN'],
     },
     {
         to: '/app/procurement',
@@ -184,7 +184,7 @@ export const MainLayout: React.FC = () => {
             <aside
                 className={cn(
                     'glass-card m-3 rounded-xl flex flex-col overflow-hidden border-slate-200 transition-all duration-300 ease-in-out shadow-sm',
-                    isCollapsed ? 'w-20' : 'w-60',
+                    isCollapsed ? 'w-20' : 'w-60 lg:w-64 xl:w-72',
                 )}
             >
                 <div
@@ -254,7 +254,7 @@ export const MainLayout: React.FC = () => {
                             {isCollapsed ? <Menu size={18} /> : <ChevronLeft size={18} />}
                         </button>
 
-                        <div className="relative max-w-sm w-full hidden md:block">
+                        <div className="relative max-w-sm lg:max-w-md w-full hidden md:block">
                             <Search
                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                                 size={16}
@@ -302,14 +302,16 @@ export const MainLayout: React.FC = () => {
                 </header>
 
                 <div className="flex-1 overflow-auto rounded-xl">
-                    {isUnassignedAdmin ? (
-                        <>
-                            <FacilityEmptyState onCreateClick={() => setShowCreateModal(true)} />
-                            {showCreateModal && <CreateFacilityModal onClose={() => setShowCreateModal(false)} />}
-                        </>
-                    ) : (
-                        <Outlet />
-                    )}
+                    <div className="max-w-screen-2xl mx-auto h-full">
+                        {isUnassignedAdmin ? (
+                            <>
+                                <FacilityEmptyState onCreateClick={() => setShowCreateModal(true)} />
+                                {showCreateModal && <CreateFacilityModal onClose={() => setShowCreateModal(false)} />}
+                            </>
+                        ) : (
+                            <Outlet />
+                        )}
+                    </div>
                 </div>
             </main>
         </div>

@@ -11,6 +11,7 @@ import {
     AlertCircle,
 } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
+import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Batch } from '../../types/pharmacy';
 import { TableSkeleton, StatsSkeleton } from '../../components/shared/Skeleton';
@@ -22,15 +23,21 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+import { StockAdjustmentModal } from '../../components/inventory/StockAdjustmentModal';
+
 export function BatchStockPage() {
+    const { user } = useAuth();
     const [batches, setBatches] = useState<Batch[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedBatchForAdjustment, setSelectedBatchForAdjustment] = useState<Batch | null>(null);
 
     const fetchBatches = async () => {
         setLoading(true);
         try {
-            const response = await pharmacyService.getBatches();
+            const response = await pharmacyService.getBatches({
+                ...(user?.facility_id ? { facility_id: user.facility_id } : {})
+            });
             setBatches(response);
         } catch (error) {
             console.error('Failed to fetch batches:', error);
@@ -89,17 +96,12 @@ export function BatchStockPage() {
     return (
         <ProtectedRoute
             allowedRoles={[
-                'Super Admin',
-                'SUPER_ADMIN',
-                'Facility Admin',
-                'FACILITY_ADMIN',
-                'Store Manager',
-                'STORE_MANAGER',
-                'Pharmacist',
-                'PHARMACIST',
-                'Auditor',
-                'AUDITOR',
-                'ADMIN',
+                'super_admin',
+                'facility_admin',
+                'store_manager',
+                'pharmacist',
+                'auditor',
+                'admin',
             ]}
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -171,6 +173,9 @@ export function BatchStockPage() {
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-slate-800/50">
                                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                        ID
+                                    </th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
                                         Medicine & Batch
                                     </th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">
@@ -187,8 +192,8 @@ export function BatchStockPage() {
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-8">
-                                            <TableSkeleton rows={5} columns={4} />
+                                        <td colSpan={5} className="px-6 py-8">
+                                            <TableSkeleton rows={5} columns={5} />
                                         </td>
                                     </tr>
                                 ) : filteredBatches.length > 0 ? (
@@ -197,6 +202,9 @@ export function BatchStockPage() {
                                             key={batch.id}
                                             className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                                         >
+                                            <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                                                #{batch.id}
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
                                                     <span className="font-black text-healthcare-dark text-sm leading-tight">
@@ -235,6 +243,7 @@ export function BatchStockPage() {
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
+                                                        onClick={() => setSelectedBatchForAdjustment(batch)}
                                                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
                                                         title="Adjust Stock"
                                                     >
@@ -270,6 +279,17 @@ export function BatchStockPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Adjust Modal */}
+            {selectedBatchForAdjustment && (
+                <StockAdjustmentModal
+                    batch={selectedBatchForAdjustment}
+                    onClose={() => setSelectedBatchForAdjustment(null)}
+                    onSuccess={() => {
+                        fetchBatches();
+                    }}
+                />
+            )}
         </ProtectedRoute>
     );
 }

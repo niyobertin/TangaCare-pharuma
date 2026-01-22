@@ -66,6 +66,7 @@ export const pharmacyService = {
         page?: number;
         limit?: number;
         search?: string;
+        facility_id?: number;
     }): Promise<PaginatedResponse<Medicine>> {
         const response = await api.get<any>('/pharmacy/medicines', { params });
         return normalizePaginatedResponse<Medicine>(response.data);
@@ -80,9 +81,15 @@ export const pharmacyService = {
     async getFacilities(params?: {
         page?: number;
         limit?: number;
+        search?: string;
     }): Promise<PaginatedResponse<Facility>> {
         const response = await api.get<any>('/pharmacy/facilities', { params });
         return normalizePaginatedResponse<Facility>(response.data);
+    },
+
+    async getFacility(id: number): Promise<Facility> {
+        const response = await api.get<{ data: Facility }>(`/pharmacy/facilities/${id}`);
+        return response.data.data;
     },
 
     async createFacility(data: import('../types/pharmacy').CreateFacilityDto): Promise<Facility> {
@@ -90,8 +97,37 @@ export const pharmacyService = {
         return response.data.data;
     },
 
+    async updateFacility(id: number, data: Partial<Facility>): Promise<Facility> {
+        const response = await api.put<{ data: Facility }>(`/pharmacy/facilities/${id}`, data);
+        return response.data.data;
+    },
+
+    async deleteFacility(id: number): Promise<void> {
+        await api.delete(`/pharmacy/facilities/${id}`);
+    },
+
+    // Departments
+    async getDepartments(params?: { facility_id: number }): Promise<import('../types/pharmacy').Department[]> {
+        const response = await api.get<{ data: import('../types/pharmacy').Department[] }>('/pharmacy/departments', { params });
+        return response.data.data;
+    },
+
+    async createDepartment(data: Partial<import('../types/pharmacy').Department>): Promise<import('../types/pharmacy').Department> {
+        const response = await api.post<{ data: import('../types/pharmacy').Department }>('/pharmacy/departments', data);
+        return response.data.data;
+    },
+
+    async updateDepartment(id: number, data: Partial<import('../types/pharmacy').Department>): Promise<import('../types/pharmacy').Department> {
+        const response = await api.put<{ data: import('../types/pharmacy').Department }>(`/pharmacy/departments/${id}`, data);
+        return response.data.data;
+    },
+
+    async deleteDepartment(id: number): Promise<void> {
+        await api.delete(`/pharmacy/departments/${id}`);
+    },
+
     // Batches
-    async getBatches(params?: { medicine_id?: number }): Promise<Batch[]> {
+    async getBatches(params?: { medicine_id?: number; facility_id?: number }): Promise<Batch[]> {
         const response = await api.get<{ data: Batch[] }>('/pharmacy/batches', { params });
         return response.data.data;
     },
@@ -116,6 +152,16 @@ export const pharmacyService = {
         return normalizePaginatedResponse<Supplier>(response.data);
     },
 
+    async createSupplier(data: Partial<Supplier>): Promise<Supplier> {
+        const response = await api.post<{ data: Supplier }>('/pharmacy/suppliers', data);
+        return response.data.data;
+    },
+
+    async updateSupplier(id: number, data: Partial<Supplier>): Promise<Supplier> {
+        const response = await api.put<{ data: Supplier }>(`/pharmacy/suppliers/${id}`, data);
+        return response.data.data;
+    },
+
     // Procurement
     async getProcurementOrders(params?: {
         facility_id?: number;
@@ -123,6 +169,21 @@ export const pharmacyService = {
     }): Promise<PaginatedResponse<ProcurementOrder>> {
         const response = await api.get<any>('/pharmacy/procurement', { params });
         return normalizePaginatedResponse<ProcurementOrder>(response.data);
+    },
+
+    async createProcurementOrder(data: any): Promise<ProcurementOrder> {
+        const response = await api.post<{ data: ProcurementOrder }>('/pharmacy/procurement', data);
+        return response.data.data;
+    },
+
+    async updateProcurementOrder(id: number, data: any): Promise<ProcurementOrder> {
+        const response = await api.put<{ data: ProcurementOrder }>(`/pharmacy/procurement/${id}`, data);
+        return response.data.data;
+    },
+
+    async receiveProcurementOrder(id: number, data: { items: any[] }): Promise<ProcurementOrder> {
+        const response = await api.post<{ data: ProcurementOrder }>(`/pharmacy/procurement/${id}/receive`, data);
+        return response.data.data;
     },
 
     // Alerts
@@ -147,5 +208,43 @@ export const pharmacyService = {
     }): Promise<any> {
         const response = await api.post('/pharmacy/dispensing', data);
         return response.data;
+    },
+
+    async transferStock(data: {
+        facility_id: number;
+        medicine_id: number;
+        batch_id: number;
+        source_department_id: number | null; // null = central/main
+        target_department_id: number;
+        quantity: number;
+        notes?: string;
+    }): Promise<any> {
+        const response = await api.post('/pharmacy/stock/transfer', data);
+        return response.data;
+    },
+
+    async adjustStock(data: {
+        facility_id: number;
+        batch_id: number;
+        type: 'increase' | 'decrease' | 'damage' | 'expired' | 'return';
+        quantity: number;
+        reason: string;
+    }): Promise<any> {
+        const response = await api.post('/pharmacy/stock/adjust', data);
+        return response.data;
+    },
+
+    // Global Search / Users
+    async getPatients(query: string): Promise<import('../types/auth').User[]> {
+        const response = await api.get<{ data: import('../types/auth').User[] }>('/users', {
+            params: {
+                role: 'patient',
+                search: query,
+                limit: 10
+            }
+        });
+        // Handle both simple array or paginated response
+        const data = response.data.data || response.data;
+        return Array.isArray(data) ? data : (data as any)?.users || [];
     },
 };

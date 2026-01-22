@@ -1,32 +1,63 @@
 import { useState, useEffect } from 'react';
-import { Grid, List, Plus } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { Grid, List, Plus, Settings, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Facility } from '../../types/pharmacy';
 import toast from 'react-hot-toast';
 import { CreateFacilityModal } from '../../components/facility/CreateFacilityModal';
+import { FacilityEmptyState } from '../../components/facility/FacilityEmptyState';
+import { useAuth } from '../../context/AuthContext';
 
 export function FacilitiesPage() {
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [facilities, setFacilities] = useState<Facility[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
     const [showCreateModal, setShowCreateModal] = useState(false);
 
+    // Pagination and Search States
+    const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(12);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+
+    const role = user?.role?.toUpperCase();
+    const isFacilityAdmin = role === 'FACILITY_ADMIN';
+
     const loadFacilities = async () => {
         setIsLoading(true);
         try {
-            const response = await pharmacyService.getFacilities();
-            setFacilities(response.data);
-        } catch (error) {
+            const response = await pharmacyService.getFacilities({ page, limit, search });
+            setFacilities(response.data || []);
+            setTotalPages(response.meta?.totalPages || 1);
+            totalItems !== response.meta?.total && setTotalItems(response.meta?.total || 0);
+        } catch (error: any) {
             console.error('Failed to load facilities:', error);
-            toast.error('Failed to load facilities');
+            // Don't show error toast if it's just an empty result or 404 for facility admins
+            if (isFacilityAdmin && (error?.response?.status === 404 || error?.response?.status === 403)) {
+                setFacilities([]);
+            } else {
+                toast.error(error?.response?.data?.message || 'Failed to load facilities');
+            }
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        loadFacilities();
-    }, []);
+        const timer = setTimeout(() => {
+            loadFacilities();
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [page, limit, search]);
 
     const handleCreateSuccess = () => {
         loadFacilities();
@@ -50,14 +81,34 @@ export function FacilitiesPage() {
                         Manage your pharmacies and clinics
                     </p>
                 </div>
+
+                <div className="flex-1 max-w-md lg:max-w-xl mx-8 hidden md:block">
+                    <div className="relative group">
+                        <Search
+                            size={18}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-healthcare-primary transition-colors"
+                        />
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                setPage(1);
+                            }}
+                            placeholder="Search by name, email or address..."
+                            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-sm font-bold text-healthcare-dark focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
+                        />
+                    </div>
+                </div>
+
                 <div className="flex items-center gap-3">
                     {/* View Toggle */}
                     <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg p-1 shadow-sm">
                         <button
                             onClick={() => setViewMode('grid')}
                             className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                                    ? 'bg-healthcare-primary text-white'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                ? 'bg-healthcare-primary text-white'
+                                : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
                                 }`}
                         >
                             <Grid size={18} />
@@ -65,53 +116,81 @@ export function FacilitiesPage() {
                         <button
                             onClick={() => setViewMode('table')}
                             className={`p-2 rounded-md transition-all ${viewMode === 'table'
-                                    ? 'bg-healthcare-primary text-white'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                ? 'bg-healthcare-primary text-white'
+                                : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
                                 }`}
                         >
                             <List size={18} />
                         </button>
                     </div>
 
-                    {/* Add Button */}
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg font-bold text-sm hover:bg-teal-700 transition-all shadow-lg"
-                    >
-                        <Plus size={18} />
-                        <span>Add Facility</span>
-                    </button>
+                    {/* Add Button - Only for Super Admin */}
+                    {role === 'SUPER_ADMIN' || role === 'SUPER ADMIN' ? (
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg font-bold text-sm hover:bg-teal-700 transition-all shadow-lg"
+                        >
+                            <Plus size={18} />
+                            <span>Add Facility</span>
+                        </button>
+                    ) : null}
                 </div>
             </div>
 
             {/* Content */}
             {facilities.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                        <p className="text-slate-500 mb-4">No facilities found</p>
-                        <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
-                        >
-                            Create Your First Facility
-                        </button>
+                isFacilityAdmin ? (
+                    <FacilityEmptyState onCreateClick={() => setShowCreateModal(true)} />
+                ) : (
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                            <p className="text-slate-500 mb-4">No facilities found</p>
+                            {isFacilityAdmin && !facilities.length ? (
+                                <button
+                                    onClick={() => setShowCreateModal(true)}
+                                    className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
+                                >
+                                    Setup Your Facility
+                                </button>
+                            ) : (role === 'SUPER_ADMIN' || role === 'SUPER ADMIN') ? (
+                                <button
+                                    onClick={() => setShowCreateModal(true)}
+                                    className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
+                                >
+                                    Create Your First Facility
+                                </button>
+                            ) : null}
+                        </div>
                     </div>
-                </div>
+                )
             ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {facilities.map((facility) => (
                         <div
                             key={facility.id}
-                            className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-slate-100 dark:border-slate-700"
+                            className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-slate-100 dark:border-slate-700 relative group"
                         >
+                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate({ to: '/app/facility/$facilityId/settings', params: { facilityId: String(facility.id) } });
+                                    }}
+                                    className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg text-slate-500 hover:text-healthcare-primary transition-colors shadow-sm"
+                                    title="Configure Facility"
+                                >
+                                    <Settings size={18} />
+                                </button>
+                            </div>
+
                             <div className="flex items-start justify-between mb-4">
                                 <div className="w-12 h-12 bg-healthcare-primary/10 rounded-xl flex items-center justify-center">
                                     <span className="text-2xl">🏥</span>
                                 </div>
                                 <span
                                     className={`px-3 py-1 rounded-full text-xs font-bold ${facility.status === 'Active'
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-slate-100 text-slate-700'
+                                        ? 'bg-green-100 text-green-700'
+                                        : 'bg-slate-100 text-slate-700'
                                         }`}
                                 >
                                     {facility.status}
@@ -138,10 +217,13 @@ export function FacilitiesPage() {
                     ))}
                 </div>
             ) : (
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
-                    <table className="w-full">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-x-auto">
+                    <table className="w-full min-w-[800px]">
                         <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
                             <tr>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    ID
+                                </th>
                                 <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                     Name
                                 </th>
@@ -152,10 +234,16 @@ export function FacilitiesPage() {
                                     Address
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    Contact
+                                    Email
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Phone
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                     Status
+                                </th>
+                                <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Actions
                                 </th>
                             </tr>
                         </thead>
@@ -165,6 +253,15 @@ export function FacilitiesPage() {
                                     key={facility.id}
                                     className="hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
                                 >
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <button
+                                            onClick={() => navigate({ to: '/app/facility/$facilityId/settings', params: { facilityId: String(facility.id) } })}
+                                            className="font-bold text-healthcare-primary hover:underline"
+                                            title="View Details"
+                                        >
+                                            #{facility.id}
+                                        </button>
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="font-bold text-healthcare-dark">
                                             {facility.name}
@@ -180,26 +277,109 @@ export function FacilitiesPage() {
                                             {facility.address}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm text-slate-600 dark:text-slate-400">
-                                            <div>{facility.phone}</div>
-                                            <div className="text-xs">{facility.email}</div>
+                                            {facility.email}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-slate-600 dark:text-slate-400">
+                                            {facility.phone}
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span
                                             className={`px-3 py-1 rounded-full text-xs font-bold ${facility.status === 'Active'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-slate-100 text-slate-700'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-slate-100 text-slate-700'
                                                 }`}
                                         >
                                             {facility.status}
                                         </span>
                                     </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button
+                                            onClick={() => navigate({ to: '/app/facility/$facilityId/settings', params: { facilityId: String(facility.id) } })}
+                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors"
+                                            title="Configure"
+                                        >
+                                            <Settings size={18} />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                </div>
+            )}
+
+            {/* Pagination */}
+            {facilities.length > 0 && (
+                <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-800 p-4 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm">
+                    <div className="flex items-center gap-6">
+                        <div className="text-[11px] font-black uppercase text-slate-400 tracking-widest">
+                            Showing{' '}
+                            <span className="text-healthcare-dark">
+                                {totalItems === 0 ? 0 : (page - 1) * limit + 1}
+                            </span>{' '}
+                            to{' '}
+                            <span className="text-healthcare-dark">
+                                {Math.min(page * limit, totalItems)}
+                            </span>{' '}
+                            of <span className="text-healthcare-dark">{totalItems}</span> Facilities
+                        </div>
+                        <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-6">
+                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                Show
+                            </span>
+                            <select
+                                value={limit}
+                                onChange={(e) => {
+                                    setLimit(Number(e.target.value));
+                                    setPage(1);
+                                }}
+                                className="bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl px-3 py-1 text-[11px] font-black text-healthcare-dark focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
+                            >
+                                {[12, 24, 48, 96].map((l) => (
+                                    <option key={l} value={l}>
+                                        {l} items
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={page === 1 || isLoading}
+                            className="p-2 border border-slate-100 dark:border-slate-800 rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary transition-all"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setPage(i + 1)}
+                                    className={cn(
+                                        'w-9 h-9 flex items-center justify-center rounded-xl text-[11px] font-black transition-all',
+                                        page === i + 1
+                                            ? 'bg-healthcare-primary text-white shadow-md shadow-teal-500/20'
+                                            : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400',
+                                    )}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={page === totalPages || isLoading}
+                            className="p-2 border border-slate-100 dark:border-slate-800 rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary transition-all"
+                        >
+                            <ChevronRight size={18} />
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -212,6 +392,9 @@ export function FacilitiesPage() {
                     }}
                 />
             )}
+
+            {/* Config Modal */}
+
         </div>
     );
 }
