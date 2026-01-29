@@ -1,4 +1,8 @@
+import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
+import { pharmacyService } from '../../services/pharmacy.service';
+import { useAuth } from '../../context/AuthContext';
+import type { DashboardStats } from '../../types/pharmacy';
 import {
     Package,
     TrendingUp,
@@ -23,6 +27,35 @@ function cn(...inputs: ClassValue[]) {
 }
 
 export function DashboardPage() {
+    const { user } = useAuth();
+    const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [loadingStats, setLoadingStats] = useState(false);
+
+    useEffect(() => {
+        let mounted = true;
+        const load = async () => {
+            setLoadingStats(true);
+            try {
+                const data = await pharmacyService.getDashboardStats();
+                if (mounted) setStats(data);
+            } catch (e) {
+                // Keep UI usable even if stats endpoint isn't reachable
+                if (mounted) setStats(null);
+            } finally {
+                if (mounted) setLoadingStats(false);
+            }
+        };
+        load();
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    const medicinesInStock = stats?.medicinesInStock ?? '0';
+    const lowStockWarning = stats?.lowStockWarning ?? 0;
+    const expiringSoon = stats?.expiringSoon ?? 0;
+    const dailySales = stats?.dailySales ? `RWF ${Number(stats.dailySales).toLocaleString()}` : 'RWF 0';
+
     return (
         <ProtectedRoute
             allowedRoles={[
@@ -42,7 +75,7 @@ export function DashboardPage() {
                         </h2>
                         <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-2 mt-0.5 text-xs uppercase tracking-wider">
                             <span className="flex h-2 w-2 rounded-full bg-healthcare-accent animate-pulse"></span>
-                            Live Pharmacy Status • Facility #042
+                            Live Pharmacy Status • Facility #{user?.facility_id ?? '—'}
                         </p>
                     </div>
                     <div className="flex gap-2">
@@ -58,33 +91,33 @@ export function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard
                         title="Medicines in Stock"
-                        value="12,842"
-                        trend="+12%"
-                        isPositive={true}
+                        value={loadingStats ? '—' : medicinesInStock.toLocaleString?.() || medicinesInStock}
+                        trend={stats?.trends?.medicines ?? '0%'}
+                        isPositive={stats?.isPositive?.medicines ?? true}
                         color="bg-healthcare-primary"
                         icon={<Package size={20} />}
                     />
                     <StatCard
                         title="Low Stock Warning"
-                        value="14"
-                        trend="-3"
-                        isPositive={true}
+                        value={loadingStats ? '—' : String(lowStockWarning)}
+                        trend={stats?.trends?.lowStock ?? '0%'}
+                        isPositive={stats?.isPositive?.lowStock ?? true}
                         color="bg-amber-500"
                         icon={<AlertTriangle size={20} />}
                     />
                     <StatCard
                         title="Expiring Soon"
-                        value="38"
-                        trend="+8"
-                        isPositive={false}
+                        value={loadingStats ? '—' : String(expiringSoon)}
+                        trend={stats?.trends?.expiring ?? '0%'}
+                        isPositive={stats?.isPositive?.expiring ?? false}
                         color="bg-red-500"
                         icon={<Clock size={20} />}
                     />
                     <StatCard
                         title="Total Daily Sales"
-                        value="RWF 842K"
-                        trend="+18%"
-                        isPositive={true}
+                        value={loadingStats ? '—' : dailySales}
+                        trend={stats?.trends?.sales ?? '0%'}
+                        isPositive={stats?.isPositive?.sales ?? true}
                         color="bg-healthcare-secondary"
                         icon={<TrendingUp size={20} />}
                     />

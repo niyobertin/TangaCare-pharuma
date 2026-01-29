@@ -30,6 +30,7 @@ export interface DashboardStats {
 export interface Medicine {
     id: number;
     code: string;
+    barcode?: string;
     name: string;
     brand_name?: string;
     strength: string;
@@ -41,21 +42,40 @@ export interface Medicine {
     stock_quantity?: number;
 }
 
+export interface Organization {
+    id: number;
+    name: string;
+    code?: string;
+    type?: string;
+    subscription_status?: string;
+    is_active?: boolean;
+}
+
 export interface Facility {
     id: number;
     name: string;
     type: 'hospital' | 'clinic' | 'pharmacy_shop';
-    address: string;
-    phone: string;
-    email: string;
-    status: 'Active' | 'Inactive';
+    address?: string;
+    phone?: string;
+    email?: string;
+    status?: 'Active' | 'Inactive';
+    organization_id?: number;
+    organization?: Organization;
     admin_name?: string;
     facility_admin?: import('./auth').User;
-    // Configuration fields
-    departments_enabled: boolean;
-    controlled_drug_rules_enabled: boolean;
-    min_stock_threshold_percentage: number;
-    expiry_alert_days: number;
+    departments_enabled?: boolean;
+    controlled_drug_rules_enabled?: boolean;
+    min_stock_threshold_percentage?: number;
+    expiry_alert_days?: number;
+}
+
+export interface CreateOrganizationDto {
+    name: string;
+    code?: string;
+    type?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
 }
 
 export interface Department {
@@ -74,9 +94,10 @@ export interface Department {
 export interface CreateFacilityDto {
     name: string;
     type: 'hospital' | 'clinic' | 'pharmacy_shop';
-    address: string;
-    phone: string;
-    email: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    organization_id?: number;
     // Configuration fields
     departments_enabled?: boolean;
     controlled_drug_rules_enabled?: boolean;
@@ -171,6 +192,65 @@ export interface CreateMedicineDto {
     unit: string;
     cost_price: number;
     selling_price: number;
+}
+
+// Sales (POS)
+export type SaleStatus = 'paid' | 'partially_paid' | 'unpaid' | 'voided';
+export type SalePaymentMethod = 'cash' | 'mobile_money' | 'bank' | 'card';
+
+export interface SalePayment {
+    id: number;
+    sale_id: number;
+    method: SalePaymentMethod;
+    amount: number;
+    reference?: string | null;
+    created_at?: string;
+}
+
+export interface SaleItem {
+    id: number;
+    sale_id: number;
+    medicine_id: number;
+    batch_id: number;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+    created_at?: string;
+}
+
+export interface Sale {
+    id: number;
+    sale_number: string;
+    facility_id: number;
+    patient_id?: number | null;
+    cashier_id: number;
+    subtotal: number;
+    vat_rate: number;
+    vat_amount: number;
+    total_amount: number;
+    paid_amount: number;
+    balance_amount: number;
+    status: SaleStatus;
+    created_at?: string;
+    items?: SaleItem[];
+    payments?: SalePayment[];
+}
+
+export interface CreateSaleDto {
+    patient_id?: number;
+    dispense_type?: 'otc' | 'prescription' | 'internal' | 'transfer';
+    vat_rate?: number;
+    items: Array<{
+        medicine_id: number;
+        batch_id?: number;
+        quantity: number;
+        unit_price: number;
+    }>;
+    payments?: Array<{
+        method: SalePaymentMethod;
+        amount: number;
+        reference?: string;
+    }>;
 }
 
 

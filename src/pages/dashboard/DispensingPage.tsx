@@ -105,8 +105,11 @@ export function DispensingPage() {
         let bestBatch: Batch | undefined;
         try {
             const batches = await pharmacyService.getBatches({ medicine_id: med.id });
-            // Sort by expiry date ASC, filter out expired/depleted
-            const activeBatches = batches.filter(b => b.current_quantity > 0 && b.status === 'active')
+            // Sort by expiry date ASC, filter out expired/depleted.
+            // Backend Batch currently doesn't provide a `status`, so rely on quantity + expiry.
+            const now = new Date();
+            const activeBatches = batches
+                .filter((b) => (b.current_quantity || 0) > 0 && new Date(b.expiry_date) > now)
                 .sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
 
             if (activeBatches.length > 0) {
@@ -164,6 +167,10 @@ export function DispensingPage() {
     const total = subtotal + tax;
 
     const handleCheckout = async () => {
+        if (!user?.facility_id) {
+            toast.error('No facility selected for your account');
+            return;
+        }
         if (!selectedPatient) {
             toast.error('Please select a patient first');
             return;
@@ -172,18 +179,26 @@ export function DispensingPage() {
 
         setProcessing(true);
         try {
-            for (const item of cart) {
-                if (!item.selectedBatch) continue;
-                await pharmacyService.dispenseMedicine({
-                    facility_id: 1,
-                    medicine_id: item.id,
-                    batch_id: item.selectedBatch.id,
-                    quantity: item.quantity,
-                    dispense_type: 'sale',
-                    unit_price: item.selling_price,
-                    patient_id: selectedPatient.id
-                });
-            }
+            await pharmacyService.createSale({
+                patient_id: selectedPatient.id,
+                dispense_type: 'otc',
+                vat_rate: 0.18,
+                items: cart
+                    .filter((i) => !!i.selectedBatch)
+                    .map((i) => ({
+                        medicine_id: i.id,
+                        batch_id: i.selectedBatch!.id,
+                        quantity: i.quantity,
+                        unit_price: i.selling_price,
+                    })),
+                payments: [
+                    {
+                        method: 'cash',
+                        amount: total,
+                    },
+                ],
+            });
+
             setShowSuccess(true);
             toast.success('Dispensing completed successfully');
             setTimeout(() => {
@@ -216,7 +231,7 @@ export function DispensingPage() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                         <input
                             type="text"
-                            placeholder="Search medicine by name or code..."
+                            placeholder="Search medicine by name, code, brand, or barcode..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:border-healthcare-primary transition-all text-sm font-bold shadow-sm"
@@ -294,8 +309,12 @@ export function DispensingPage() {
                                     <div className="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-lg mt-1 z-10 max-h-40 overflow-y-auto">
                                         {patients.map(p => (
                                             <div key={p.id} onClick={() => { setSelectedPatient(p); setPatientQuery(''); setPatients([]); }} className="p-2 hover:bg-slate-50 cursor-pointer text-sm">
-                                                <div className="font-bold">{p.name}</div>
-                                                <div className="text-xs text-slate-500">{p.phone}</div>
+                                                <div className="font-bold">
+                                                    {(p.first_name || p.firstName || p.name || '')} {(p.last_name || p.lastName || '')}
+                                                </div>
+                                                <div className="text-xs text-slate-500">
+                                                    {p.phone_number || p.phoneNumber || p.phone || '—'}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -304,8 +323,13 @@ export function DispensingPage() {
                         ) : (
                             <div className="flex justify-between items-center bg-white p-2 rounded-lg border text-sm">
                                 <div>
-                                    <div className="font-bold">{selectedPatient.name}</div>
-                                    <div className="text-xs text-slate-500">{selectedPatient.phone}</div>
+                                    <div className="font-bold">
+                                        {(selectedPatient.first_name || selectedPatient.firstName || selectedPatient.name || '')}{' '}
+                                        {(selectedPatient.last_name || selectedPatient.lastName || '')}
+                                    </div>
+                                    <div className="text-xs text-slate-500">
+                                        {selectedPatient.phone_number || selectedPatient.phoneNumber || selectedPatient.phone || '—'}
+                                    </div>
                                 </div>
                                 <button onClick={() => setSelectedPatient(null)} className="text-slate-400 hover:text-red-500"><Trash2 size={14} /></button>
                             </div>

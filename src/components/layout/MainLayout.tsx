@@ -17,6 +17,8 @@ import {
     ShoppingCart,
     Factory,
     Database,
+    Building2,
+    ChevronDown,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -36,6 +38,12 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
     { to: '/app', icon: BarChart3, label: 'Dashboard' },
+    {
+        to: '/app/organizations',
+        icon: Building2,
+        label: 'Organizations',
+        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN'],
+    },
     {
         to: '/app/facilities',
         icon: Factory,
@@ -146,18 +154,25 @@ const NAV_ITEMS: NavItem[] = [
 
 import { CreateFacilityModal } from '../facility/CreateFacilityModal';
 import { FacilityEmptyState } from '../facility/FacilityEmptyState';
+import { SetupPharmacyModal } from '../facility/SetupPharmacyModal';
+
+const PHARMACY_ROLES = ['FACILITY_ADMIN', 'FACILITY ADMIN', 'PHARMACIST', 'STORE_MANAGER', 'STORE MANAGER', 'AUDITOR'];
 
 export const MainLayout: React.FC = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, organizationId, facilityId, organizations, facilities, setOrganization, setFacility, refreshProfile } = useAuth();
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isDark, setIsDark] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [showSetupModal, setShowSetupModal] = useState(false);
+    const [switcherOpen, setSwitcherOpen] = useState(false);
     const role = user?.role?.toUpperCase();
+    const currentOrg = organizations.find((o) => o.id === organizationId) ?? organizations[0];
+    const currentFacility = facilities.find((f) => f.id === facilityId) ?? facilities[0];
 
-    // Check if user is Facility Admin but has no facility
-    const isUnassignedAdmin =
-        role === 'FACILITY_ADMIN' && !user?.facility_id && !user?.facility;
+    const isPharmacyRole = role && PHARMACY_ROLES.includes(role);
+    const needsOnboarding = isPharmacyRole && !user?.organization_id;
+    const isUnassignedAdmin = isPharmacyRole && user?.organization_id && !user?.facility_id && !user?.facility;
 
     const handleLogout = async () => {
         await logout();
@@ -211,8 +226,7 @@ export const MainLayout: React.FC = () => {
                                 !item.allowedRoles || item.allowedRoles.includes(role || '');
                             if (!isAllowed) return null;
 
-                            // HIDE SIDEBAR ITEMS IF NO FACILITY (for Facility Admins)
-                            if (isUnassignedAdmin) return null;
+                            if (needsOnboarding || isUnassignedAdmin) return null;
 
                             return (
                                 <SidebarLink
@@ -268,6 +282,62 @@ export const MainLayout: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-3 font-sans">
+                        {(organizations.length > 0 || facilities.length > 0) && (
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setSwitcherOpen(!switcherOpen)}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-left min-w-0 max-w-[180px]"
+                                >
+                                    <Building2 size={16} className="text-healthcare-primary flex-shrink-0" />
+                                    <span className="truncate text-xs font-bold text-healthcare-dark">
+                                        {currentOrg?.name ?? currentFacility?.name ?? 'Select context'}
+                                    </span>
+                                    <ChevronDown size={14} className="flex-shrink-0 text-slate-400" />
+                                </button>
+                                {switcherOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-10" onClick={() => setSwitcherOpen(false)} />
+                                        <div className="absolute right-0 top-full mt-1 z-20 w-64 py-2 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+                                            {organizations.length > 1 && (
+                                                <div className="px-3 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Organization</div>
+                                            )}
+                                            {organizations.map((org) => (
+                                                <button
+                                                    key={org.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setOrganization(org.id);
+                                                        setSwitcherOpen(false);
+                                                        refreshProfile();
+                                                    }}
+                                                    className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${organizationId === org.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                >
+                                                    {org.name} {org.code && `(${org.code})`}
+                                                </button>
+                                            ))}
+                                            {facilities.length > 1 && (
+                                                <div className="px-3 py-1.5 mt-2 text-xs font-bold text-slate-500 uppercase tracking-wider border-t border-slate-200 dark:border-slate-700">Facility</div>
+                                            )}
+                                            {facilities.map((fac) => (
+                                                <button
+                                                    key={fac.id}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setFacility(fac.id);
+                                                        setSwitcherOpen(false);
+                                                        refreshProfile();
+                                                    }}
+                                                    className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId === fac.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                >
+                                                    {fac.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
                         <div className="flex items-center gap-1.5 mr-1">
                             <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors relative">
                                 <Bell size={18} />
@@ -303,7 +373,22 @@ export const MainLayout: React.FC = () => {
 
                 <div className="flex-1 overflow-auto rounded-xl">
                     <div className="max-w-screen-2xl mx-auto h-full">
-                        {isUnassignedAdmin ? (
+                        {needsOnboarding ? (
+                            <>
+                                <FacilityEmptyState
+                                    onCreateClick={() => setShowSetupModal(true)}
+                                    noOrganization
+                                />
+                                {showSetupModal && (
+                                    <SetupPharmacyModal
+                                        onSuccess={() => {
+                                            setShowSetupModal(false);
+                                            refreshProfile();
+                                        }}
+                                    />
+                                )}
+                            </>
+                        ) : isUnassignedAdmin ? (
                             <>
                                 <FacilityEmptyState onCreateClick={() => setShowCreateModal(true)} />
                                 {showCreateModal && <CreateFacilityModal onClose={() => setShowCreateModal(false)} />}

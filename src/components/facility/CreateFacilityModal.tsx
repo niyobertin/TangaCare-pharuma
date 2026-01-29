@@ -30,7 +30,7 @@ interface CreateFacilityModalProps {
 
 export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const { refreshProfile } = useAuth();
+    const { refreshProfile, organizationId } = useAuth();
     const navigate = useNavigate();
 
     const {
@@ -44,7 +44,8 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
     const onSubmit = async (data: CreateFacilityDto) => {
         setIsLoading(true);
         try {
-            await pharmacyService.createFacility(data);
+            const payload = organizationId ? { ...data, organization_id: organizationId } : data;
+            await pharmacyService.createFacility(payload);
             toast.success('Facility created successfully!');
             // Refresh profile to get updated facility association
             await refreshProfile();

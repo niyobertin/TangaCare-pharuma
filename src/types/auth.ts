@@ -12,6 +12,13 @@ export const UserRole = {
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
+export interface Organization {
+    id: number;
+    name: string;
+    code?: string;
+    type?: string;
+}
+
 export interface User {
     id: number;
     userId?: string;
@@ -31,12 +38,15 @@ export interface User {
     isActive?: boolean;
     created_at?: string;
     updated_at?: string;
+    organization_id?: number;
     facility_id?: number;
     facility?: {
         id: number;
         name: string;
         type: string;
     };
+    organizations?: Organization[];
+    facilities?: Array<{ id: number; name: string; type?: string }>;
 }
 
 export interface AuthTokens {

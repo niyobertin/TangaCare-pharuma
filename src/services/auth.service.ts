@@ -12,8 +12,22 @@ export const authService = {
             localStorage.setItem('access_token', response.data.data.tokens.accessToken);
             localStorage.setItem('refresh_token', response.data.data.tokens.refreshToken);
         }
-        if (response.data.data.user) {
-            localStorage.setItem('user_data', JSON.stringify(response.data.data.user));
+        const user = response.data.data.user;
+        if (user) {
+            localStorage.setItem('user_data', JSON.stringify(user));
+        }
+        const orgs = response.data.data.organizations;
+        const facilities = response.data.data.facilities;
+        if (orgs?.length) {
+            const firstOrg = orgs[0];
+            localStorage.setItem('selected_organization_id', String(firstOrg.id));
+        }
+        if (facilities?.length) {
+            const firstFacility = facilities[0];
+            localStorage.setItem('selected_facility_id', String(firstFacility.id));
+        } else {
+            const fid = user?.facility_id ?? user?.facility?.id;
+            if (fid) localStorage.setItem('selected_facility_id', String(fid));
         }
         return response.data;
     },
@@ -27,6 +41,8 @@ export const authService = {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user_data');
+        localStorage.removeItem('selected_organization_id');
+        localStorage.removeItem('selected_facility_id');
     },
 
     async getProfile(): Promise<User> {

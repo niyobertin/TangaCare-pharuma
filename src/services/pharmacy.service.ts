@@ -5,12 +5,16 @@ import type {
     Medicine,
     CreateMedicineDto,
     Facility,
+    Organization,
+    CreateOrganizationDto,
     Batch,
     Stock,
     Supplier,
     ProcurementOrder,
     Alert,
     PaginatedResponse,
+    Sale,
+    CreateSaleDto,
 } from '../types/pharmacy';
 
 // Helper to normalize backend responses that might be wrapped in { success, data, ... } or { data: [], total, ... }
@@ -53,12 +57,59 @@ export const pharmacyService = {
     // Dashboard
     async getDashboardStats(): Promise<DashboardStats> {
         const response = await api.get<{ data: DashboardStats }>('/pharmacy/stats');
-        return response.data.data;
+        // backend wraps responses as { success, data, ... }
+        return (response.data as any).data ?? (response.data as any);
     },
 
     async getRecentSales(): Promise<Transaction[]> {
         const response = await api.get<{ data: Transaction[] }>('/pharmacy/transactions');
-        return response.data.data;
+        return (response.data as any).data ?? (response.data as any);
+    },
+
+    // Reports
+    async getStockReport(facilityId: number): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/stock/${facilityId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getSalesReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string }
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/sales/${facilityId}`, { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getProfitReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string }
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/profit/${facilityId}`, { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getDeadStockReport(facilityId: number, params?: { days?: number }): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/dead-stock/${facilityId}`, { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getControlledDrugReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string }
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/controlled-drugs/${facilityId}`, { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getExpiryReport(facilityId: number, params?: { days?: number }): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/expiry/${facilityId}`, { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    // Sales (POS)
+    async createSale(payload: CreateSaleDto): Promise<Sale> {
+        const response = await api.post<any>('/pharmacy/sales', payload);
+        return (response.data as any).data ?? response.data;
     },
 
     // Medicines
@@ -75,6 +126,49 @@ export const pharmacyService = {
     async createMedicine(data: CreateMedicineDto): Promise<Medicine> {
         const response = await api.post<{ data: Medicine }>('/pharmacy/medicines', data);
         return response.data.data;
+    },
+
+    // Organizations
+    async getOrganizations(params?: {
+        page?: number;
+        limit?: number;
+        search?: string;
+    }): Promise<PaginatedResponse<Organization>> {
+        const response = await api.get<any>('/pharmacy/organizations', { params });
+        return normalizePaginatedResponse<Organization>(response.data);
+    },
+
+    async getOrganization(id: number): Promise<Organization> {
+        const response = await api.get<{ data: Organization }>(`/pharmacy/organizations/${id}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async createOrganization(data: CreateOrganizationDto): Promise<Organization> {
+        const response = await api.post<any>('/pharmacy/organizations', data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async updateOrganization(id: number, data: Partial<Organization>): Promise<Organization> {
+        const response = await api.put<any>(`/pharmacy/organizations/${id}`, data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async deleteOrganization(id: number): Promise<void> {
+        await api.delete(`/pharmacy/organizations/${id}`);
+    },
+
+    /** First-time setup: create Organization + first Facility (for users with no org yet). */
+    async setupOnboarding(data: {
+        organization_name: string;
+        organization_code?: string;
+        facility_name: string;
+        facility_type: 'hospital' | 'clinic' | 'pharmacy_shop';
+        address?: string;
+        phone?: string;
+        email?: string;
+    }): Promise<{ organization: Organization; facility: Facility }> {
+        const response = await api.post<any>('/pharmacy/onboarding/setup', data);
+        return (response.data as any).data ?? response.data;
     },
 
     // Facilities

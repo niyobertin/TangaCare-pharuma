@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     BarChart3,
     PieChart,
@@ -9,9 +9,11 @@ import {
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { TableSkeleton } from '../../components/shared/Skeleton';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { useAuth } from '../../context/AuthContext';
 
 export function ReportsPage() {
     const [activeTab, setActiveTab] = useState<'sales' | 'stock'>('sales');
+    const { user } = useAuth();
 
     return (
         <ProtectedRoute allowedRoles={['admin', 'super_admin', 'facility_admin', 'store_manager', 'auditor']}>
@@ -54,41 +56,172 @@ export function ReportsPage() {
                 </div>
 
                 <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 min-h-[400px]">
-                    {activeTab === 'sales' ? <SalesReports /> : <StockReports />}
+                    {activeTab === 'sales' ? <SalesReports facilityId={user?.facility_id} /> : <StockReports facilityId={user?.facility_id} />}
                 </div>
             </div>
         </ProtectedRoute>
     );
 }
 
-function SalesReports() {
+function SalesReports({ facilityId }: { facilityId?: number }) {
+    const [loading, setLoading] = useState(false);
+    const [sales, setSales] = useState<any | null>(null);
+    const [profit, setProfit] = useState<any | null>(null);
+
+    useEffect(() => {
+        if (!facilityId) return;
+        let mounted = true;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const [salesData, profitData] = await Promise.all([
+                    pharmacyService.getSalesReport(facilityId),
+                    pharmacyService.getProfitReport(facilityId),
+                ]);
+                if (mounted) {
+                    setSales(salesData);
+                    setProfit(profitData);
+                }
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+        load();
+        return () => {
+            mounted = false;
+        };
+    }, [facilityId]);
+
+    const totals = useMemo(() => {
+        const totalSales = Number(sales?.total_sales || 0);
+        const totalQty = Number(sales?.total_quantity || 0);
+        const days = Array.isArray(sales?.daily_sales) ? sales.daily_sales.length : 0;
+        const totalProfit = Number(profit?.profit || 0);
+        return { totalSales, totalQty, days, totalProfit };
+    }, [sales, profit]);
+
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <SummaryCard title="Total Sales" value="RWF 2.5M" trend="+12%" icon={<TrendingUp size={20} />} />
-                <SummaryCard title="Prescriptions" value="1,234" trend="+5%" icon={<BarChart3 size={20} />} />
-                <SummaryCard title="Avg. Transaction" value="RWF 8,500" trend="-2%" icon={<PieChart size={20} />} />
-            </div>
+            {loading ? (
+                <TableSkeleton rows={3} columns={1} />
+            ) : (
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <SummaryCard
+                            title="Total Sales (30d)"
+                            value={`RWF ${totals.totalSales.toLocaleString()}`}
+                            trend="0%"
+                            icon={<TrendingUp size={20} />}
+                        />
+                        <SummaryCard
+                            title="Units Sold (30d)"
+                            value={totals.totalQty.toLocaleString()}
+                            trend="0%"
+                            icon={<BarChart3 size={20} />}
+                        />
+                        <SummaryCard
+                            title="Profit (30d)"
+                            value={`RWF ${totals.totalProfit.toLocaleString()}`}
+                            trend="—"
+                            icon={<PieChart size={20} />}
+                        />
+                    </div>
 
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-8 text-center text-slate-500 text-sm font-medium">
-                Sales Chart Visualization Placeholder
-            </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 text-slate-500 text-sm font-medium">
+                        {Array.isArray(sales?.daily_sales) && sales.daily_sales.length > 0 ? (
+                            <div className="space-y-2">
+                                <div className="text-xs font-bold uppercase text-slate-400">Daily Sales (latest 10)</div>
+                                <div className="space-y-1">
+                                    {sales.daily_sales.slice(-10).reverse().map((d: any) => (
+                                        <div key={d.date} className="flex justify-between text-xs">
+                                            <span className="font-bold">{d.date}</span>
+                                            <span>RWF {Number(d.sales || 0).toLocaleString()}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center">No sales data yet for this facility.</div>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 }
 
-function StockReports() {
+function StockReports({ facilityId }: { facilityId?: number }) {
+    const [loading, setLoading] = useState(false);
+    const [stock, setStock] = useState<any | null>(null);
+    const [deadStock, setDeadStock] = useState<any | null>(null);
+
+    useEffect(() => {
+        if (!facilityId) return;
+        let mounted = true;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const [stockData, deadStockData] = await Promise.all([
+                    pharmacyService.getStockReport(facilityId),
+                    pharmacyService.getDeadStockReport(facilityId, { days: 90 }),
+                ]);
+                if (mounted) {
+                    setStock(stockData);
+                    setDeadStock(deadStockData);
+                }
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        };
+        load();
+        return () => {
+            mounted = false;
+        };
+    }, [facilityId]);
+
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <SummaryCard title="Total Stock Value" value="RWF 45.2M" trend="+0%" icon={<TrendingUp size={20} />} />
-                <SummaryCard title="Low Stock Items" value="12" trend="Warning" icon={<BarChart3 size={20} />} color="amber" />
-                <SummaryCard title="Expiring Soon" value="5" trend="Critical" icon={<PieChart size={20} />} color="rose" />
-            </div>
+            {loading ? (
+                <TableSkeleton rows={3} columns={1} />
+            ) : (
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <SummaryCard
+                            title="Total Stock Value"
+                            value={`RWF ${Number(stock?.total_value || 0).toLocaleString()}`}
+                            trend="0%"
+                            icon={<TrendingUp size={20} />}
+                        />
+                        <SummaryCard
+                            title="Low Stock Items"
+                            value={String(stock?.low_stock_count ?? 0)}
+                            trend="Warning"
+                            icon={<BarChart3 size={20} />}
+                            color="amber"
+                        />
+                        <SummaryCard
+                            title="Expiring Soon"
+                            value={String(stock?.expiring_batches_count ?? 0)}
+                            trend="Critical"
+                            icon={<PieChart size={20} />}
+                            color="rose"
+                        />
+                    </div>
 
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-8 text-center text-slate-500 text-sm font-medium">
-                Inventory Distribution Chart Placeholder
-            </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-8 text-center text-slate-500 text-sm font-medium">
+                        {stock ? (
+                            <div className="space-y-1">
+                                <div>Inventory summary loaded from API.</div>
+                                <div className="text-xs font-bold text-slate-400">
+                                    Dead stock (90d): {Array.isArray(deadStock?.items) ? deadStock.items.length : 0} medicines
+                                </div>
+                            </div>
+                        ) : (
+                            'No stock report data yet for this facility.'
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

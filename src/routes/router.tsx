@@ -88,6 +88,7 @@ import { ReportsPage } from '../pages/dashboard/ReportsPage';
 import { SuppliersPage } from '../pages/procurement/SuppliersPage';
 import { OrdersPage } from '../pages/procurement/OrdersPage';
 import { FacilitiesPage } from '../pages/facilities/FacilitiesPage';
+import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
 import { FacilitySettingsPage } from '../pages/dashboard/FacilitySettingsPage';
 
 const indexRoute = createRoute({
@@ -105,6 +106,12 @@ const dispensingRoute = createRoute({
     path: 'dispensing',
     component: DispensingPage,
 });
+const organizationsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'organizations',
+    component: OrganizationsPage,
+});
+
 const facilitiesRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'facilities',
@@ -251,6 +258,7 @@ const appRouteTree = appLayoutRoute.addChildren([
     indexRoute,
     inventoryRoute,
     dispensingRoute,
+    organizationsRoute,
     facilitiesRoute,
     facilitySettingsRoute,
     procurementRoute,

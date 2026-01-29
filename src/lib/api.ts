@@ -7,13 +7,17 @@ const api = axios.create({
     },
 });
 
-// Request interceptor to add tokens
+// Request interceptor to add tokens and tenant context
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('access_token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        const organizationId = localStorage.getItem('selected_organization_id');
+        const facilityId = localStorage.getItem('selected_facility_id');
+        if (organizationId) config.headers['x-organization-id'] = organizationId;
+        if (facilityId) config.headers['x-tenant-id'] = facilityId;
         return config;
     },
     (error) => Promise.reject(error),

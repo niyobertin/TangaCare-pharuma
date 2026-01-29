@@ -15,13 +15,15 @@ interface CreateOrderModalProps {
 
 const itemSchema = yup.object({
     medicine_id: yup.number().required('Select a medicine'),
-    quantity: yup.number().min(1, 'Min 1').required('Req'),
+    quantity_ordered: yup.number().min(1, 'Min 1').required('Req'),
     unit_price: yup.number().min(0, 'Min 0').required('Req'),
 });
 
 const orderSchema = yup.object({
     supplier_id: yup.number().required('Select a supplier'),
     order_date: yup.string().required('Date is required'),
+    discount_percent: yup.number().min(0).max(100).optional().default(0),
+    vat_rate: yup.number().min(0).max(100).optional().default(18),
     notes: yup.string(),
     items: yup.array().of(itemSchema).min(1, 'Add at least one item').required(),
 });
@@ -37,7 +39,9 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
         resolver: yupResolver(orderSchema),
         defaultValues: {
             order_date: new Date().toISOString().split('T')[0],
-            items: [{ medicine_id: 0, quantity: 1, unit_price: 0 }]
+            discount_percent: 0,
+            vat_rate: 18,
+            items: [{ medicine_id: 0, quantity_ordered: 1, unit_price: 0 }]
         },
         mode: 'onChange'
     });
@@ -70,9 +74,17 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
 
     const calculateTotal = () => {
         return watchItems?.reduce((sum, item) => {
-            return sum + ((item.quantity || 0) * (item.unit_price || 0));
+            return sum + ((item.quantity_ordered || 0) * (item.unit_price || 0));
         }, 0) || 0;
     };
+
+    const subtotal = calculateTotal();
+    const discountPercent = Number(watch('discount_percent') || 0);
+    const discountAmount = subtotal * (discountPercent / 100);
+    const vatRate = Number(watch('vat_rate') || 0);
+    const taxableBase = Math.max(0, subtotal - discountAmount);
+    const vatAmount = taxableBase * (vatRate / 100);
+    const grandTotal = taxableBase + vatAmount;
 
     const onSubmit = async (data: any) => {
         if (!user?.facility_id) return;
@@ -82,9 +94,10 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                 facility_id: user.facility_id,
                 supplier_id: data.supplier_id,
                 order_date: data.order_date,
-                status: 'PENDING',
+                discount_percent: Number(data.discount_percent || 0),
+                vat_rate: Number(data.vat_rate || 0),
                 items: data.items,
-                total_amount: calculateTotal()
+                notes: data.notes,
             });
             toast.success('Order created successfully');
             onSuccess();
@@ -143,13 +156,38 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">Discount (%)</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.01"
+                                        {...register('discount_percent')}
+                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary font-medium"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">VAT (%)</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="100"
+                                        step="0.01"
+                                        {...register('vat_rate')}
+                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary font-medium"
+                                    />
+                                </div>
+                            </div>
+
                             {/* Items */}
                             <div>
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="text-sm font-bold text-slate-700">Order Items</label>
                                     <button
                                         type="button"
-                                        onClick={() => append({ medicine_id: 0, quantity: 1, unit_price: 0 })}
+                                        onClick={() => append({ medicine_id: 0, quantity_ordered: 1, unit_price: 0 })}
                                         className="text-xs font-bold text-healthcare-primary flex items-center gap-1 hover:underline"
                                     >
                                         <Plus size={14} /> Add Item
@@ -185,7 +223,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                     <td className="p-2">
                                                         <input
                                                             type="number"
-                                                            {...register(`items.${index}.quantity`)}
+                                                            {...register(`items.${index}.quantity_ordered`)}
                                                             className="w-full px-2 py-1.5 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 text-sm"
                                                             min="1"
                                                         />
@@ -202,7 +240,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                         </div>
                                                     </td>
                                                     <td className="p-2 text-right font-bold text-slate-700">
-                                                        {(watchItems[index]?.quantity || 0) * (watchItems[index]?.unit_price || 0)}
+                                                        {(watchItems[index]?.quantity_ordered || 0) * (watchItems[index]?.unit_price || 0)}
                                                     </td>
                                                     <td className="p-2 text-center">
                                                         <button
@@ -219,9 +257,30 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                         </tbody>
                                         <tfoot className="bg-slate-50 border-t">
                                             <tr>
+                                                <td colSpan={3} className="px-4 py-2 text-right font-black uppercase text-xs text-slate-500">Subtotal</td>
+                                                <td className="px-4 py-2 text-right font-black text-healthcare-dark">
+                                                    RWF {subtotal.toLocaleString()}
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td colSpan={3} className="px-4 py-2 text-right font-black uppercase text-xs text-slate-500">Discount ({discountPercent}%)</td>
+                                                <td className="px-4 py-2 text-right font-black text-healthcare-dark">
+                                                    - RWF {discountAmount.toLocaleString()}
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td colSpan={3} className="px-4 py-2 text-right font-black uppercase text-xs text-slate-500">VAT ({vatRate}%)</td>
+                                                <td className="px-4 py-2 text-right font-black text-healthcare-dark">
+                                                    RWF {vatAmount.toLocaleString()}
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
                                                 <td colSpan={3} className="px-4 py-3 text-right font-black uppercase text-xs text-slate-500">Total Amount</td>
                                                 <td className="px-4 py-3 text-right font-black text-healthcare-dark text-lg">
-                                                    RWF {calculateTotal().toLocaleString()}
+                                                    RWF {grandTotal.toLocaleString()}
                                                 </td>
                                                 <td></td>
                                             </tr>
