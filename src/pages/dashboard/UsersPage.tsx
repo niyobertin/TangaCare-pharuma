@@ -13,7 +13,6 @@ import {
 import { userService, STAFF_ROLES, type CreateStaffPayload } from '../../services/user.service';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
-import { PERMISSIONS } from '../../types/auth';
 import type { User } from '../../types/auth';
 import toast from 'react-hot-toast';
 
@@ -66,7 +65,12 @@ export function UsersPage() {
         '—';
 
     const role = authUser?.role?.toUpperCase();
-    const canAddStaff = role === 'OWNER' || role === 'SUPER_ADMIN' || role === 'SUPER ADMIN';
+    const canAddStaff =
+        role === 'OWNER' ||
+        role === 'SUPER_ADMIN' ||
+        role === 'SUPER ADMIN' ||
+        role === 'FACILITY_ADMIN' ||
+        role === 'FACILITY ADMIN';
     const currentUserId = authUser?.id ?? (authUser as any)?.userId ?? null;
 
     const canShowActions = (u: User) => {
@@ -77,7 +81,16 @@ export function UsersPage() {
     };
 
     return (
-        <ProtectedRoute requiredPermissions={[PERMISSIONS.USERS_MANAGE]}>
+        <ProtectedRoute
+            allowedRoles={[
+                'SUPER_ADMIN',
+                'SUPER ADMIN',
+                'OWNER',
+                'FACILITY_ADMIN',
+                'FACILITY ADMIN',
+            ]}
+            requireFacility
+        >
             <div className="h-full flex flex-col p-6 bg-slate-50/50 dark:bg-slate-900/50">
                 <div className="flex items-center justify-between mb-6">
                     <div>

@@ -70,21 +70,14 @@ const NAV_ITEMS: NavItem[] = [
         to: '/app/users',
         icon: Users,
         label: 'Users',
+        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER', 'FACILITY_ADMIN', 'FACILITY ADMIN'],
         allowedPermissions: ['users:manage'],
     },
     {
         to: '/app/facilities',
         icon: Factory,
         label: 'Facilities',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'SUPER ADMIN',
-            'AUDITOR',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'OWNER',
-        ],
-        allowedPermissions: ['facility:manage'],
+        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER'],
     },
     {
         to: '/app/procurement',
@@ -290,7 +283,8 @@ export const MainLayout: React.FC = () => {
     const currentFacility =
         facilityId != null ? (facilities.find((f) => f.id === facilityId) ?? null) : null;
     const isOwner = role === 'OWNER';
-    const isFacilityAdmin = role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN';
+    const isSuperAdmin = role === 'SUPER_ADMIN' || role === 'SUPER ADMIN';
+    const showFacilityNameOnly = !isOwner && !isSuperAdmin;
     const showAllFacilitiesOption = isOwner && facilities.length > 1;
     const switcherLabel =
         facilityId == null && facilities.length > 0
@@ -417,19 +411,21 @@ export const MainLayout: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-3 font-sans">
-                        {isFacilityAdmin ? (
-                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-w-0 max-w-[180px]">
-                                <Building2
-                                    size={16}
-                                    className="text-healthcare-primary flex-shrink-0"
-                                />
+                        {showFacilityNameOnly ? (
+                            <div className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-w-0 max-w-[180px]">
                                 <span
-                                    className="truncate text-xs font-bold text-healthcare-dark"
-                                    title="Your facility"
+                                    className="truncate block text-xs font-bold text-healthcare-dark"
+                                    title={
+                                        currentFacility?.name ??
+                                        facilities[0]?.name ??
+                                        user?.facility?.name ??
+                                        'Facility'
+                                    }
                                 >
                                     {currentFacility?.name ??
                                         facilities[0]?.name ??
-                                        'Your facility'}
+                                        (user as any)?.facility?.name ??
+                                        '—'}
                                 </span>
                             </div>
                         ) : (

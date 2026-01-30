@@ -25,8 +25,11 @@ export function SetPasswordPage() {
         setLoading(true);
         try {
             await authService.setInitialPassword(password);
-            toast.success('Password set successfully. Redirecting...');
-            navigate({ to: '/app' });
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('user_data');
+            toast.success('Password set successfully. You can now log in.');
+            navigate({ to: '/auth/login' });
         } catch (err: any) {
             toast.error(err?.response?.data?.message || 'Failed to set password');
         } finally {
