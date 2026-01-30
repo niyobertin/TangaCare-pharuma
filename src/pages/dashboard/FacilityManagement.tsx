@@ -39,7 +39,7 @@ const FacilityModal = ({
     onClose,
     onSubmit,
     initialData,
-    loading
+    loading,
 }: {
     isOpen: boolean;
     onClose: () => void;
@@ -99,18 +99,25 @@ const FacilityModal = ({
                     <h3 className="text-xl font-black text-healthcare-dark">
                         {initialData ? 'Edit Facility' : 'Register New Facility'}
                     </h3>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400">
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400"
+                    >
                         <XCircle size={20} />
                     </button>
                 </div>
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Facility Name</label>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                            Facility Name
+                        </label>
                         <input
                             type="text"
                             value={formData.name}
-                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                            onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, name: e.target.value }))
+                            }
                             className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                             placeholder="e.g. Central Hospital"
                         />
@@ -118,10 +125,17 @@ const FacilityModal = ({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Type</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Type
+                            </label>
                             <select
                                 value={formData.type}
-                                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        type: e.target.value as any,
+                                    }))
+                                }
                                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                             >
                                 <option value="hospital">Hospital</option>
@@ -130,10 +144,17 @@ const FacilityModal = ({
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Status</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Status
+                            </label>
                             <select
                                 value={formData.status}
-                                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'Active' | 'Inactive' }))}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        status: e.target.value as 'Active' | 'Inactive',
+                                    }))
+                                }
                                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                             >
                                 <option value="Active">Active</option>
@@ -143,11 +164,15 @@ const FacilityModal = ({
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Address</label>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                            Address
+                        </label>
                         <input
                             type="text"
                             value={formData.address}
-                            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                            onChange={(e) =>
+                                setFormData((prev) => ({ ...prev, address: e.target.value }))
+                            }
                             className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                             placeholder="Address"
                         />
@@ -155,21 +180,29 @@ const FacilityModal = ({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Phone</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Phone
+                            </label>
                             <input
                                 type="text"
                                 value={formData.phone}
-                                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({ ...prev, phone: e.target.value }))
+                                }
                                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                                 placeholder="Phone number"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Email
+                            </label>
                             <input
                                 type="email"
                                 value={formData.email}
-                                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({ ...prev, email: e.target.value }))
+                                }
                                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                                 placeholder="Email address"
                             />
@@ -178,41 +211,71 @@ const FacilityModal = ({
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl space-y-4 border border-slate-100 dark:border-slate-700">
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Configuration</p>
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                        Configuration
+                    </p>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="flex items-center justify-between col-span-2 sm:col-span-1 border border-slate-200 dark:border-slate-700 p-3 rounded-xl bg-white dark:bg-slate-900">
-                            <label className="text-xs font-bold text-slate-500">Enable Departments</label>
+                            <label className="text-xs font-bold text-slate-500">
+                                Enable Departments
+                            </label>
                             <input
                                 type="checkbox"
                                 checked={!!formData.departments_enabled}
-                                onChange={(e) => setFormData(p => ({ ...p, departments_enabled: e.target.checked }))}
+                                onChange={(e) =>
+                                    setFormData((p) => ({
+                                        ...p,
+                                        departments_enabled: e.target.checked,
+                                    }))
+                                }
                                 className="w-4 h-4 rounded border-slate-300 text-healthcare-primary focus:ring-healthcare-primary"
                             />
                         </div>
                         <div className="flex items-center justify-between col-span-2 sm:col-span-1 border border-slate-200 dark:border-slate-700 p-3 rounded-xl bg-white dark:bg-slate-900">
-                            <label className="text-xs font-bold text-slate-500">Controlled Drugs Rules</label>
+                            <label className="text-xs font-bold text-slate-500">
+                                Controlled Drugs Rules
+                            </label>
                             <input
                                 type="checkbox"
                                 checked={!!formData.controlled_drug_rules_enabled}
-                                onChange={(e) => setFormData(p => ({ ...p, controlled_drug_rules_enabled: e.target.checked }))}
+                                onChange={(e) =>
+                                    setFormData((p) => ({
+                                        ...p,
+                                        controlled_drug_rules_enabled: e.target.checked,
+                                    }))
+                                }
                                 className="w-4 h-4 rounded border-slate-300 text-healthcare-primary focus:ring-healthcare-primary"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Min Stock Threshold (%)</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Min Stock Threshold (%)
+                            </label>
                             <input
                                 type="number"
                                 value={formData.min_stock_threshold_percentage || 0}
-                                onChange={(e) => setFormData(prev => ({ ...prev, min_stock_threshold_percentage: Number(e.target.value) }))}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        min_stock_threshold_percentage: Number(e.target.value),
+                                    }))
+                                }
                                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Expiry Alert (Days)</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Expiry Alert (Days)
+                            </label>
                             <input
                                 type="number"
                                 value={formData.expiry_alert_days || 0}
-                                onChange={(e) => setFormData(prev => ({ ...prev, expiry_alert_days: Number(e.target.value) }))}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        expiry_alert_days: Number(e.target.value),
+                                    }))
+                                }
                                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                             />
                         </div>
@@ -221,11 +284,17 @@ const FacilityModal = ({
 
                 <div className="bg-blue-50 text-blue-800 p-3 rounded-xl text-xs flex items-start gap-2">
                     <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                    <p>To assign a Facility Admin, please save the facility first, then click the "Assign" button in the facility list.</p>
+                    <p>
+                        To assign a Facility Admin, please save the facility first, then click the
+                        "Assign" button in the facility list.
+                    </p>
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-4">
-                    <button onClick={onClose} className="px-5 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl">
+                    <button
+                        onClick={onClose}
+                        className="px-5 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl"
+                    >
                         Cancel
                     </button>
                     <button
@@ -240,8 +309,6 @@ const FacilityModal = ({
         </div>
     );
 };
-
-
 
 export function FacilityManagementPage() {
     const navigate = useNavigate();
@@ -298,10 +365,11 @@ export function FacilityManagementPage() {
         }
     };
 
-
-
     const handleDelete = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this facility? This action cannot be undone.')) return;
+        if (
+            !confirm('Are you sure you want to delete this facility? This action cannot be undone.')
+        )
+            return;
         try {
             await pharmacyService.deleteFacility(id);
             toast.success('Facility deleted');
@@ -517,7 +585,14 @@ export function FacilityManagementPage() {
                                             >
                                                 <td className="px-6 py-4 text-center">
                                                     <button
-                                                        onClick={() => navigate({ to: '/app/facility/$facilityId/settings', params: { facilityId: String(f.id) } })}
+                                                        onClick={() =>
+                                                            navigate({
+                                                                to: '/app/facility/$facilityId/settings',
+                                                                params: {
+                                                                    facilityId: String(f.id),
+                                                                },
+                                                            })
+                                                        }
                                                         className="text-xs lg:text-sm font-bold text-healthcare-primary hover:underline"
                                                     >
                                                         #{f.id}
@@ -531,8 +606,8 @@ export function FacilityManagementPage() {
                                                                 type.includes('hospital')
                                                                     ? 'bg-teal-500'
                                                                     : type.includes('clinic')
-                                                                        ? 'bg-indigo-500'
-                                                                        : 'bg-amber-500',
+                                                                      ? 'bg-indigo-500'
+                                                                      : 'bg-amber-500',
                                                             )}
                                                         >
                                                             {type.includes('hospital') ? (
@@ -558,19 +633,30 @@ export function FacilityManagementPage() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 whitespace-nowrap">
-                                                        <p className="text-xs lg:text-sm font-bold text-healthcare-dark">{f.email}</p>
-                                                        <span className="hidden lg:inline text-slate-300">•</span>
-                                                        <p className="text-[10px] lg:text-xs font-bold text-slate-400">{f.phone}</p>
+                                                        <p className="text-xs lg:text-sm font-bold text-healthcare-dark">
+                                                            {f.email}
+                                                        </p>
+                                                        <span className="hidden lg:inline text-slate-300">
+                                                            •
+                                                        </span>
+                                                        <p className="text-[10px] lg:text-xs font-bold text-slate-400">
+                                                            {f.phone}
+                                                        </p>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400">
-                                                            {(f.facility_admin?.first_name ? f.facility_admin.first_name[0] : (f.admin_name || 'No')[0])}
+                                                            {f.facility_admin?.first_name
+                                                                ? f.facility_admin.first_name[0]
+                                                                : (f.admin_name || 'No')[0]}
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="text-xs lg:text-sm font-bold text-healthcare-dark">
-                                                                {f.facility_admin ? `${f.facility_admin.first_name || ''} ${f.facility_admin.last_name || ''}`.trim() || 'Admin' : (f.admin_name || 'No Admin')}
+                                                                {f.facility_admin
+                                                                    ? `${f.facility_admin.first_name || ''} ${f.facility_admin.last_name || ''}`.trim() ||
+                                                                      'Admin'
+                                                                    : f.admin_name || 'No Admin'}
                                                             </span>
                                                             {f.facility_admin && (
                                                                 <span className="text-[10px] text-slate-400">
@@ -579,7 +665,16 @@ export function FacilityManagementPage() {
                                                             )}
                                                             {!f.facility_admin && !f.admin_name && (
                                                                 <button
-                                                                    onClick={() => navigate({ to: '/app/facility/$facilityId/settings', params: { facilityId: String(f.id) } })}
+                                                                    onClick={() =>
+                                                                        navigate({
+                                                                            to: '/app/facility/$facilityId/settings',
+                                                                            params: {
+                                                                                facilityId: String(
+                                                                                    f.id,
+                                                                                ),
+                                                                            },
+                                                                        })
+                                                                    }
                                                                     className="text-[10px] text-healthcare-primary hover:underline text-left mt-0.5"
                                                                 >
                                                                     Assign
@@ -613,14 +708,28 @@ export function FacilityManagementPage() {
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
-                                                            onClick={() => navigate({ to: '/app/facility/$facilityId/settings', params: { facilityId: String(f.id) } })}
+                                                            onClick={() =>
+                                                                navigate({
+                                                                    to: '/app/facility/$facilityId/settings',
+                                                                    params: {
+                                                                        facilityId: String(f.id),
+                                                                    },
+                                                                })
+                                                            }
                                                             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors tooltip"
                                                             title="Assign Admin"
                                                         >
                                                             <UserPlus size={16} />
                                                         </button>
                                                         <button
-                                                            onClick={() => navigate({ to: '/app/facility/$facilityId/settings', params: { facilityId: String(f.id) } })}
+                                                            onClick={() =>
+                                                                navigate({
+                                                                    to: '/app/facility/$facilityId/settings',
+                                                                    params: {
+                                                                        facilityId: String(f.id),
+                                                                    },
+                                                                })
+                                                            }
                                                             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors tooltip"
                                                             title="Edit Facility"
                                                         >
@@ -700,7 +809,6 @@ export function FacilityManagementPage() {
                             <ChevronRight size={18} />
                         </button>
                     </div>
-
                 </div>
 
                 {/* Modals */}
@@ -710,8 +818,7 @@ export function FacilityManagementPage() {
                     onSubmit={handleCreate}
                     loading={actionLoading}
                 />
-
-            </div >
-        </ProtectedRoute >
+            </div>
+        </ProtectedRoute>
     );
 }

@@ -14,43 +14,52 @@ interface ReceiveOrderModalProps {
 }
 
 const receiveSchema = yup.object({
-    items: yup.array().of(
-        yup.object({
-            id: yup.number().required(), // Detail ID or Item ID
-            medicine_id: yup.number().required(),
-            quantity_received: yup.number().min(1, 'Min 1').required('Required'),
-            batch_number: yup.string().required('Batch # is required'),
-            expiry_date: yup.string().required('Expiry is required'),
-        })
-    ).required()
+    items: yup
+        .array()
+        .of(
+            yup.object({
+                id: yup.number().required(), // Detail ID or Item ID
+                medicine_id: yup.number().required(),
+                quantity_received: yup.number().min(1, 'Min 1').required('Required'),
+                batch_number: yup.string().required('Batch # is required'),
+                expiry_date: yup.string().required('Expiry is required'),
+            }),
+        )
+        .required(),
 });
 
 export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { register, control, handleSubmit, formState: { errors } } = useForm({
+    const {
+        register,
+        control,
+        handleSubmit,
+        formState: { errors },
+    } = useForm({
         resolver: yupResolver(receiveSchema),
         defaultValues: {
-            items: order.items?.map(item => ({
-                id: item.id,
-                medicine_id: item.medicine_id,
-                quantity_received: item.quantity_ordered,
-                batch_number: '',
-                expiry_date: ''
-            })) || []
-        }
+            items:
+                order.items?.map((item) => ({
+                    id: item.id,
+                    medicine_id: item.medicine_id,
+                    quantity_received: item.quantity_ordered,
+                    batch_number: '',
+                    expiry_date: '',
+                })) || [],
+        },
     });
 
     const { fields } = useFieldArray({
         control,
-        name: 'items'
+        name: 'items',
     });
 
     const onSubmit = async (data: any) => {
         setIsSubmitting(true);
         try {
             await pharmacyService.receiveProcurementOrder(order.id, {
-                items: data.items
+                items: data.items,
             });
             toast.success('Order received and stock updated');
             onSuccess();
@@ -72,9 +81,14 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                             <CheckCircle size={20} className="text-healthcare-primary" />
                             Receive Order #{order.order_number}
                         </h2>
-                        <p className="text-sm text-slate-500 mt-1">Enter batch details for stock entry</p>
+                        <p className="text-sm text-slate-500 mt-1">
+                            Enter batch details for stock entry
+                        </p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
                         <X size={20} />
                     </button>
                 </div>
@@ -94,9 +108,14 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                                 </thead>
                                 <tbody className="divide-y">
                                     {fields.map((field, index) => {
-                                        const originalItem = order.items?.find(i => i.id === field.id);
+                                        const originalItem = order.items?.find(
+                                            (i) => i.id === field.id,
+                                        );
                                         return (
-                                            <tr key={field.id} className="group hover:bg-slate-50/50">
+                                            <tr
+                                                key={field.id}
+                                                className="group hover:bg-slate-50/50"
+                                            >
                                                 <td className="p-4 font-medium text-slate-700">
                                                     {originalItem?.medicine?.name}
                                                     <span className="block text-xs text-slate-400 font-normal">
@@ -109,32 +128,62 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                                                 <td className="p-2">
                                                     <input
                                                         type="number"
-                                                        {...register(`items.${index}.quantity_received`)}
+                                                        {...register(
+                                                            `items.${index}.quantity_received`,
+                                                        )}
                                                         className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 bg-white"
                                                     />
-                                                    {errors.items?.[index]?.quantity_received && <p className="text-red-500 text-[10px]">{errors.items[index]?.quantity_received?.message}</p>}
+                                                    {errors.items?.[index]?.quantity_received && (
+                                                        <p className="text-red-500 text-[10px]">
+                                                            {
+                                                                errors.items[index]
+                                                                    ?.quantity_received?.message
+                                                            }
+                                                        </p>
+                                                    )}
                                                 </td>
                                                 <td className="p-2">
                                                     <div className="relative">
-                                                        <Package size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                                        <Package
+                                                            size={14}
+                                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                                        />
                                                         <input
                                                             type="text"
-                                                            {...register(`items.${index}.batch_number`)}
+                                                            {...register(
+                                                                `items.${index}.batch_number`,
+                                                            )}
                                                             className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 bg-white uppercase font-mono text-xs"
                                                             placeholder="BATCH-001"
                                                         />
                                                     </div>
-                                                    {errors.items?.[index]?.batch_number && <p className="text-red-500 text-[10px] mt-1">{errors.items[index]?.batch_number?.message}</p>}
+                                                    {errors.items?.[index]?.batch_number && (
+                                                        <p className="text-red-500 text-[10px] mt-1">
+                                                            {
+                                                                errors.items[index]?.batch_number
+                                                                    ?.message
+                                                            }
+                                                        </p>
+                                                    )}
                                                 </td>
                                                 <td className="p-2">
                                                     <div className="relative">
                                                         <input
                                                             type="date"
-                                                            {...register(`items.${index}.expiry_date`)}
+                                                            {...register(
+                                                                `items.${index}.expiry_date`,
+                                                            )}
                                                             className="w-full pl-3 pr-2 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 bg-white text-xs"
                                                         />
                                                     </div>
-                                                    {errors.items?.[index]?.expiry_date && <p className="text-red-500 text-[10px] mt-1">{errors.items[index]?.expiry_date?.message}</p>}
+                                                    {errors.items?.[index]?.expiry_date && (
+                                                        <p className="text-red-500 text-[10px] mt-1">
+                                                            {
+                                                                errors.items[index]?.expiry_date
+                                                                    ?.message
+                                                            }
+                                                        </p>
+                                                    )}
                                                 </td>
                                             </tr>
                                         );
@@ -158,7 +207,11 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                         disabled={isSubmitting}
                         className="px-6 py-2 bg-healthcare-primary text-white rounded-xl font-bold hover:bg-teal-700 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
-                        {isSubmitting ? <div className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full" /> : <CheckCircle size={18} />}
+                        {isSubmitting ? (
+                            <div className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full" />
+                        ) : (
+                            <CheckCircle size={18} />
+                        )}
                         Confirm Receipt
                     </button>
                 </div>

@@ -78,13 +78,8 @@ export function InventoryPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={[
-                'admin',
-                'pharmacist',
-                'super_admin',
-                'store_manager',
-                'facility_admin',
-            ]}
+            allowedRoles={['admin', 'pharmacist', 'super_admin', 'store_manager', 'facility_admin']}
+            requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
                 {/* Header Section */}
@@ -248,8 +243,8 @@ export function InventoryPage() {
                                                         (med.stock_quantity || 0) === 0
                                                             ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30'
                                                             : (med.stock_quantity || 0) <= 20
-                                                                ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/30'
-                                                                : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-teal-200 dark:border-teal-900/30',
+                                                              ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/30'
+                                                              : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-teal-200 dark:border-teal-900/30',
                                                     )}
                                                 >
                                                     <div
@@ -258,21 +253,23 @@ export function InventoryPage() {
                                                             (med.stock_quantity || 0) === 0
                                                                 ? 'bg-red-500 animate-pulse'
                                                                 : (med.stock_quantity || 0) <= 20
-                                                                    ? 'bg-amber-500'
-                                                                    : 'bg-emerald-500',
+                                                                  ? 'bg-amber-500'
+                                                                  : 'bg-emerald-500',
                                                         )}
                                                     ></div>
                                                     {(med.stock_quantity || 0) === 0
                                                         ? 'Out of Stock'
                                                         : (med.stock_quantity || 0) <= 20
-                                                            ? 'Low Stock'
-                                                            : 'In Stock'}
+                                                          ? 'Low Stock'
+                                                          : 'In Stock'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
-                                                        onClick={() => setSelectedMedForTransfer(med)}
+                                                        onClick={() =>
+                                                            setSelectedMedForTransfer(med)
+                                                        }
                                                         className="p-2 text-slate-400 hover:text-healthcare-primary hover:bg-teal-50 dark:hover:bg-slate-800 rounded-lg transition-all border border-transparent hover:border-teal-100 dark:hover:border-slate-700"
                                                         title="Transfer Stock"
                                                     >

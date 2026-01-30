@@ -13,13 +13,15 @@ import { RegisterPage } from '../pages/auth/RegisterPage';
 import { InventoryPage } from '../pages/dashboard/InventoryPage';
 import { DispensingPage } from '../pages/dashboard/DispensingPage';
 
-
 import { BatchStockPage } from '../pages/dashboard/BatchStockPage';
 import { AuditLogsPage } from '../pages/dashboard/AuditLogsPage';
+import { StockMovementsPage } from '../pages/dashboard/StockMovementsPage';
+import { PricingPage } from '../pages/dashboard/PricingPage';
 import { ModulePlaceholder } from '../pages/shared/ModulePlaceholder';
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
 import { VerifyOtpPage } from '../pages/auth/VerifyOtpPage';
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
+import { SetPasswordPage } from '../pages/auth/SetPasswordPage';
 import { z } from 'zod';
 
 // --- Components ---
@@ -84,12 +86,14 @@ const authLayoutRoute = createRoute({
 
 import { AlertsPage } from '../pages/dashboard/AlertsPage';
 import { ReportsPage } from '../pages/dashboard/ReportsPage';
+import { StockRegisterReportPage } from '../pages/dashboard/StockRegisterReportPage';
 // import { SuppliersPage } from '../pages/dashboard/SuppliersPage'; // Removed old import
 import { SuppliersPage } from '../pages/procurement/SuppliersPage';
 import { OrdersPage } from '../pages/procurement/OrdersPage';
 import { FacilitiesPage } from '../pages/facilities/FacilitiesPage';
 import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
 import { FacilitySettingsPage } from '../pages/dashboard/FacilitySettingsPage';
+import { UsersPage } from '../pages/dashboard/UsersPage';
 
 const indexRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -117,6 +121,11 @@ const facilitiesRoute = createRoute({
     path: 'facilities',
     component: FacilitiesPage,
 });
+const usersRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'users',
+    component: UsersPage,
+});
 const procurementRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'procurement',
@@ -131,6 +140,21 @@ const auditLogsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'audit-logs',
     component: AuditLogsPage,
+});
+const stockMovementsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'stock-movements',
+    component: StockMovementsPage,
+});
+const pricingRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'pricing',
+    component: PricingPage,
+});
+const stockRegisterRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'stock-register',
+    component: StockRegisterReportPage,
 });
 
 // --- Application Routes (Integrated) ---
@@ -246,6 +270,12 @@ const resetPasswordRoute = createRoute({
     },
 });
 
+const setPasswordRoute = createRoute({
+    getParentRoute: () => authLayoutRoute,
+    path: 'set-password',
+    component: SetPasswordPage,
+});
+
 // --- Route Tree Construction ---
 
 const facilitySettingsRoute = createRoute({
@@ -260,10 +290,14 @@ const appRouteTree = appLayoutRoute.addChildren([
     dispensingRoute,
     organizationsRoute,
     facilitiesRoute,
+    usersRoute,
     facilitySettingsRoute,
     procurementRoute,
     stockRoute,
     auditLogsRoute,
+    stockMovementsRoute,
+    pricingRoute,
+    stockRegisterRoute,
     prescriptionsRoute,
     patientsRoute,
     analyticsRoute,
@@ -279,6 +313,7 @@ const authRouteTree = authLayoutRoute.addChildren([
     forgotPasswordRoute,
     verifyOtpRoute,
     resetPasswordRoute,
+    setPasswordRoute,
 ]);
 
 const routeTree = rootRoute.addChildren([rootIndexRoute, appRouteTree, authRouteTree]);

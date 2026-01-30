@@ -33,7 +33,11 @@ export function FacilityEmptyState({ onCreateClick, noOrganization }: FacilityEm
                         className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-healthcare-primary text-white rounded-2xl font-bold text-sm hover:bg-teal-700 transition-all shadow-lg hover:shadow-healthcare-primary/30 active:scale-[0.98]"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-                        <span>{noOrganization ? 'Set up organization & branch' : 'Register New Facility'}</span>
+                        <span>
+                            {noOrganization
+                                ? 'Set up organization & branch'
+                                : 'Register New Facility'}
+                        </span>
                         <div className="absolute inset-x-0 bottom-0 h-[2px] bg-white/20 scale-x-0 group-hover:scale-x-50 transition-transform duration-500"></div>
                     </button>
                     <p className="mt-4 text-[10px] text-slate-400 font-bold tracking-widest">

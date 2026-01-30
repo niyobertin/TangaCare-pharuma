@@ -50,6 +50,21 @@ export const authService = {
         return response.data.data;
     },
 
+    /** Refresh access token (e.g. after role/org change so next requests use new context). */
+    async refreshToken(): Promise<void> {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken) return;
+        const response = await api.post<{ data: { accessToken: string; refreshToken?: string } }>(
+            '/auth/refresh-token',
+            { refreshToken },
+        );
+        const tokens = response.data?.data;
+        if (tokens?.accessToken) {
+            localStorage.setItem('access_token', tokens.accessToken);
+            if (tokens.refreshToken) localStorage.setItem('refresh_token', tokens.refreshToken);
+        }
+    },
+
     async forgotPassword(email: string): Promise<any> {
         // Backend likely expects identifier based on other endpoints, but let's send both or map it if needed.
         // Keeping as email for now if that matches api, otherwise:
@@ -69,8 +84,18 @@ export const authService = {
         return response.data;
     },
 
-    async resetPassword(data: { identifier: string; otp: string; newPassword: string }): Promise<any> {
+    async resetPassword(data: {
+        identifier: string;
+        otp: string;
+        newPassword: string;
+    }): Promise<any> {
         const response = await api.post('/auth/reset-password', data);
+        return response.data;
+    },
+
+    /** Set initial password after staff invite verification (authenticated). */
+    async setInitialPassword(newPassword: string): Promise<any> {
+        const response = await api.post('/auth/set-initial-password', { newPassword });
         return response.data;
     },
 };

@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-    BarChart3,
-    PieChart,
-    TrendingUp,
-    Calendar,
-    Download
-} from 'lucide-react';
+import { BarChart3, PieChart, TrendingUp, Calendar, Download, FileText } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { TableSkeleton } from '../../components/shared/Skeleton';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -13,17 +8,41 @@ import { useAuth } from '../../context/AuthContext';
 
 export function ReportsPage() {
     const [activeTab, setActiveTab] = useState<'sales' | 'stock'>('sales');
-    const { user } = useAuth();
+    const { user, facilityId } = useAuth();
+    const effectiveFacilityId = facilityId ?? user?.facility_id;
 
     return (
-        <ProtectedRoute allowedRoles={['admin', 'super_admin', 'facility_admin', 'store_manager', 'auditor']}>
+        <ProtectedRoute
+            allowedRoles={[
+                'ADMIN',
+                'SUPER_ADMIN',
+                'SUPER ADMIN',
+                'FACILITY_ADMIN',
+                'FACILITY ADMIN',
+                'OWNER',
+                'STORE_MANAGER',
+                'STORE MANAGER',
+                'AUDITOR',
+            ]}
+            requireFacility
+        >
             <div className="p-6 space-y-8 animate-in fade-in duration-500">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-black text-healthcare-dark">Reports & Analytics</h1>
-                        <p className="text-slate-500 text-sm mt-1">Detailed insights into pharmacy performance</p>
+                        <h1 className="text-2xl font-black text-healthcare-dark">
+                            Reports & Analytics
+                        </h1>
+                        <p className="text-slate-500 text-sm mt-1">
+                            Detailed insights into pharmacy performance
+                        </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                        <Link
+                            to="/app/stock-register"
+                            className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                        >
+                            <FileText size={16} /> Stock Register
+                        </Link>
                         <button className="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
                             <Calendar size={16} /> Last 30 Days
                         </button>
@@ -37,26 +56,32 @@ export function ReportsPage() {
                 <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-1">
                     <button
                         onClick={() => setActiveTab('sales')}
-                        className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-b-2 ${activeTab === 'sales'
+                        className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-b-2 ${
+                            activeTab === 'sales'
                                 ? 'border-healthcare-primary text-healthcare-primary bg-slate-50 dark:bg-slate-800/50'
                                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50/50'
-                            }`}
+                        }`}
                     >
                         Sales & Dispensing
                     </button>
                     <button
                         onClick={() => setActiveTab('stock')}
-                        className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-b-2 ${activeTab === 'stock'
+                        className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-b-2 ${
+                            activeTab === 'stock'
                                 ? 'border-healthcare-primary text-healthcare-primary bg-slate-50 dark:bg-slate-800/50'
                                 : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50/50'
-                            }`}
+                        }`}
                     >
                         Stock & Inventory
                     </button>
                 </div>
 
                 <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 min-h-[400px]">
-                    {activeTab === 'sales' ? <SalesReports facilityId={user?.facility_id} /> : <StockReports facilityId={user?.facility_id} />}
+                    {activeTab === 'sales' ? (
+                        <SalesReports facilityId={effectiveFacilityId} />
+                    ) : (
+                        <StockReports facilityId={effectiveFacilityId} />
+                    )}
                 </div>
             </div>
         </ProtectedRoute>
@@ -130,14 +155,24 @@ function SalesReports({ facilityId }: { facilityId?: number }) {
                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 text-slate-500 text-sm font-medium">
                         {Array.isArray(sales?.daily_sales) && sales.daily_sales.length > 0 ? (
                             <div className="space-y-2">
-                                <div className="text-xs font-bold uppercase text-slate-400">Daily Sales (latest 10)</div>
+                                <div className="text-xs font-bold uppercase text-slate-400">
+                                    Daily Sales (latest 10)
+                                </div>
                                 <div className="space-y-1">
-                                    {sales.daily_sales.slice(-10).reverse().map((d: any) => (
-                                        <div key={d.date} className="flex justify-between text-xs">
-                                            <span className="font-bold">{d.date}</span>
-                                            <span>RWF {Number(d.sales || 0).toLocaleString()}</span>
-                                        </div>
-                                    ))}
+                                    {sales.daily_sales
+                                        .slice(-10)
+                                        .reverse()
+                                        .map((d: any) => (
+                                            <div
+                                                key={d.date}
+                                                className="flex justify-between text-xs"
+                                            >
+                                                <span className="font-bold">{d.date}</span>
+                                                <span>
+                                                    RWF {Number(d.sales || 0).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        ))}
                                 </div>
                             </div>
                         ) : (
@@ -213,7 +248,9 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                             <div className="space-y-1">
                                 <div>Inventory summary loaded from API.</div>
                                 <div className="text-xs font-bold text-slate-400">
-                                    Dead stock (90d): {Array.isArray(deadStock?.items) ? deadStock.items.length : 0} medicines
+                                    Dead stock (90d):{' '}
+                                    {Array.isArray(deadStock?.items) ? deadStock.items.length : 0}{' '}
+                                    medicines
                                 </div>
                             </div>
                         ) : (
@@ -226,18 +263,25 @@ function StockReports({ facilityId }: { facilityId?: number }) {
     );
 }
 
-function SummaryCard({ title, value, trend, icon, color = "teal" }: any) {
+function SummaryCard({ title, value, trend, icon, color = 'teal' }: any) {
     return (
         <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-5 shadow-sm">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 ${color === 'teal' ? 'bg-teal-50 text-teal-600' :
-                    color === 'amber' ? 'bg-amber-50 text-amber-600' :
-                        'bg-rose-50 text-rose-600'
-                }`}>
+            <div
+                className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 ${
+                    color === 'teal'
+                        ? 'bg-teal-50 text-teal-600'
+                        : color === 'amber'
+                          ? 'bg-amber-50 text-amber-600'
+                          : 'bg-rose-50 text-rose-600'
+                }`}
+            >
                 {icon}
             </div>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">{title}</p>
             <h3 className="text-2xl font-black text-healthcare-dark mt-1">{value}</h3>
-            <p className={`text-xs font-bold mt-2 ${trend.includes('+') ? 'text-emerald-500' : trend.includes('-') ? 'text-rose-500' : 'text-amber-500'}`}>
+            <p
+                className={`text-xs font-bold mt-2 ${trend.includes('+') ? 'text-emerald-500' : trend.includes('-') ? 'text-rose-500' : 'text-amber-500'}`}
+            >
                 {trend} <span className="text-slate-400 font-normal">vs last month</span>
             </p>
         </div>

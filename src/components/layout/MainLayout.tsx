@@ -19,6 +19,7 @@ import {
     Database,
     Building2,
     ChevronDown,
+    FileText,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -33,22 +34,57 @@ interface NavItem {
     to: string;
     icon: React.ComponentType<{ size: number }>;
     label: string;
+    /** Show if user has any of these roles (fallback when no allowedPermissions) */
     allowedRoles?: string[];
+    /** Show if user has any of these permissions (from /me). Takes precedence when both set. */
+    allowedPermissions?: string[];
 }
 
 const NAV_ITEMS: NavItem[] = [
-    { to: '/app', icon: BarChart3, label: 'Dashboard' },
+    {
+        to: '/app',
+        icon: BarChart3,
+        label: 'Dashboard',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'SUPER ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'OWNER',
+            'CASHIER',
+            'PHARMACIST',
+            'STORE_MANAGER',
+            'STORE MANAGER',
+            'AUDITOR',
+            'ADMIN',
+        ],
+    },
     {
         to: '/app/organizations',
         icon: Building2,
         label: 'Organizations',
         allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN'],
+        allowedPermissions: ['organization:manage'],
+    },
+    {
+        to: '/app/users',
+        icon: Users,
+        label: 'Users',
+        allowedPermissions: ['users:manage'],
     },
     {
         to: '/app/facilities',
         icon: Factory,
         label: 'Facilities',
-        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'AUDITOR', 'FACILITY_ADMIN', 'FACILITY ADMIN'],
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'SUPER ADMIN',
+            'AUDITOR',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'OWNER',
+        ],
+        allowedPermissions: ['facility:manage'],
     },
     {
         to: '/app/procurement',
@@ -58,6 +94,7 @@ const NAV_ITEMS: NavItem[] = [
             'SUPER_ADMIN',
             'FACILITY_ADMIN',
             'FACILITY ADMIN',
+            'OWNER',
             'STORE_MANAGER',
             'STORE MANAGER',
             'AUDITOR',
@@ -72,6 +109,8 @@ const NAV_ITEMS: NavItem[] = [
             'SUPER_ADMIN',
             'FACILITY_ADMIN',
             'FACILITY ADMIN',
+            'OWNER',
+            'CASHIER',
             'PHARMACIST',
             'AUDITOR',
             'ADMIN',
@@ -85,13 +124,15 @@ const NAV_ITEMS: NavItem[] = [
             'SUPER_ADMIN',
             'FACILITY_ADMIN',
             'FACILITY ADMIN',
+            'OWNER',
+            'CASHIER',
             'STORE_MANAGER',
             'STORE MANAGER',
             'PHARMACIST',
             'AUDITOR',
             'ADMIN',
             'DOCTOR',
-        ], // All except Patient
+        ],
     },
     {
         to: '/app/stock',
@@ -101,6 +142,7 @@ const NAV_ITEMS: NavItem[] = [
             'SUPER_ADMIN',
             'FACILITY_ADMIN',
             'FACILITY ADMIN',
+            'OWNER',
             'STORE_MANAGER',
             'STORE MANAGER',
             'PHARMACIST',
@@ -116,6 +158,7 @@ const NAV_ITEMS: NavItem[] = [
             'SUPER_ADMIN',
             'FACILITY_ADMIN',
             'FACILITY ADMIN',
+            'OWNER',
             'STORE_MANAGER',
             'STORE MANAGER',
             'PHARMACIST',
@@ -131,6 +174,7 @@ const NAV_ITEMS: NavItem[] = [
             'SUPER_ADMIN',
             'FACILITY_ADMIN',
             'FACILITY ADMIN',
+            'OWNER',
             'PHARMACIST',
             'STORE_MANAGER',
             'STORE MANAGER',
@@ -139,16 +183,71 @@ const NAV_ITEMS: NavItem[] = [
         ],
     },
     {
+        to: '/app/analytics',
+        icon: FileText,
+        label: 'Reports',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'SUPER ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'OWNER',
+            'STORE_MANAGER',
+            'STORE MANAGER',
+            'AUDITOR',
+            'ADMIN',
+        ],
+        allowedPermissions: ['reports:read'],
+    },
+    {
         to: '/app/audit-logs',
         icon: TrendingUp,
         label: 'Audit Logs',
-        allowedRoles: ['SUPER_ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'AUDITOR', 'ADMIN'],
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'OWNER',
+            'AUDITOR',
+            'ADMIN',
+        ],
+        allowedPermissions: ['audit:read'],
+    },
+    {
+        to: '/app/stock-movements',
+        icon: Database,
+        label: 'Stock Movement History',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'OWNER',
+            'AUDITOR',
+            'PHARMACIST',
+            'STORE_MANAGER',
+            'ADMIN',
+        ],
+        allowedPermissions: ['stock_movements:read'],
+    },
+    {
+        to: '/app/pricing',
+        icon: TrendingUp,
+        label: 'Pricing',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'OWNER',
+            'ADMIN',
+            'STORE_MANAGER',
+        ],
+        allowedPermissions: ['pricing:manage'],
     },
     {
         to: '/app/settings',
         icon: Settings,
         label: 'Settings',
-        allowedRoles: ['SUPER_ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'ADMIN'],
+        allowedRoles: ['SUPER_ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'OWNER', 'ADMIN'],
     },
 ];
 
@@ -156,10 +255,30 @@ import { CreateFacilityModal } from '../facility/CreateFacilityModal';
 import { FacilityEmptyState } from '../facility/FacilityEmptyState';
 import { SetupPharmacyModal } from '../facility/SetupPharmacyModal';
 
-const PHARMACY_ROLES = ['FACILITY_ADMIN', 'FACILITY ADMIN', 'PHARMACIST', 'STORE_MANAGER', 'STORE MANAGER', 'AUDITOR'];
+const PHARMACY_ROLES = [
+    'FACILITY_ADMIN',
+    'FACILITY ADMIN',
+    'OWNER',
+    'CASHIER',
+    'PHARMACIST',
+    'STORE_MANAGER',
+    'STORE MANAGER',
+    'AUDITOR',
+];
 
 export const MainLayout: React.FC = () => {
-    const { user, logout, organizationId, facilityId, organizations, facilities, setOrganization, setFacility, refreshProfile } = useAuth();
+    const {
+        user,
+        logout,
+        organizationId,
+        facilityId,
+        organizations,
+        facilities,
+        setOrganization,
+        setFacility,
+        refreshProfile,
+        can,
+    } = useAuth();
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isDark, setIsDark] = useState(false);
@@ -168,11 +287,20 @@ export const MainLayout: React.FC = () => {
     const [switcherOpen, setSwitcherOpen] = useState(false);
     const role = user?.role?.toUpperCase();
     const currentOrg = organizations.find((o) => o.id === organizationId) ?? organizations[0];
-    const currentFacility = facilities.find((f) => f.id === facilityId) ?? facilities[0];
+    const currentFacility =
+        facilityId != null ? (facilities.find((f) => f.id === facilityId) ?? null) : null;
+    const isOwner = role === 'OWNER';
+    const isFacilityAdmin = role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN';
+    const showAllFacilitiesOption = isOwner && facilities.length > 1;
+    const switcherLabel =
+        facilityId == null && facilities.length > 0
+            ? 'All facilities'
+            : (currentFacility?.name ?? facilities[0]?.name ?? 'Select context');
 
     const isPharmacyRole = role && PHARMACY_ROLES.includes(role);
     const needsOnboarding = isPharmacyRole && !user?.organization_id;
-    const isUnassignedAdmin = isPharmacyRole && user?.organization_id && !user?.facility_id && !user?.facility;
+    const isUnassignedAdmin =
+        isPharmacyRole && user?.organization_id && !user?.facility_id && !user?.facility;
 
     const handleLogout = async () => {
         await logout();
@@ -221,9 +349,16 @@ export const MainLayout: React.FC = () => {
                 <nav className="flex-1 px-2 space-y-1 py-4 overflow-y-auto custom-scrollbar">
                     {user &&
                         NAV_ITEMS.map((item) => {
-                            // Check user role
-                            const isAllowed =
-                                !item.allowedRoles || item.allowedRoles.includes(role || '');
+                            const perms = item.allowedPermissions || [];
+                            const roles = item.allowedRoles || [];
+                            const hasPermission = perms.length > 0 && perms.some((p) => can(p));
+                            const normalizedRole = (role || '').toUpperCase().replace(/\s+/g, ' ');
+                            const normalizedAllowed = roles.map((r) =>
+                                String(r).toUpperCase().replace(/\s+/g, ' '),
+                            );
+                            const hasRole =
+                                roles.length === 0 || normalizedAllowed.includes(normalizedRole);
+                            const isAllowed = hasPermission || hasRole;
                             if (!isAllowed) return null;
 
                             if (needsOnboarding || isUnassignedAdmin) return null;
@@ -282,61 +417,106 @@ export const MainLayout: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-3 font-sans">
-                        {(organizations.length > 0 || facilities.length > 0) && (
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setSwitcherOpen(!switcherOpen)}
-                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-left min-w-0 max-w-[180px]"
+                        {isFacilityAdmin ? (
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-w-0 max-w-[180px]">
+                                <Building2
+                                    size={16}
+                                    className="text-healthcare-primary flex-shrink-0"
+                                />
+                                <span
+                                    className="truncate text-xs font-bold text-healthcare-dark"
+                                    title="Your facility"
                                 >
-                                    <Building2 size={16} className="text-healthcare-primary flex-shrink-0" />
-                                    <span className="truncate text-xs font-bold text-healthcare-dark">
-                                        {currentOrg?.name ?? currentFacility?.name ?? 'Select context'}
-                                    </span>
-                                    <ChevronDown size={14} className="flex-shrink-0 text-slate-400" />
-                                </button>
-                                {switcherOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setSwitcherOpen(false)} />
-                                        <div className="absolute right-0 top-full mt-1 z-20 w-64 py-2 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-                                            {organizations.length > 1 && (
-                                                <div className="px-3 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">Organization</div>
-                                            )}
-                                            {organizations.map((org) => (
-                                                <button
-                                                    key={org.id}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setOrganization(org.id);
-                                                        setSwitcherOpen(false);
-                                                        refreshProfile();
-                                                    }}
-                                                    className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${organizationId === org.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
-                                                >
-                                                    {org.name} {org.code && `(${org.code})`}
-                                                </button>
-                                            ))}
-                                            {facilities.length > 1 && (
-                                                <div className="px-3 py-1.5 mt-2 text-xs font-bold text-slate-500 uppercase tracking-wider border-t border-slate-200 dark:border-slate-700">Facility</div>
-                                            )}
-                                            {facilities.map((fac) => (
-                                                <button
-                                                    key={fac.id}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setFacility(fac.id);
-                                                        setSwitcherOpen(false);
-                                                        refreshProfile();
-                                                    }}
-                                                    className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId === fac.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
-                                                >
-                                                    {fac.name}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
+                                    {currentFacility?.name ??
+                                        facilities[0]?.name ??
+                                        'Your facility'}
+                                </span>
                             </div>
+                        ) : (
+                            (organizations.length > 0 || facilities.length > 0) && (
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSwitcherOpen(!switcherOpen)}
+                                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-left min-w-0 max-w-[180px]"
+                                    >
+                                        <Building2
+                                            size={16}
+                                            className="text-healthcare-primary flex-shrink-0"
+                                        />
+                                        <span className="truncate text-xs font-bold text-healthcare-dark">
+                                            {facilities.length > 0
+                                                ? switcherLabel
+                                                : (currentOrg?.name ?? 'Select context')}
+                                        </span>
+                                        <ChevronDown
+                                            size={14}
+                                            className="flex-shrink-0 text-slate-400"
+                                        />
+                                    </button>
+                                    {switcherOpen && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-10"
+                                                onClick={() => setSwitcherOpen(false)}
+                                            />
+                                            <div className="absolute right-0 top-full mt-1 z-20 w-64 py-2 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+                                                {organizations.length > 1 && (
+                                                    <div className="px-3 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                        Organization
+                                                    </div>
+                                                )}
+                                                {organizations.map((org) => (
+                                                    <button
+                                                        key={org.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setOrganization(org.id);
+                                                            setSwitcherOpen(false);
+                                                            refreshProfile();
+                                                        }}
+                                                        className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${organizationId === org.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                    >
+                                                        {org.name} {org.code && `(${org.code})`}
+                                                    </button>
+                                                ))}
+                                                {facilities.length > 0 && (
+                                                    <div className="px-3 py-1.5 mt-2 text-xs font-bold text-slate-500 uppercase tracking-wider border-t border-slate-200 dark:border-slate-700">
+                                                        Facility
+                                                    </div>
+                                                )}
+                                                {showAllFacilitiesOption && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setFacility(null);
+                                                            setSwitcherOpen(false);
+                                                            refreshProfile();
+                                                        }}
+                                                        className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId == null ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                    >
+                                                        All facilities
+                                                    </button>
+                                                )}
+                                                {facilities.map((fac) => (
+                                                    <button
+                                                        key={fac.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setFacility(fac.id);
+                                                            setSwitcherOpen(false);
+                                                            refreshProfile();
+                                                        }}
+                                                        className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId === fac.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                    >
+                                                        {fac.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )
                         )}
                         <div className="flex items-center gap-1.5 mr-1">
                             <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors relative">
@@ -390,8 +570,14 @@ export const MainLayout: React.FC = () => {
                             </>
                         ) : isUnassignedAdmin ? (
                             <>
-                                <FacilityEmptyState onCreateClick={() => setShowCreateModal(true)} />
-                                {showCreateModal && <CreateFacilityModal onClose={() => setShowCreateModal(false)} />}
+                                <FacilityEmptyState
+                                    onCreateClick={() => setShowCreateModal(true)}
+                                />
+                                {showCreateModal && (
+                                    <CreateFacilityModal
+                                        onClose={() => setShowCreateModal(false)}
+                                    />
+                                )}
                             </>
                         ) : (
                             <Outlet />

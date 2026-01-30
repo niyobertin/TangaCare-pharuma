@@ -13,6 +13,12 @@ export interface DashboardStats {
     lowStockWarning: number;
     expiringSoon: number;
     dailySales: string;
+    /** Last 14 days of daily sales for chart (date YYYY-MM-DD, sales number). */
+    dailySalesChart?: Array<{ date: string; sales: number }>;
+    /** Staff count in scope (facility or organization). */
+    staffCount?: number;
+    /** Active alerts count in scope. */
+    activeAlertsCount?: number;
     trends: {
         medicines: string;
         lowStock: string;
@@ -38,6 +44,9 @@ export interface Medicine {
     unit: string;
     cost_price: number;
     selling_price: number;
+    markup_percent?: number;
+    category_id?: number;
+    category?: MedicineCategory;
     is_controlled_drug: boolean;
     stock_quantity?: number;
 }
@@ -62,11 +71,21 @@ export interface Facility {
     organization_id?: number;
     organization?: Organization;
     admin_name?: string;
+    facility_admin_id?: number;
     facility_admin?: import('./auth').User;
     departments_enabled?: boolean;
     controlled_drug_rules_enabled?: boolean;
     min_stock_threshold_percentage?: number;
     expiry_alert_days?: number;
+    default_markup_percent?: number;
+}
+
+export interface MedicineCategory {
+    id: number;
+    name: string;
+    code: string;
+    default_markup_percent?: number;
+    organization_id?: number;
 }
 
 export interface CreateOrganizationDto {
@@ -252,5 +271,3 @@ export interface CreateSaleDto {
         reference?: string;
     }>;
 }
-
-

@@ -4,6 +4,8 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import type { Organization } from '../../types/pharmacy';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
+import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
+import { PERMISSIONS } from '../../types/auth';
 
 export function OrganizationsPage() {
     const { user } = useAuth();
@@ -41,74 +43,86 @@ export function OrganizationsPage() {
     const canCreate = role === 'SUPER_ADMIN';
 
     return (
-        <div className="h-full flex flex-col p-6 bg-slate-50/50 dark:bg-slate-900/50">
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-2xl font-black text-healthcare-dark">Organizations</h1>
-                    <p className="text-sm text-slate-500 mt-1">
-                        Manage organizations and their facilities
-                    </p>
-                </div>
-                {canCreate && (
-                    <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-healthcare-primary text-white rounded-xl font-bold text-sm hover:bg-teal-600 transition-all shadow-md"
-                    >
-                        <Plus size={18} />
-                        New Organization
-                    </button>
-                )}
-            </div>
-
-            <div className="flex items-center gap-3 mb-6">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                        type="text"
-                        placeholder="Search organizations..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
-                    />
-                </div>
-            </div>
-
-            {isLoading ? (
-                <div className="flex items-center justify-center flex-1">
-                    <div className="w-8 h-8 border-4 border-healthcare-primary/20 border-t-healthcare-primary rounded-full animate-spin" />
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {organizations.map((org) => (
-                        <div
-                            key={org.id}
-                            className="glass-card p-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-healthcare-primary/30 transition-all"
+        <ProtectedRoute requiredPermissions={[PERMISSIONS.ORGANIZATION_MANAGE]}>
+            <div className="h-full flex flex-col p-6 bg-slate-50/50 dark:bg-slate-900/50">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 className="text-2xl font-black text-healthcare-dark">Organizations</h1>
+                        <p className="text-sm text-slate-500 mt-1">
+                            Manage organizations and their facilities
+                        </p>
+                    </div>
+                    {canCreate && (
+                        <button
+                            onClick={() => setShowCreateModal(true)}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-healthcare-primary text-white rounded-xl font-bold text-sm hover:bg-teal-600 transition-all shadow-md"
                         >
-                            <div className="flex items-start gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-healthcare-primary/10 flex items-center justify-center flex-shrink-0">
-                                    <Building2 className="text-healthcare-primary" size={24} />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <h3 className="font-bold text-healthcare-dark truncate">{org.name}</h3>
-                                    {org.code && (
-                                        <p className="text-xs text-slate-500 font-mono mt-0.5">{org.code}</p>
-                                    )}
-                                    {org.type && (
-                                        <span className="inline-block mt-2 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-xs text-slate-600 dark:text-slate-300">
-                                            {org.type.replace('_', ' ')}
-                                        </span>
-                                    )}
+                            <Plus size={18} />
+                            New Organization
+                        </button>
+                    )}
+                </div>
+
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="relative flex-1 max-w-sm">
+                        <Search
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                            size={18}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Search organizations..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
+                        />
+                    </div>
+                </div>
+
+                {isLoading ? (
+                    <div className="flex items-center justify-center flex-1">
+                        <div className="w-8 h-8 border-4 border-healthcare-primary/20 border-t-healthcare-primary rounded-full animate-spin" />
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {organizations.map((org) => (
+                            <div
+                                key={org.id}
+                                className="glass-card p-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-healthcare-primary/30 transition-all"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className="w-12 h-12 rounded-xl bg-healthcare-primary/10 flex items-center justify-center flex-shrink-0">
+                                        <Building2 className="text-healthcare-primary" size={24} />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="font-bold text-healthcare-dark truncate">
+                                            {org.name}
+                                        </h3>
+                                        {org.code && (
+                                            <p className="text-xs text-slate-500 font-mono mt-0.5">
+                                                {org.code}
+                                            </p>
+                                        )}
+                                        {org.type && (
+                                            <span className="inline-block mt-2 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-xs text-slate-600 dark:text-slate-300">
+                                                {org.type.replace('_', ' ')}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
 
-            {showCreateModal && (
-                <CreateOrganizationModal onClose={() => setShowCreateModal(false)} onSuccess={handleCreateSuccess} />
-            )}
-        </div>
+                {showCreateModal && (
+                    <CreateOrganizationModal
+                        onClose={() => setShowCreateModal(false)}
+                        onSuccess={handleCreateSuccess}
+                    />
+                )}
+            </div>
+        </ProtectedRoute>
     );
 }
 
@@ -140,7 +154,10 @@ function CreateOrganizationModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={onClose}
+        >
             <div
                 className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-md w-full p-6"
                 onClick={(e) => e.stopPropagation()}
@@ -148,7 +165,9 @@ function CreateOrganizationModal({
                 <h2 className="text-xl font-black text-healthcare-dark mb-4">New Organization</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">Name *</label>
+                        <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">
+                            Name *
+                        </label>
                         <input
                             type="text"
                             value={name}
@@ -158,7 +177,9 @@ function CreateOrganizationModal({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">Code</label>
+                        <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">
+                            Code
+                        </label>
                         <input
                             type="text"
                             value={code}
@@ -168,7 +189,9 @@ function CreateOrganizationModal({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">Type</label>
+                        <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">
+                            Type
+                        </label>
                         <select
                             value={type}
                             onChange={(e) => setType(e.target.value)}

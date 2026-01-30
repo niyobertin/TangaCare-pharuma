@@ -76,9 +76,23 @@ export function VerifyOtpPage() {
         setLoading(true);
         try {
             if (type === 'register') {
-                await authService.verifyRegistrationOtp(email, otpValue);
-                toast.success('Account verified! Please login.');
-                navigate({ to: '/auth/login' });
+                const result = await authService.verifyRegistrationOtp(email, otpValue);
+                const payload = result?.data ?? result;
+                const mustSetPassword = payload?.mustSetPassword === true;
+                const tokens = payload?.tokens;
+                if (mustSetPassword && tokens) {
+                    if (tokens.accessToken)
+                        localStorage.setItem('access_token', tokens.accessToken);
+                    if (tokens.refreshToken)
+                        localStorage.setItem('refresh_token', tokens.refreshToken);
+                    if (payload?.user)
+                        localStorage.setItem('user_data', JSON.stringify(payload.user));
+                    toast.success('Email verified! Set your password to continue.');
+                    navigate({ to: '/auth/set-password' });
+                } else {
+                    toast.success('Account verified! Please login.');
+                    navigate({ to: '/auth/login' });
+                }
             } else {
                 await authService.verifyResetOtp(email, otpValue);
                 toast.success('OTP verified successfully!');
@@ -160,7 +174,8 @@ export function VerifyOtpPage() {
                             }}
                             className="text-xs font-bold text-healthcare-primary hover:underline flex items-center justify-center mx-auto gap-1"
                         >
-                            <ChevronLeft size={16} /> {type === 'register' ? 'Back to Register' : 'Back'}
+                            <ChevronLeft size={16} />{' '}
+                            {type === 'register' ? 'Back to Register' : 'Back'}
                         </button>
                     </div>
                 </form>

@@ -104,6 +104,7 @@ export function SuppliersPage() {
                 'AUDITOR',
                 'ADMIN',
             ]}
+            requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
                 {/* Header */}

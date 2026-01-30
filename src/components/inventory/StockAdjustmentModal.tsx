@@ -5,7 +5,13 @@ import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Batch } from '../../types/pharmacy';
-import { X, ArrowDownWideNarrow, AlertTriangle, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import {
+    X,
+    ArrowDownWideNarrow,
+    AlertTriangle,
+    ArrowUpCircle,
+    ArrowDownCircle,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface StockAdjustmentModalProps {
@@ -24,12 +30,17 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
     const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
 
-    const { register, handleSubmit, watch, formState: { errors } } = useForm({
+    const {
+        register,
+        handleSubmit,
+        watch,
+        formState: { errors },
+    } = useForm({
         resolver: yupResolver(adjustmentSchema),
         defaultValues: {
             type: 'decrease',
-            quantity: 1
-        }
+            quantity: 1,
+        },
     });
 
     const adjustmentType = watch('type');
@@ -55,7 +66,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                 batch_id: batch.id,
                 type: data.type,
                 quantity: data.quantity,
-                reason: data.reason
+                reason: data.reason,
             });
             toast.success('Stock adjusted successfully');
             onSuccess();
@@ -70,10 +81,14 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
 
     const getTypeIcon = () => {
         switch (adjustmentType) {
-            case 'increase': return <ArrowUpCircle className="text-green-500" />;
-            case 'return': return <ArrowUpCircle className="text-blue-500" />;
-            case 'decrease': return <ArrowDownCircle className="text-amber-500" />;
-            default: return <AlertTriangle className="text-red-500" />;
+            case 'increase':
+                return <ArrowUpCircle className="text-green-500" />;
+            case 'return':
+                return <ArrowUpCircle className="text-blue-500" />;
+            case 'decrease':
+                return <ArrowDownCircle className="text-amber-500" />;
+            default:
+                return <AlertTriangle className="text-red-500" />;
         }
     };
 
@@ -88,26 +103,35 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             Adjust Stock
                         </h2>
                         <p className="text-sm text-slate-500 mt-1">
-                            Batch: <span className="font-mono bg-slate-100 px-1 rounded">{batch.batch_number}</span>
+                            Batch:{' '}
+                            <span className="font-mono bg-slate-100 px-1 rounded">
+                                {batch.batch_number}
+                            </span>
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    >
                         <X size={20} />
                     </button>
                 </div>
 
                 <div className="p-6">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-
                         {/* Current Info */}
                         <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm flex justify-between items-center">
                             <span className="text-slate-500 font-bold">Current Quantity</span>
-                            <span className="text-xl font-black text-healthcare-dark">{batch.current_quantity}</span>
+                            <span className="text-xl font-black text-healthcare-dark">
+                                {batch.current_quantity}
+                            </span>
                         </div>
 
                         {/* Type */}
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Adjustment Type</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                                Adjustment Type
+                            </label>
                             <div className="relative">
                                 <select
                                     {...register('type')}
@@ -127,25 +151,35 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
 
                         {/* Quantity */}
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Quantity</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                                Quantity
+                            </label>
                             <input
                                 type="number"
                                 {...register('quantity')}
                                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold"
                             />
-                            {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity.message}</p>}
+                            {errors.quantity && (
+                                <p className="text-red-500 text-xs mt-1">
+                                    {errors.quantity.message}
+                                </p>
+                            )}
                         </div>
 
                         {/* Reason */}
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">Reason / Notes</label>
+                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                                Reason / Notes
+                            </label>
                             <textarea
                                 {...register('reason')}
                                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm"
                                 rows={2}
                                 placeholder="Explain why this adjustment is being made..."
                             />
-                            {errors.reason && <p className="text-red-500 text-xs mt-1">{errors.reason.message}</p>}
+                            {errors.reason && (
+                                <p className="text-red-500 text-xs mt-1">{errors.reason.message}</p>
+                            )}
                         </div>
 
                         <button
@@ -153,7 +187,11 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             disabled={isLoading}
                             className="w-full py-3 bg-healthcare-primary text-white rounded-xl font-bold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                         >
-                            {isLoading ? <div className="animate-spin w-5 h-5 border-2 border-white/20 border-t-white rounded-full" /> : <span>Save Adjustment</span>}
+                            {isLoading ? (
+                                <div className="animate-spin w-5 h-5 border-2 border-white/20 border-t-white rounded-full" />
+                            ) : (
+                                <span>Save Adjustment</span>
+                            )}
                         </button>
                     </form>
                 </div>

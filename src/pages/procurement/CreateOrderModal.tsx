@@ -35,20 +35,26 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
     const [loadingData, setLoadingData] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { register, control, handleSubmit, watch, formState: { errors, isValid } } = useForm({
+    const {
+        register,
+        control,
+        handleSubmit,
+        watch,
+        formState: { errors, isValid },
+    } = useForm({
         resolver: yupResolver(orderSchema),
         defaultValues: {
             order_date: new Date().toISOString().split('T')[0],
             discount_percent: 0,
             vat_rate: 18,
-            items: [{ medicine_id: 0, quantity_ordered: 1, unit_price: 0 }]
+            items: [{ medicine_id: 0, quantity_ordered: 1, unit_price: 0 }],
         },
-        mode: 'onChange'
+        mode: 'onChange',
     });
 
     const { fields, append, remove } = useFieldArray({
         control,
-        name: 'items'
+        name: 'items',
     });
 
     const watchItems = watch('items');
@@ -58,7 +64,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
             try {
                 const [suppliersData, medicinesResponse] = await Promise.all([
                     pharmacyService.getSuppliers(),
-                    pharmacyService.getMedicines({ limit: 100 }) // Fetch reasonable amount or implement search
+                    pharmacyService.getMedicines({ limit: 100 }), // Fetch reasonable amount or implement search
                 ]);
                 setSuppliers(suppliersData.data || []);
                 setMedicines(medicinesResponse.data || []);
@@ -73,9 +79,11 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
     }, []);
 
     const calculateTotal = () => {
-        return watchItems?.reduce((sum, item) => {
-            return sum + ((item.quantity_ordered || 0) * (item.unit_price || 0));
-        }, 0) || 0;
+        return (
+            watchItems?.reduce((sum, item) => {
+                return sum + (item.quantity_ordered || 0) * (item.unit_price || 0);
+            }, 0) || 0
+        );
     };
 
     const subtotal = calculateTotal();
@@ -118,7 +126,10 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                         <ShoppingCart size={20} className="text-healthcare-primary" />
                         Create Purchase Order
                     </h2>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
                         <X size={20} />
                     </button>
                 </div>
@@ -129,36 +140,56 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                             <div className="w-8 h-8 border-4 border-healthcare-primary/20 border-t-healthcare-primary rounded-full animate-spin" />
                         </div>
                     ) : (
-                        <form id="order-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                        <form
+                            id="order-form"
+                            onSubmit={handleSubmit(onSubmit)}
+                            className="space-y-6"
+                        >
                             {/* General Info */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Supplier</label>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">
+                                        Supplier
+                                    </label>
                                     <select
                                         {...register('supplier_id')}
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary bg-white font-medium"
                                     >
                                         <option value="">Select Supplier...</option>
-                                        {suppliers.map(s => (
-                                            <option key={s.id} value={s.id}>{s.name} ({s.contact_person})</option>
+                                        {suppliers.map((s) => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.name} ({s.contact_person})
+                                            </option>
                                         ))}
                                     </select>
-                                    {errors.supplier_id && <p className="text-red-500 text-xs mt-1">{errors.supplier_id.message}</p>}
+                                    {errors.supplier_id && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                            {errors.supplier_id.message}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Order Date</label>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">
+                                        Order Date
+                                    </label>
                                     <input
                                         type="date"
                                         {...register('order_date')}
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary font-medium"
                                     />
-                                    {errors.order_date && <p className="text-red-500 text-xs mt-1">{errors.order_date.message}</p>}
+                                    {errors.order_date && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                            {errors.order_date.message}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">Discount (%)</label>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">
+                                        Discount (%)
+                                    </label>
                                     <input
                                         type="number"
                                         min="0"
@@ -169,7 +200,9 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-1">VAT (%)</label>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1">
+                                        VAT (%)
+                                    </label>
                                     <input
                                         type="number"
                                         min="0"
@@ -184,10 +217,18 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                             {/* Items */}
                             <div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <label className="text-sm font-bold text-slate-700">Order Items</label>
+                                    <label className="text-sm font-bold text-slate-700">
+                                        Order Items
+                                    </label>
                                     <button
                                         type="button"
-                                        onClick={() => append({ medicine_id: 0, quantity_ordered: 1, unit_price: 0 })}
+                                        onClick={() =>
+                                            append({
+                                                medicine_id: 0,
+                                                quantity_ordered: 1,
+                                                unit_price: 0,
+                                            })
+                                        }
                                         className="text-xs font-bold text-healthcare-primary flex items-center gap-1 hover:underline"
                                     >
                                         <Plus size={14} /> Add Item
@@ -201,46 +242,70 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                 <th className="px-4 py-3 w-[40%]">Medicine</th>
                                                 <th className="px-4 py-3 w-[20%]">Quantity</th>
                                                 <th className="px-4 py-3 w-[25%]">Unit Price</th>
-                                                <th className="px-4 py-3 w-[15%] text-right">Total</th>
+                                                <th className="px-4 py-3 w-[15%] text-right">
+                                                    Total
+                                                </th>
                                                 <th className="px-2 py-3 w-[5%]"></th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y">
                                             {fields.map((field, index) => (
-                                                <tr key={field.id} className="group hover:bg-slate-50/50">
+                                                <tr
+                                                    key={field.id}
+                                                    className="group hover:bg-slate-50/50"
+                                                >
                                                     <td className="p-2">
                                                         <select
-                                                            {...register(`items.${index}.medicine_id`)}
+                                                            {...register(
+                                                                `items.${index}.medicine_id`,
+                                                            )}
                                                             className="w-full px-2 py-1.5 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 text-sm"
                                                         >
                                                             <option value="0">Select...</option>
-                                                            {medicines.map(m => (
-                                                                <option key={m.id} value={m.id}>{m.name} ({m.strength})</option>
+                                                            {medicines.map((m) => (
+                                                                <option key={m.id} value={m.id}>
+                                                                    {m.name} ({m.strength})
+                                                                </option>
                                                             ))}
                                                         </select>
-                                                        {errors.items?.[index]?.medicine_id && <p className="text-red-500 text-[10px]">{errors.items[index]?.medicine_id?.message}</p>}
+                                                        {errors.items?.[index]?.medicine_id && (
+                                                            <p className="text-red-500 text-[10px]">
+                                                                {
+                                                                    errors.items[index]?.medicine_id
+                                                                        ?.message
+                                                                }
+                                                            </p>
+                                                        )}
                                                     </td>
                                                     <td className="p-2">
                                                         <input
                                                             type="number"
-                                                            {...register(`items.${index}.quantity_ordered`)}
+                                                            {...register(
+                                                                `items.${index}.quantity_ordered`,
+                                                            )}
                                                             className="w-full px-2 py-1.5 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 text-sm"
                                                             min="1"
                                                         />
                                                     </td>
                                                     <td className="p-2">
                                                         <div className="relative">
-                                                            <span className="absolute left-2 top-1.5 text-slate-400 text-xs">RWF</span>
+                                                            <span className="absolute left-2 top-1.5 text-slate-400 text-xs">
+                                                                RWF
+                                                            </span>
                                                             <input
                                                                 type="number"
-                                                                {...register(`items.${index}.unit_price`)}
+                                                                {...register(
+                                                                    `items.${index}.unit_price`,
+                                                                )}
                                                                 className="w-full pl-10 px-2 py-1.5 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 text-sm"
                                                                 min="0"
                                                             />
                                                         </div>
                                                     </td>
                                                     <td className="p-2 text-right font-bold text-slate-700">
-                                                        {(watchItems[index]?.quantity_ordered || 0) * (watchItems[index]?.unit_price || 0)}
+                                                        {(watchItems[index]?.quantity_ordered ||
+                                                            0) *
+                                                            (watchItems[index]?.unit_price || 0)}
                                                     </td>
                                                     <td className="p-2 text-center">
                                                         <button
@@ -257,28 +322,48 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                         </tbody>
                                         <tfoot className="bg-slate-50 border-t">
                                             <tr>
-                                                <td colSpan={3} className="px-4 py-2 text-right font-black uppercase text-xs text-slate-500">Subtotal</td>
+                                                <td
+                                                    colSpan={3}
+                                                    className="px-4 py-2 text-right font-black uppercase text-xs text-slate-500"
+                                                >
+                                                    Subtotal
+                                                </td>
                                                 <td className="px-4 py-2 text-right font-black text-healthcare-dark">
                                                     RWF {subtotal.toLocaleString()}
                                                 </td>
                                                 <td></td>
                                             </tr>
                                             <tr>
-                                                <td colSpan={3} className="px-4 py-2 text-right font-black uppercase text-xs text-slate-500">Discount ({discountPercent}%)</td>
+                                                <td
+                                                    colSpan={3}
+                                                    className="px-4 py-2 text-right font-black uppercase text-xs text-slate-500"
+                                                >
+                                                    Discount ({discountPercent}%)
+                                                </td>
                                                 <td className="px-4 py-2 text-right font-black text-healthcare-dark">
                                                     - RWF {discountAmount.toLocaleString()}
                                                 </td>
                                                 <td></td>
                                             </tr>
                                             <tr>
-                                                <td colSpan={3} className="px-4 py-2 text-right font-black uppercase text-xs text-slate-500">VAT ({vatRate}%)</td>
+                                                <td
+                                                    colSpan={3}
+                                                    className="px-4 py-2 text-right font-black uppercase text-xs text-slate-500"
+                                                >
+                                                    VAT ({vatRate}%)
+                                                </td>
                                                 <td className="px-4 py-2 text-right font-black text-healthcare-dark">
                                                     RWF {vatAmount.toLocaleString()}
                                                 </td>
                                                 <td></td>
                                             </tr>
                                             <tr>
-                                                <td colSpan={3} className="px-4 py-3 text-right font-black uppercase text-xs text-slate-500">Total Amount</td>
+                                                <td
+                                                    colSpan={3}
+                                                    className="px-4 py-3 text-right font-black uppercase text-xs text-slate-500"
+                                                >
+                                                    Total Amount
+                                                </td>
                                                 <td className="px-4 py-3 text-right font-black text-healthcare-dark text-lg">
                                                     RWF {grandTotal.toLocaleString()}
                                                 </td>
@@ -287,7 +372,11 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                         </tfoot>
                                     </table>
                                 </div>
-                                {errors.items && <p className="text-red-500 text-xs mt-2 text-center">{errors.items.message}</p>}
+                                {errors.items && (
+                                    <p className="text-red-500 text-xs mt-2 text-center">
+                                        {errors.items.message}
+                                    </p>
+                                )}
                             </div>
                         </form>
                     )}
@@ -307,7 +396,11 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                         disabled={isSubmitting || !isValid || calculateTotal() === 0}
                         className="px-6 py-2 bg-healthcare-primary text-white rounded-xl font-bold hover:bg-teal-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/10"
                     >
-                        {isSubmitting ? <div className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full" /> : <Save size={18} />}
+                        {isSubmitting ? (
+                            <div className="animate-spin w-4 h-4 border-2 border-white/20 border-t-white rounded-full" />
+                        ) : (
+                            <Save size={18} />
+                        )}
                         Create Order
                     </button>
                 </div>

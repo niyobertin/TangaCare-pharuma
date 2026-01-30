@@ -5,6 +5,8 @@ export const UserRole = {
     // Pharmacy Inventory Roles
     SUPER_ADMIN: 'super_admin',
     FACILITY_ADMIN: 'facility_admin',
+    OWNER: 'owner',
+    CASHIER: 'cashier',
     PHARMACIST: 'pharmacist',
     STORE_MANAGER: 'store_manager',
     AUDITOR: 'auditor',
@@ -19,6 +21,29 @@ export interface Organization {
     type?: string;
 }
 
+/** Granular permissions (e.g. inventory:read, pricing:manage) returned from /me. Must match backend PERMISSIONS. */
+export type Permission = string;
+
+/** Permission constants aligned with backend config/permissions.ts */
+export const PERMISSIONS = {
+    INVENTORY_READ: 'inventory:read',
+    INVENTORY_WRITE: 'inventory:write',
+    DISPENSING_READ: 'dispensing:read',
+    DISPENSING_WRITE: 'dispensing:write',
+    PROCUREMENT_READ: 'procurement:read',
+    PROCUREMENT_WRITE: 'procurement:write',
+    REPORTS_READ: 'reports:read',
+    REPORTS_FINANCIAL: 'reports:financial',
+    FACILITY_MANAGE: 'facility:manage',
+    ORGANIZATION_MANAGE: 'organization:manage',
+    PRICING_MANAGE: 'pricing:manage',
+    AUDIT_READ: 'audit:read',
+    STOCK_MOVEMENTS_READ: 'stock_movements:read',
+    USERS_MANAGE: 'users:manage',
+} as const;
+
+export type PermissionKey = keyof typeof PERMISSIONS;
+
 export interface User {
     id: number;
     userId?: string;
@@ -30,6 +55,7 @@ export interface User {
     last_name?: string;
     lastName?: string;
     role: UserRole;
+    permissions?: Permission[];
     gender?: 'male' | 'female' | 'other';
     date_of_birth?: string;
     address?: string;

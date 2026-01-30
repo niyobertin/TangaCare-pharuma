@@ -34,7 +34,31 @@ const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
     return result;
 };
 
+/** Staff roles an organization owner can assign. */
+export const STAFF_ROLES = [
+    'facility_admin',
+    'pharmacist',
+    'store_manager',
+    'auditor',
+    'cashier',
+] as const;
+
+export type CreateStaffPayload = {
+    email: string;
+    first_name: string;
+    last_name: string;
+    /** Optional: if omitted, user will set password after verifying email. */
+    password?: string;
+    role: (typeof STAFF_ROLES)[number];
+    facility_id?: number;
+};
+
 export const userService = {
+    async createUser(data: CreateStaffPayload): Promise<User> {
+        const response = await api.post<{ data: User }>('/users', data);
+        return response.data.data;
+    },
+
     async getUsers(params?: {
         page?: number;
         limit?: number;
@@ -57,5 +81,5 @@ export const userService = {
 
     async deleteUser(id: number): Promise<void> {
         await api.delete(`/users/${id}`);
-    }
+    },
 };

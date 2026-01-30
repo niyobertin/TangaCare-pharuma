@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Building2 } from 'lucide-react';
+import { Building2, ChevronRight, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { authService } from '../../services/auth.service';
 import { useAuth } from '../../context/AuthContext';
 import * as yup from 'yup';
 
-const setupSchema = yup.object({
+const step1Schema = yup.object({
     organization_name: yup
         .string()
         .trim()
@@ -16,11 +17,14 @@ const setupSchema = yup.object({
         .trim()
         .max(20, 'Organization code must be at most 20 characters')
         .optional(),
+});
+
+const step2Schema = yup.object({
     facility_name: yup
         .string()
         .trim()
-        .min(2, 'Facility name must be at least 2 characters')
-        .required('Facility name is required'),
+        .min(2, 'Branch name must be at least 2 characters')
+        .required('Branch name is required'),
     facility_type: yup
         .mixed<'hospital' | 'clinic' | 'pharmacy_shop'>()
         .oneOf(['hospital', 'clinic', 'pharmacy_shop'])
@@ -38,12 +42,21 @@ interface SetupPharmacyModalProps {
     onSuccess: () => void;
 }
 
+type Step = 1 | 2;
+
 export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
     const { refreshProfile, setOrganization, setFacility } = useAuth();
+    const [step, setStep] = useState<Step>(1);
+    const [createdOrganization, setCreatedOrganization] = useState<{
+        id: number;
+        name: string;
+    } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [form, setForm] = useState({
+    const [step1Form, setStep1Form] = useState({
         organization_name: '',
         organization_code: '',
+    });
+    const [step2Form, setStep2Form] = useState({
         facility_name: '',
         facility_type: 'pharmacy_shop' as 'hospital' | 'clinic' | 'pharmacy_shop',
         address: '',
@@ -51,35 +64,56 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
         email: '',
     });
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleStep1 = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            // Frontend validation aligned with backend (class-validator)
-            await setupSchema.validate(form, { abortEarly: false });
+            await step1Schema.validate(step1Form, { abortEarly: false });
+            const result = await pharmacyService.createOnboardingOrganization({
+                organization_name: step1Form.organization_name.trim(),
+                organization_code: step1Form.organization_code?.trim() || undefined,
+            });
+            toast.success('Organization created. Now add your first branch.');
+            if (result.organization) {
+                setCreatedOrganization({
+                    id: result.organization.id,
+                    name: result.organization.name,
+                });
+                await authService.refreshToken(); // new token has OWNER role so step 2 can create facility
+                setStep(2);
+            }
+        } catch (error: any) {
+            const msg =
+                error?.response?.data?.message || error?.message || 'Failed to create organization';
+            toast.error(msg);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-            const result = await pharmacyService.setupOnboarding({
-                organization_name: form.organization_name.trim(),
-                organization_code: form.organization_code.trim() || undefined,
-                facility_name: form.facility_name.trim(),
-                facility_type: form.facility_type,
-                address: form.address.trim() || undefined,
-                phone: form.phone.trim() || undefined,
-                email: form.email.trim() || undefined,
+    const handleStep2 = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!createdOrganization?.id) return;
+        setIsLoading(true);
+        try {
+            await step2Schema.validate(step2Form, { abortEarly: false });
+            const facility = await pharmacyService.createFacility({
+                name: step2Form.facility_name.trim(),
+                type: step2Form.facility_type,
+                organization_id: createdOrganization.id,
+                address: step2Form.address?.trim() || undefined,
+                phone: step2Form.phone?.trim() || undefined,
+                email: step2Form.email?.trim() || undefined,
             });
             toast.success('Your pharmacy is set up. You can start using the app.');
-            if (result.organization?.id) {
-                setOrganization(result.organization.id);
-                localStorage.setItem('selected_organization_id', String(result.organization.id));
-            }
-            if (result.facility?.id) {
-                setFacility(result.facility.id);
-                localStorage.setItem('selected_facility_id', String(result.facility.id));
-            }
+            setOrganization(createdOrganization.id);
+            localStorage.setItem('selected_organization_id', String(createdOrganization.id));
+            setFacility(facility.id);
+            localStorage.setItem('selected_facility_id', String(facility.id));
             await refreshProfile();
             onSuccess();
         } catch (error: any) {
-            const msg = error?.response?.data?.message || error?.message || 'Setup failed';
+            const msg = error?.response?.data?.message || error?.message || 'Failed to add branch';
             toast.error(msg);
         } finally {
             setIsLoading(false);
@@ -95,101 +129,180 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
                             <Building2 className="text-healthcare-primary" size={24} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-healthcare-dark">Set up your pharmacy</h2>
+                            <h2 className="text-xl font-black text-healthcare-dark">
+                                {step === 1
+                                    ? 'Step 1: Register your organization'
+                                    : 'Step 2: Add your first branch'}
+                            </h2>
                             <p className="text-sm text-slate-500 mt-0.5">
-                                Create your organization and first branch (takes less than 2 minutes).
+                                {step === 1
+                                    ? 'Create your organization (company / pharmacy group).'
+                                    : `Add a branch for ${createdOrganization?.name ?? 'your organization'}.`}
                             </p>
                         </div>
                     </div>
+                    <div className="flex gap-2 mt-3">
+                        <span
+                            className={`h-1 flex-1 rounded-full ${step >= 1 ? 'bg-healthcare-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
+                        />
+                        <span
+                            className={`h-1 flex-1 rounded-full ${step >= 2 ? 'bg-healthcare-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
+                        />
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Organization name *</label>
-                        <input
-                            value={form.organization_name}
-                            onChange={(e) => setForm((f) => ({ ...f, organization_name: e.target.value }))}
-                            placeholder="e.g. My Pharmacy Ltd"
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
-                            required
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Organization code (optional)</label>
-                        <input
-                            value={form.organization_code}
-                            onChange={(e) => setForm((f) => ({ ...f, organization_code: e.target.value }))}
-                            placeholder="e.g. MP"
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
-                        />
-                    </div>
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 my-4" />
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Branch / facility name *</label>
-                        <input
-                            value={form.facility_name}
-                            onChange={(e) => setForm((f) => ({ ...f, facility_name: e.target.value }))}
-                            placeholder="e.g. Main Branch"
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
-                            required
-                        />
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Type</label>
-                        <select
-                            value={form.facility_type}
-                            onChange={(e) => setForm((f) => ({ ...f, facility_type: e.target.value as any }))}
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
-                        >
-                            <option value="pharmacy_shop">Pharmacy Shop</option>
-                            <option value="clinic">Clinic</option>
-                            <option value="hospital">Hospital</option>
-                        </select>
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Address</label>
-                        <input
-                            value={form.address}
-                            onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                            placeholder="District, Sector, Cell"
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                {step === 1 && (
+                    <form onSubmit={handleStep1} className="p-6 space-y-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Phone</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                                Organization name *
+                            </label>
                             <input
-                                value={form.phone}
-                                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                                placeholder="+250 7..."
+                                value={step1Form.organization_name}
+                                onChange={(e) =>
+                                    setStep1Form((f) => ({
+                                        ...f,
+                                        organization_name: e.target.value,
+                                    }))
+                                }
+                                placeholder="e.g. My Pharmacy Ltd"
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
+                                required
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Email</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                                Organization code (optional)
+                            </label>
                             <input
-                                type="email"
-                                value={form.email}
-                                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                                placeholder="contact@pharmacy.com"
+                                value={step1Form.organization_code}
+                                onChange={(e) =>
+                                    setStep1Form((f) => ({
+                                        ...f,
+                                        organization_code: e.target.value,
+                                    }))
+                                }
+                                placeholder="e.g. MP"
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
                             />
                         </div>
-                    </div>
-                    <div className="pt-4">
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full py-4 bg-healthcare-primary text-white rounded-xl font-black text-sm hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                            {isLoading ? (
-                                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                'Create organization & branch'
-                            )}
-                        </button>
-                    </div>
-                </form>
+                        <div className="pt-4">
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full py-4 bg-healthcare-primary text-white rounded-xl font-black text-sm hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isLoading ? (
+                                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        Next: Add branch <ChevronRight size={18} />
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                )}
+
+                {step === 2 && (
+                    <form onSubmit={handleStep2} className="p-6 space-y-4">
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                                Branch / facility name *
+                            </label>
+                            <input
+                                value={step2Form.facility_name}
+                                onChange={(e) =>
+                                    setStep2Form((f) => ({ ...f, facility_name: e.target.value }))
+                                }
+                                placeholder="e.g. Main Branch"
+                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                                Type
+                            </label>
+                            <select
+                                value={step2Form.facility_type}
+                                onChange={(e) =>
+                                    setStep2Form((f) => ({
+                                        ...f,
+                                        facility_type: e.target.value as any,
+                                    }))
+                                }
+                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
+                            >
+                                <option value="pharmacy_shop">Pharmacy Shop</option>
+                                <option value="clinic">Clinic</option>
+                                <option value="hospital">Hospital</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                                <MapPin size={12} /> Address
+                            </label>
+                            <input
+                                value={step2Form.address}
+                                onChange={(e) =>
+                                    setStep2Form((f) => ({ ...f, address: e.target.value }))
+                                }
+                                placeholder="District, Sector, Cell"
+                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-500 uppercase">
+                                    Phone
+                                </label>
+                                <input
+                                    value={step2Form.phone}
+                                    onChange={(e) =>
+                                        setStep2Form((f) => ({ ...f, phone: e.target.value }))
+                                    }
+                                    placeholder="+250 7..."
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-500 uppercase">
+                                    Email
+                                </label>
+                                <input
+                                    type="email"
+                                    value={step2Form.email}
+                                    onChange={(e) =>
+                                        setStep2Form((f) => ({ ...f, email: e.target.value }))
+                                    }
+                                    placeholder="contact@pharmacy.com"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
+                                />
+                            </div>
+                        </div>
+                        <div className="pt-4 flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setStep(1)}
+                                className="py-4 px-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl font-black text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            >
+                                Back
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="flex-1 py-4 bg-healthcare-primary text-white rounded-xl font-black text-sm hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isLoading ? (
+                                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    'Create organization & branch'
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                )}
             </div>
         </div>
     );

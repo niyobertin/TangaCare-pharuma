@@ -19,6 +19,8 @@ interface AuthContextType {
     register: (credentials: RegisterCredentials) => Promise<void>;
     logout: () => Promise<void>;
     refreshProfile: () => Promise<void>;
+    /** Check if current user has a permission (from /me permissions array). */
+    can: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,7 +37,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return v ? parseInt(v, 10) : null;
     });
     const [organizations, setOrganizations] = useState<Organization[]>([]);
-    const [facilities, setFacilities] = useState<Array<{ id: number; name: string; type?: string }>>([]);
+    const [facilities, setFacilities] = useState<
+        Array<{ id: number; name: string; type?: string }>
+    >([]);
 
     const setOrganization = useCallback((id: number | null) => {
         if (id !== null) localStorage.setItem(ORG_KEY, String(id));
@@ -71,8 +75,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 localStorage.setItem('user_data', JSON.stringify(profile));
                 if (profile.organizations) setOrganizations(profile.organizations);
                 if (profile.facilities) setFacilities(profile.facilities);
-                const oid = localStorage.getItem(ORG_KEY);
-                const fid = localStorage.getItem(FACILITY_KEY);
+                let oid = localStorage.getItem(ORG_KEY);
+                let fid = localStorage.getItem(FACILITY_KEY);
+                // Facility admin / owner: default to their single facility and org when not yet selected.
+                // OWNER with multiple facilities: do not set default facility (show "All facilities" / aggregated view).
+                const isOwner = (profile as any).role?.toUpperCase() === 'OWNER';
+                const multiFacilityOwner = isOwner && (profile.facilities?.length ?? 0) > 1;
+                const defaultFacility = multiFacilityOwner
+                    ? null
+                    : ((profile as any).facility ??
+                      (profile.facilities?.length === 1 ? profile.facilities[0] : null));
+                const defaultOrgId =
+                    defaultFacility?.organization_id ?? profile.organizations?.[0]?.id ?? null;
+                if (!fid && defaultFacility?.id) {
+                    fid = String(defaultFacility.id);
+                    localStorage.setItem(FACILITY_KEY, fid);
+                }
+                if (!oid && defaultOrgId != null) {
+                    oid = String(defaultOrgId);
+                    localStorage.setItem(ORG_KEY, oid);
+                }
                 if (oid) setOrganizationIdState(parseInt(oid, 10));
                 if (fid) setFacilityIdState(parseInt(fid, 10));
             } catch (error) {
@@ -102,8 +124,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const facs = payload?.facilities ?? u?.facilities ?? [];
             setOrganizations(Array.isArray(orgs) ? orgs : []);
             setFacilities(Array.isArray(facs) ? facs : []);
-            const oid = localStorage.getItem(ORG_KEY);
-            const fid = localStorage.getItem(FACILITY_KEY);
+            // Facility admin / owner: default to their single facility and org when not yet selected
+            const isOwner = (u?.role ?? payload?.user?.role)?.toString().toUpperCase() === 'OWNER';
+            const multiFacilityOwner = isOwner && Array.isArray(facs) && facs.length > 1;
+            const defaultFacility = multiFacilityOwner
+                ? null
+                : (payload?.facility ??
+                  u?.facility ??
+                  (Array.isArray(facs) && facs.length === 1 ? facs[0] : null));
+            let oid = localStorage.getItem(ORG_KEY);
+            let fid = localStorage.getItem(FACILITY_KEY);
+            if (!fid && defaultFacility?.id) {
+                fid = String(defaultFacility.id);
+                localStorage.setItem(FACILITY_KEY, fid);
+            }
+            if (!oid && (defaultFacility?.organization_id ?? orgs?.[0]?.id)) {
+                oid = String(defaultFacility?.organization_id ?? orgs?.[0]?.id);
+                localStorage.setItem(ORG_KEY, oid);
+            }
             if (oid) setOrganizationIdState(parseInt(oid, 10));
             if (fid) setFacilityIdState(parseInt(fid, 10));
         } catch (error) {
@@ -139,7 +177,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('user_data', JSON.stringify(profile));
         if (profile.organizations) setOrganizations(profile.organizations);
         if (profile.facilities) setFacilities(profile.facilities);
+        // Keep tenant in sync for facility admin / owner. OWNER with multiple facilities: do not set default.
+        const isOwner = (profile as any).role?.toUpperCase() === 'OWNER';
+        const multiFacilityOwner = isOwner && (profile.facilities?.length ?? 0) > 1;
+        const defaultFacility = multiFacilityOwner
+            ? null
+            : ((profile as any).facility ??
+              (profile.facilities?.length === 1 ? profile.facilities[0] : null));
+        if (defaultFacility?.id && !localStorage.getItem(FACILITY_KEY)) {
+            localStorage.setItem(FACILITY_KEY, String(defaultFacility.id));
+            setFacilityIdState(defaultFacility.id);
+        }
+        if (
+            (defaultFacility?.organization_id ?? profile.organizations?.[0]?.id) != null &&
+            !localStorage.getItem(ORG_KEY)
+        ) {
+            const oid = defaultFacility?.organization_id ?? profile.organizations?.[0]?.id;
+            localStorage.setItem(ORG_KEY, String(oid));
+            setOrganizationIdState(oid);
+        }
     };
+
+    const can = useCallback(
+        (permission: string) => {
+            const u = user;
+            if (!u?.permissions || !Array.isArray(u.permissions)) return false;
+            return u.permissions.includes(permission);
+        },
+        [user],
+    );
 
     return (
         <AuthContext.Provider
@@ -157,6 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 register,
                 logout,
                 refreshProfile,
+                can,
             }}
         >
             {children}

@@ -30,13 +30,15 @@ export function BatchStockPage() {
     const [batches, setBatches] = useState<Batch[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedBatchForAdjustment, setSelectedBatchForAdjustment] = useState<Batch | null>(null);
+    const [selectedBatchForAdjustment, setSelectedBatchForAdjustment] = useState<Batch | null>(
+        null,
+    );
 
     const fetchBatches = async () => {
         setLoading(true);
         try {
             const response = await pharmacyService.getBatches({
-                ...(user?.facility_id ? { facility_id: user.facility_id } : {})
+                ...(user?.facility_id ? { facility_id: user.facility_id } : {}),
             });
             setBatches(response);
         } catch (error) {
@@ -103,6 +105,7 @@ export function BatchStockPage() {
                 'auditor',
                 'admin',
             ]}
+            requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
                 {/* Header */}
@@ -243,7 +246,9 @@ export function BatchStockPage() {
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     <button
-                                                        onClick={() => setSelectedBatchForAdjustment(batch)}
+                                                        onClick={() =>
+                                                            setSelectedBatchForAdjustment(batch)
+                                                        }
                                                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
                                                         title="Adjust Stock"
                                                     >

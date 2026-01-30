@@ -22,22 +22,33 @@ const transferSchema = yup.object({
     notes: yup.string(),
 });
 
-export function StockTransferModal({ medicine, facilityId, onClose, onSuccess }: StockTransferModalProps) {
+export function StockTransferModal({
+    medicine,
+    facilityId,
+    onClose,
+    onSuccess,
+}: StockTransferModalProps) {
     const { user } = useAuth();
     const [batches, setBatches] = useState<Batch[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
 
-    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    const {
+        register,
+        handleSubmit,
+        watch,
+        setValue,
+        formState: { errors },
+    } = useForm({
         resolver: yupResolver(transferSchema),
         defaultValues: {
-            quantity: 1
-        }
+            quantity: 1,
+        },
     });
 
     const selectedBatchId = watch('batch_id');
-    const selectedBatch = batches.find(b => b.id === Number(selectedBatchId));
+    const selectedBatch = batches.find((b) => b.id === Number(selectedBatchId));
 
     useEffect(() => {
         const loadData = async () => {
@@ -45,12 +56,12 @@ export function StockTransferModal({ medicine, facilityId, onClose, onSuccess }:
             try {
                 const [batchesData, departmentsData] = await Promise.all([
                     pharmacyService.getBatches({ medicine_id: medicine.id }),
-                    pharmacyService.getDepartments({ facility_id: facilityId })
+                    pharmacyService.getDepartments({ facility_id: facilityId }),
                 ]);
 
                 // Filter active batches with stock
-                const activeBatches = (batchesData || []).filter(b =>
-                    (b.current_quantity > 0) && new Date(b.expiry_date) > new Date()
+                const activeBatches = (batchesData || []).filter(
+                    (b) => b.current_quantity > 0 && new Date(b.expiry_date) > new Date(),
                 );
 
                 setBatches(activeBatches);
@@ -69,7 +80,9 @@ export function StockTransferModal({ medicine, facilityId, onClose, onSuccess }:
         if (!selectedBatch) return;
 
         if (data.quantity > selectedBatch.current_quantity) {
-            toast.error(`Cannot transfer more than available stock (${selectedBatch.current_quantity})`);
+            toast.error(
+                `Cannot transfer more than available stock (${selectedBatch.current_quantity})`,
+            );
             return;
         }
 
@@ -82,7 +95,7 @@ export function StockTransferModal({ medicine, facilityId, onClose, onSuccess }:
                 source_department_id: null, // Assuming from Central Store for now
                 target_department_id: data.target_department_id,
                 quantity: data.quantity,
-                notes: data.notes
+                notes: data.notes,
             });
             toast.success('Stock transferred successfully');
             onSuccess();
@@ -106,10 +119,16 @@ export function StockTransferModal({ medicine, facilityId, onClose, onSuccess }:
                             Transfer Stock
                         </h2>
                         <p className="text-sm text-slate-500 mt-1">
-                            {medicine.name} <span className="text-xs uppercase font-bold bg-slate-100 px-2 py-0.5 rounded ml-2">{medicine.code}</span>
+                            {medicine.name}{' '}
+                            <span className="text-xs uppercase font-bold bg-slate-100 px-2 py-0.5 rounded ml-2">
+                                {medicine.code}
+                            </span>
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    >
                         <X size={20} />
                     </button>
                 </div>
@@ -123,7 +142,9 @@ export function StockTransferModal({ medicine, facilityId, onClose, onSuccess }:
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                             {/* Source (Fixed as Central Store for this version) */}
                             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm">
-                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">From</span>
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                                    From
+                                </span>
                                 <div className="font-bold text-healthcare-dark flex items-center gap-2">
                                     <Building2 size={16} /> Central Store / Main Pharmacy
                                 </div>
@@ -131,39 +152,56 @@ export function StockTransferModal({ medicine, facilityId, onClose, onSuccess }:
 
                             {/* Batch Selection */}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Select Batch</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                    Select Batch
+                                </label>
                                 <select
                                     {...register('batch_id')}
                                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white"
                                 >
                                     <option value="">Select a batch...</option>
-                                    {batches.map(b => (
+                                    {batches.map((b) => (
                                         <option key={b.id} value={b.id}>
-                                            {b.batch_number} (Qty: {b.current_quantity}) - Exp: {new Date(b.expiry_date).toLocaleDateString()}
+                                            {b.batch_number} (Qty: {b.current_quantity}) - Exp:{' '}
+                                            {new Date(b.expiry_date).toLocaleDateString()}
                                         </option>
                                     ))}
                                 </select>
-                                {errors.batch_id && <p className="text-red-500 text-xs mt-1">{errors.batch_id.message}</p>}
+                                {errors.batch_id && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {errors.batch_id.message}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Target Department */}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Destination Department</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                    Destination Department
+                                </label>
                                 <select
                                     {...register('target_department_id')}
                                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white"
                                 >
                                     <option value="">Select destination...</option>
-                                    {departments.map(d => (
-                                        <option key={d.id} value={d.id}>{d.name} ({d.type})</option>
+                                    {departments.map((d) => (
+                                        <option key={d.id} value={d.id}>
+                                            {d.name} ({d.type})
+                                        </option>
                                     ))}
                                 </select>
-                                {errors.target_department_id && <p className="text-red-500 text-xs mt-1">{errors.target_department_id.message}</p>}
+                                {errors.target_department_id && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {errors.target_department_id.message}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Quantity */}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Quantity to Transfer</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                    Quantity to Transfer
+                                </label>
                                 <div className="flex items-center gap-2">
                                     <input
                                         type="number"
@@ -175,12 +213,18 @@ export function StockTransferModal({ medicine, facilityId, onClose, onSuccess }:
                                         Max: {selectedBatch?.current_quantity || 0}
                                     </span>
                                 </div>
-                                {errors.quantity && <p className="text-red-500 text-xs mt-1">{errors.quantity.message}</p>}
+                                {errors.quantity && (
+                                    <p className="text-red-500 text-xs mt-1">
+                                        {errors.quantity.message}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Notes */}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Notes (Optional)</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                    Notes (Optional)
+                                </label>
                                 <textarea
                                     {...register('notes')}
                                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm"
@@ -193,7 +237,11 @@ export function StockTransferModal({ medicine, facilityId, onClose, onSuccess }:
                                 disabled={isLoading || batches.length === 0}
                                 className="w-full py-3 bg-healthcare-primary text-white rounded-xl font-bold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {isLoading ? <div className="animate-spin w-5 h-5 border-2 border-white/20 border-t-white rounded-full" /> : <ArrowRightLeft size={18} />}
+                                {isLoading ? (
+                                    <div className="animate-spin w-5 h-5 border-2 border-white/20 border-t-white rounded-full" />
+                                ) : (
+                                    <ArrowRightLeft size={18} />
+                                )}
                                 Confirm Transfer
                             </button>
                         </form>

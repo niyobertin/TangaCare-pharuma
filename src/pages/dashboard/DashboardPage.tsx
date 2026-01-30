@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { useAuth } from '../../context/AuthContext';
-import type { DashboardStats } from '../../types/pharmacy';
+import type { DashboardStats, Transaction, Alert } from '../../types/pharmacy';
 import {
     Package,
     TrendingUp,
@@ -26,10 +26,29 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+/** Format ISO date string as relative time (e.g. "2m ago", "1h ago"). */
+function formatRelativeTime(isoDate: string): string {
+    const d = new Date(isoDate);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffM = Math.floor(diffMs / 60000);
+    const diffH = Math.floor(diffMs / 3600000);
+    const diffD = Math.floor(diffMs / 86400000);
+    if (diffM < 1) return 'Just now';
+    if (diffM < 60) return `${diffM}m ago`;
+    if (diffH < 24) return `${diffH}h ago`;
+    if (diffD < 7) return `${diffD}d ago`;
+    return d.toLocaleDateString();
+}
+
 export function DashboardPage() {
-    const { user } = useAuth();
+    const { user, facilityId, facilities } = useAuth();
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loadingStats, setLoadingStats] = useState(false);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loadingTransactions, setLoadingTransactions] = useState(false);
+    const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [staffTotal, setStaffTotal] = useState<number | null>(null);
 
     useEffect(() => {
         let mounted = true;
@@ -39,7 +58,6 @@ export function DashboardPage() {
                 const data = await pharmacyService.getDashboardStats();
                 if (mounted) setStats(data);
             } catch (e) {
-                // Keep UI usable even if stats endpoint isn't reachable
                 if (mounted) setStats(null);
             } finally {
                 if (mounted) setLoadingStats(false);
@@ -49,12 +67,56 @@ export function DashboardPage() {
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [facilityId]);
+
+    useEffect(() => {
+        let mounted = true;
+        const load = async () => {
+            setLoadingTransactions(true);
+            try {
+                const list = await pharmacyService.getRecentSales();
+                if (mounted) setTransactions(Array.isArray(list) ? list : []);
+            } catch {
+                if (mounted) setTransactions([]);
+            } finally {
+                if (mounted) setLoadingTransactions(false);
+            }
+        };
+        load();
+        return () => {
+            mounted = false;
+        };
+    }, [facilityId]);
+
+    useEffect(() => {
+        let mounted = true;
+        const load = async () => {
+            try {
+                const res = await pharmacyService.getAlerts({ status: 'active' });
+                if (mounted) setAlerts(res?.data ?? []);
+            } catch {
+                if (mounted) setAlerts([]);
+            }
+        };
+        load();
+        return () => {
+            mounted = false;
+        };
+    }, [facilityId]);
 
     const medicinesInStock = stats?.medicinesInStock ?? '0';
     const lowStockWarning = stats?.lowStockWarning ?? 0;
     const expiringSoon = stats?.expiringSoon ?? 0;
-    const dailySales = stats?.dailySales ? `RWF ${Number(stats.dailySales).toLocaleString()}` : 'RWF 0';
+    const dailySales = stats?.dailySales
+        ? `RWF ${Number(stats.dailySales).toLocaleString()}`
+        : 'RWF 0';
+
+    const scopeLabel =
+        facilityId == null && facilities.length > 0
+            ? 'All facilities'
+            : facilityId != null
+              ? (facilities.find((f) => f.id === facilityId)?.name ?? `Facility #${facilityId}`)
+              : `Facility #${user?.facility_id ?? '—'}`;
 
     return (
         <ProtectedRoute
@@ -65,6 +127,13 @@ export function DashboardPage() {
                 'ADMIN',
                 'PHARMACIST',
                 'SUPER_ADMIN',
+                'OWNER',
+                'FACILITY_ADMIN',
+                'FACILITY ADMIN',
+                'CASHIER',
+                'STORE_MANAGER',
+                'STORE MANAGER',
+                'AUDITOR',
             ]}
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -75,7 +144,7 @@ export function DashboardPage() {
                         </h2>
                         <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-2 mt-0.5 text-xs uppercase tracking-wider">
                             <span className="flex h-2 w-2 rounded-full bg-healthcare-accent animate-pulse"></span>
-                            Live Pharmacy Status • Facility #{user?.facility_id ?? '—'}
+                            Live Pharmacy Status • {scopeLabel}
                         </p>
                     </div>
                     <div className="flex gap-2">
@@ -91,7 +160,11 @@ export function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard
                         title="Medicines in Stock"
-                        value={loadingStats ? '—' : medicinesInStock.toLocaleString?.() || medicinesInStock}
+                        value={
+                            loadingStats
+                                ? '—'
+                                : medicinesInStock.toLocaleString?.() || medicinesInStock
+                        }
                         trend={stats?.trends?.medicines ?? '0%'}
                         isPositive={stats?.isPositive?.medicines ?? true}
                         color="bg-healthcare-primary"
@@ -137,60 +210,85 @@ export function DashboardPage() {
                                 </div>
                             </div>
                             <div className="flex items-end gap-3 min-h-[200px] pt-4 relative z-10 px-2">
-                                {[42, 65, 38, 82, 95, 70, 85, 55, 60, 48, 72, 88].map(
-                                    (height, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex-1 flex flex-col items-center gap-3 group/bar"
-                                        >
-                                            <div className="w-full relative h-[160px] flex items-end">
-                                                <div
-                                                    style={{ height: `${height}%` }}
-                                                    className={cn(
-                                                        'w-full rounded-t-md transition-all duration-500 relative shadow-sm',
-                                                        i === 4
-                                                            ? 'bg-healthcare-primary'
-                                                            : 'bg-teal-500/20 dark:bg-teal-500/30 group-hover/bar:bg-healthcare-primary/40 dark:group-hover/bar:bg-healthcare-primary/60',
-                                                    )}
-                                                ></div>
+                                {(() => {
+                                    const chartArray =
+                                        stats?.dailySalesChart && stats.dailySalesChart.length > 0
+                                            ? stats.dailySalesChart
+                                            : Array.from({ length: 14 }, (_, i) => {
+                                                  const d = new Date();
+                                                  d.setDate(d.getDate() - (13 - i));
+                                                  return {
+                                                      date: d.toISOString().split('T')[0],
+                                                      sales: 0,
+                                                  };
+                                              });
+                                    const maxSales = Math.max(...chartArray.map((x) => x.sales), 1);
+                                    return chartArray.map((day, i) => {
+                                        const heightPct = Math.round((day.sales / maxSales) * 100);
+                                        const dayLabel = new Date(day.date).toLocaleDateString(
+                                            'en-US',
+                                            { weekday: 'short' },
+                                        )[0];
+                                        return (
+                                            <div
+                                                key={day.date}
+                                                className="flex-1 flex flex-col items-center gap-3 group/bar"
+                                            >
+                                                <div className="w-full relative h-[160px] flex items-end">
+                                                    <div
+                                                        style={{ height: `${heightPct}%` }}
+                                                        className={cn(
+                                                            'w-full rounded-t-md transition-all duration-500 relative shadow-sm min-h-[4px]',
+                                                            heightPct > 0 &&
+                                                                i === chartArray.length - 1
+                                                                ? 'bg-healthcare-primary'
+                                                                : 'bg-teal-500/20 dark:bg-teal-500/30 group-hover/bar:bg-healthcare-primary/40 dark:group-hover/bar:bg-healthcare-primary/60',
+                                                        )}
+                                                    ></div>
+                                                </div>
+                                                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-tighter">
+                                                    {dayLabel}
+                                                </span>
                                             </div>
-                                            <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-tighter">
-                                                {
-                                                    [
-                                                        'M',
-                                                        'T',
-                                                        'W',
-                                                        'T',
-                                                        'F',
-                                                        'S',
-                                                        'S',
-                                                        'M',
-                                                        'T',
-                                                        'W',
-                                                        'T',
-                                                        'F',
-                                                    ][i]
-                                                }
-                                            </span>
-                                        </div>
-                                    ),
-                                )}
+                                        );
+                                    });
+                                })()}
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <SummaryFeature
                                 icon={<Stethoscope size={18} className="text-blue-600" />}
                                 title="Pharmacy Staff"
-                                value="12 Pharmacists Online"
-                                description="Currently active in dispensing"
+                                value={
+                                    loadingStats
+                                        ? '—'
+                                        : typeof stats?.staffCount === 'number'
+                                          ? `${stats.staffCount} staff in scope`
+                                          : '—'
+                                }
+                                description="Users in facility or organization"
                                 color="bg-blue-50 dark:bg-blue-900"
                             />
                             <SummaryFeature
                                 icon={<ShieldCheck size={18} className="text-healthcare-accent" />}
                                 title="System Compliance"
-                                value="99.8% Optimized"
-                                description="All regulatory checks passed"
-                                color="bg-emerald-50 dark:bg-emerald-900"
+                                value={
+                                    loadingStats
+                                        ? '—'
+                                        : (stats?.activeAlertsCount ?? 0) === 0
+                                          ? '100% Optimized'
+                                          : `${Math.max(0, 100 - (stats?.activeAlertsCount ?? 0) * 2)}% attention`
+                                }
+                                description={
+                                    (stats?.activeAlertsCount ?? 0) === 0
+                                        ? 'All regulatory checks passed'
+                                        : `${stats?.activeAlertsCount} active alert(s)`
+                                }
+                                color={
+                                    (stats?.activeAlertsCount ?? 0) === 0
+                                        ? 'bg-emerald-50 dark:bg-emerald-900'
+                                        : 'bg-amber-50 dark:bg-amber-900'
+                                }
                             />
                         </div>
                     </div>
@@ -226,22 +324,32 @@ export function DashboardPage() {
                                 Critical Alerts
                             </h3>
                             <div className="space-y-4">
-                                <AlertItem
-                                    type="expiry"
-                                    title="Amoxicillin batches"
-                                    info="Expires in 2 business days"
-                                />
-                                <AlertItem
-                                    type="stock"
-                                    title="Insulin supply"
-                                    info="Critical low (4 units left)"
-                                />
-                                <AlertItem
-                                    type="audit"
-                                    title="Batch Audit"
-                                    info="Compliance deadline: 5 PM"
-                                    isUrgent
-                                />
+                                {alerts.length === 0 ? (
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                        No active alerts.
+                                    </p>
+                                ) : (
+                                    alerts
+                                        .slice(0, 5)
+                                        .map((alert) => (
+                                            <AlertItem
+                                                key={alert.id}
+                                                type={
+                                                    alert.type === 'expiry'
+                                                        ? 'expiry'
+                                                        : alert.type === 'low_stock'
+                                                          ? 'stock'
+                                                          : 'audit'
+                                                }
+                                                title={
+                                                    alert.message.slice(0, 40) +
+                                                    (alert.message.length > 40 ? '…' : '')
+                                                }
+                                                info={new Date(alert.created_at).toLocaleString()}
+                                                isUrgent={alert.status === 'active'}
+                                            />
+                                        ))
+                                )}
                             </div>
                         </div>
                     </div>
@@ -272,44 +380,42 @@ export function DashboardPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[13px] font-medium">
-                                <TableRow
-                                    id="TRX-948"
-                                    name="Paracetamol 500mg Tabs"
-                                    category="Pain Relief"
-                                    qty="-40"
-                                    status="Completed"
-                                    date="2m ago"
-                                    sku="SKU-4829"
-                                />
-                                <TableRow
-                                    id="TRX-947"
-                                    name="Metformin 850mg Tabs"
-                                    category="Anti-Diabetic"
-                                    qty="-28"
-                                    status="In Process"
-                                    date="5m ago"
-                                    isPending
-                                    sku="SKU-1029"
-                                />
-                                <TableRow
-                                    id="TRX-946"
-                                    name="Vitamin C 1000mg"
-                                    category="Supplements"
-                                    qty="+120"
-                                    status="Restocked"
-                                    date="12m ago"
-                                    isStockIn
-                                    sku="SKU-7721"
-                                />
-                                <TableRow
-                                    id="TRX-945"
-                                    name="Azithromycin 250mg"
-                                    category="Antibiotics"
-                                    qty="-6"
-                                    status="Completed"
-                                    date="45m ago"
-                                    sku="SKU-3321"
-                                />
+                                {loadingTransactions ? (
+                                    <tr>
+                                        <td
+                                            colSpan={7}
+                                            className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 text-sm"
+                                        >
+                                            Loading…
+                                        </td>
+                                    </tr>
+                                ) : transactions.length === 0 ? (
+                                    <tr>
+                                        <td
+                                            colSpan={7}
+                                            className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 text-sm"
+                                        >
+                                            No recent sales.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    transactions.map((t) => (
+                                        <TableRow
+                                            key={t.id}
+                                            id={t.id}
+                                            name={t.name}
+                                            category={t.category}
+                                            qty={
+                                                t.qty.startsWith('+')
+                                                    ? t.qty
+                                                    : `-${t.qty.replace(/^-/, '')}`
+                                            }
+                                            status={t.status}
+                                            date={formatRelativeTime(t.date)}
+                                            sku={t.sku || '—'}
+                                        />
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>

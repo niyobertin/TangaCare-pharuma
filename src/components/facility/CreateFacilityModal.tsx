@@ -30,8 +30,9 @@ interface CreateFacilityModalProps {
 
 export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const { refreshProfile, organizationId } = useAuth();
+    const { refreshProfile, organizationId, organizations } = useAuth();
     const navigate = useNavigate();
+    const effectiveOrgId = organizationId ?? organizations?.[0]?.id;
 
     const {
         register,
@@ -44,7 +45,7 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
     const onSubmit = async (data: CreateFacilityDto) => {
         setIsLoading(true);
         try {
-            const payload = organizationId ? { ...data, organization_id: organizationId } : data;
+            const payload = effectiveOrgId ? { ...data, organization_id: effectiveOrgId } : data;
             await pharmacyService.createFacility(payload);
             toast.success('Facility created successfully!');
             // Refresh profile to get updated facility association
@@ -66,7 +67,9 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
             <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
                     <div>
-                        <h2 className="text-xl font-black text-healthcare-dark">Register Your Facility</h2>
+                        <h2 className="text-xl font-black text-healthcare-dark">
+                            Register Your Facility
+                        </h2>
                         <p className="text-sm text-slate-500 mt-1">
                             Please provide details about your pharmacy or clinic to get started.
                         </p>
@@ -79,6 +82,11 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                     </button>
                 </div>
 
+                {!effectiveOrgId && (
+                    <div className="mx-6 mb-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-800 dark:text-amber-200 text-sm">
+                        Select an organization in the header switcher first, then add a facility.
+                    </div>
+                )}
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
                     <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-500 uppercase">
@@ -87,10 +95,11 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                         <input
                             {...register('name')}
                             placeholder="e.g. Kigali City Pharmacy"
-                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${errors.name
-                                ? 'border-red-400'
-                                : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
-                                }`}
+                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${
+                                errors.name
+                                    ? 'border-red-400'
+                                    : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
+                            }`}
                         />
                         {errors.name && (
                             <p className="text-[10px] font-bold text-red-500">
@@ -101,13 +110,16 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase">Type</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase">
+                                Type
+                            </label>
                             <select
                                 {...register('type')}
-                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all appearance-none cursor-pointer ${errors.type
-                                    ? 'border-red-400'
-                                    : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
-                                    }`}
+                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all appearance-none cursor-pointer ${
+                                    errors.type
+                                        ? 'border-red-400'
+                                        : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
+                                }`}
                             >
                                 <option value="">Select Type</option>
                                 <option value="pharmacy_shop">Pharmacy Shop</option>
@@ -128,10 +140,11 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                             <input
                                 {...register('phone')}
                                 placeholder="+250 7..."
-                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${errors.phone
-                                    ? 'border-red-400'
-                                    : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
-                                    }`}
+                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${
+                                    errors.phone
+                                        ? 'border-red-400'
+                                        : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
+                                }`}
                             />
                             {errors.phone && (
                                 <p className="text-[10px] font-bold text-red-500">
@@ -147,10 +160,11 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                             {...register('email')}
                             type="email"
                             placeholder="contact@pharmacy.com"
-                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${errors.email
-                                ? 'border-red-400'
-                                : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
-                                }`}
+                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${
+                                errors.email
+                                    ? 'border-red-400'
+                                    : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
+                            }`}
                         />
                         {errors.email && (
                             <p className="text-[10px] font-bold text-red-500">
@@ -166,10 +180,11 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                         <input
                             {...register('address')}
                             placeholder="District, Sector, Cell"
-                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${errors.address
-                                ? 'border-red-400'
-                                : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
-                                }`}
+                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${
+                                errors.address
+                                    ? 'border-red-400'
+                                    : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
+                            }`}
                         />
                         {errors.address && (
                             <p className="text-[10px] font-bold text-red-500">
@@ -181,7 +196,7 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                     <div className="pt-4">
                         <button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={isLoading || !effectiveOrgId}
                             className="w-full py-4 bg-healthcare-primary text-white rounded-xl font-black text-sm hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {isLoading ? (
