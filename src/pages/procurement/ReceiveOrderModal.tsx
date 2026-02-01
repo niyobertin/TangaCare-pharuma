@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import toast from 'react-hot-toast';
-import { X, CheckCircle, AlertTriangle, Calendar, Package } from 'lucide-react';
+import { X, CheckCircle, Package } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { ProcurementOrder } from '../../types/pharmacy';
 

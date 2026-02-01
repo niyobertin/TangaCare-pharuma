@@ -16,8 +16,9 @@ export const authService = {
         if (user) {
             localStorage.setItem('user_data', JSON.stringify(user));
         }
-        const orgs = response.data.data.organizations;
-        const facilities = response.data.data.facilities;
+        // Organizations and facilities are properties on the user object
+        const orgs = user?.organizations;
+        const facilities = user?.facilities;
         if (orgs?.length) {
             const firstOrg = orgs[0];
             localStorage.setItem('selected_organization_id', String(firstOrg.id));

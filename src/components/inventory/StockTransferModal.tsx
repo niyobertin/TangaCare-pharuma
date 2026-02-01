@@ -5,7 +5,7 @@ import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Medicine, Batch, Department } from '../../types/pharmacy';
-import { X, ArrowRightLeft, Calendar, Building2 } from 'lucide-react';
+import { X, ArrowRightLeft, Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface StockTransferModalProps {
@@ -28,7 +28,7 @@ export function StockTransferModal({
     onClose,
     onSuccess,
 }: StockTransferModalProps) {
-    const { user } = useAuth();
+    const { } = useAuth();
     const [batches, setBatches] = useState<Batch[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +38,6 @@ export function StockTransferModal({
         register,
         handleSubmit,
         watch,
-        setValue,
         formState: { errors },
     } = useForm({
         resolver: yupResolver(transferSchema),

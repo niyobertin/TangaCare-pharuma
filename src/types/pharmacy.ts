@@ -77,6 +77,8 @@ export interface Facility {
     min_stock_threshold_percentage?: number;
     expiry_alert_days?: number;
     default_markup_percent?: number;
+    status?: string | 'Active' | 'Inactive';
+    is_active?: boolean;
 }
 
 export interface MedicineCategory {
@@ -121,6 +123,8 @@ export interface CreateFacilityDto {
     controlled_drug_rules_enabled?: boolean;
     min_stock_threshold_percentage?: number;
     expiry_alert_days?: number;
+    status?: string;
+    is_active?: boolean;
 }
 
 export interface Batch {

@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Facility, Department } from '../../types/pharmacy';
 import { useAuth } from '../../context/AuthContext';
-import { X, Settings, Building2, Plus, Trash2, Edit2, Save } from 'lucide-react';
+import { X, Settings, Building2, Plus, Trash2, Save } from 'lucide-react';
 
 interface FacilityConfigurationModalProps {
     facility: Facility;
@@ -37,7 +37,6 @@ export function FacilityConfigurationModal({
     const [activeTab, setActiveTab] = useState<'config' | 'departments'>('config');
     const [isLoading, setIsLoading] = useState(false);
     const [departments, setDepartments] = useState<Department[]>([]);
-    const [isEditingDept, setIsEditingDept] = useState<number | null>(null);
     const [newDeptName, setNewDeptName] = useState('');
     const [newDeptType, setNewDeptType] = useState<Department['type']>('dispensary');
 
@@ -153,11 +152,10 @@ export function FacilityConfigurationModal({
                 <div className="flex border-b border-slate-100 dark:border-slate-800 px-6 shrink-0">
                     <button
                         onClick={() => setActiveTab('config')}
-                        className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${
-                            activeTab === 'config'
-                                ? 'border-healthcare-primary text-healthcare-primary'
-                                : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
+                        className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'config'
+                            ? 'border-healthcare-primary text-healthcare-primary'
+                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                            }`}
                     >
                         <div className="flex items-center gap-2">
                             <Settings size={16} /> Configuration
@@ -166,11 +164,10 @@ export function FacilityConfigurationModal({
                     {isHospital && (
                         <button
                             onClick={() => setActiveTab('departments')}
-                            className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${
-                                activeTab === 'departments'
-                                    ? 'border-healthcare-primary text-healthcare-primary'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                            }`}
+                            className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'departments'
+                                ? 'border-healthcare-primary text-healthcare-primary'
+                                : 'border-transparent text-slate-500 hover:text-slate-700'
+                                }`}
                         >
                             <div className="flex items-center gap-2">
                                 <Building2 size={16} /> Departments

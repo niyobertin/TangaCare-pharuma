@@ -58,14 +58,14 @@ export function ProcurementPage() {
     const stats = [
         {
             label: 'Pending POs',
-            value: orders.filter((o) => o.status === 'pending').length,
+            value: orders.filter((o) => o.status === 'PENDING').length,
             icon: Clock,
             color: 'text-amber-500',
             bg: 'bg-amber-50',
         },
         {
             label: 'Active Orders',
-            value: orders.filter((o) => o.status === 'ordered').length,
+            value: orders.filter((o) => o.status === 'ORDERED').length,
             icon: Truck,
             color: 'text-blue-500',
             bg: 'bg-blue-50',
@@ -241,20 +241,20 @@ export function ProcurementPage() {
                                                 <div
                                                     className={cn(
                                                         'w-fit px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5',
-                                                        order.status === 'received'
+                                                        order.status === 'RECEIVED'
                                                             ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                            : order.status === 'ordered'
-                                                              ? 'bg-blue-50 text-blue-600 border border-blue-100'
-                                                              : order.status === 'pending'
-                                                                ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                                : 'bg-red-50 text-red-600 border border-red-100',
+                                                            : order.status === 'ORDERED'
+                                                                ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                                : order.status === 'PENDING'
+                                                                    ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                    : 'bg-red-50 text-red-600 border border-red-100',
                                                     )}
                                                 >
-                                                    {order.status === 'received' ? (
+                                                    {order.status === 'RECEIVED' ? (
                                                         <CheckCircle2 size={12} />
-                                                    ) : order.status === 'pending' ? (
+                                                    ) : order.status === 'PENDING' ? (
                                                         <Clock size={12} />
-                                                    ) : order.status === 'ordered' ? (
+                                                    ) : order.status === 'ORDERED' ? (
                                                         <Truck size={12} />
                                                     ) : (
                                                         <XCircle size={12} />

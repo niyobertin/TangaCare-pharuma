@@ -7,10 +7,6 @@ import {
     Settings,
     Shield,
     User as UserIcon,
-    Store,
-    Hotel,
-    Stethoscope,
-    Trash2,
     AlertTriangle,
 } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -556,7 +552,7 @@ export function FacilitySettingsPage() {
                                         <p className="text-base font-black text-healthcare-dark">
                                             {facility?.facility_admin
                                                 ? `${facility.facility_admin.first_name || ''} ${facility.facility_admin.last_name || ''}`.trim() ||
-                                                  'Admin'
+                                                'Admin'
                                                 : facility?.admin_name || 'No Admin Assigned'}
                                         </p>
                                     </div>

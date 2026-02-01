@@ -12,8 +12,7 @@ export function OrganizationsPage() {
     const [organizations, setOrganizations] = useState<Organization[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [page] = useState(1);
     const [showCreateModal, setShowCreateModal] = useState(false);
 
     const loadOrganizations = async () => {
@@ -21,7 +20,6 @@ export function OrganizationsPage() {
         try {
             const response = await pharmacyService.getOrganizations({ page, limit: 12, search });
             setOrganizations(response.data || []);
-            setTotalPages(response.meta?.totalPages || 1);
         } catch (error: any) {
             toast.error(error?.response?.data?.message || 'Failed to load organizations');
         } finally {

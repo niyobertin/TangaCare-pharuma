@@ -10,11 +10,8 @@ import {
     Phone,
     Mail,
     Edit,
-    Trash2,
     Building,
-    Globe,
     Briefcase,
-    FileText,
     X,
 } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -173,11 +170,10 @@ export function SuppliersPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span
-                                                    className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide border ${
-                                                        supplier.is_active
-                                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                                            : 'bg-slate-100 text-slate-500 border-slate-200'
-                                                    }`}
+                                                    className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide border ${supplier.is_active
+                                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                        : 'bg-slate-100 text-slate-500 border-slate-200'
+                                                        }`}
                                                 >
                                                     {supplier.is_active ? 'Active' : 'Inactive'}
                                                 </span>
@@ -347,8 +343,8 @@ function SupplierModal({
                             {isLoading
                                 ? 'Saving...'
                                 : supplier
-                                  ? 'Update Supplier'
-                                  : 'Create Supplier'}
+                                    ? 'Update Supplier'
+                                    : 'Create Supplier'}
                         </button>
                     </div>
                 </form>

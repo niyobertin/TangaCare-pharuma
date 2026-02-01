@@ -72,7 +72,7 @@ export interface User {
         type: string;
     };
     organizations?: Organization[];
-    facilities?: Array<{ id: number; name: string; type?: string }>;
+    facilities?: Array<{ id: number; name: string; type?: string; organization_id?: number }>;
 }
 
 export interface AuthTokens {

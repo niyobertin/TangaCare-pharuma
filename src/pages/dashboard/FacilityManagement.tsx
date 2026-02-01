@@ -9,7 +9,6 @@ import {
     Stethoscope,
     CheckCircle2,
     XCircle,
-    ArrowUpRight,
     ChevronLeft,
     ChevronRight,
     AlertCircle,
@@ -21,9 +20,7 @@ import {
 import { useNavigate } from '@tanstack/react-router';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { pharmacyService } from '../../services/pharmacy.service';
-import { userService } from '../../services/user.service';
 import type { Facility, CreateFacilityDto } from '../../types/pharmacy';
-import type { User } from '../../types/auth'; // Ensure User is imported
 import { StatsSkeleton } from '../../components/shared/Skeleton';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -606,8 +603,8 @@ export function FacilityManagementPage() {
                                                                 type.includes('hospital')
                                                                     ? 'bg-teal-500'
                                                                     : type.includes('clinic')
-                                                                      ? 'bg-indigo-500'
-                                                                      : 'bg-amber-500',
+                                                                        ? 'bg-indigo-500'
+                                                                        : 'bg-amber-500',
                                                             )}
                                                         >
                                                             {type.includes('hospital') ? (
@@ -655,7 +652,7 @@ export function FacilityManagementPage() {
                                                             <span className="text-xs lg:text-sm font-bold text-healthcare-dark">
                                                                 {f.facility_admin
                                                                     ? `${f.facility_admin.first_name || ''} ${f.facility_admin.last_name || ''}`.trim() ||
-                                                                      'Admin'
+                                                                    'Admin'
                                                                     : f.admin_name || 'No Admin'}
                                                             </span>
                                                             {f.facility_admin && (
