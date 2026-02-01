@@ -25,6 +25,7 @@ import { StatsSkeleton } from '../../components/shared/Skeleton';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-hot-toast';
+import { ConfirmModal } from '../../components/shared/ConfirmModal';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -321,6 +322,8 @@ export function FacilityManagementPage() {
     // Modal States
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [facilityToDelete, setFacilityToDelete] = useState<number | null>(null);
 
     const fetchFacilities = async () => {
         setLoading(true);
@@ -363,18 +366,8 @@ export function FacilityManagementPage() {
     };
 
     const handleDelete = async (id: number) => {
-        if (
-            !confirm('Are you sure you want to delete this facility? This action cannot be undone.')
-        )
-            return;
-        try {
-            await pharmacyService.deleteFacility(id);
-            toast.success('Facility deleted');
-            fetchFacilities();
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to delete facility');
-        }
+        setFacilityToDelete(id);
+        setIsConfirmOpen(true);
     };
 
     const safeFacilities = Array.isArray(facilities) ? facilities : [];
@@ -459,7 +452,7 @@ export function FacilityManagementPage() {
                                     <stat.icon size={24} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    <p className="text-[10px] font-bold text-slate-400 tracking-tight">
                                         {stat.label}
                                     </p>
                                     <p className="text-xl font-black text-healthcare-dark">
@@ -474,7 +467,7 @@ export function FacilityManagementPage() {
                 {/* Filters */}
                 <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
                     <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                        <span className="text-[11px] font-bold text-slate-400 tracking-tight">
                             Show
                         </span>
                         <select
@@ -538,25 +531,25 @@ export function FacilityManagementPage() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-slate-800/50">
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center w-16">
+                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center w-16">
                                         ID
                                     </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
                                         Facility Details
                                     </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
                                         Contact Info
                                     </th>
-                                    <th className="px-6 py-4 text-[10px] lg:text-xs font-black uppercase text-slate-400 tracking-widest">
+                                    <th className="px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-400 tracking-tight">
                                         Admin
                                     </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">
+                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center">
                                         Type
                                     </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
                                         Status
                                     </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
+                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-right">
                                         Actions
                                     </th>
                                 </tr>
@@ -688,7 +681,7 @@ export function FacilityManagementPage() {
                                                 <td className="px-6 py-4">
                                                     <div
                                                         className={cn(
-                                                            'w-fit px-3 py-1 rounded-lg text-[10px] lg:text-xs font-black uppercase flex items-center gap-1.5',
+                                                            'w-fit px-3 py-1 rounded-lg text-[10px] lg:text-xs font-semibold flex items-center gap-1.5',
                                                             isActive
                                                                 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                                                 : 'bg-red-50 text-red-600 border border-red-100',
@@ -763,7 +756,7 @@ export function FacilityManagementPage() {
 
                 {/* Pagination */}
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm">
-                    <div className="text-[11px] font-black uppercase text-slate-400 tracking-widest">
+                    <div className="text-[11px] font-bold text-slate-400 tracking-tight whitespace-nowrap">
                         Showing{' '}
                         <span className="text-healthcare-dark">
                             {totalItems === 0 ? 0 : (page - 1) * limit + 1}
@@ -783,20 +776,50 @@ export function FacilityManagementPage() {
                             <ChevronLeft size={18} />
                         </button>
                         <div className="flex items-center gap-1">
-                            {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setPage(i + 1)}
-                                    className={cn(
-                                        'w-9 h-9 flex items-center justify-center rounded-xl text-[11px] font-black transition-all',
-                                        page === i + 1
-                                            ? 'bg-healthcare-primary text-white shadow-md shadow-teal-500/20'
-                                            : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400',
-                                    )}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
+                            {(() => {
+                                const pages = [];
+                                const maxVisible = 5;
+
+                                if (totalPages <= maxVisible) {
+                                    for (let i = 1; i <= totalPages; i++) {
+                                        pages.push(i);
+                                    }
+                                } else {
+                                    pages.push(1);
+                                    if (page > 3) pages.push('...');
+
+                                    const start = Math.max(2, page - 1);
+                                    const end = Math.min(totalPages - 1, page + 1);
+
+                                    for (let i = start; i <= end; i++) {
+                                        if (!pages.includes(i)) pages.push(i);
+                                    }
+
+                                    if (page < totalPages - 2) pages.push('...');
+                                    if (!pages.includes(totalPages)) pages.push(totalPages);
+                                }
+
+                                return pages.map((p, i) =>
+                                    p === '...' ? (
+                                        <span key={`sep-${i}`} className="px-2 text-slate-400 font-bold">
+                                            ...
+                                        </span>
+                                    ) : (
+                                        <button
+                                            key={p}
+                                            onClick={() => setPage(Number(p))}
+                                            className={cn(
+                                                'w-9 h-9 flex items-center justify-center rounded-xl text-[11px] font-black transition-all',
+                                                page === p
+                                                    ? 'bg-healthcare-primary text-white shadow-md shadow-teal-500/20'
+                                                    : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400',
+                                            )}
+                                        >
+                                            {p}
+                                        </button>
+                                    ),
+                                );
+                            })()}
                         </div>
                         <button
                             onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
@@ -814,6 +837,34 @@ export function FacilityManagementPage() {
                     onClose={() => setIsCreateOpen(false)}
                     onSubmit={handleCreate}
                     loading={actionLoading}
+                />
+                <ConfirmModal
+                    isOpen={isConfirmOpen}
+                    onClose={() => {
+                        setIsConfirmOpen(false);
+                        setFacilityToDelete(null);
+                    }}
+                    onConfirm={async () => {
+                        if (facilityToDelete) {
+                            setActionLoading(true);
+                            try {
+                                await pharmacyService.deleteFacility(facilityToDelete);
+                                toast.success('Facility deleted');
+                                setIsConfirmOpen(false);
+                                setFacilityToDelete(null);
+                                fetchFacilities();
+                            } catch (error) {
+                                console.error(error);
+                                toast.error('Failed to delete facility');
+                            } finally {
+                                setActionLoading(false);
+                            }
+                        }
+                    }}
+                    loading={actionLoading}
+                    title="Delete Facility"
+                    message="Are you sure you want to delete this facility? This action cannot be undone."
+                    confirmText="Delete"
                 />
             </div>
         </ProtectedRoute>

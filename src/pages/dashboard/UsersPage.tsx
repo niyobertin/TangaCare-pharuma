@@ -6,12 +6,15 @@ import {
     ChevronRight,
     Plus,
     Pencil,
+    History,
     UserCheck,
     UserX,
+    Trash2,
     AlertTriangle,
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Link } from '@tanstack/react-router';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -19,7 +22,7 @@ function cn(...inputs: ClassValue[]) {
 import { userService, STAFF_ROLES, type CreateStaffPayload } from '../../services/user.service';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
-import type { User } from '../../types/auth';
+import type { User, Organization } from '../../types/auth';
 import toast from 'react-hot-toast';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -31,7 +34,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export function UsersPage() {
-    const { user: authUser, facilities } = useAuth();
+    const { user: authUser, facilities, organizations } = useAuth();
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -42,6 +45,7 @@ export function UsersPage() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [facilityFilter, setFacilityFilter] = useState<number | ''>('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+    const [roleFilter, setRoleFilter] = useState<string | 'all'>('all');
 
     const loadUsers = async () => {
         setIsLoading(true);
@@ -52,6 +56,7 @@ export function UsersPage() {
                 search: search || undefined,
                 facility_id: facilityFilter === '' ? undefined : facilityFilter,
                 status: statusFilter === 'all' ? undefined : statusFilter,
+                role: roleFilter === 'all' ? undefined : roleFilter,
             });
             setUsers(response.data || []);
             setTotalPages(response.meta?.totalPages ?? 1);
@@ -64,10 +69,17 @@ export function UsersPage() {
         }
     };
 
+    const groupedFacilities = (facilities ?? []).reduce((acc, f) => {
+        const orgName = organizations?.find((o: Organization) => o.id === f.organization_id)?.name || 'Other';
+        if (!acc[orgName]) acc[orgName] = [];
+        acc[orgName].push(f);
+        return acc;
+    }, {} as Record<string, typeof facilities>);
+
     useEffect(() => {
         const timer = setTimeout(() => loadUsers(), 300);
         return () => clearTimeout(timer);
-    }, [page, search, facilityFilter, statusFilter, limit]);
+    }, [page, search, facilityFilter, statusFilter, roleFilter, limit]);
 
     const displayName = (u: User) =>
         [u.first_name ?? u.firstName, u.last_name ?? u.lastName].filter(Boolean).join(' ') ||
@@ -149,11 +161,23 @@ export function UsersPage() {
                             className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                         >
                             <option value="">All facilities</option>
-                            {facilities.map((f) => (
-                                <option key={f.id} value={f.id}>
-                                    {f.name ?? `Facility ${f.id}`}
-                                </option>
-                            ))}
+                            {authUser?.role?.toUpperCase().includes('SUPER') ? (
+                                Object.entries(groupedFacilities).map(([orgName, facs]) => (
+                                    <optgroup key={orgName} label={orgName}>
+                                        {facs.map((f) => (
+                                            <option key={f.id} value={f.id}>
+                                                {f.name}
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                ))
+                            ) : (
+                                facilities.map((f) => (
+                                    <option key={f.id} value={f.id}>
+                                        {f.name ?? `Facility ${f.id}`}
+                                    </option>
+                                ))
+                            )}
                         </select>
                     )}
                     <select
@@ -167,6 +191,21 @@ export function UsersPage() {
                         <option value="all">All status</option>
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
+                    </select>
+                    <select
+                        value={roleFilter}
+                        onChange={(e) => {
+                            setRoleFilter(e.target.value);
+                            setPage(1);
+                        }}
+                        className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
+                    >
+                        <option value="all">All roles</option>
+                        {Object.entries(ROLE_LABELS).map(([val, label]) => (
+                            <option key={val} value={val}>
+                                {label}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
@@ -363,6 +402,7 @@ function UserActionsIcons({
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
     const [showActivateConfirm, setShowActivateConfirm] = useState(false);
+    const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
     const isActive = user.is_active ?? user.isActive ?? true;
     const displayName =
         [user.first_name ?? user.firstName, user.last_name ?? user.lastName]
@@ -383,6 +423,17 @@ function UserActionsIcons({
         }
     };
 
+    const handleArchive = async () => {
+        try {
+            await userService.deleteUser(user.id);
+            toast.success('User archived successfully');
+            setShowArchiveConfirm(false);
+            onUpdate();
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || 'Failed to archive user');
+        }
+    };
+
     const onToggleActiveClick = () => {
         if (isActive) setShowDeactivateConfirm(true);
         else setShowActivateConfirm(true);
@@ -390,6 +441,14 @@ function UserActionsIcons({
 
     return (
         <div className="flex items-center justify-end gap-1">
+            <Link
+                to="/app/audit-logs"
+                search={{ search: user.email || user.id.toString() }}
+                className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-healthcare-primary transition-colors"
+                title="View activity history"
+            >
+                <History size={18} />
+            </Link>
             <button
                 type="button"
                 onClick={() => setShowEditModal(true)}
@@ -407,6 +466,15 @@ function UserActionsIcons({
                 title={isActive ? 'Deactivate' : 'Activate'}
             >
                 {isActive ? <UserX size={18} /> : <UserCheck size={18} />}
+            </button>
+            <button
+                type="button"
+                onClick={() => setShowArchiveConfirm(true)}
+                className="p-2 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
+                aria-label="Archive user"
+                title="Archive user"
+            >
+                <Trash2 size={18} />
             </button>
             {showEditModal && (
                 <EditUserModal
@@ -504,6 +572,52 @@ function UserActionsIcons({
                                 className="flex-1 py-2.5 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600"
                             >
                                 Activate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showArchiveConfirm && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                    onClick={() => setShowArchiveConfirm(false)}
+                >
+                    <div
+                        className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-md w-full p-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
+                                <AlertTriangle size={24} />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-black text-healthcare-dark">
+                                    Archive user
+                                </h2>
+                                <p className="text-sm text-slate-500 mt-0.5">
+                                    This will permanently hide the user
+                                </p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+                            Are you sure you want to archive <strong>{displayName}</strong>? They
+                            will be removed from the staff list, but their historical data (sales, orders, etc.)
+                            will be preserved in the database.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowArchiveConfirm(false)}
+                                className="flex-1 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleArchive}
+                                className="flex-1 py-2.5 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 shadow-md shadow-red-500/20"
+                            >
+                                Archive staff
                             </button>
                         </div>
                     </div>

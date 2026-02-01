@@ -87,13 +87,13 @@ const authLayoutRoute = createRoute({
 import { AlertsPage } from '../pages/dashboard/AlertsPage';
 import { ReportsPage } from '../pages/dashboard/ReportsPage';
 import { StockRegisterReportPage } from '../pages/dashboard/StockRegisterReportPage';
-// import { SuppliersPage } from '../pages/dashboard/SuppliersPage'; // Removed old import
-import { SuppliersPage } from '../pages/procurement/SuppliersPage';
-import { OrdersPage } from '../pages/procurement/OrdersPage';
+import { ProcurementPage } from '../pages/procurement/ProcurementPage';
+import { ProcurementLayout } from '../pages/procurement/ProcurementLayout';
 import { FacilitiesPage } from '../pages/facilities/FacilitiesPage';
 import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
 import { FacilitySettingsPage } from '../pages/dashboard/FacilitySettingsPage';
 import { UsersPage } from '../pages/dashboard/UsersPage';
+import { ViewOrderPage } from '../pages/procurement/ViewOrderPage';
 
 const indexRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -129,7 +129,27 @@ const usersRoute = createRoute({
 const procurementRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'procurement',
-    component: OrdersPage, // Default procurement view is Orders
+    component: ProcurementLayout,
+});
+const procurementIndexRoute = createRoute({
+    getParentRoute: () => procurementRoute,
+    path: '/',
+    component: ProcurementPage,
+});
+const ordersRoute = createRoute({
+    getParentRoute: () => procurementRoute,
+    path: 'orders',
+    component: ProcurementPage,
+});
+const suppliersRoute = createRoute({
+    getParentRoute: () => procurementRoute,
+    path: 'suppliers',
+    component: ProcurementPage,
+});
+const viewOrderRoute = createRoute({
+    getParentRoute: () => procurementRoute,
+    path: 'orders/$orderId',
+    component: ViewOrderPage,
 });
 const stockRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -140,6 +160,13 @@ const auditLogsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'audit-logs',
     component: AuditLogsPage,
+    validateSearch: (search: Record<string, unknown>) => {
+        return z
+            .object({
+                search: z.string().optional(),
+            })
+            .parse(search);
+    },
 });
 const stockMovementsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -157,12 +184,7 @@ const stockRegisterRoute = createRoute({
     component: StockRegisterReportPage,
 });
 
-// --- Application Routes (Integrated) ---
-const suppliersRoute = createRoute({
-    getParentRoute: () => appLayoutRoute,
-    path: 'suppliers',
-    component: SuppliersPage,
-});
+
 const alertsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'alerts',
@@ -292,7 +314,7 @@ const appRouteTree = appLayoutRoute.addChildren([
     facilitiesRoute,
     usersRoute,
     facilitySettingsRoute,
-    procurementRoute,
+    procurementRoute.addChildren([procurementIndexRoute, ordersRoute, suppliersRoute, viewOrderRoute]),
     stockRoute,
     auditLogsRoute,
     stockMovementsRoute,
@@ -301,7 +323,6 @@ const appRouteTree = appLayoutRoute.addChildren([
     prescriptionsRoute,
     patientsRoute,
     analyticsRoute,
-    suppliersRoute,
     employeeRoute,
     settingsRoute,
     alertsRoute,
