@@ -64,6 +64,8 @@ export const userService = {
         limit?: number;
         role?: string;
         search?: string;
+        facility_id?: number;
+        status?: 'active' | 'inactive';
     }): Promise<PaginatedResponse<User>> {
         const response = await api.get<any>('/users', { params });
         return normalizePaginatedResponse<User>(response.data);

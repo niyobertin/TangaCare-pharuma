@@ -10,6 +10,12 @@ import {
     UserX,
     AlertTriangle,
 } from 'lucide-react';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
 import { userService, STAFF_ROLES, type CreateStaffPayload } from '../../services/user.service';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
@@ -30,10 +36,12 @@ export function UsersPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
-    const [limit] = useState(20);
+    const [limit, setLimit] = useState(20);
     const [totalPages, setTotalPages] = useState(1);
     const [total, setTotal] = useState(0);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [facilityFilter, setFacilityFilter] = useState<number | ''>('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
     const loadUsers = async () => {
         setIsLoading(true);
@@ -42,6 +50,8 @@ export function UsersPage() {
                 page,
                 limit,
                 search: search || undefined,
+                facility_id: facilityFilter === '' ? undefined : facilityFilter,
+                status: statusFilter === 'all' ? undefined : statusFilter,
             });
             setUsers(response.data || []);
             setTotalPages(response.meta?.totalPages ?? 1);
@@ -57,7 +67,7 @@ export function UsersPage() {
     useEffect(() => {
         const timer = setTimeout(() => loadUsers(), 300);
         return () => clearTimeout(timer);
-    }, [page, search]);
+    }, [page, search, facilityFilter, statusFilter, limit]);
 
     const displayName = (u: User) =>
         [u.first_name ?? u.firstName, u.last_name ?? u.lastName].filter(Boolean).join(' ') ||
@@ -129,6 +139,35 @@ export function UsersPage() {
                             className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                         />
                     </div>
+                    {facilities && facilities.length > 0 && (
+                        <select
+                            value={facilityFilter}
+                            onChange={(e) => {
+                                setFacilityFilter(e.target.value === '' ? '' : Number(e.target.value));
+                                setPage(1);
+                            }}
+                            className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
+                        >
+                            <option value="">All facilities</option>
+                            {facilities.map((f) => (
+                                <option key={f.id} value={f.id}>
+                                    {f.name ?? `Facility ${f.id}`}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => {
+                            setStatusFilter(e.target.value as 'all' | 'active' | 'inactive');
+                            setPage(1);
+                        }}
+                        className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
+                    >
+                        <option value="all">All status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
                 </div>
 
                 {isLoading ? (
@@ -145,98 +184,149 @@ export function UsersPage() {
                 ) : (
                     <>
                         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700">
-                            <table className="w-full min-w-[640px]">
-                                <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                            ID
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                            Name
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                            Email
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                            Role
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                        <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider w-24">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                    {users.map((u) => (
-                                        <tr
-                                            key={u.id}
-                                            className="hover:bg-slate-50 dark:hover:bg-slate-900/50"
-                                        >
-                                            <td className="px-6 py-4 text-sm font-mono text-slate-600 dark:text-slate-400">
-                                                {u.id}
-                                            </td>
-                                            <td className="px-6 py-4 font-bold text-healthcare-dark">
-                                                {displayName(u)}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                                                {u.email || '—'}
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="px-2 py-1 rounded-full text-xs font-bold bg-healthcare-primary/10 text-healthcare-primary uppercase">
-                                                    {u.role || '—'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span
-                                                    className={`px-2 py-1 rounded-full text-xs font-bold ${(u.is_active ?? u.isActive) ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'}`}
-                                                >
-                                                    {(u.is_active ?? u.isActive)
-                                                        ? 'Active'
-                                                        : 'Inactive'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                {canShowActions(u) ? (
-                                                    <UserActionsIcons
-                                                        user={u}
-                                                        facilities={facilities ?? []}
-                                                        onUpdate={() => loadUsers()}
-                                                    />
-                                                ) : (
-                                                    <span className="text-slate-400 text-xs">
-                                                        —
-                                                    </span>
-                                                )}
-                                            </td>
+                            <div className="overflow-x-auto">
+                                <table className="w-full min-w-[900px]">
+                                    <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                ID
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase whitespace-nowrap tracking-wider">
+                                                Joined Date
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                Name
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                Email
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase whitespace-nowrap tracking-wider">
+                                                Role
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase whitespace-nowrap tracking-wider">
+                                                Facility
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase whitespace-nowrap tracking-wider">
+                                                Status
+                                            </th>
+                                            <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider w-24">
+                                                Actions
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                                        {users.map((u) => {
+                                            const userFacility = facilities?.find(f => f.id === u.facility_id);
+                                            const joinedDate = u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+                                            return (
+                                                <tr
+                                                    key={u.id}
+                                                    className="hover:bg-slate-50 dark:hover:bg-slate-900/50"
+                                                >
+                                                    <td className="px-6 py-4 text-sm font-mono text-slate-600 dark:text-slate-400">
+                                                        {u.id}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap dark:text-slate-400">
+                                                        {joinedDate}
+                                                    </td>
+                                                    <td className="px-6 py-4 font-bold whitespace-nowrap text-healthcare-dark">
+                                                        {displayName(u)}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                                                        {u.email || '—'}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-healthcare-primary/10 text-healthcare-primary uppercase">
+                                                            {u.role || '—'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap dark:text-slate-400">
+                                                        {userFacility?.name || '—'}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span
+                                                            className={`px-2 py-1 rounded-full text-xs font-bold ${(u.is_active ?? u.isActive) ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400'}`}
+                                                        >
+                                                            {(u.is_active ?? u.isActive)
+                                                                ? 'Active'
+                                                                : 'Inactive'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        {canShowActions(u) ? (
+                                                            <UserActionsIcons
+                                                                user={u}
+                                                                facilities={facilities ?? []}
+                                                                onUpdate={() => loadUsers()}
+                                                            />
+                                                        ) : (
+                                                            <span className="text-slate-400 text-xs">
+                                                                —
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         {totalPages > 1 && (
-                            <div className="mt-6 flex items-center justify-between">
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)}{' '}
-                                    of {total}
-                                </p>
+                            <div className="mt-6 flex items-center justify-between bg-white dark:bg-slate-800 px-6 py-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                                <div className="flex items-center gap-4">
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                        Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                            Show
+                                        </span>
+                                        <select
+                                            value={limit}
+                                            onChange={(e) => {
+                                                setLimit(Number(e.target.value));
+                                                setPage(1);
+                                            }}
+                                            className="bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl px-3 py-1 text-[11px] font-black text-healthcare-dark focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
+                                        >
+                                            {[20, 40, 60, 100].map((l) => (
+                                                <option key={l} value={l}>
+                                                    {l} items
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
                                 <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                        disabled={page === 1}
-                                        className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-50 text-slate-500 hover:text-healthcare-primary"
+                                        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                                        disabled={page === 1 || isLoading}
+                                        className="p-2 border border-slate-100 dark:border-slate-800 rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary transition-all"
                                     >
                                         <ChevronLeft size={18} />
                                     </button>
-                                    <span className="text-sm font-bold text-healthcare-dark">
-                                        Page {page} of {totalPages}
-                                    </span>
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => setPage(i + 1)}
+                                                className={cn(
+                                                    'w-9 h-9 flex items-center justify-center rounded-xl text-[11px] font-black transition-all',
+                                                    page === i + 1
+                                                        ? 'bg-healthcare-primary text-white shadow-md shadow-teal-500/20'
+                                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400',
+                                                )}
+                                            >
+                                                {i + 1}
+                                            </button>
+                                        ))}
+                                    </div>
                                     <button
-                                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                                        disabled={page === totalPages}
-                                        className="p-2 border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-50 text-slate-500 hover:text-healthcare-primary"
+                                        onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                                        disabled={page === totalPages || isLoading}
+                                        className="p-2 border border-slate-100 dark:border-slate-800 rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary transition-all"
                                     >
                                         <ChevronRight size={18} />
                                     </button>
