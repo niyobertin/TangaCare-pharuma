@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Search,
     ShoppingCart,
@@ -35,29 +35,40 @@ export function DispensingPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 500);
-    const [page, _setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [page, setPage] = useState(1);
 
-    // Cart & Sale State
     const [cart, setCart] = useState<CartItem[]>([]);
     const [patientQuery, setPatientQuery] = useState('');
-    // const [debouncedPatientSearch] = useDebounce(patientQuery, 500);
     const [patients, setPatients] = useState<any[]>([]);
     const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
-    // const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'Card'>('Cash');
     const [processing, setProcessing] = useState(false);
 
-    // Fetch Medicines
+    useEffect(() => {
+        setPage(1);
+        setHasMore(true);
+    }, [debouncedSearch]);
+
     const fetchMedicines = async () => {
-        setLoading(true);
+        if (page === 1) setLoading(true);
+
         try {
             const response = await pharmacyService.getMedicines({
                 page,
-                limit: 12,
+                limit: 20,
                 search: debouncedSearch,
                 ...(user?.facility_id ? { facility_id: user.facility_id } : {}),
             });
-            setMedicines(response.data);
+
+            setMedicines(prev => {
+                if (page === 1) return response.data;
+                const newIds = new Set(response.data.map(m => m.id));
+                return [...prev.filter(m => !newIds.has(m.id)), ...response.data];
+            });
+
+            setHasMore(response.meta.page < response.meta.totalPages);
         } catch (error) {
             console.error('Failed to fetch medicines:', error);
         } finally {
@@ -65,7 +76,15 @@ export function DispensingPage() {
         }
     };
 
-    // Patient Search (Mockable)
+    const handleScroll = () => {
+        if (!scrollContainerRef.current || loading || !hasMore) return;
+
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+        if (scrollHeight - scrollTop <= clientHeight + 100) {
+            setPage(prev => prev + 1);
+        }
+    };
+
     useEffect(() => {
         if (!patientQuery) {
             setPatients([]);
@@ -73,11 +92,9 @@ export function DispensingPage() {
         }
         const searchPatients = async () => {
             try {
-                // Real API call
                 const results = await pharmacyService.getPatients(patientQuery);
                 setPatients(results || []);
             } catch (err) {
-                // Mock behavior if API fails or doesn't exist
                 console.warn('Patient API not reachable, mocking results');
                 setPatients(
                     [
@@ -101,12 +118,9 @@ export function DispensingPage() {
             return;
         }
 
-        // FEFO Logic: Fetch batches for this medicine
         let bestBatch: Batch | undefined;
         try {
             const batches = await pharmacyService.getBatches({ medicine_id: med.id });
-            // Sort by expiry date ASC, filter out expired/depleted.
-            // Backend Batch currently doesn't provide a `status`, so rely on quantity + expiry.
             const now = new Date();
             const activeBatches = batches
                 .filter((b) => (b.current_quantity || 0) > 0 && new Date(b.expiry_date) > now)
@@ -231,7 +245,6 @@ export function DispensingPage() {
             requireFacility
         >
             <div className="flex h-full flex-col lg:flex-row p-5 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-700 overflow-hidden">
-                {/* Left Side: Search & Selection */}
                 <div className="flex-1 flex flex-col gap-6 overflow-hidden min-h-0">
                     <div className="space-y-1">
                         <h2 className="text-xl font-black text-healthcare-dark tracking-tight">
@@ -256,7 +269,11 @@ export function DispensingPage() {
                         />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2">
+                    <div
+                        ref={scrollContainerRef}
+                        onScroll={handleScroll}
+                        className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2"
+                    >
                         {loading ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <TableSkeleton rows={6} columns={1} />
@@ -271,7 +288,7 @@ export function DispensingPage() {
                                         className={cn(
                                             'group p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl text-left transition-all hover:border-healthcare-primary/30 hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden',
                                             (med.stock_quantity || 0) === 0 &&
-                                                'opacity-50 cursor-not-allowed grayscale',
+                                            'opacity-50 cursor-not-allowed grayscale',
                                         )}
                                     >
                                         <div className="flex flex-col gap-3">
@@ -312,12 +329,9 @@ export function DispensingPage() {
                             </div>
                         )}
                     </div>
-                    {/* Pagination omitted for brevity matching previous style */}
                 </div>
 
-                {/* Right Side: Cart & Checkout */}
                 <div className="w-full lg:w-[400px] flex flex-col gap-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative min-h-[500px]">
-                    {/* Patient Selector */}
                     <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3">
                         <div className="flex items-center gap-2 text-healthcare-dark font-black text-sm">
                             <User size={16} />
@@ -419,8 +433,8 @@ export function DispensingPage() {
                                                 EXP:{' '}
                                                 {item.selectedBatch?.expiry_date
                                                     ? new Date(
-                                                          item.selectedBatch.expiry_date,
-                                                      ).toLocaleDateString()
+                                                        item.selectedBatch.expiry_date,
+                                                    ).toLocaleDateString()
                                                     : 'N/A'}
                                             </span>
                                         </div>
@@ -481,7 +495,6 @@ export function DispensingPage() {
                     </div>
 
                     <div className="mt-auto space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                        {/* Summary & Checkout Button */}
                         <div className="space-y-2 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
                             <div className="flex justify-between text-[11px] font-bold text-slate-500">
                                 <span>Subtotal</span>
@@ -528,6 +541,6 @@ export function DispensingPage() {
                     )}
                 </div>
             </div>
-        </ProtectedRoute>
+        </ProtectedRoute >
     );
 }

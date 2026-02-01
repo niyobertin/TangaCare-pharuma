@@ -1,3 +1,5 @@
+import type { User } from './auth';
+
 export interface PaginatedResponse<T> {
     data: T[];
     meta: {
@@ -49,6 +51,8 @@ export interface Medicine {
     category?: MedicineCategory;
     is_controlled_drug: boolean;
     stock_quantity?: number;
+    expiry_date?: string;
+    created_at?: string;
 }
 
 export interface Organization {
@@ -159,6 +163,7 @@ export interface Supplier {
     address: string;
     tax_id?: string;
     is_active: boolean;
+    created_at?: string;
 }
 
 export interface ProcurementOrderItem {
@@ -175,13 +180,23 @@ export interface ProcurementOrder {
     id: number;
     order_number: string;
     facility_id: number;
+    organization_id: number;
     supplier_id: number;
     order_date: string;
-    status: 'PENDING' | 'APPROVED' | 'ORDERED' | 'RECEIVED' | 'PARTIAL' | 'CANCELLED';
-    total_amount: number; // Used interchangeably with total_cost, keeping total_amount as db field
-    total_cost?: number; // Frontend alias if needed
+    expected_delivery_date?: string;
+    received_date?: string;
+    status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'ORDERED' | 'RECEIVED' | 'PARTIAL' | 'CANCELLED';
+    subtotal_amount: number;
+    discount_percent: number;
+    discount_amount: number;
+    vat_rate: number;
+    vat_amount: number;
+    total_amount: number;
+    notes?: string;
     items_count: number;
     supplier?: Supplier;
+    facility?: Facility;
+    created_by?: User;
     items?: ProcurementOrderItem[];
 }
 

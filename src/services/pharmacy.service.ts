@@ -184,6 +184,8 @@ export const pharmacyService = {
         limit?: number;
         search?: string;
         facility_id?: number;
+        start_date?: string;
+        end_date?: string;
     }): Promise<PaginatedResponse<Medicine>> {
         const response = await api.get<any>('/pharmacy/medicines', { params });
         return normalizePaginatedResponse<Medicine>(response.data);
@@ -192,6 +194,56 @@ export const pharmacyService = {
     async createMedicine(data: CreateMedicineDto): Promise<Medicine> {
         const response = await api.post<{ data: Medicine }>('/pharmacy/medicines', data);
         return response.data.data;
+    },
+
+    async downloadMedicineTemplate(): Promise<Blob> {
+        const response = await api.get('/pharmacy/medicines/template/download', {
+            responseType: 'blob',
+        });
+        return response.data;
+    },
+
+    async importMedicines(file: File): Promise<{ imported: number; updated: number; errors: string[] }> {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post<any>('/pharmacy/medicines/import', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async validateMedicineImport(
+        file: File,
+    ): Promise<{ items: any[]; errors: string[]; total: number }> {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post<any>('/pharmacy/medicines/import/validate', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getMedicineStatistics(): Promise<{
+        totalItems: number;
+        totalCategories: number;
+        lowStock: number;
+        expired: number;
+    }> {
+        const response = await api.get<any>('/pharmacy/medicines/statistics');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async exportMedicines(): Promise<void> {
+        const response = await api.get('/pharmacy/medicines/export', {
+            responseType: 'blob',
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `medicine_inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
     },
 
     // Organizations
@@ -310,11 +362,13 @@ export const pharmacyService = {
     async getDepartments(params?: {
         facility_id: number;
     }): Promise<import('../types/pharmacy').Department[]> {
-        const response = await api.get<{ data: import('../types/pharmacy').Department[] }>(
-            '/pharmacy/departments',
-            { params },
-        );
-        return response.data.data;
+        const response = await api.get<any>('/pharmacy/departments', { params });
+        const payload = response.data?.data;
+        // The backend returns { data: Department[], total, page, limit }
+        if (payload && Array.isArray(payload.data)) {
+            return payload.data;
+        }
+        return Array.isArray(payload) ? payload : [];
     },
 
     async createDepartment(
@@ -359,10 +413,11 @@ export const pharmacyService = {
         return normalizePaginatedResponse<Stock>(response.data);
     },
 
-    // Suppliers
     async getSuppliers(params?: {
         page?: number;
         limit?: number;
+        search?: string;
+        is_active?: boolean;
     }): Promise<PaginatedResponse<Supplier>> {
         const response = await api.get<any>('/pharmacy/suppliers', { params });
         return normalizePaginatedResponse<Supplier>(response.data);
@@ -377,11 +432,19 @@ export const pharmacyService = {
         const response = await api.put<{ data: Supplier }>(`/pharmacy/suppliers/${id}`, data);
         return response.data.data;
     },
+    async deleteSupplier(id: number): Promise<void> {
+        await api.delete(`/pharmacy/suppliers/${id}`);
+    },
 
     // Procurement
     async getProcurementOrders(params?: {
         facility_id?: number;
         status?: string;
+        search?: string;
+        start_date?: string;
+        end_date?: string;
+        page?: number;
+        limit?: number;
     }): Promise<PaginatedResponse<ProcurementOrder>> {
         const response = await api.get<any>('/pharmacy/procurement', { params });
         return normalizePaginatedResponse<ProcurementOrder>(response.data);
@@ -392,6 +455,11 @@ export const pharmacyService = {
         return response.data.data;
     },
 
+    async getProcurementOrder(id: number): Promise<ProcurementOrder> {
+        const response = await api.get<{ data: ProcurementOrder }>(`/pharmacy/procurement/${id}`);
+        return (response.data as any).data ?? response.data;
+    },
+
     async updateProcurementOrder(id: number, data: any): Promise<ProcurementOrder> {
         const response = await api.put<{ data: ProcurementOrder }>(
             `/pharmacy/procurement/${id}`,
@@ -400,12 +468,59 @@ export const pharmacyService = {
         return response.data.data;
     },
 
-    async receiveProcurementOrder(id: number, data: { items: any[] }): Promise<ProcurementOrder> {
-        const response = await api.post<{ data: ProcurementOrder }>(
+    async receiveProcurementOrder(
+        id: number,
+        data: { received_items: any[]; received_date: string }
+    ): Promise<ProcurementOrder & { skippedItems?: any[] }> {
+        const response = await api.post<any>(
             `/pharmacy/procurement/${id}/receive`,
             data,
         );
-        return response.data.data;
+        // The backend returns { data: { order, skippedItems }, ... } OR { data: PurchaseOrder, ... }
+        // Let's inspect the structure from my backend change:
+        // return { order: updatedOrder, skippedItems }; wrapped in ResponseUtil.success(res, result) which wraps in { data: result }
+        // So response.data.data will be { order: ..., skippedItems: ... }
+
+        const result = response.data.data;
+        if (result && result.order) {
+            return { ...result.order, skippedItems: result.skippedItems };
+        }
+        return result;
+    },
+    async downloadProcurementTemplate(): Promise<Blob> {
+        const response = await api.get('/pharmacy/procurement/template', {
+            responseType: 'blob',
+        });
+        return response.data;
+    },
+    async importProcurementExcel(supplierId: number, file: File): Promise<ProcurementOrder> {
+        const formData = new FormData();
+        formData.append('supplier_id', supplierId.toString());
+        formData.append('file', file);
+        const response = await api.post<any>('/pharmacy/procurement/import', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+    async validateProcurementImport(file: File): Promise<{ items: any[]; total_amount: number }> {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post<any>('/pharmacy/procurement/import/validate', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+    async submitProcurementOrder(id: number): Promise<ProcurementOrder> {
+        const response = await api.post<any>(`/pharmacy/procurement/${id}/submit`);
+        return (response.data as any).data ?? response.data;
+    },
+    async approveProcurementOrder(id: number): Promise<ProcurementOrder> {
+        const response = await api.post<any>(`/pharmacy/procurement/${id}/approve`);
+        return (response.data as any).data ?? response.data;
+    },
+    async cancelProcurementOrder(id: number): Promise<ProcurementOrder> {
+        const response = await api.post<any>(`/pharmacy/procurement/${id}/cancel`);
+        return (response.data as any).data ?? response.data;
     },
 
     // Alerts
@@ -468,5 +583,18 @@ export const pharmacyService = {
         // Handle both simple array or paginated response
         const data = response.data.data || response.data;
         return Array.isArray(data) ? data : (data as any)?.users || [];
+    },
+
+    async exportProcurementOrder(id: number): Promise<void> {
+        const response = await api.get(`/pharmacy/procurement/${id}/export`, {
+            responseType: 'blob',
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `PO_${id}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
     },
 };

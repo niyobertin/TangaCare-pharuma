@@ -124,7 +124,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         allowedRoles &&
         allowedRoles.length > 0 &&
         user &&
-        !allowedRoles.some((role) => String(role).toUpperCase() === (user.role || '').toUpperCase())
+        !allowedRoles.some((role) => {
+            const r1 = String(role).toUpperCase().replace(/[\s_]+/g, ' ');
+            const r2 = (user.role || '').toUpperCase().replace(/[\s_]+/g, ' ');
+            return r1 === r2;
+        })
     ) {
         return (
             <div className="h-screen w-full flex items-center justify-center bg-healthcare-surface p-10">
