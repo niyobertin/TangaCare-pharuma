@@ -1,353 +1,323 @@
-import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
-import { MainLayout } from '../components/layout/MainLayout';
 import {
-    Package,
-    TrendingUp,
-    AlertTriangle,
-    Clock,
-    MoreVertical,
-    ChevronRight,
-    Filter,
-    Download,
-    ArrowUpRight,
-    ArrowDownRight,
-    Stethoscope,
-    Pill,
-    ShieldCheck,
-    Zap
-} from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+    createRootRoute,
+    createRoute,
+    createRouter,
+    Outlet,
+    Navigate,
+} from '@tanstack/react-router';
+import React from 'react';
+import { MainLayout } from '../components/layout/MainLayout';
+import { DashboardPage } from '../pages/dashboard/DashboardPage';
+import { LoginPage } from '../pages/auth/LoginPage';
+import { RegisterPage } from '../pages/auth/RegisterPage';
+import { InventoryPage } from '../pages/dashboard/InventoryPage';
+import { DispensingPage } from '../pages/dashboard/DispensingPage';
 
-function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
-}
+import { BatchStockPage } from '../pages/dashboard/BatchStockPage';
+import { AuditLogsPage } from '../pages/dashboard/AuditLogsPage';
+import { StockMovementsPage } from '../pages/dashboard/StockMovementsPage';
+import { PricingPage } from '../pages/dashboard/PricingPage';
+import { ModulePlaceholder } from '../pages/shared/ModulePlaceholder';
+import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage';
+import { VerifyOtpPage } from '../pages/auth/VerifyOtpPage';
+import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
+import { SetPasswordPage } from '../pages/auth/SetPasswordPage';
+import { z } from 'zod';
+
+// --- Components ---
+
+const RootComponent = () => {
+    return (
+        <React.Fragment>
+            <Outlet />
+        </React.Fragment>
+    );
+};
+
+const AppLayoutComponent = () => {
+    return <MainLayout />;
+};
+
+const AuthLayoutComponent = () => {
+    return <Outlet />;
+};
+
+// --- Routes Configuration ---
 
 const rootRoute = createRootRoute({
-    component: MainLayout,
+    component: RootComponent,
+    notFoundComponent: () => (
+        <div className="h-screen w-full flex items-center justify-center bg-healthcare-surface p-10">
+            <div className="glass-card p-10 max-w-md w-full text-center space-y-4 rounded-2xl border-2">
+                <h2 className="text-xl font-black text-healthcare-dark">404 - Not Found</h2>
+                <p className="text-slate-500 text-sm">
+                    The page you are looking for does not exist.
+                </p>
+                <button
+                    onClick={() => (window.location.href = '/')}
+                    className="px-6 py-2 bg-healthcare-primary text-white rounded-lg text-xs font-black hover:bg-teal-700 transition-all shadow-md"
+                >
+                    Go Dashboard
+                </button>
+            </div>
+        </div>
+    ),
 });
 
-const indexRoute = createRoute({
+const appLayoutRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/app',
+    component: AppLayoutComponent,
+});
+
+const rootIndexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: function Index() {
-        return (
-            <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h2 className="text-xl font-black text-healthcare-dark tracking-tight">Pharmacy Management</h2>
-                        <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-2 mt-0.5 text-xs uppercase tracking-wider">
-                            <span className="flex h-2 w-2 rounded-full bg-healthcare-accent animate-pulse"></span>
-                            Live Pharmacy Status • Facility #042
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm">
-                            <Filter size={14} /> Filter View
-                        </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md shadow-teal-500/10">
-                            <Download size={14} /> Export Report
-                        </button>
-                    </div>
-                </div>
+    component: () => <Navigate to="/app" />,
+});
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard
-                        title="Medicines in Stock"
-                        value="12,842"
-                        trend="+12%"
-                        isPositive={true}
-                        color="bg-healthcare-primary"
-                        icon={<Package size={20} />}
-                    />
-                    <StatCard
-                        title="Low Stock Warning"
-                        value="14"
-                        trend="-3"
-                        isPositive={true}
-                        color="bg-amber-500"
-                        icon={<AlertTriangle size={20} />}
-                    />
-                    <StatCard
-                        title="Expiring Soon"
-                        value="38"
-                        trend="+8"
-                        isPositive={false}
-                        color="bg-red-500"
-                        icon={<Clock size={20} />}
-                    />
-                    <StatCard
-                        title="Total Daily Sales"
-                        value="RWF 842K"
-                        trend="+18%"
-                        isPositive={true}
-                        color="bg-healthcare-secondary"
-                        icon={<TrendingUp size={20} />}
-                    />
-                </div>
+const authLayoutRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/auth',
+    component: AuthLayoutComponent,
+});
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Trends Area */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="glass-card p-6 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 relative overflow-hidden shadow-sm">
-                            <div className="flex justify-between items-center mb-8">
-                                <div>
-                                    <h3 className="text-base font-black text-healthcare-dark">Medicine Demand Trend</h3>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">Daily dispensing patterns</p>
-                                </div>
-                                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
-                                    {['WEEK', 'MONTH'].map((period) => (
-                                        <button
-                                            key={period}
-                                            className={cn(
-                                                "px-4 py-1.5 rounded-md text-[10px] font-black transition-all",
-                                                period === 'WEEK' ? "bg-white dark:bg-slate-700 text-healthcare-primary shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                                            )}
-                                        >
-                                            {period}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+// --- Application Routes ---
 
-                            <div className="flex items-end gap-3 min-h-[200px] pt-4 relative z-10 px-2">
-                                {[42, 65, 38, 82, 95, 70, 85, 55, 60, 48, 72, 88].map((height, i) => (
-                                    <div key={i} className="flex-1 flex flex-col items-center gap-3 group/bar">
-                                        <div className="w-full relative h-[160px] flex items-end">
-                                            <div
-                                                style={{ height: `${height}%` }}
-                                                className={cn(
-                                                    "w-full rounded-t-md transition-all duration-500 relative shadow-sm",
-                                                    i === 4 ? "bg-healthcare-primary" : "bg-teal-500/20 dark:bg-teal-500/30 group-hover/bar:bg-healthcare-primary/40 dark:group-hover/bar:bg-healthcare-primary/60"
-                                                )}
-                                            >
-                                            </div>
-                                        </div>
-                                        <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-tighter">
-                                            {['M', 'T', 'W', 'T', 'F', 'S', 'S', 'M', 'T', 'W', 'T', 'F'][i]}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+import { AlertsPage } from '../pages/dashboard/AlertsPage';
+import { ReportsPage } from '../pages/dashboard/ReportsPage';
+import { StockRegisterReportPage } from '../pages/dashboard/StockRegisterReportPage';
+// import { SuppliersPage } from '../pages/dashboard/SuppliersPage'; // Removed old import
+import { SuppliersPage } from '../pages/procurement/SuppliersPage';
+import { OrdersPage } from '../pages/procurement/OrdersPage';
+import { FacilitiesPage } from '../pages/facilities/FacilitiesPage';
+import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
+import { FacilitySettingsPage } from '../pages/dashboard/FacilitySettingsPage';
+import { UsersPage } from '../pages/dashboard/UsersPage';
 
-                        {/* Quick Summary */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <SummaryFeature
-                                icon={<Stethoscope size={18} className="text-blue-600" />}
-                                title="Pharmacy Staff"
-                                value="12 Pharmacists Online"
-                                description="Currently active in dispensing"
-                                color="bg-blue-50 dark:bg-blue-900"
-                            />
-                            <SummaryFeature
-                                icon={<ShieldCheck size={18} className="text-healthcare-accent" />}
-                                title="System Compliance"
-                                value="99.8% Optimized"
-                                description="All regulatory checks passed"
-                                color="bg-emerald-50 dark:bg-emerald-900"
-                            />
-                        </div>
-                    </div>
+const indexRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: '/',
+    component: DashboardPage,
+});
+const inventoryRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'inventory',
+    component: InventoryPage,
+});
+const dispensingRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'dispensing',
+    component: DispensingPage,
+});
+const organizationsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'organizations',
+    component: OrganizationsPage,
+});
 
-                    {/* Right Column */}
-                    <div className="space-y-6">
-                        <div className="glass-card p-5 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all duration-300">
-                            <h3 className="font-black text-sm text-healthcare-dark mb-5 flex items-center gap-2">
-                                <Zap size={16} className="text-amber-500 fill-amber-500" />
-                                Quick Actions
-                            </h3>
-                            <div className="space-y-3">
-                                <QuickAction icon={<Package size={16} />} title="Inventory Restock" description="Add new medicine batches" color="bg-healthcare-primary" />
-                                <QuickAction icon={<Pill size={16} />} title="New Sale" description="Dispense medicine to patient" color="bg-healthcare-secondary" />
-                                <QuickAction icon={<TrendingUp size={16} />} title="Monthly Reports" description="Analyze stock movements" color="bg-slate-800" />
-                            </div>
-                        </div>
+const facilitiesRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'facilities',
+    component: FacilitiesPage,
+});
+const usersRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'users',
+    component: UsersPage,
+});
+const procurementRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'procurement',
+    component: OrdersPage, // Default procurement view is Orders
+});
+const stockRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'stock',
+    component: BatchStockPage,
+});
+const auditLogsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'audit-logs',
+    component: AuditLogsPage,
+});
+const stockMovementsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'stock-movements',
+    component: StockMovementsPage,
+});
+const pricingRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'pricing',
+    component: PricingPage,
+});
+const stockRegisterRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'stock-register',
+    component: StockRegisterReportPage,
+});
 
-                        <div className="glass-card p-5 rounded-xl border-red-100 dark:border-red-900 bg-white dark:bg-slate-900 shadow-sm transition-all duration-300">
-                            <h3 className="font-black text-sm text-healthcare-dark mb-5">Critical Alerts</h3>
-                            <div className="space-y-4">
-                                <AlertItem type="expiry" title="Amoxicillin batches" info="Expires in 2 business days" />
-                                <AlertItem type="stock" title="Insulin supply" info="Critical low (4 units left)" />
-                                <AlertItem type="audit" title="Batch Audit" info="Compliance deadline: 5 PM" isUrgent />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+// --- Application Routes (Integrated) ---
+const suppliersRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'suppliers',
+    component: SuppliersPage,
+});
+const alertsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'alerts',
+    component: AlertsPage,
+});
 
-                {/* Transactions Table */}
-                <div className="glass-card rounded-xl overflow-hidden border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md transition-all duration-300">
-                    <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
-                            <h3 className="text-base font-black text-healthcare-dark">Recent Medicine Sales</h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">Real-time dispensing activity</p>
-                        </div>
-                        <button className="text-healthcare-primary text-[10px] font-black flex items-center gap-2 px-4 py-2 hover:bg-teal-50 dark:hover:bg-slate-800 rounded-lg transition-all border border-teal-100 dark:border-teal-900 uppercase tracking-widest shadow-sm">
-                            View All Transactions <ChevronRight size={14} />
-                        </button>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="bg-slate-50 dark:bg-slate-800 text-[11px] font-black uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                                    <th className="px-6 py-4">Transaction ID</th>
-                                    <th className="px-6 py-4">Medicine Item</th>
-                                    <th className="px-6 py-4">Category</th>
-                                    <th className="px-6 py-4 text-center">Quantity</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4">Time</th>
-                                    <th className="px-6 py-4"></th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[13px] font-medium">
-                                <TableRow id="TRX-948" name="Paracetamol 500mg Tabs" category="Pain Relief" qty="-40" status="Completed" date="2m ago" />
-                                <TableRow id="TRX-947" name="Metformin 850mg Tabs" category="Anti-Diabetic" qty="-28" status="In Process" date="5m ago" isPending />
-                                <TableRow id="TRX-946" name="Vitamin C 1000mg" category="Supplements" qty="+120" status="Restocked" date="12m ago" isStockIn />
-                                <TableRow id="TRX-945" name="Azithromycin 250mg" category="Antibiotics" qty="-6" status="Completed" date="45m ago" />
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        );
+// --- Placeholder Routes ---
+const prescriptionsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'prescriptions',
+    component: () => (
+        <ModulePlaceholder
+            title="Prescriptions"
+            description="View and process electronic prescriptions from doctors."
+        />
+    ),
+});
+const patientsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'patients',
+    component: () => (
+        <ModulePlaceholder
+            title="Customer Records"
+            description="Lookup customer history and profiles."
+        />
+    ),
+});
+const analyticsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'analytics',
+    component: ReportsPage,
+});
+const employeeRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'employees',
+    component: () => (
+        <ModulePlaceholder
+            title="Employee Directory"
+            description="Manage pharmacy staff and permissions."
+        />
+    ),
+});
+const settingsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'settings',
+    component: () => (
+        <ModulePlaceholder
+            title="General Settings"
+            description="Configure system-wide pharmacy preferences."
+        />
+    ),
+});
+
+// --- Authentication Routes ---
+
+const loginRoute = createRoute({
+    getParentRoute: () => authLayoutRoute,
+    path: 'login',
+    component: LoginPage,
+    validateSearch: (search: Record<string, unknown>) => {
+        return z
+            .object({
+                redirect: z.string().optional(),
+            })
+            .parse(search);
     },
 });
 
-// Helper Components
+const registerRoute = createRoute({
+    getParentRoute: () => authLayoutRoute,
+    path: 'register',
+    component: RegisterPage,
+});
 
-function StatCard({ title, value, trend, isPositive, color, icon }: any) {
-    return (
-        <div className="glass-card p-5 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 group transition-all duration-300 shadow-sm relative overflow-hidden cursor-pointer">
-            <div className="relative z-10">
-                <div className="flex justify-between items-start mb-4">
-                    <div className={cn(
-                        "w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group-hover:scale-110",
-                        color
-                    )}>
-                        {icon}
-                    </div>
-                    <div className={cn(
-                        "flex items-center gap-1 text-[11px] font-black px-2 py-1 rounded-lg",
-                        isPositive ? "bg-emerald-50 dark:bg-emerald-900 text-healthcare-accent" : "bg-red-50 dark:bg-red-900 text-red-500"
-                    )}>
-                        {isPositive ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
-                        {trend}
-                    </div>
-                </div>
-                <h3 className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1 truncate">{title}</h3>
-                <p className="text-xl font-black text-healthcare-dark leading-none tracking-tight">{value}</p>
-            </div>
-        </div>
-    );
-}
+const forgotPasswordRoute = createRoute({
+    getParentRoute: () => authLayoutRoute,
+    path: 'forgot-password',
+    component: ForgotPasswordPage,
+});
 
-function SummaryFeature({ icon, title, value, description, color }: any) {
-    return (
-        <div className="flex items-center gap-4 p-4 glass-card rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all shadow-sm">
-            <div className={cn("p-3 rounded-xl shadow-inner", color)}>
-                {icon}
-            </div>
-            <div>
-                <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mb-1.5">{title}</p>
-                <p className="text-lg font-black text-healthcare-dark leading-none mb-1">{value}</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight">{description}</p>
-            </div>
-        </div>
-    );
-}
+const verifyOtpRoute = createRoute({
+    getParentRoute: () => authLayoutRoute,
+    path: 'verify-otp',
+    component: VerifyOtpPage,
+    validateSearch: (search: Record<string, unknown>) => {
+        return z
+            .object({
+                email: z.string().optional(),
+            })
+            .parse(search);
+    },
+});
 
-function QuickAction({ icon, title, description, color }: any) {
-    return (
-        <button className="w-full flex items-center gap-4 p-3.5 rounded-xl border border-transparent hover:border-teal-100 dark:hover:border-teal-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-300 group text-left">
-            <div className={cn(
-                "p-2.5 rounded-xl text-white transition-all group-hover:scale-110 shadow-sm",
-                color
-            )}>
-                {icon}
-            </div>
-            <div className="flex-1">
-                <h4 className="font-black text-healthcare-dark text-sm leading-tight">{title}</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-0.5">{description}</p>
-            </div>
-            <ChevronRight size={16} className="text-slate-300 group-hover:text-healthcare-primary group-hover:translate-x-1 transition-all" />
-        </button>
-    );
-}
+const resetPasswordRoute = createRoute({
+    getParentRoute: () => authLayoutRoute,
+    path: 'reset-password',
+    component: ResetPasswordPage,
+    validateSearch: (search: Record<string, unknown>) => {
+        return z
+            .object({
+                email: z.string().optional(),
+                otp: z.string().optional(),
+            })
+            .parse(search);
+    },
+});
 
-function AlertItem({ type, title, info, isUrgent = false }: any) {
-    return (
-        <div className={cn(
-            "p-3.5 rounded-xl border flex items-center gap-4 group cursor-pointer transition-all",
-            isUrgent ? "bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-900 shadow-sm" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm"
-        )}>
-            <div className={cn(
-                "w-2 h-2 rounded-full",
-                isUrgent ? "bg-red-500 animate-pulse" : (type === 'expiry' ? "bg-red-400" : "bg-amber-400")
-            )}></div>
-            <div className="flex-1">
-                <h4 className="font-bold text-healthcare-dark text-sm leading-none mb-1.5">{title}</h4>
-                <p className={cn("text-[10px] font-black uppercase tracking-widest", isUrgent ? "text-red-600 dark:text-red-400" : "text-slate-500 dark:text-slate-400")}>{info}</p>
-            </div>
-        </div>
-    );
-}
+const setPasswordRoute = createRoute({
+    getParentRoute: () => authLayoutRoute,
+    path: 'set-password',
+    component: SetPasswordPage,
+});
 
-function TableRow({ id, name, category, qty, status, date, isStockIn = false, isPending = false }: any) {
-    return (
-        <tr className="group hover:bg-teal-50/30 dark:hover:bg-teal-900/10 transition-all">
-            <td className="px-6 py-4">
-                <span className="text-[10px] font-black text-healthcare-primary bg-teal-50 dark:bg-slate-800 px-2 py-1 rounded-md border border-teal-100 dark:border-slate-700 shadow-sm tracking-tight">
-                    {id}
-                </span>
-            </td>
-            <td className="px-6 py-4">
-                <div className="flex flex-col">
-                    <span className="font-black text-healthcare-dark text-[13px] leading-tight">{name}</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mt-0.5">SKU-{Math.floor(Math.random() * 10000)}</span>
-                </div>
-            </td>
-            <td className="px-6 py-4">
-                <span className="text-[10px] font-black px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-md whitespace-nowrap uppercase tracking-widest border border-slate-200 dark:border-slate-700 shadow-xs">
-                    {category}
-                </span>
-            </td>
-            <td className="px-6 py-4 text-center">
-                <span className={cn(
-                    "text-[14px] font-black tracking-tight",
-                    isStockIn ? "text-emerald-500" : (qty.startsWith('-') ? "text-amber-500" : "text-slate-600 dark:text-slate-300")
-                )}>
-                    {qty}
-                </span>
-            </td>
-            <td className="px-6 py-4">
-                <span className={cn(
-                    "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider border whitespace-nowrap shadow-xs",
-                    isPending
-                        ? "bg-amber-50 dark:bg-amber-900 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800"
-                        : (isStockIn ? "bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800" : "bg-emerald-50 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 border-teal-200 dark:border-teal-800")
-                )}>
-                    {status}
-                </span>
-            </td>
-            <td className="px-6 py-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">{date}</td>
-            <td className="px-6 py-4 text-right">
-                <button className="p-2 text-slate-300 hover:text-healthcare-dark transition-all opacity-0 group-hover:opacity-100 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700">
-                    <MoreVertical size={14} />
-                </button>
-            </td>
-        </tr>
-    );
-}
+// --- Route Tree Construction ---
 
-// Route Registration
-const inventoryRoute = createRoute({ getParentRoute: () => rootRoute, path: '/inventory', component: () => <div className="p-8"><h2 className="text-xl font-black">Medicine Inventory</h2></div> });
-const ordersRoute = createRoute({ getParentRoute: () => rootRoute, path: '/orders', component: () => <div className="p-8"><h2 className="text-xl font-black">Sales Orders</h2></div> });
-const patientsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/patients', component: () => <div className="p-8"><h2 className="text-xl font-black">Patients & Prescriptions</h2></div> });
-const reportsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/reports', component: () => <div className="p-8"><h2 className="text-xl font-black">Pharmacy Analytics</h2></div> });
-const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/settings', component: () => <div className="p-8"><h2 className="text-xl font-black">Facility Settings</h2></div> });
+const facilitySettingsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'facility/$facilityId/settings',
+    component: FacilitySettingsPage,
+});
 
-const routeTree = rootRoute.addChildren([indexRoute, inventoryRoute, ordersRoute, patientsRoute, reportsRoute, settingsRoute]);
+const appRouteTree = appLayoutRoute.addChildren([
+    indexRoute,
+    inventoryRoute,
+    dispensingRoute,
+    organizationsRoute,
+    facilitiesRoute,
+    usersRoute,
+    facilitySettingsRoute,
+    procurementRoute,
+    stockRoute,
+    auditLogsRoute,
+    stockMovementsRoute,
+    pricingRoute,
+    stockRegisterRoute,
+    prescriptionsRoute,
+    patientsRoute,
+    analyticsRoute,
+    suppliersRoute,
+    employeeRoute,
+    settingsRoute,
+    alertsRoute,
+]);
+
+const authRouteTree = authLayoutRoute.addChildren([
+    loginRoute,
+    registerRoute,
+    forgotPasswordRoute,
+    verifyOtpRoute,
+    resetPasswordRoute,
+    setPasswordRoute,
+]);
+
+const routeTree = rootRoute.addChildren([rootIndexRoute, appRouteTree, authRouteTree]);
+
 export const router = createRouter({ routeTree });
 
 declare module '@tanstack/react-router' {
