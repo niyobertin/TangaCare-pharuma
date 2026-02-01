@@ -108,21 +108,19 @@ export function FacilitiesPage() {
                     <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg p-1 shadow-sm">
                         <button
                             onClick={() => setViewMode('grid')}
-                            className={`p-2 rounded-md transition-all ${
-                                viewMode === 'grid'
+                            className={`p-2 rounded-md transition-all ${viewMode === 'grid'
                                     ? 'bg-healthcare-primary text-white'
                                     : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
-                            }`}
+                                }`}
                         >
                             <Grid size={18} />
                         </button>
                         <button
                             onClick={() => setViewMode('table')}
-                            className={`p-2 rounded-md transition-all ${
-                                viewMode === 'table'
+                            className={`p-2 rounded-md transition-all ${viewMode === 'table'
                                     ? 'bg-healthcare-primary text-white'
                                     : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
-                            }`}
+                                }`}
                         >
                             <List size={18} />
                         </button>
@@ -170,13 +168,13 @@ export function FacilitiesPage() {
                                 {(role === 'SUPER_ADMIN' ||
                                     role === 'SUPER ADMIN' ||
                                     role === 'OWNER') && (
-                                    <button
-                                        onClick={() => setShowCreateModal(true)}
-                                        className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
-                                    >
-                                        Add Facility
-                                    </button>
-                                )}
+                                        <button
+                                            onClick={() => setShowCreateModal(true)}
+                                            className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
+                                        >
+                                            Add Facility
+                                        </button>
+                                    )}
                             </div>
                         </div>
                     )
@@ -208,15 +206,6 @@ export function FacilitiesPage() {
                                         <div className="w-12 h-12 bg-healthcare-primary/10 rounded-xl flex items-center justify-center">
                                             <span className="text-2xl">🏥</span>
                                         </div>
-                                        <span
-                                            className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                facility.status === 'Active'
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-slate-100 text-slate-700'
-                                            }`}
-                                        >
-                                            {facility.status}
-                                        </span>
                                     </div>
                                     <h3 className="text-lg font-black text-healthcare-dark mb-1">
                                         {facility.name}
@@ -246,6 +235,9 @@ export function FacilitiesPage() {
                                 <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                            #
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                             ID
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -263,20 +255,22 @@ export function FacilitiesPage() {
                                         <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                             Phone
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                            Status
-                                        </th>
                                         <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                    {facilities.map((facility) => (
+                                    {facilities.map((facility, index) => (
                                         <tr
                                             key={facility.id}
                                             className="hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
                                         >
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="text-sm font-bold text-slate-500">
+                                                    {(page - 1) * limit + index + 1}
+                                                </span>
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <button
                                                     onClick={() =>
@@ -317,17 +311,6 @@ export function FacilitiesPage() {
                                                 <div className="text-sm text-slate-600 dark:text-slate-400">
                                                     {facility.phone}
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                        facility.status === 'Active'
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-slate-100 text-slate-700'
-                                                    }`}
-                                                >
-                                                    {facility.status}
-                                                </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <button

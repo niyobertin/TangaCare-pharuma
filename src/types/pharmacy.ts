@@ -67,7 +67,6 @@ export interface Facility {
     address?: string;
     phone?: string;
     email?: string;
-    status?: 'Active' | 'Inactive';
     organization_id?: number;
     organization?: Organization;
     admin_name?: string;
@@ -122,7 +121,6 @@ export interface CreateFacilityDto {
     controlled_drug_rules_enabled?: boolean;
     min_stock_threshold_percentage?: number;
     expiry_alert_days?: number;
-    status?: 'Active' | 'Inactive';
 }
 
 export interface Batch {
