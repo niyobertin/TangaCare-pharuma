@@ -241,7 +241,7 @@ export function DispensingPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['admin', 'pharmacist', 'super_admin', 'store_manager', 'facility_admin']}
+            allowedRoles={['admin', 'pharmacist', 'super_admin', 'facility_admin']}
             requireFacility
         >
             <div className="flex h-full flex-col lg:flex-row p-5 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-700 overflow-hidden">

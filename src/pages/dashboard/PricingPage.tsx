@@ -80,7 +80,7 @@ export function PricingPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['SUPER_ADMIN', 'FACILITY_ADMIN', 'OWNER', 'ADMIN', 'STORE_MANAGER']}
+            allowedRoles={['SUPER_ADMIN', 'FACILITY_ADMIN', 'OWNER', 'ADMIN']}
             requireFacility
         >
             <div className="p-5 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -234,7 +234,7 @@ export function PricingPage() {
                                                                 setEditMarkup(
                                                                     String(
                                                                         cat.default_markup_percent ??
-                                                                            '',
+                                                                        '',
                                                                     ),
                                                                 );
                                                             }}
