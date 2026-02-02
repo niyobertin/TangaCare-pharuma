@@ -18,15 +18,17 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
 
     useEffect(() => {
         if (isOpen && order) {
-            setReceivedItems(order.items?.map(item => ({
-                id: item.id,
-                medicine_name: item.medicine?.name,
-                quantity_ordered: item.quantity_ordered,
-                quantity_received: item.quantity_ordered - (item.quantity_received || 0),
-                batch_number: '',
-                expiry_date: '',
-                manufacturing_date: '',
-            })) || []);
+            setReceivedItems(
+                order.items?.map((item) => ({
+                    id: item.id,
+                    medicine_name: item.medicine?.name,
+                    quantity_ordered: item.quantity_ordered,
+                    quantity_received: item.quantity_ordered - (item.quantity_received || 0),
+                    batch_number: '',
+                    expiry_date: '',
+                    manufacturing_date: '',
+                })) || [],
+            );
         }
     }, [isOpen, order]);
 
@@ -39,25 +41,24 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
     };
 
     const handleClearAll = () => {
-        setReceivedItems(prev => prev.map(item => ({ ...item, quantity_received: 0 })));
+        setReceivedItems((prev) => prev.map((item) => ({ ...item, quantity_received: 0 })));
     };
 
     const handleSubmit = async () => {
         const todayStr = new Date().toISOString().split('T')[0];
 
-        // 1. Identify items we INTEND to receive (qty > 0)
-        const attemptedItems = receivedItems.filter(i => i.quantity_received > 0);
+        const attemptedItems = receivedItems.filter((i) => i.quantity_received > 0);
 
         if (attemptedItems.length === 0) {
             toast.error('Please enter a quantity to receive for at least one item.');
             return;
         }
 
-        // Schema Validation
         const itemSchema = yup.object().shape({
             quantity_received: yup.number(),
             batch_number: yup.string().required('Batch Number is required'),
-            expiry_date: yup.string()
+            expiry_date: yup
+                .string()
                 .required('Expiry Date is required')
                 .test('is-future', 'Expiry date must be in the future', (val) => {
                     return !!val && val > todayStr;
@@ -67,22 +68,20 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     if (!val || !manufacturing_date) return true;
                     return val > manufacturing_date;
                 }),
-            manufacturing_date: yup.string().nullable().optional()
+            manufacturing_date: yup.string().nullable().optional(),
         });
 
         const validItems: any[] = [];
         const skippedItems: any[] = [];
 
-        // 2. Validate items
         for (const item of attemptedItems) {
             try {
                 itemSchema.validateSync(item);
                 validItems.push(item);
             } catch (err: any) {
-                // Capture reason
                 skippedItems.push({
                     ...item,
-                    reason: err.message
+                    reason: err.message,
                 });
             }
         }
@@ -94,36 +93,40 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
         }
 
         if (skippedItems.length > 0) {
-            const reasons = [...new Set(skippedItems.map(i => i.reason))].join(', ');
+            const reasons = [...new Set(skippedItems.map((i) => i.reason))].join(', ');
             toast(`Skipping ${skippedItems.length} invalid item(s). ${reasons}`, {
                 icon: '⚠️',
-                duration: 5000
+                duration: 5000,
             });
         }
 
         setLoading(true);
         try {
             const response = await pharmacyService.receiveProcurementOrder(order.id, {
-                received_items: validItems.map(i => ({
+                received_items: validItems.map((i) => ({
                     item_id: i.id,
                     quantity_received: Number(i.quantity_received),
                     batch_number: i.batch_number,
                     expiry_date: i.expiry_date,
-                    manufacturing_date: i.manufacturing_date || undefined
+                    manufacturing_date: i.manufacturing_date || undefined,
                 })),
-                received_date: new Date().toISOString().split('T')[0]
+                received_date: new Date().toISOString().split('T')[0],
             });
 
             const skippedBackend = response.skippedItems || [];
 
             if (skippedBackend.length > 0) {
-                toast('Received most items, but skipped ' + skippedBackend.length + ' duplicates.', {
-                    icon: 'ℹ️',
-                    duration: 5000
-                });
+                toast(
+                    'Received most items, but skipped ' + skippedBackend.length + ' duplicates.',
+                    {
+                        icon: 'ℹ️',
+                        duration: 5000,
+                    },
+                );
 
-                // Optional: Show list of skipped batches in a separate toast or log
-                const skippedDetails = skippedBackend.map((s: any) => `${s.medicine_name} (${s.batch_number})`).join(', ');
+                const skippedDetails = skippedBackend
+                    .map((s: any) => `${s.medicine_name} (${s.batch_number})`)
+                    .join(', ');
                 toast.error(`Existing Batches Skipped: ${skippedDetails}`, { duration: 6000 });
             } else {
                 toast.success(`Successfully received ${validItems.length} item(s)`);
@@ -148,11 +151,18 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                             <Package size={20} />
                         </div>
                         <div>
-                            <h3 className="text-xl font-black text-healthcare-dark">Receive Inventory</h3>
-                            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Record goods receipt for PO-{order.id}</p>
+                            <h3 className="text-xl font-black text-healthcare-dark">
+                                Receive Inventory
+                            </h3>
+                            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                                Record goods receipt for PO-{order.id}
+                            </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
+                    >
                         <X size={24} className="text-slate-400" />
                     </button>
                 </div>
@@ -174,23 +184,43 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b-2 border-slate-100 dark:border-slate-800">
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">Medicine</th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center px-2">Ordered</th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center px-2">Receiving</th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">Batch Details</th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">Dates</th>
+                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">
+                                    Medicine
+                                </th>
+                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center px-2">
+                                    Ordered
+                                </th>
+                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center px-2">
+                                    Receiving
+                                </th>
+                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">
+                                    Batch Details
+                                </th>
+                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">
+                                    Dates
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                             {receivedItems.map((item, idx) => {
                                 const isReceiving = item.quantity_received > 0;
-                                const isMissingInfo = isReceiving && (!item.batch_number || !item.expiry_date);
+                                const isMissingInfo =
+                                    isReceiving && (!item.batch_number || !item.expiry_date);
 
                                 return (
-                                    <tr key={idx} className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors align-top ${isMissingInfo ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
+                                    <tr
+                                        key={idx}
+                                        className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors align-top ${isMissingInfo ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}
+                                    >
                                         <td className="py-4 px-2">
-                                            <div className="font-bold text-healthcare-dark text-sm">{item.medicine_name}</div>
-                                            {isMissingInfo && <span className="text-[10px] text-red-500 font-bold animate-pulse">Missing details</span>}
+                                            <div className="font-bold text-healthcare-dark text-sm">
+                                                {item.medicine_name}
+                                            </div>
+                                            {isMissingInfo && (
+                                                <span className="text-[10px] text-red-500 font-bold animate-pulse">
+                                                    Missing details
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="py-4 px-2 text-center text-sm font-black text-slate-400">
                                             {item.quantity_ordered}
@@ -199,7 +229,13 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                             <input
                                                 type="number"
                                                 value={item.quantity_received}
-                                                onChange={(e) => handleItemChange(idx, 'quantity_received', Number(e.target.value))}
+                                                onChange={(e) =>
+                                                    handleItemChange(
+                                                        idx,
+                                                        'quantity_received',
+                                                        Number(e.target.value),
+                                                    )
+                                                }
                                                 className="w-20 px-2 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg text-center font-black text-sm outline-none focus:border-emerald-500"
                                             />
                                         </td>
@@ -208,28 +244,50 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                 type="text"
                                                 placeholder="Batch Number"
                                                 value={item.batch_number}
-                                                onChange={(e) => handleItemChange(idx, 'batch_number', e.target.value)}
+                                                onChange={(e) =>
+                                                    handleItemChange(
+                                                        idx,
+                                                        'batch_number',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 className={`w-full px-3 py-1.5 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs outline-none focus:border-emerald-500 mb-2 ${isMissingInfo ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
                                                 required={item.quantity_received > 0}
                                             />
                                         </td>
                                         <td className="py-4 px-2 space-y-2">
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-[9px] font-black text-slate-400 uppercase">Expiry Date</span>
+                                                <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                    Expiry Date
+                                                </span>
                                                 <input
                                                     type="date"
                                                     value={item.expiry_date}
-                                                    onChange={(e) => handleItemChange(idx, 'expiry_date', e.target.value)}
+                                                    onChange={(e) =>
+                                                        handleItemChange(
+                                                            idx,
+                                                            'expiry_date',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     className={`px-2 py-1 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs outline-none focus:border-emerald-500 ${isMissingInfo ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
                                                     required={item.quantity_received > 0}
                                                 />
                                             </div>
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-[9px] font-black text-slate-400 uppercase">Mfg Date (Optional)</span>
+                                                <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                    Mfg Date (Optional)
+                                                </span>
                                                 <input
                                                     type="date"
                                                     value={item.manufacturing_date}
-                                                    onChange={(e) => handleItemChange(idx, 'manufacturing_date', e.target.value)}
+                                                    onChange={(e) =>
+                                                        handleItemChange(
+                                                            idx,
+                                                            'manufacturing_date',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     className="px-2 py-1 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg font-bold text-xs outline-none focus:border-emerald-500"
                                                 />
                                             </div>
@@ -253,7 +311,11 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                         disabled={loading}
                         className="px-8 py-2.5 bg-emerald-500 text-white rounded-xl font-black text-xs hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2 uppercase tracking-widest"
                     >
-                        {loading ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
+                        {loading ? (
+                            <Loader2 className="animate-spin" size={16} />
+                        ) : (
+                            <CheckCircle2 size={16} />
+                        )}
                         Confirm Goods Receipt
                     </button>
                 </div>

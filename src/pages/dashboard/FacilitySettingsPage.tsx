@@ -32,7 +32,6 @@ export function FacilitySettingsPage() {
     const [saving, setSaving] = useState(false);
     const [facility, setFacility] = useState<Facility | null>(null);
 
-    // Form States
     const [formData, setFormData] = useState<Partial<CreateFacilityDto>>({
         name: '',
         type: 'hospital',
@@ -46,12 +45,10 @@ export function FacilitySettingsPage() {
         expiry_alert_days: 90,
     });
 
-    // Admin Assignment State
     const [adminQuery, setAdminQuery] = useState('');
     const [users, setUsers] = useState<User[]>([]);
     const [searchingUsers, setSearchingUsers] = useState(false);
 
-    // Facility Admin: only allow access to their assigned facility; redirect if URL is for another facility
     const role = user?.role?.toUpperCase();
     const isFacilityAdmin = role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN';
     const assignedFacilityId = contextFacilityId ?? user?.facility_id ?? facilities?.[0]?.id;
@@ -101,7 +98,7 @@ export function FacilitySettingsPage() {
         try {
             await pharmacyService.updateFacility(facility.id, formData);
             toast.success('Facility settings saved');
-            loadFacility(facility.id); // Reload to confirm
+            loadFacility(facility.id);
         } catch (error) {
             console.error(error);
             toast.error('Failed to save settings');
@@ -127,9 +124,7 @@ export function FacilitySettingsPage() {
                     role: 'facility_admin',
                     facility_id: facility.id,
                 });
-            } catch (userErr) {
-                // Facility link updated; user update may fail if endpoint differs
-            }
+            } catch (userErr) {}
             toast.success('Admin assigned successfully');
             loadFacility(facility.id);
         } catch (error) {
@@ -159,7 +154,6 @@ export function FacilitySettingsPage() {
         }
     };
 
-    // User Search Effect
     useEffect(() => {
         if (!adminQuery) {
             setUsers([]);
@@ -199,7 +193,7 @@ export function FacilitySettingsPage() {
             requireFacility
         >
             <div className="p-6 max-w-5xl xl:max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                {/* Header */}
+                {}
                 <div className="flex items-center gap-4 mb-8">
                     <button
                         onClick={() => navigate({ to: '/app/facilities' })}
@@ -237,7 +231,7 @@ export function FacilitySettingsPage() {
                     </div>
                 </div>
 
-                {/* Navigation Tabs - Horizontal Header Style */}
+                {}
                 <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto">
                     <button
                         onClick={() => setActiveTab('general')}
@@ -279,7 +273,7 @@ export function FacilitySettingsPage() {
 
                 <div className="max-w-4xl">
                     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-                        {/* General Info Tab */}
+                        {}
                         {activeTab === 'general' && (
                             <div className="space-y-8">
                                 <div className="space-y-6">
@@ -399,7 +393,7 @@ export function FacilitySettingsPage() {
                                     </div>
                                 </div>
 
-                                {/* Danger Zone */}
+                                {}
                                 <div className="pt-8 mt-4 border-t border-slate-200 dark:border-slate-800">
                                     <h4 className="flex items-center gap-2 text-red-500 font-bold mb-4">
                                         <AlertTriangle size={18} />
@@ -425,7 +419,7 @@ export function FacilitySettingsPage() {
                             </div>
                         )}
 
-                        {/* Config Tab */}
+                        {}
                         {activeTab === 'config' && (
                             <div className="space-y-6">
                                 <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
@@ -529,7 +523,7 @@ export function FacilitySettingsPage() {
                             </div>
                         )}
 
-                        {/* Admin Config Tab */}
+                        {}
                         {activeTab === 'admin' && (
                             <div className="space-y-6">
                                 <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
@@ -552,7 +546,7 @@ export function FacilitySettingsPage() {
                                         <p className="text-base font-black text-healthcare-dark">
                                             {facility?.facility_admin
                                                 ? `${facility.facility_admin.first_name || ''} ${facility.facility_admin.last_name || ''}`.trim() ||
-                                                'Admin'
+                                                  'Admin'
                                                 : facility?.admin_name || 'No Admin Assigned'}
                                         </p>
                                     </div>
@@ -570,7 +564,7 @@ export function FacilitySettingsPage() {
                                         className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold"
                                     />
 
-                                    {/* Search Results */}
+                                    {}
                                     {adminQuery && (
                                         <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
                                             {searchingUsers ? (
@@ -611,7 +605,7 @@ export function FacilitySettingsPage() {
                             </div>
                         )}
 
-                        {/* Save Actions (Only for form tabs) */}
+                        {}
                         {activeTab !== 'admin' && (
                             <div className="flex justify-end pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
                                 <button

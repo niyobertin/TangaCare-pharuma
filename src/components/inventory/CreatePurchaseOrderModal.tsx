@@ -21,13 +21,20 @@ const poItemSchema = yup.object({
 });
 
 const poSchema = yup.object({
-    supplier_id: yup.number().positive('Please select a supplier').required('Please select a supplier'),
+    supplier_id: yup
+        .number()
+        .positive('Please select a supplier')
+        .required('Please select a supplier'),
     items: yup.array().of(poItemSchema).min(1, 'Please add at least one item').required(),
 });
 
 type POFormData = yup.InferType<typeof poSchema>;
 
-export function CreatePurchaseOrderModal({ isOpen, onClose, onSuccess }: CreatePurchaseOrderModalProps) {
+export function CreatePurchaseOrderModal({
+    isOpen,
+    onClose,
+    onSuccess,
+}: CreatePurchaseOrderModalProps) {
     const [loading, setLoading] = useState(false);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -61,7 +68,7 @@ export function CreatePurchaseOrderModal({ isOpen, onClose, onSuccess }: CreateP
                 try {
                     const [sRes, mRes] = await Promise.all([
                         pharmacyService.getSuppliers({ limit: 100 }),
-                        pharmacyService.getMedicines({ limit: 100 })
+                        pharmacyService.getMedicines({ limit: 100 }),
                     ]);
                     setSuppliers(sRes.data || []);
                     setMedicines(mRes.data || []);
@@ -78,7 +85,7 @@ export function CreatePurchaseOrderModal({ isOpen, onClose, onSuccess }: CreateP
     if (!isOpen) return null;
 
     const addItem = (med: Medicine) => {
-        if (watchItems.find(i => i.medicine_id === med.id)) {
+        if (watchItems.find((i) => i.medicine_id === med.id)) {
             toast.error('Item already added to order');
             return;
         }
@@ -86,7 +93,7 @@ export function CreatePurchaseOrderModal({ isOpen, onClose, onSuccess }: CreateP
             medicine_id: med.id,
             medicine_name: med.name,
             quantity: 1,
-            unit_price: med.cost_price || 0
+            unit_price: med.cost_price || 0,
         });
     };
 
@@ -95,11 +102,11 @@ export function CreatePurchaseOrderModal({ isOpen, onClose, onSuccess }: CreateP
         try {
             await pharmacyService.createProcurementOrder({
                 supplier_id: data.supplier_id,
-                items: data.items.map(i => ({
+                items: data.items.map((i) => ({
                     medicine_id: i.medicine_id,
                     quantity_ordered: i.quantity,
-                    unit_price: i.unit_price
-                }))
+                    unit_price: i.unit_price,
+                })),
             });
             toast.success('Purchase Order generated successfully');
             onSuccess();
@@ -112,54 +119,78 @@ export function CreatePurchaseOrderModal({ isOpen, onClose, onSuccess }: CreateP
         }
     };
 
-    const filteredMedicines = medicines.filter(m =>
-        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.code.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredMedicines = medicines.filter(
+        (m) =>
+            m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            m.code.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
-    const totalAmount = watchItems.reduce((acc, i) => acc + (i.quantity * i.unit_price), 0);
+    const totalAmount = watchItems.reduce((acc, i) => acc + i.quantity * i.unit_price, 0);
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-teal-900/20 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-teal-500/10 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
-                {/* Header */}
+                {}
                 <div className="bg-teal-500/5 p-6 flex justify-between items-center border-b border-teal-500/10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20">
                             <ShoppingCart className="text-white" size={20} />
                         </div>
                         <div>
-                            <h3 className="text-lg font-black text-healthcare-dark">New Purchase Order</h3>
-                            <p className="text-[10px] text-teal-600 font-black uppercase tracking-widest">Inventory Replenishment</p>
+                            <h3 className="text-lg font-black text-healthcare-dark">
+                                New Purchase Order
+                            </h3>
+                            <p className="text-[10px] text-teal-600 font-black uppercase tracking-widest">
+                                Inventory Replenishment
+                            </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-healthcare-primary transition-all">
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-healthcare-primary transition-all"
+                    >
                         <X size={20} />
                     </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Left: Selection */}
+                    {}
                     <div className="space-y-6">
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Supplier / Partner</label>
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                                Supplier / Partner
+                            </label>
                             <select
                                 {...register('supplier_id')}
-                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 rounded-2xl outline-none transition-all font-bold text-sm ${errors.supplier_id ? 'border-red-500 focus:ring-red-500/10' : 'border-transparent focus:border-teal-500/20 focus:bg-white dark:focus:bg-slate-800'
-                                    }`}
+                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 rounded-2xl outline-none transition-all font-bold text-sm ${
+                                    errors.supplier_id
+                                        ? 'border-red-500 focus:ring-red-500/10'
+                                        : 'border-transparent focus:border-teal-500/20 focus:bg-white dark:focus:bg-slate-800'
+                                }`}
                             >
                                 <option value="0">Select a supplier...</option>
-                                {suppliers.map(s => (
-                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                {suppliers.map((s) => (
+                                    <option key={s.id} value={s.id}>
+                                        {s.name}
+                                    </option>
                                 ))}
                             </select>
-                            {errors.supplier_id && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.supplier_id.message}</p>}
+                            {errors.supplier_id && (
+                                <p className="text-red-500 text-[10px] font-bold ml-1">
+                                    {errors.supplier_id.message}
+                                </p>
+                            )}
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Search Medicines</label>
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                                Search Medicines
+                            </label>
                             <div className="relative">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500" size={16} />
+                                <Search
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500"
+                                    size={16}
+                                />
                                 <input
                                     type="text"
                                     value={searchQuery}
@@ -169,15 +200,19 @@ export function CreatePurchaseOrderModal({ isOpen, onClose, onSuccess }: CreateP
                                 />
                             </div>
                             <div className="bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 h-[300px] overflow-y-auto p-2 space-y-1">
-                                {filteredMedicines.map(med => (
+                                {filteredMedicines.map((med) => (
                                     <button
                                         key={med.id}
                                         onClick={() => addItem(med)}
                                         className="w-full flex items-center justify-between p-3 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all group border border-transparent hover:border-teal-500/10"
                                     >
                                         <div className="text-left">
-                                            <p className="text-xs font-black text-healthcare-dark">{med.name}</p>
-                                            <p className="text-[10px] text-slate-400 font-bold uppercase">{med.code}</p>
+                                            <p className="text-xs font-black text-healthcare-dark">
+                                                {med.name}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase">
+                                                {med.code}
+                                            </p>
                                         </div>
                                         <div className="p-1.5 bg-teal-50 text-teal-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all">
                                             <Plus size={14} />
@@ -188,11 +223,18 @@ export function CreatePurchaseOrderModal({ isOpen, onClose, onSuccess }: CreateP
                         </div>
                     </div>
 
-                    {/* Right: Items List */}
+                    {}
                     <div className="flex flex-col h-full space-y-4">
-                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Order items ({fields.length})</label>
-                        <div className={`flex-1 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border overflow-y-auto p-4 space-y-3 ${errors.items ? 'border-red-500' : 'border-slate-100 dark:border-slate-800'
-                            }`}>
+                        <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                            Order items ({fields.length})
+                        </label>
+                        <div
+                            className={`flex-1 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border overflow-y-auto p-4 space-y-3 ${
+                                errors.items
+                                    ? 'border-red-500'
+                                    : 'border-slate-100 dark:border-slate-800'
+                            }`}
+                        >
                             {fields.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-2">
                                     <ShoppingCart size={32} className="opacity-20" />
@@ -200,32 +242,50 @@ export function CreatePurchaseOrderModal({ isOpen, onClose, onSuccess }: CreateP
                                 </div>
                             ) : (
                                 fields.map((field, index) => (
-                                    <div key={field.id} className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-2">
+                                    <div
+                                        key={field.id}
+                                        className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-2"
+                                    >
                                         <div className="flex justify-between items-start">
-                                            <p className="text-xs font-black text-healthcare-dark">{field.medicine_name}</p>
-                                            <button onClick={() => remove(index)} className="text-slate-300 hover:text-red-500 transition-colors">
+                                            <p className="text-xs font-black text-healthcare-dark">
+                                                {field.medicine_name}
+                                            </p>
+                                            <button
+                                                onClick={() => remove(index)}
+                                                className="text-slate-300 hover:text-red-500 transition-colors"
+                                            >
                                                 <X size={14} />
                                             </button>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="space-y-1">
-                                                <p className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">Qty</p>
+                                                <p className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">
+                                                    Qty
+                                                </p>
                                                 <input
                                                     type="number"
                                                     min="1"
                                                     {...register(`items.${index}.quantity`)}
-                                                    className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.quantity ? 'border-red-500' : 'focus:border-teal-500 font-bold'
-                                                        }`}
+                                                    className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${
+                                                        errors.items?.[index]?.quantity
+                                                            ? 'border-red-500'
+                                                            : 'focus:border-teal-500 font-bold'
+                                                    }`}
                                                 />
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">Unit Cost</p>
+                                                <p className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">
+                                                    Unit Cost
+                                                </p>
                                                 <input
                                                     type="number"
                                                     min="0"
                                                     {...register(`items.${index}.unit_price`)}
-                                                    className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.unit_price ? 'border-red-500' : 'focus:border-teal-500 font-bold'
-                                                        }`}
+                                                    className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${
+                                                        errors.items?.[index]?.unit_price
+                                                            ? 'border-red-500'
+                                                            : 'focus:border-teal-500 font-bold'
+                                                    }`}
                                                 />
                                             </div>
                                         </div>
@@ -233,13 +293,21 @@ export function CreatePurchaseOrderModal({ isOpen, onClose, onSuccess }: CreateP
                                 ))
                             )}
                         </div>
-                        {errors.items && <p className="text-red-500 text-[10px] font-bold text-center">{errors.items.message}</p>}
+                        {errors.items && (
+                            <p className="text-red-500 text-[10px] font-bold text-center">
+                                {errors.items.message}
+                            </p>
+                        )}
 
-                        {/* Summary Footer */}
+                        {}
                         <div className="bg-teal-500/5 p-4 rounded-2xl border border-teal-500/10 space-y-4">
                             <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-black uppercase text-teal-600 tracking-widest">Total Amount</span>
-                                <span className="text-lg font-black text-healthcare-dark underline decoration-teal-500/30 decoration-4">RWF {totalAmount.toLocaleString()}</span>
+                                <span className="text-[10px] font-black uppercase text-teal-600 tracking-widest">
+                                    Total Amount
+                                </span>
+                                <span className="text-lg font-black text-healthcare-dark underline decoration-teal-500/30 decoration-4">
+                                    RWF {totalAmount.toLocaleString()}
+                                </span>
                             </div>
                             <button
                                 onClick={handleSubmit(onSubmit)}

@@ -34,7 +34,9 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export function UsersPage() {
-    const { user: authUser, facilities, organizations } = useAuth();
+    const { user, facilities, organizations } = useAuth();
+    const authUser = user;
+    const role = (user?.role || '').toString().toUpperCase();
     const [users, setUsers] = useState<User[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -69,12 +71,17 @@ export function UsersPage() {
         }
     };
 
-    const groupedFacilities = (facilities ?? []).reduce((acc, f) => {
-        const orgName = organizations?.find((o: Organization) => o.id === f.organization_id)?.name || 'Other';
-        if (!acc[orgName]) acc[orgName] = [];
-        acc[orgName].push(f);
-        return acc;
-    }, {} as Record<string, typeof facilities>);
+    const groupedFacilities = (facilities ?? []).reduce(
+        (acc, f) => {
+            const orgName =
+                organizations?.find((o: Organization) => o.id === f.organization_id)?.name ||
+                'Other';
+            if (!acc[orgName]) acc[orgName] = [];
+            acc[orgName].push(f);
+            return acc;
+        },
+        {} as Record<string, typeof facilities>,
+    );
 
     useEffect(() => {
         const timer = setTimeout(() => loadUsers(), 300);
@@ -86,7 +93,6 @@ export function UsersPage() {
         u.email ||
         '—';
 
-    const role = authUser?.role?.toUpperCase();
     const canAddStaff =
         role === 'OWNER' ||
         role === 'SUPER_ADMIN' ||
@@ -104,13 +110,7 @@ export function UsersPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={[
-                'SUPER_ADMIN',
-                'SUPER ADMIN',
-                'OWNER',
-                'FACILITY_ADMIN',
-                'FACILITY ADMIN',
-            ]}
+            allowedRoles={['OWNER', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'AUDITOR']}
             requireFacility
         >
             <div className="h-full flex flex-col p-6 bg-slate-50/50 dark:bg-slate-900/50">
@@ -155,29 +155,29 @@ export function UsersPage() {
                         <select
                             value={facilityFilter}
                             onChange={(e) => {
-                                setFacilityFilter(e.target.value === '' ? '' : Number(e.target.value));
+                                setFacilityFilter(
+                                    e.target.value === '' ? '' : Number(e.target.value),
+                                );
                                 setPage(1);
                             }}
                             className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                         >
                             <option value="">All facilities</option>
-                            {authUser?.role?.toUpperCase().includes('SUPER') ? (
-                                Object.entries(groupedFacilities).map(([orgName, facs]) => (
-                                    <optgroup key={orgName} label={orgName}>
-                                        {facs.map((f) => (
-                                            <option key={f.id} value={f.id}>
-                                                {f.name}
-                                            </option>
-                                        ))}
-                                    </optgroup>
-                                ))
-                            ) : (
-                                facilities.map((f) => (
-                                    <option key={f.id} value={f.id}>
-                                        {f.name ?? `Facility ${f.id}`}
-                                    </option>
-                                ))
-                            )}
+                            {user?.role?.toUpperCase().includes('SUPER')
+                                ? Object.entries(groupedFacilities).map(([orgName, facs]) => (
+                                      <optgroup key={orgName} label={orgName}>
+                                          {facs.map((f) => (
+                                              <option key={f.id} value={f.id}>
+                                                  {f.name}
+                                              </option>
+                                          ))}
+                                      </optgroup>
+                                  ))
+                                : facilities.map((f) => (
+                                      <option key={f.id} value={f.id}>
+                                          {f.name ?? `Facility ${f.id}`}
+                                      </option>
+                                  ))}
                         </select>
                     )}
                     <select
@@ -255,8 +255,19 @@ export function UsersPage() {
                                     </thead>
                                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                                         {users.map((u) => {
-                                            const userFacility = facilities?.find(f => f.id === u.facility_id);
-                                            const joinedDate = u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+                                            const userFacility = facilities?.find(
+                                                (f) => f.id === u.facility_id,
+                                            );
+                                            const joinedDate = u.created_at
+                                                ? new Date(u.created_at).toLocaleDateString(
+                                                      'en-US',
+                                                      {
+                                                          year: 'numeric',
+                                                          month: 'short',
+                                                          day: 'numeric',
+                                                      },
+                                                  )
+                                                : '—';
                                             return (
                                                 <tr
                                                     key={u.id}
@@ -316,7 +327,8 @@ export function UsersPage() {
                             <div className="mt-6 flex items-center justify-between bg-white dark:bg-slate-800 px-6 py-4 rounded-xl border border-slate-100 dark:border-slate-700">
                                 <div className="flex items-center gap-4">
                                     <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                        Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
+                                        Showing {(page - 1) * limit + 1}–
+                                        {Math.min(page * limit, total)} of {total}
                                     </p>
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
@@ -347,23 +359,27 @@ export function UsersPage() {
                                         <ChevronLeft size={18} />
                                     </button>
                                     <div className="flex items-center gap-1">
-                                        {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => setPage(i + 1)}
-                                                className={cn(
-                                                    'w-9 h-9 flex items-center justify-center rounded-xl text-[11px] font-black transition-all',
-                                                    page === i + 1
-                                                        ? 'bg-healthcare-primary text-white shadow-md shadow-teal-500/20'
-                                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400',
-                                                )}
-                                            >
-                                                {i + 1}
-                                            </button>
-                                        ))}
+                                        {Array.from({ length: Math.min(totalPages, 5) }).map(
+                                            (_, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setPage(i + 1)}
+                                                    className={cn(
+                                                        'w-9 h-9 flex items-center justify-center rounded-xl text-[11px] font-black transition-all',
+                                                        page === i + 1
+                                                            ? 'bg-healthcare-primary text-white shadow-md shadow-teal-500/20'
+                                                            : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400',
+                                                    )}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            ),
+                                        )}
                                     </div>
                                     <button
-                                        onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                                        onClick={() =>
+                                            setPage((prev) => Math.min(prev + 1, totalPages))
+                                        }
                                         disabled={page === totalPages || isLoading}
                                         className="p-2 border border-slate-100 dark:border-slate-800 rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary transition-all"
                                     >
@@ -449,33 +465,37 @@ function UserActionsIcons({
             >
                 <History size={18} />
             </Link>
-            <button
-                type="button"
-                onClick={() => setShowEditModal(true)}
-                className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-healthcare-primary transition-colors"
-                aria-label="Edit user"
-                title="Edit user"
-            >
-                <Pencil size={18} />
-            </button>
-            <button
-                type="button"
-                onClick={onToggleActiveClick}
-                className={`p-2 rounded-lg transition-colors ${isActive ? 'text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400' : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-400'}`}
-                aria-label={isActive ? 'Deactivate' : 'Activate'}
-                title={isActive ? 'Deactivate' : 'Activate'}
-            >
-                {isActive ? <UserX size={18} /> : <UserCheck size={18} />}
-            </button>
-            <button
-                type="button"
-                onClick={() => setShowArchiveConfirm(true)}
-                className="p-2 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
-                aria-label="Archive user"
-                title="Archive user"
-            >
-                <Trash2 size={18} />
-            </button>
+            {user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+                <>
+                    <button
+                        type="button"
+                        onClick={() => setShowEditModal(true)}
+                        className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-healthcare-primary transition-colors"
+                        aria-label="Edit user"
+                        title="Edit user"
+                    >
+                        <Pencil size={18} />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onToggleActiveClick}
+                        className={`p-2 rounded-lg transition-colors ${isActive ? 'text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400' : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-400'}`}
+                        aria-label={isActive ? 'Deactivate' : 'Activate'}
+                        title={isActive ? 'Deactivate' : 'Activate'}
+                    >
+                        {isActive ? <UserX size={18} /> : <UserCheck size={18} />}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setShowArchiveConfirm(true)}
+                        className="p-2 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors"
+                        aria-label="Archive user"
+                        title="Archive user"
+                    >
+                        <Trash2 size={18} />
+                    </button>
+                </>
+            )}
             {showEditModal && (
                 <EditUserModal
                     user={user}
@@ -601,8 +621,8 @@ function UserActionsIcons({
                         </div>
                         <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
                             Are you sure you want to archive <strong>{displayName}</strong>? They
-                            will be removed from the staff list, but their historical data (sales, orders, etc.)
-                            will be preserved in the database.
+                            will be removed from the staff list, but their historical data (sales,
+                            orders, etc.) will be preserved in the database.
                         </p>
                         <div className="flex gap-3">
                             <button
@@ -639,7 +659,11 @@ function EditUserModal({
     onSuccess: () => void;
 }) {
     const [role, setRole] = useState(() => (user.role ?? '').toString().toLowerCase());
-    const [facilityId, setFacilityId] = useState<number | ''>(user.facility_id ?? '');
+    const [facilityId, setFacilityId] = useState<number | ''>(() => {
+        if (user.facility_id) return user.facility_id;
+        if (facilities.length === 1) return facilities[0].id;
+        return '';
+    });
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -692,12 +716,12 @@ function EditUserModal({
                         >
                             {editableRoles.map((r) => (
                                 <option key={r} value={r}>
-                                    {ROLE_LABELS[r] ?? r.replace(/_/g, ' ')}
+                                    {ROLE_LABELS[r] ?? (r || '').replace(/_/g, ' ')}
                                 </option>
                             ))}
                         </select>
                     </div>
-                    {facilities.length > 0 && (
+                    {facilities.length > 1 && (
                         <div>
                             <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">
                                 Facility
@@ -757,7 +781,9 @@ function AddStaffModal({
         last_name: '',
         role: 'pharmacist',
     });
-    const [facilityId, setFacilityId] = useState<number | ''>('');
+    const [facilityId, setFacilityId] = useState<number | ''>(() => {
+        return facilities.length === 1 ? facilities[0].id : '';
+    });
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -863,7 +889,7 @@ function AddStaffModal({
                             ))}
                         </select>
                     </div>
-                    {facilities.length > 0 && (
+                    {facilities.length > 1 && (
                         <div>
                             <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">
                                 Facility (optional)

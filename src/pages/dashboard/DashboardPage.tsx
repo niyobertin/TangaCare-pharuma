@@ -26,7 +26,6 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-/** Format ISO date string as relative time (e.g. "2m ago", "1h ago"). */
 function formatRelativeTime(isoDate: string): string {
     const d = new Date(isoDate);
     const now = new Date();
@@ -114,8 +113,8 @@ export function DashboardPage() {
         facilityId == null && facilities.length > 0
             ? 'All facilities'
             : facilityId != null
-                ? (facilities.find((f) => f.id === facilityId)?.name ?? `Facility #${facilityId}`)
-                : `Facility #${user?.facility_id ?? '—'}`;
+              ? (facilities.find((f) => f.id === facilityId)?.name ?? `Facility #${facilityId}`)
+              : `Facility #${user?.facility_id ?? '—'}`;
 
     return (
         <ProtectedRoute
@@ -214,13 +213,13 @@ export function DashboardPage() {
                                         stats?.dailySalesChart && stats.dailySalesChart.length > 0
                                             ? stats.dailySalesChart
                                             : Array.from({ length: 14 }, (_, i) => {
-                                                const d = new Date();
-                                                d.setDate(d.getDate() - (13 - i));
-                                                return {
-                                                    date: d.toISOString().split('T')[0],
-                                                    sales: 0,
-                                                };
-                                            });
+                                                  const d = new Date();
+                                                  d.setDate(d.getDate() - (13 - i));
+                                                  return {
+                                                      date: d.toISOString().split('T')[0],
+                                                      sales: 0,
+                                                  };
+                                              });
                                     const maxSales = Math.max(...chartArray.map((x) => x.sales), 1);
                                     return chartArray.map((day, i) => {
                                         const heightPct = Math.round((day.sales / maxSales) * 100);
@@ -262,8 +261,8 @@ export function DashboardPage() {
                                     loadingStats
                                         ? '—'
                                         : typeof stats?.staffCount === 'number'
-                                            ? `${stats.staffCount} staff in scope`
-                                            : '—'
+                                          ? `${stats.staffCount} staff in scope`
+                                          : '—'
                                 }
                                 description="Users in facility or organization"
                                 color="bg-blue-50 dark:bg-blue-900"
@@ -275,8 +274,8 @@ export function DashboardPage() {
                                     loadingStats
                                         ? '—'
                                         : (stats?.activeAlertsCount ?? 0) === 0
-                                            ? '100% Optimized'
-                                            : `${Math.max(0, 100 - (stats?.activeAlertsCount ?? 0) * 2)}% attention`
+                                          ? '100% Optimized'
+                                          : `${Math.max(0, 100 - (stats?.activeAlertsCount ?? 0) * 2)}% attention`
                                 }
                                 description={
                                     (stats?.activeAlertsCount ?? 0) === 0
@@ -337,8 +336,8 @@ export function DashboardPage() {
                                                     alert.type === 'expiry'
                                                         ? 'expiry'
                                                         : alert.type === 'low_stock'
-                                                            ? 'stock'
-                                                            : 'audit'
+                                                          ? 'stock'
+                                                          : 'audit'
                                                 }
                                                 title={
                                                     alert.message.slice(0, 40) +
@@ -423,8 +422,6 @@ export function DashboardPage() {
         </ProtectedRoute>
     );
 }
-
-// --- Internal Stat Components ---
 
 function StatCard({ title, value, trend, isPositive, color, icon }: any) {
     return (
@@ -520,8 +517,8 @@ function AlertItem({ type, title, info, isUrgent = false }: any) {
                     isUrgent
                         ? 'bg-red-500 animate-pulse'
                         : type === 'expiry'
-                            ? 'bg-red-400'
-                            : 'bg-amber-400',
+                          ? 'bg-red-400'
+                          : 'bg-amber-400',
                 )}
             ></div>
             <div className="flex-1">
@@ -583,8 +580,8 @@ function TableRow({
                         isStockIn
                             ? 'text-emerald-500'
                             : qty.startsWith('-')
-                                ? 'text-amber-500'
-                                : 'text-slate-600 dark:text-slate-300',
+                              ? 'text-amber-500'
+                              : 'text-slate-600 dark:text-slate-300',
                     )}
                 >
                     {qty}
@@ -597,8 +594,8 @@ function TableRow({
                         isPending
                             ? 'bg-amber-50 dark:bg-amber-900 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800'
                             : isStockIn
-                                ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
-                                : 'bg-emerald-50 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 border-teal-200 dark:border-teal-800',
+                              ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                              : 'bg-emerald-50 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 border-teal-200 dark:border-teal-800',
                     )}
                 >
                     {status}

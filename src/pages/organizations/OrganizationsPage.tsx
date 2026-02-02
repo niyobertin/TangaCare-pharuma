@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { PERMISSIONS } from '../../types/auth';
+import { OrganizationDetailsModal } from '../../components/organization/OrganizationDetailsModal';
 
 export function OrganizationsPage() {
     const { user } = useAuth();
@@ -14,6 +15,7 @@ export function OrganizationsPage() {
     const [search, setSearch] = useState('');
     const [page] = useState(1);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
 
     const loadOrganizations = async () => {
         setIsLoading(true);
@@ -86,7 +88,8 @@ export function OrganizationsPage() {
                         {organizations.map((org) => (
                             <div
                                 key={org.id}
-                                className="glass-card p-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-healthcare-primary/30 transition-all"
+                                onClick={() => setSelectedOrganization(org)}
+                                className="glass-card p-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-healthcare-primary/30 transition-all cursor-pointer hover:shadow-md"
                             >
                                 <div className="flex items-start gap-3">
                                     <div className="w-12 h-12 rounded-xl bg-healthcare-primary/10 flex items-center justify-center flex-shrink-0">
@@ -103,7 +106,7 @@ export function OrganizationsPage() {
                                         )}
                                         {org.type && (
                                             <span className="inline-block mt-2 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-xs text-slate-600 dark:text-slate-300">
-                                                {org.type.replace('_', ' ')}
+                                                {(org.type || '').replace('_', ' ')}
                                             </span>
                                         )}
                                     </div>
@@ -117,6 +120,13 @@ export function OrganizationsPage() {
                     <CreateOrganizationModal
                         onClose={() => setShowCreateModal(false)}
                         onSuccess={handleCreateSuccess}
+                    />
+                )}
+
+                {selectedOrganization && (
+                    <OrganizationDetailsModal
+                        organization={selectedOrganization}
+                        onClose={() => setSelectedOrganization(null)}
                     />
                 )}
             </div>

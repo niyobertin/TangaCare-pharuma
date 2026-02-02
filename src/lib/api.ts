@@ -7,7 +7,6 @@ const api = axios.create({
     },
 });
 
-// Request interceptor to add tokens and tenant context
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('access_token');
@@ -21,9 +20,7 @@ api.interceptors.request.use(
                 const parsed = JSON.parse(userData);
                 const role = (parsed?.role ?? '').toString().toUpperCase();
                 isFacilityAdmin = role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN';
-            } catch {
-                // ignore
-            }
+            } catch {}
         }
         const organizationId = localStorage.getItem('selected_organization_id');
         const facilityId = localStorage.getItem('selected_facility_id');
@@ -34,7 +31,6 @@ api.interceptors.request.use(
     (error) => Promise.reject(error),
 );
 
-// Response interceptor for token refresh or error handling
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -47,7 +43,7 @@ api.interceptors.response.use(
             if (refreshToken) {
                 try {
                     const response = await axios.post(
-                        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/refresh-token`,
+                        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/refresh`,
                         {
                             refreshToken,
                         },

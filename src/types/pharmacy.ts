@@ -15,11 +15,11 @@ export interface DashboardStats {
     lowStockWarning: number;
     expiringSoon: number;
     dailySales: string;
-    /** Last 14 days of daily sales for chart (date YYYY-MM-DD, sales number). */
+
     dailySalesChart?: Array<{ date: string; sales: number }>;
-    /** Staff count in scope (facility or organization). */
+
     staffCount?: number;
-    /** Active alerts count in scope. */
+
     activeAlertsCount?: number;
     trends: {
         medicines: string;
@@ -113,8 +113,6 @@ export interface Department {
     status: 'active' | 'inactive';
 }
 
-// ... (skipping unchanged parts)
-
 export interface CreateFacilityDto {
     name: string;
     type: 'hospital' | 'clinic' | 'pharmacy_shop';
@@ -122,7 +120,7 @@ export interface CreateFacilityDto {
     phone?: string;
     email?: string;
     organization_id?: number;
-    // Configuration fields
+
     departments_enabled?: boolean;
     controlled_drug_rules_enabled?: boolean;
     min_stock_threshold_percentage?: number;
@@ -146,7 +144,7 @@ export interface Batch {
 export interface Stock {
     id: number;
     facility_id: number;
-    department_id?: number | null; // Null indicates Central Store (for Hospitals) or Main Stock (for others)
+    department_id?: number | null;
     medicine_id: number;
     quantity: number;
     min_threshold: number;
@@ -230,7 +228,6 @@ export interface CreateMedicineDto {
     selling_price: number;
 }
 
-// Sales (POS)
 export type SaleStatus = 'paid' | 'partially_paid' | 'unpaid' | 'voided';
 export type SalePaymentMethod = 'cash' | 'mobile_money' | 'bank' | 'card';
 

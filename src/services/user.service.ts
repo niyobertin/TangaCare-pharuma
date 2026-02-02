@@ -2,7 +2,6 @@ import api from '../lib/api';
 import type { User } from '../types/auth';
 import type { PaginatedResponse } from '../types/pharmacy';
 
-// Helper to normalize paginated response (reused logic)
 const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
     const result: PaginatedResponse<T> = {
         data: [],
@@ -34,7 +33,6 @@ const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
     return result;
 };
 
-/** Staff roles an organization owner can assign. */
 export const STAFF_ROLES = [
     'facility_admin',
     'pharmacist',
@@ -47,7 +45,7 @@ export type CreateStaffPayload = {
     email: string;
     first_name: string;
     last_name: string;
-    /** Optional: if omitted, user will set password after verifying email. */
+
     password?: string;
     role: (typeof STAFF_ROLES)[number];
     facility_id?: number;

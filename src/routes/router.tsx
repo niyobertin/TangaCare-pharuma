@@ -24,8 +24,6 @@ import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 import { SetPasswordPage } from '../pages/auth/SetPasswordPage';
 import { z } from 'zod';
 
-// --- Components ---
-
 const RootComponent = () => {
     return (
         <React.Fragment>
@@ -41,8 +39,6 @@ const AppLayoutComponent = () => {
 const AuthLayoutComponent = () => {
     return <Outlet />;
 };
-
-// --- Routes Configuration ---
 
 const rootRoute = createRootRoute({
     component: RootComponent,
@@ -81,8 +77,6 @@ const authLayoutRoute = createRoute({
     path: '/auth',
     component: AuthLayoutComponent,
 });
-
-// --- Application Routes ---
 
 import { AlertsPage } from '../pages/dashboard/AlertsPage';
 import { ReportsPage } from '../pages/dashboard/ReportsPage';
@@ -184,14 +178,12 @@ const stockRegisterRoute = createRoute({
     component: StockRegisterReportPage,
 });
 
-
 const alertsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'alerts',
     component: AlertsPage,
 });
 
-// --- Placeholder Routes ---
 const prescriptionsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'prescriptions',
@@ -237,8 +229,6 @@ const settingsRoute = createRoute({
         />
     ),
 });
-
-// --- Authentication Routes ---
 
 const loginRoute = createRoute({
     getParentRoute: () => authLayoutRoute,
@@ -298,8 +288,6 @@ const setPasswordRoute = createRoute({
     component: SetPasswordPage,
 });
 
-// --- Route Tree Construction ---
-
 const facilitySettingsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'facility/$facilityId/settings',
@@ -314,7 +302,12 @@ const appRouteTree = appLayoutRoute.addChildren([
     facilitiesRoute,
     usersRoute,
     facilitySettingsRoute,
-    procurementRoute.addChildren([procurementIndexRoute, ordersRoute, suppliersRoute, viewOrderRoute]),
+    procurementRoute.addChildren([
+        procurementIndexRoute,
+        ordersRoute,
+        suppliersRoute,
+        viewOrderRoute,
+    ]),
     stockRoute,
     auditLogsRoute,
     stockMovementsRoute,

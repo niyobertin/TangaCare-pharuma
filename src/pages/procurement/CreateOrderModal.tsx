@@ -64,7 +64,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
             try {
                 const [suppliersData, medicinesResponse] = await Promise.all([
                     pharmacyService.getSuppliers(),
-                    pharmacyService.getMedicines({ limit: 100 }), // Fetch reasonable amount or implement search
+                    pharmacyService.getMedicines({ limit: 100 }),
                 ]);
                 setSuppliers(suppliersData.data || []);
                 setMedicines(medicinesResponse.data || []);
@@ -120,7 +120,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <div className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-                {/* Header */}
+                {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
                     <h2 className="text-xl font-black text-healthcare-dark flex items-center gap-2">
                         <ShoppingCart size={20} className="text-healthcare-primary" />
@@ -145,7 +145,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                             onSubmit={handleSubmit(onSubmit)}
                             className="space-y-6"
                         >
-                            {/* General Info */}
+                            {}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-1">
@@ -214,7 +214,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                 </div>
                             </div>
 
-                            {/* Items */}
+                            {}
                             <div>
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="text-sm font-bold text-slate-700">
@@ -382,7 +382,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                     )}
                 </div>
 
-                {/* Footer */}
+                {}
                 <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
                     <button
                         onClick={onClose}

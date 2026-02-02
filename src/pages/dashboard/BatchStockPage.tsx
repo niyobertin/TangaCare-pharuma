@@ -89,8 +89,6 @@ export function BatchStockPage() {
         },
     ];
 
-    // ... (rest of the component structure remains similar, but using correct properties) ...
-    // Note: I'll simplify the mapping since search/pagination isn't supported by the current getBatches service
     const filteredBatches = batches.filter((b) =>
         b.batch_number.toLowerCase().includes(searchQuery.toLowerCase()),
     );
@@ -108,7 +106,7 @@ export function BatchStockPage() {
             requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                {/* Header */}
+                {}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
                         <h2 className="text-2xl font-black text-healthcare-dark tracking-tight">
@@ -120,7 +118,7 @@ export function BatchStockPage() {
                     </div>
                 </div>
 
-                {/* Stats Grid */}
+                {}
                 {loading ? (
                     <StatsSkeleton />
                 ) : (
@@ -152,7 +150,7 @@ export function BatchStockPage() {
                     </div>
                 )}
 
-                {/* Filters */}
+                {}
                 <div className="flex flex-col md:flex-row gap-4 justify-between">
                     <div className="relative flex-1 max-w-lg">
                         <Search
@@ -169,7 +167,7 @@ export function BatchStockPage() {
                     </div>
                 </div>
 
-                {/* Batch Table */}
+                {}
                 <div className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
@@ -245,15 +243,18 @@ export function BatchStockPage() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <button
-                                                        onClick={() =>
-                                                            setSelectedBatchForAdjustment(batch)
-                                                        }
-                                                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
-                                                        title="Adjust Stock"
-                                                    >
-                                                        <ArrowDownWideNarrow size={16} />
-                                                    </button>
+                                                    {user?.role?.toString().toLowerCase() !==
+                                                        'auditor' && (
+                                                        <button
+                                                            onClick={() =>
+                                                                setSelectedBatchForAdjustment(batch)
+                                                            }
+                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
+                                                            title="Adjust Stock"
+                                                        >
+                                                            <ArrowDownWideNarrow size={16} />
+                                                        </button>
+                                                    )}
                                                     <button
                                                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
                                                         title="View History"
@@ -285,7 +286,7 @@ export function BatchStockPage() {
                 </div>
             </div>
 
-            {/* Adjust Modal */}
+            {}
             {selectedBatchForAdjustment && (
                 <StockAdjustmentModal
                     batch={selectedBatchForAdjustment}

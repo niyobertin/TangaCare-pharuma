@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { User, LoginCredentials, RegisterCredentials, Organization } from '../types/auth';
+import {
+    isSuperAdmin,
+    type User,
+    type LoginCredentials,
+    type RegisterCredentials,
+    type Organization,
+} from '../types/auth';
 import { authService } from '../services/auth.service';
 
 const ORG_KEY = 'selected_organization_id';
@@ -19,7 +25,7 @@ interface AuthContextType {
     register: (credentials: RegisterCredentials) => Promise<void>;
     logout: () => Promise<void>;
     refreshProfile: () => Promise<void>;
-    /** Check if current user has a permission (from /me permissions array). */
+
     can: (permission: string) => boolean;
 }
 
@@ -77,14 +83,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (profile.facilities) setFacilities(profile.facilities);
                 let oid = localStorage.getItem(ORG_KEY);
                 let fid = localStorage.getItem(FACILITY_KEY);
-                // Facility admin / owner: default to their single facility and org when not yet selected.
-                // OWNER with multiple facilities: do not set default facility (show "All facilities" / aggregated view).
+
                 const isOwner = (profile as any).role?.toUpperCase() === 'OWNER';
+                const isSuper = isSuperAdmin((profile as any).role);
                 const multiFacilityOwner = isOwner && (profile.facilities?.length ?? 0) > 1;
-                const defaultFacility = multiFacilityOwner
-                    ? null
-                    : ((profile as any).facility ??
-                        (profile.facilities?.length === 1 ? profile.facilities[0] : null));
+                const defaultFacility =
+                    multiFacilityOwner || isSuper
+                        ? null
+                        : ((profile as any).facility ??
+                          (profile.facilities?.length === 1 ? profile.facilities[0] : null));
                 const defaultOrgId =
                     defaultFacility?.organization_id ?? profile.organizations?.[0]?.id ?? null;
                 if (!fid && defaultFacility?.id) {
@@ -120,18 +127,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const payload = response?.data ?? response;
             const u = payload?.user;
             setUser(u);
-            // Organizations and facilities are on the user object
+
             const orgs = u?.organizations ?? [];
             const facs = u?.facilities ?? [];
             setOrganizations(Array.isArray(orgs) ? orgs : []);
             setFacilities(Array.isArray(facs) ? facs : []);
-            // Facility admin / owner: default to their single facility and org when not yet selected
+
             const isOwner = (u?.role ?? payload?.user?.role)?.toString().toUpperCase() === 'OWNER';
+            const isSuper = isSuperAdmin(u?.role ?? payload?.user?.role);
             const multiFacilityOwner = isOwner && Array.isArray(facs) && facs.length > 1;
-            const defaultFacility = multiFacilityOwner
-                ? null
-                : (u?.facility ??
-                    (Array.isArray(facs) && facs.length === 1 ? facs[0] : null));
+            const defaultFacility =
+                multiFacilityOwner || isSuper
+                    ? null
+                    : (u?.facility ?? (Array.isArray(facs) && facs.length === 1 ? facs[0] : null));
             let oid = localStorage.getItem(ORG_KEY);
             let fid = localStorage.getItem(FACILITY_KEY);
             if (!fid && defaultFacility?.id) {
@@ -177,13 +185,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('user_data', JSON.stringify(profile));
         if (profile.organizations) setOrganizations(profile.organizations);
         if (profile.facilities) setFacilities(profile.facilities);
-        // Keep tenant in sync for facility admin / owner. OWNER with multiple facilities: do not set default.
-        const isOwner = (profile as any).role?.toUpperCase() === 'OWNER';
+
+        const profileRole =
+            (profile as any).role || (profile as any).user_role || (profile as any).UserRole;
+        if (!profileRole) {
+            console.warn('[refreshProfile] Role missing in profile data:', profile);
+        }
+        const isOwner = profileRole?.toString().toUpperCase() === 'OWNER';
+        const isSuper = isSuperAdmin(profileRole?.toString());
         const multiFacilityOwner = isOwner && (profile.facilities?.length ?? 0) > 1;
-        const defaultFacility = multiFacilityOwner
-            ? null
-            : ((profile as any).facility ??
-                (profile.facilities?.length === 1 ? profile.facilities[0] : null));
+        const defaultFacility =
+            multiFacilityOwner || isSuper
+                ? null
+                : ((profile as any).facility ??
+                  (profile.facilities?.length === 1 ? profile.facilities[0] : null));
         if (defaultFacility?.id && !localStorage.getItem(FACILITY_KEY)) {
             localStorage.setItem(FACILITY_KEY, String(defaultFacility.id));
             setFacilityIdState(defaultFacility.id);

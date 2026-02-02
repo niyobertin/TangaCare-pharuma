@@ -62,10 +62,10 @@ export function DispensingPage() {
                 ...(user?.facility_id ? { facility_id: user.facility_id } : {}),
             });
 
-            setMedicines(prev => {
+            setMedicines((prev) => {
                 if (page === 1) return response.data;
-                const newIds = new Set(response.data.map(m => m.id));
-                return [...prev.filter(m => !newIds.has(m.id)), ...response.data];
+                const newIds = new Set(response.data.map((m) => m.id));
+                return [...prev.filter((m) => !newIds.has(m.id)), ...response.data];
             });
 
             setHasMore(response.meta.page < response.meta.totalPages);
@@ -81,7 +81,7 @@ export function DispensingPage() {
 
         const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
         if (scrollHeight - scrollTop <= clientHeight + 100) {
-            setPage(prev => prev + 1);
+            setPage((prev) => prev + 1);
         }
     };
 
@@ -241,7 +241,7 @@ export function DispensingPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['admin', 'pharmacist', 'super_admin', 'store_manager', 'facility_admin']}
+            allowedRoles={['admin', 'pharmacist', 'super_admin', 'facility_admin', 'auditor']}
             requireFacility
         >
             <div className="flex h-full flex-col lg:flex-row p-5 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-700 overflow-hidden">
@@ -284,11 +284,15 @@ export function DispensingPage() {
                                     <button
                                         key={med.id}
                                         onClick={() => addToCart(med)}
-                                        disabled={(med.stock_quantity || 0) === 0}
+                                        disabled={
+                                            (med.stock_quantity || 0) === 0 ||
+                                            user?.role?.toString() === 'auditor'
+                                        }
                                         className={cn(
                                             'group p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl text-left transition-all hover:border-healthcare-primary/30 hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden',
-                                            (med.stock_quantity || 0) === 0 &&
-                                            'opacity-50 cursor-not-allowed grayscale',
+                                            ((med.stock_quantity || 0) === 0 ||
+                                                user?.role?.toString() === 'auditor') &&
+                                                'opacity-50 cursor-not-allowed grayscale',
                                         )}
                                     >
                                         <div className="flex flex-col gap-3">
@@ -337,67 +341,84 @@ export function DispensingPage() {
                             <User size={16} />
                             <span>Patient Details</span>
                         </div>
-                        {!selectedPatient ? (
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search patient..."
-                                    value={patientQuery}
-                                    onChange={(e) => setPatientQuery(e.target.value)}
-                                    className="w-full px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-healthcare-primary/20 outline-none"
-                                />
-                                {patients.length > 0 && (
-                                    <div className="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-lg mt-1 z-10 max-h-40 overflow-y-auto">
-                                        {patients.map((p) => (
-                                            <div
-                                                key={p.id}
-                                                onClick={() => {
-                                                    setSelectedPatient(p);
-                                                    setPatientQuery('');
-                                                    setPatients([]);
-                                                }}
-                                                className="p-2 hover:bg-slate-50 cursor-pointer text-sm"
-                                            >
-                                                <div className="font-bold">
-                                                    {p.first_name || p.firstName || p.name || ''}{' '}
-                                                    {p.last_name || p.lastName || ''}
+                        {user?.role?.toString()?.toLowerCase() !== 'auditor' &&
+                            !selectedPatient && (
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Search patient..."
+                                        value={patientQuery}
+                                        onChange={(e) => setPatientQuery(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-healthcare-primary/20 outline-none"
+                                    />
+                                    {patients.length > 0 && (
+                                        <div className="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-lg mt-1 z-10 max-h-40 overflow-y-auto">
+                                            {patients.map((p) => (
+                                                <div
+                                                    key={p.id}
+                                                    onClick={() => {
+                                                        setSelectedPatient(p);
+                                                        setPatientQuery('');
+                                                        setPatients([]);
+                                                    }}
+                                                    className="p-2 hover:bg-slate-50 cursor-pointer text-sm"
+                                                >
+                                                    <div className="font-bold">
+                                                        {p.first_name ||
+                                                            p.firstName ||
+                                                            p.name ||
+                                                            ''}{' '}
+                                                        {p.last_name || p.lastName || ''}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500">
+                                                        {p.phone_number ||
+                                                            p.phoneNumber ||
+                                                            p.phone ||
+                                                            '—'}
+                                                    </div>
                                                 </div>
-                                                <div className="text-xs text-slate-500">
-                                                    {p.phone_number ||
-                                                        p.phoneNumber ||
-                                                        p.phone ||
-                                                        '—'}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        {(selectedPatient ||
+                            user?.role?.toString()?.toLowerCase() === 'auditor') && (
                             <div className="flex justify-between items-center bg-white p-2 rounded-lg border text-sm">
                                 <div>
                                     <div className="font-bold">
-                                        {selectedPatient.first_name ||
-                                            selectedPatient.firstName ||
-                                            selectedPatient.name ||
-                                            ''}{' '}
-                                        {selectedPatient.last_name ||
-                                            selectedPatient.lastName ||
-                                            ''}
+                                        {selectedPatient ? (
+                                            <>
+                                                {selectedPatient.first_name ||
+                                                    selectedPatient.firstName ||
+                                                    selectedPatient.name ||
+                                                    ''}{' '}
+                                                {selectedPatient.last_name ||
+                                                    selectedPatient.lastName ||
+                                                    ''}
+                                            </>
+                                        ) : (
+                                            'No Patient Selected'
+                                        )}
                                     </div>
                                     <div className="text-xs text-slate-500">
-                                        {selectedPatient.phone_number ||
-                                            selectedPatient.phoneNumber ||
-                                            selectedPatient.phone ||
-                                            '—'}
+                                        {selectedPatient
+                                            ? selectedPatient.phone_number ||
+                                              selectedPatient.phoneNumber ||
+                                              selectedPatient.phone ||
+                                              '—'
+                                            : 'Patient info is unavailable in browse mode'}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => setSelectedPatient(null)}
-                                    className="text-slate-400 hover:text-red-500"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
+                                {selectedPatient &&
+                                    user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+                                        <button
+                                            onClick={() => setSelectedPatient(null)}
+                                            className="text-slate-400 hover:text-red-500"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    )}
                             </div>
                         )}
                     </div>
@@ -433,51 +454,53 @@ export function DispensingPage() {
                                                 EXP:{' '}
                                                 {item.selectedBatch?.expiry_date
                                                     ? new Date(
-                                                        item.selectedBatch.expiry_date,
-                                                    ).toLocaleDateString()
+                                                          item.selectedBatch.expiry_date,
+                                                      ).toLocaleDateString()
                                                     : 'N/A'}
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                                    {user?.role?.toString() !== 'auditor' && (
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+                                                <button
+                                                    onClick={() =>
+                                                        updateQuantity(
+                                                            item.id,
+                                                            item.selectedBatch!.id,
+                                                            -1,
+                                                        )
+                                                    }
+                                                    className="p-1 px-2 hover:bg-slate-50 transition-colors text-slate-400 hover:text-healthcare-primary"
+                                                >
+                                                    <Minus size={12} />
+                                                </button>
+                                                <span className="text-xs font-black w-6 text-center">
+                                                    {item.quantity}
+                                                </span>
+                                                <button
+                                                    onClick={() =>
+                                                        updateQuantity(
+                                                            item.id,
+                                                            item.selectedBatch!.id,
+                                                            1,
+                                                        )
+                                                    }
+                                                    className="p-1 px-2 hover:bg-slate-50 transition-colors text-slate-400 hover:text-healthcare-primary"
+                                                >
+                                                    <Plus size={12} />
+                                                </button>
+                                            </div>
                                             <button
                                                 onClick={() =>
-                                                    updateQuantity(
-                                                        item.id,
-                                                        item.selectedBatch!.id,
-                                                        -1,
-                                                    )
+                                                    removeFromCart(item.id, item.selectedBatch!.id)
                                                 }
-                                                className="p-1 px-2 hover:bg-slate-50 transition-colors text-slate-400 hover:text-healthcare-primary"
+                                                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
                                             >
-                                                <Minus size={12} />
-                                            </button>
-                                            <span className="text-xs font-black w-6 text-center">
-                                                {item.quantity}
-                                            </span>
-                                            <button
-                                                onClick={() =>
-                                                    updateQuantity(
-                                                        item.id,
-                                                        item.selectedBatch!.id,
-                                                        1,
-                                                    )
-                                                }
-                                                className="p-1 px-2 hover:bg-slate-50 transition-colors text-slate-400 hover:text-healthcare-primary"
-                                            >
-                                                <Plus size={12} />
+                                                <Trash2 size={16} />
                                             </button>
                                         </div>
-                                        <button
-                                            onClick={() =>
-                                                removeFromCart(item.id, item.selectedBatch!.id)
-                                            }
-                                            className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
+                                    )}
                                 </div>
                             ))
                         ) : (
@@ -514,19 +537,21 @@ export function DispensingPage() {
                             </div>
                         </div>
 
-                        <button
-                            onClick={handleCheckout}
-                            disabled={cart.length === 0 || processing || !selectedPatient}
-                            className="w-full flex items-center justify-center gap-2 py-4 bg-healthcare-secondary text-white rounded-xl font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-blue-500/20 disabled:opacity-50 disabled:grayscale disabled:scale-100"
-                        >
-                            {processing ? (
-                                'Processing...'
-                            ) : (
-                                <>
-                                    <Receipt size={18} /> Complete Sale
-                                </>
-                            )}
-                        </button>
+                        {user?.role?.toString() !== 'auditor' && (
+                            <button
+                                onClick={handleCheckout}
+                                disabled={cart.length === 0 || processing || !selectedPatient}
+                                className="w-full flex items-center justify-center gap-2 py-4 bg-healthcare-secondary text-white rounded-xl font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-blue-500/20 disabled:opacity-50 disabled:grayscale disabled:scale-100"
+                            >
+                                {processing ? (
+                                    'Processing...'
+                                ) : (
+                                    <>
+                                        <Receipt size={18} /> Complete Sale
+                                    </>
+                                )}
+                            </button>
+                        )}
                     </div>
 
                     {showSuccess && (
@@ -541,6 +566,6 @@ export function DispensingPage() {
                     )}
                 </div>
             </div>
-        </ProtectedRoute >
+        </ProtectedRoute>
     );
 }

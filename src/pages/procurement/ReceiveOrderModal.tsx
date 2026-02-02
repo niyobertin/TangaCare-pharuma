@@ -18,7 +18,7 @@ const receiveSchema = yup.object({
         .array()
         .of(
             yup.object({
-                id: yup.number().required(), // Detail ID or Item ID
+                id: yup.number().required(),
                 medicine_id: yup.number().required(),
                 quantity_received: yup.number().min(1, 'Min 1').required('Required'),
                 batch_number: yup.string().required('Batch # is required'),
@@ -59,7 +59,8 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
         setIsSubmitting(true);
         try {
             await pharmacyService.receiveProcurementOrder(order.id, {
-                items: data.items,
+                received_items: data.items,
+                received_date: new Date().toISOString(),
             });
             toast.success('Order received and stock updated');
             onSuccess();
@@ -74,7 +75,7 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <div className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-                {/* Header */}
+                {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark flex items-center gap-2">

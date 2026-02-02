@@ -64,9 +64,14 @@ const ImportPreviewModal = ({
                 <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                     <div>
                         <h3 className="text-xl font-black text-healthcare-dark">Import Preview</h3>
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Review items before creating Purchase Order</p>
+                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                            Review items before creating Purchase Order
+                        </p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
+                    >
                         <XCircle size={24} className="text-slate-400" />
                     </button>
                 </div>
@@ -75,25 +80,46 @@ const ImportPreviewModal = ({
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b-2 border-slate-200 dark:border-slate-800">
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Medicine</th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">Code</th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">Quantity</th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">Unit Price</th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">Total</th>
+                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    Medicine
+                                </th>
+                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">
+                                    Code
+                                </th>
+                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">
+                                    Quantity
+                                </th>
+                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
+                                    Unit Price
+                                </th>
+                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
+                                    Total
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                             {items.map((item, idx) => (
-                                <tr key={idx} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                    <td className="py-4 font-bold text-healthcare-dark text-sm">{item.medicine_name}</td>
+                                <tr
+                                    key={idx}
+                                    className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                >
+                                    <td className="py-4 font-bold text-healthcare-dark text-sm">
+                                        {item.medicine_name}
+                                    </td>
                                     <td className="py-4 text-center">
                                         <span className="text-[10px] font-black bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-500 uppercase">
                                             {item.medicine_code}
                                         </span>
                                     </td>
-                                    <td className="py-4 text-center text-sm font-black text-healthcare-dark">{item.quantity_ordered}</td>
-                                    <td className="py-4 text-right text-sm font-bold text-slate-500">RWF {item.unit_price.toLocaleString()}</td>
-                                    <td className="py-4 text-right text-sm font-black text-healthcare-primary">RWF {item.total_price.toLocaleString()}</td>
+                                    <td className="py-4 text-center text-sm font-black text-healthcare-dark">
+                                        {item.quantity_ordered}
+                                    </td>
+                                    <td className="py-4 text-right text-sm font-bold text-slate-500">
+                                        RWF {item.unit_price.toLocaleString()}
+                                    </td>
+                                    <td className="py-4 text-right text-sm font-black text-healthcare-primary">
+                                        RWF {item.total_price.toLocaleString()}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -103,13 +129,21 @@ const ImportPreviewModal = ({
                 <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-4">
                         <div className="text-right sm:text-left">
-                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Items</p>
-                            <p className="text-lg font-black text-healthcare-dark">{items.length}</p>
+                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                Total Items
+                            </p>
+                            <p className="text-lg font-black text-healthcare-dark">
+                                {items.length}
+                            </p>
                         </div>
                         <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 hidden sm:block" />
                         <div className="text-right sm:text-left">
-                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Amount</p>
-                            <p className="text-lg font-black text-healthcare-primary">RWF {totalAmount.toLocaleString()}</p>
+                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                Total Amount
+                            </p>
+                            <p className="text-lg font-black text-healthcare-primary">
+                                RWF {totalAmount.toLocaleString()}
+                            </p>
                         </div>
                     </div>
                     <div className="flex gap-3 w-full sm:w-auto">
@@ -124,7 +158,11 @@ const ImportPreviewModal = ({
                             disabled={loading}
                             className="flex-1 sm:flex-none px-8 py-3 bg-healthcare-primary text-white rounded-xl text-sm font-black hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                         >
-                            {loading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                            {loading ? (
+                                <Loader2 size={18} className="animate-spin" />
+                            ) : (
+                                <CheckCircle2 size={18} />
+                            )}
                             Confirm Import
                         </button>
                     </div>
@@ -135,6 +173,7 @@ const ImportPreviewModal = ({
 };
 
 const SuppliersTab = () => {
+    const { user } = useAuth();
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -159,9 +198,15 @@ const SuppliersTab = () => {
                 search: currentSearch ?? searchQuery,
             };
 
-            if (currentStatus === 'active' || (currentStatus === undefined && statusFilter === 'active')) {
+            if (
+                currentStatus === 'active' ||
+                (currentStatus === undefined && statusFilter === 'active')
+            ) {
                 params.is_active = true;
-            } else if (currentStatus === 'inactive' || (currentStatus === undefined && statusFilter === 'inactive')) {
+            } else if (
+                currentStatus === 'inactive' ||
+                (currentStatus === undefined && statusFilter === 'inactive')
+            ) {
                 params.is_active = false;
             }
 
@@ -199,7 +244,10 @@ const SuppliersTab = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
                 <div className="relative flex-1 max-w-lg">
-                    <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <SearchIcon
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                        size={18}
+                    />
                     <input
                         type="text"
                         placeholder="Search by supplier name or contact..."
@@ -209,7 +257,9 @@ const SuppliersTab = () => {
                     />
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">Show</span>
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                        Show
+                    </span>
                     <select
                         value={limit}
                         onChange={(e) => {
@@ -219,7 +269,9 @@ const SuppliersTab = () => {
                         className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1 text-[10px] font-black text-healthcare-dark focus:outline-none focus:border-healthcare-primary"
                     >
                         {[10, 25, 50, 100].map((l) => (
-                            <option key={l} value={l}>{l}</option>
+                            <option key={l} value={l}>
+                                {l}
+                            </option>
                         ))}
                     </select>
                     <select
@@ -231,15 +283,17 @@ const SuppliersTab = () => {
                         <option value="active">Active Partners</option>
                         <option value="inactive">Inactive</option>
                     </select>
-                    <button
-                        onClick={() => {
-                            setSelectedSupplier(null);
-                            setIsModalOpen(true);
-                        }}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98]"
-                    >
-                        <Plus size={18} /> Add Supplier
-                    </button>
+                    {user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+                        <button
+                            onClick={() => {
+                                setSelectedSupplier(null);
+                                setIsModalOpen(true);
+                            }}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98]"
+                        >
+                            <Plus size={18} /> Add Supplier
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -248,12 +302,24 @@ const SuppliersTab = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50 dark:bg-slate-800/50">
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">ID</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">Company Name</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">TIN (Tax ID)</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">Contact</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">Location</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap text-right">Actions</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                    ID
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                    Company Name
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                    TIN (Tax ID)
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                    Contact
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                    Location
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap text-right">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -265,9 +331,16 @@ const SuppliersTab = () => {
                                 </tr>
                             ) : safeSuppliers.length > 0 ? (
                                 safeSuppliers.map((supplier) => (
-                                    <tr key={supplier.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-sm">
-                                        <td className="px-6 py-4 font-bold text-slate-400">#{supplier.id.toString().padStart(3, '0')}</td>
-                                        <td className="px-6 py-4 font-black text-healthcare-dark">{supplier.name}</td>
+                                    <tr
+                                        key={supplier.id}
+                                        className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-sm"
+                                    >
+                                        <td className="px-6 py-4 font-bold text-slate-400">
+                                            #{supplier.id.toString().padStart(3, '0')}
+                                        </td>
+                                        <td className="px-6 py-4 font-black text-healthcare-dark">
+                                            {supplier.name}
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className="text-[10px] font-black text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                                                 {supplier.tax_id || 'N/A'}
@@ -291,24 +364,29 @@ const SuppliersTab = () => {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedSupplier(supplier);
-                                                        setIsModalOpen(true);
-                                                    }}
-                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-all"
-                                                >
-                                                    <Edit size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setSupplierToDelete(supplier.id);
-                                                        setIsConfirmOpen(true);
-                                                    }}
-                                                    className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-all"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
+                                                {user?.role?.toString()?.toLowerCase() !==
+                                                    'auditor' && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedSupplier(supplier);
+                                                                setIsModalOpen(true);
+                                                            }}
+                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-all"
+                                                        >
+                                                            <Edit size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                setSupplierToDelete(supplier.id);
+                                                                setIsConfirmOpen(true);
+                                                            }}
+                                                            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-all"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -316,7 +394,9 @@ const SuppliersTab = () => {
                             ) : (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-10 text-center">
-                                        <span className="text-slate-400 font-bold italic">No suppliers found</span>
+                                        <span className="text-slate-400 font-bold italic">
+                                            No suppliers found
+                                        </span>
                                     </td>
                                 </tr>
                             )}
@@ -325,10 +405,11 @@ const SuppliersTab = () => {
                 </div>
             </div>
 
-            {/* Pagination */}
+            {}
             <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
                 <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                    Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalItems)} of {totalItems}
+                    Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalItems)} of{' '}
+                    {totalItems}
                 </span>
                 <div className="flex items-center gap-2">
                     <button
@@ -357,7 +438,12 @@ const SuppliersTab = () => {
                             }
                             return pages.map((p, i) =>
                                 p === '...' ? (
-                                    <span key={`sep-${i}`} className="px-2 text-slate-400 font-bold">...</span>
+                                    <span
+                                        key={`sep-${i}`}
+                                        className="px-2 text-slate-400 font-bold"
+                                    >
+                                        ...
+                                    </span>
                                 ) : (
                                     <button
                                         key={p}
@@ -425,6 +511,7 @@ const SuppliersTab = () => {
 };
 
 export function ProcurementPage() {
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [orders, setOrders] = useState<ProcurementOrder[]>([]);
     const [loading, setLoading] = useState(true);
@@ -438,27 +525,24 @@ export function ProcurementPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [limit] = useState(10);
-    const { user } = useAuth();
-    const role = (user?.role || '').toString().toUpperCase().replace(/[\s_]+/g, ' ');
+    const role = (user?.role || '')
+        .toString()
+        .toUpperCase()
+        .replace(/[\s_]+/g, ' ');
     const isFacilityAdmin = role === 'FACILITY ADMIN' || role === 'FACILITY_ADMIN';
 
-    // Receiving states
     const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<ProcurementOrder | null>(null);
 
-    // Filter states
     const [searchTerm, setSearchTerm] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
-    // Import Preview States
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [previewData, setPreviewData] = useState<{ items: any[]; total_amount: number } | null>(null);
+    const [previewData, setPreviewData] = useState<{ items: any[]; total_amount: number } | null>(
+        null,
+    );
     const [pendingFile, setPendingFile] = useState<File | null>(null);
-
-    // For simplicity in this dummy-to-real transition, we'll assume a fixed limit
-    // and manual filtering if the backend doesn't support specific status filtering yet.
-    // In a full implementation, these would be API params.
 
     const fetchOrders = async () => {
         setLoading(true);
@@ -538,9 +622,12 @@ export function ProcurementPage() {
             setPreviewData(result);
             setPendingFile(file);
             setIsPreviewOpen(true);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Validation failed:', error);
-            toast.error('Failed to parse Excel file. Please ensure it follows the template.');
+            const message =
+                error?.response?.data?.message ||
+                'Failed to parse Excel file. Please ensure it follows the template.';
+            toast.error(message);
         } finally {
             setUploading(false);
             e.target.value = '';
@@ -558,9 +645,10 @@ export function ProcurementPage() {
             setPreviewData(null);
             setPendingFile(null);
             fetchOrders();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Import failed:', error);
-            toast.error('Failed to create Purchase Order.');
+            const message = error?.response?.data?.message || 'Failed to create Purchase Order.';
+            toast.error(message);
         } finally {
             setUploading(false);
         }
@@ -591,7 +679,6 @@ export function ProcurementPage() {
         setSelectedOrder(order);
         setIsReceiveModalOpen(true);
     };
-
 
     const stats = [
         {
@@ -643,7 +730,7 @@ export function ProcurementPage() {
             requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                {/* Header */}
+                {}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
                         <h2 className="text-2xl font-black text-healthcare-dark tracking-tight">
@@ -674,55 +761,56 @@ export function ProcurementPage() {
                             </button>
                         </div>
                     </div>
-                    {activeTab === 'orders' && (
-                        <div className="flex flex-wrap items-center gap-3">
-                            <select
-                                value={selectedSupplierId || ''}
-                                onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
-                                className="px-4 py-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:border-healthcare-primary h-[42px]"
-                            >
-                                <option value="">Select Supplier to Import</option>
-                                {suppliers.map((s) => (
-                                    <option key={s.id} value={s.id}>
-                                        {s.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <button
-                                onClick={downloadTemplate}
-                                className="px-5 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98] flex items-center gap-2"
-                            >
-                                <Download size={16} />
-                                Template
-                            </button>
-                            <label className="cursor-pointer px-5 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98] flex items-center gap-2 h-[42px]">
-                                {uploading ? (
-                                    <Loader2 className="animate-spin" size={16} />
-                                ) : (
-                                    <Upload size={16} />
-                                )}
-                                Import Excel
-                                <input
-                                    type="file"
-                                    className="hidden"
-                                    accept=".xlsx, .xls"
-                                    onChange={handleImport}
-                                    disabled={uploading}
-                                />
-                            </label>
-                            <button
-                                onClick={() => setIsPOModalOpen(true)}
-                                className="px-5 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] flex items-center gap-2 h-[42px]"
-                            >
-                                <Plus size={16} /> Create PO
-                            </button>
-                        </div>
-                    )}
+                    {activeTab === 'orders' &&
+                        user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+                            <div className="flex flex-wrap items-center gap-3">
+                                <select
+                                    value={selectedSupplierId || ''}
+                                    onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
+                                    className="px-4 py-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:border-healthcare-primary h-[42px]"
+                                >
+                                    <option value="">Select Supplier to Import</option>
+                                    {suppliers.map((s) => (
+                                        <option key={s.id} value={s.id}>
+                                            {s.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={downloadTemplate}
+                                    className="px-5 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98] flex items-center gap-2"
+                                >
+                                    <Download size={16} />
+                                    Template
+                                </button>
+                                <label className="cursor-pointer px-5 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98] flex items-center gap-2 h-[42px]">
+                                    {uploading ? (
+                                        <Loader2 className="animate-spin" size={16} />
+                                    ) : (
+                                        <Upload size={16} />
+                                    )}
+                                    Import Excel
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept=".xlsx, .xls"
+                                        onChange={handleImport}
+                                        disabled={uploading}
+                                    />
+                                </label>
+                                <button
+                                    onClick={() => setIsPOModalOpen(true)}
+                                    className="px-5 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] flex items-center gap-2 h-[42px]"
+                                >
+                                    <Plus size={16} /> Create PO
+                                </button>
+                            </div>
+                        )}
                 </div>
 
                 {activeTab === 'orders' ? (
                     <>
-                        {/* Stats Grid */}
+                        {}
                         {loading ? (
                             <StatsSkeleton />
                         ) : (
@@ -754,11 +842,14 @@ export function ProcurementPage() {
                             </div>
                         )}
 
-                        {/* Search & Filter */}
+                        {}
                         <div className="space-y-4">
                             <div className="flex flex-col lg:flex-row gap-4 items-center bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
                                 <div className="relative flex-1 w-full lg:min-w-[400px]">
-                                    <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                    <SearchIcon
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                        size={14}
+                                    />
                                     <input
                                         type="text"
                                         placeholder="Search PO#, Supplier..."
@@ -770,7 +861,9 @@ export function ProcurementPage() {
 
                                 <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
                                     <div className="flex items-center gap-3">
-                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">Status</span>
+                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                            Status
+                                        </span>
                                         <select
                                             value={statusFilter}
                                             onChange={(e) => {
@@ -791,7 +884,10 @@ export function ProcurementPage() {
 
                                     <div className="flex items-center gap-2">
                                         <div className="relative">
-                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                            <Calendar
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                                size={14}
+                                            />
                                             <input
                                                 type="date"
                                                 value={startDate}
@@ -799,9 +895,14 @@ export function ProcurementPage() {
                                                 className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase transition-all outline-none"
                                             />
                                         </div>
-                                        <span className="text-slate-400 font-black text-[10px]">TO</span>
+                                        <span className="text-slate-400 font-black text-[10px]">
+                                            TO
+                                        </span>
                                         <div className="relative">
-                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                            <Calendar
+                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                                size={14}
+                                            />
                                             <input
                                                 type="date"
                                                 value={endDate}
@@ -827,7 +928,7 @@ export function ProcurementPage() {
                             </div>
                         </div>
 
-                        {/* Procurement Table */}
+                        {}
                         <div className="glass-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
@@ -866,7 +967,10 @@ export function ProcurementPage() {
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col">
                                                             <span className="font-black text-healthcare-dark text-sm leading-tight">
-                                                                PO-{order.id.toString().padStart(4, '0')}
+                                                                PO-
+                                                                {order.id
+                                                                    .toString()
+                                                                    .padStart(4, '0')}
                                                             </span>
                                                             <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">
                                                                 Date:{' '}
@@ -883,41 +987,72 @@ export function ProcurementPage() {
                                                                 <Truck size={14} />
                                                             </div>
                                                             <span className="text-xs font-bold text-healthcare-dark">
-                                                                {order.supplier?.name || 'Unknown Supplier'}
+                                                                {order.supplier?.name ||
+                                                                    'Unknown Supplier'}
                                                             </span>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <span className="text-sm font-black text-healthcare-dark">
-                                                            RWF {order.total_amount.toLocaleString()}
+                                                            RWF{' '}
+                                                            {order.total_amount.toLocaleString()}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div
                                                             className={cn(
                                                                 'w-fit px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5',
-                                                                order.status.toUpperCase() === 'RECEIVED'
+                                                                order.status.toUpperCase() ===
+                                                                    'RECEIVED'
                                                                     ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                                    : ['ORDERED', 'APPROVED'].includes(order.status.toUpperCase())
-                                                                        ? 'bg-teal-50 text-teal-600 border border-teal-100'
-                                                                        : order.status.toUpperCase() === 'PENDING'
-                                                                            ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                                            : ['PARTIAL', 'PARTIALLY_RECEIVED'].includes(order.status.toUpperCase())
-                                                                                ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-                                                                                : order.status.toUpperCase() === 'DRAFT'
-                                                                                    ? 'bg-slate-100 text-slate-500 border border-slate-200'
-                                                                                    : 'bg-red-50 text-red-600 border border-red-100',
+                                                                    : [
+                                                                            'ORDERED',
+                                                                            'APPROVED',
+                                                                        ].includes(
+                                                                            order.status.toUpperCase(),
+                                                                        )
+                                                                      ? 'bg-teal-50 text-teal-600 border border-teal-100'
+                                                                      : order.status.toUpperCase() ===
+                                                                          'PENDING'
+                                                                        ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                        : [
+                                                                                'PARTIAL',
+                                                                                'PARTIALLY_RECEIVED',
+                                                                            ].includes(
+                                                                                order.status.toUpperCase(),
+                                                                            )
+                                                                          ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                                                          : order.status.toUpperCase() ===
+                                                                              'DRAFT'
+                                                                            ? 'bg-slate-100 text-slate-500 border border-slate-200'
+                                                                            : 'bg-red-50 text-red-600 border border-red-100',
                                                             )}
                                                         >
-                                                            {order.status.toUpperCase() === 'RECEIVED' ? (
+                                                            {order.status.toUpperCase() ===
+                                                            'RECEIVED' ? (
                                                                 <CheckCircle2 size={12} />
-                                                            ) : order.status.toUpperCase() === 'PENDING' ? (
+                                                            ) : order.status.toUpperCase() ===
+                                                              'PENDING' ? (
                                                                 <Clock size={12} />
-                                                            ) : ['ORDERED', 'APPROVED'].includes(order.status.toUpperCase()) ? (
-                                                                <CheckCircle2 size={12} className="text-teal-500" />
-                                                            ) : ['PARTIAL', 'PARTIALLY_RECEIVED'].includes(order.status.toUpperCase()) ? (
-                                                                <Truck size={12} className="text-indigo-500" />
-                                                            ) : order.status.toUpperCase() === 'DRAFT' ? (
+                                                            ) : ['ORDERED', 'APPROVED'].includes(
+                                                                  order.status.toUpperCase(),
+                                                              ) ? (
+                                                                <CheckCircle2
+                                                                    size={12}
+                                                                    className="text-teal-500"
+                                                                />
+                                                            ) : [
+                                                                  'PARTIAL',
+                                                                  'PARTIALLY_RECEIVED',
+                                                              ].includes(
+                                                                  order.status.toUpperCase(),
+                                                              ) ? (
+                                                                <Truck
+                                                                    size={12}
+                                                                    className="text-indigo-500"
+                                                                />
+                                                            ) : order.status.toUpperCase() ===
+                                                              'DRAFT' ? (
                                                                 <FileText size={12} />
                                                             ) : (
                                                                 <XCircle size={12} />
@@ -927,48 +1062,97 @@ export function ProcurementPage() {
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
                                                         <div className="flex items-center justify-end gap-2">
-                                                            {order.status.toUpperCase() === 'DRAFT' && (
-                                                                <button
-                                                                    onClick={() => handleAction(order.id, 'submit')}
-                                                                    className="px-3 py-1 bg-teal-500 text-white rounded-lg text-[10px] font-black hover:bg-teal-600 transition-colors shadow-sm"
-                                                                >
-                                                                    Submit
-                                                                </button>
-                                                            )}
-                                                            {order.status.toUpperCase() === 'PENDING' && isFacilityAdmin && (
-                                                                <button
-                                                                    onClick={() => handleAction(order.id, 'approve')}
-                                                                    className="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[10px] font-black hover:bg-emerald-600 transition-colors shadow-sm"
-                                                                >
-                                                                    Approve
-                                                                </button>
-                                                            )}
-                                                            {['APPROVED', 'PARTIAL', 'PARTIALLY_RECEIVED', 'ORDERED'].includes(order.status.toUpperCase()) && (
-                                                                <button
-                                                                    onClick={() => handleReceiveClick(order)}
-                                                                    className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black hover:bg-amber-600 transition-colors shadow-sm"
-                                                                >
-                                                                    Receive
-                                                                </button>
-                                                            )}
-                                                            {['DRAFT', 'PENDING', 'APPROVED'].includes(order.status.toUpperCase()) && (
-                                                                <button
-                                                                    onClick={() => handleAction(order.id, 'cancel')}
-                                                                    className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
-                                                                    title="Cancel PO"
-                                                                >
-                                                                    <XCircle size={16} />
-                                                                </button>
+                                                            {user?.role
+                                                                ?.toString()
+                                                                ?.toLowerCase() !== 'auditor' && (
+                                                                <>
+                                                                    {order.status.toUpperCase() ===
+                                                                        'DRAFT' && (
+                                                                        <button
+                                                                            onClick={() =>
+                                                                                handleAction(
+                                                                                    order.id,
+                                                                                    'submit',
+                                                                                )
+                                                                            }
+                                                                            className="px-3 py-1 bg-teal-500 text-white rounded-lg text-[10px] font-black hover:bg-teal-600 transition-colors shadow-sm"
+                                                                        >
+                                                                            Submit
+                                                                        </button>
+                                                                    )}
+                                                                    {order.status.toUpperCase() ===
+                                                                        'PENDING' &&
+                                                                        isFacilityAdmin && (
+                                                                            <button
+                                                                                onClick={() =>
+                                                                                    handleAction(
+                                                                                        order.id,
+                                                                                        'approve',
+                                                                                    )
+                                                                                }
+                                                                                className="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[10px] font-black hover:bg-emerald-600 transition-colors shadow-sm"
+                                                                            >
+                                                                                Approve
+                                                                            </button>
+                                                                        )}
+                                                                    {[
+                                                                        'APPROVED',
+                                                                        'PARTIAL',
+                                                                        'PARTIALLY_RECEIVED',
+                                                                        'ORDERED',
+                                                                    ].includes(
+                                                                        order.status.toUpperCase(),
+                                                                    ) && (
+                                                                        <button
+                                                                            onClick={() =>
+                                                                                handleReceiveClick(
+                                                                                    order,
+                                                                                )
+                                                                            }
+                                                                            className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black hover:bg-amber-600 transition-colors shadow-sm"
+                                                                        >
+                                                                            Receive
+                                                                        </button>
+                                                                    )}
+                                                                    {[
+                                                                        'DRAFT',
+                                                                        'PENDING',
+                                                                        'APPROVED',
+                                                                    ].includes(
+                                                                        order.status.toUpperCase(),
+                                                                    ) && (
+                                                                        <button
+                                                                            onClick={() =>
+                                                                                handleAction(
+                                                                                    order.id,
+                                                                                    'cancel',
+                                                                                )
+                                                                            }
+                                                                            className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
+                                                                            title="Cancel PO"
+                                                                        >
+                                                                            <XCircle size={16} />
+                                                                        </button>
+                                                                    )}
+                                                                </>
                                                             )}
                                                             <button
-                                                                onClick={() => pharmacyService.exportProcurementOrder(order.id)}
+                                                                onClick={() =>
+                                                                    pharmacyService.exportProcurementOrder(
+                                                                        order.id,
+                                                                    )
+                                                                }
                                                                 className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
                                                                 title="Export PO to Excel"
                                                             >
                                                                 <Download size={16} />
                                                             </button>
                                                             <button
-                                                                onClick={() => navigate({ to: `/app/procurement/orders/${order.id}` })}
+                                                                onClick={() =>
+                                                                    navigate({
+                                                                        to: `/app/procurement/orders/${order.id}`,
+                                                                    })
+                                                                }
                                                                 className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
                                                                 title="View Details"
                                                             >
@@ -982,7 +1166,10 @@ export function ProcurementPage() {
                                             <tr>
                                                 <td colSpan={5} className="px-6 py-10 text-center">
                                                     <div className="flex flex-col items-center gap-2">
-                                                        <AlertCircle size={32} className="text-slate-300" />
+                                                        <AlertCircle
+                                                            size={32}
+                                                            className="text-slate-300"
+                                                        />
                                                         <span className="text-slate-500 font-bold italic">
                                                             No procurement orders found
                                                         </span>
@@ -997,7 +1184,8 @@ export function ProcurementPage() {
 
                         <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
                             <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalItems)} of {totalItems}
+                                Showing {(page - 1) * limit + 1} to{' '}
+                                {Math.min(page * limit, totalItems)} of {totalItems}
                             </span>
                             <div className="flex items-center gap-2">
                                 <button
@@ -1026,7 +1214,12 @@ export function ProcurementPage() {
                                         }
                                         return pages.map((p, i) =>
                                             p === '...' ? (
-                                                <span key={`sep-${i}`} className="px-2 text-slate-400 font-bold">...</span>
+                                                <span
+                                                    key={`sep-${i}`}
+                                                    className="px-2 text-slate-400 font-bold"
+                                                >
+                                                    ...
+                                                </span>
                                             ) : (
                                                 <button
                                                     key={p}
@@ -1045,7 +1238,9 @@ export function ProcurementPage() {
                                     })()}
                                 </div>
                                 <button
-                                    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                                    onClick={() =>
+                                        setPage((prev) => Math.min(prev + 1, totalPages))
+                                    }
                                     disabled={page === totalPages || loading}
                                     className="p-2 border rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary"
                                 >

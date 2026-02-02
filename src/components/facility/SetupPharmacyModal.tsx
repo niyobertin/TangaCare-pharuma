@@ -79,7 +79,7 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
                     id: result.organization.id,
                     name: result.organization.name,
                 });
-                await authService.refreshToken(); // new token has OWNER role so step 2 can create facility
+                await authService.refreshToken();
                 setStep(2);
             }
         } catch (error: any) {

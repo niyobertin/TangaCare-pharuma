@@ -2,7 +2,7 @@ export const UserRole = {
     PATIENT: 'patient',
     DOCTOR: 'doctor',
     ADMIN: 'admin',
-    // Pharmacy Inventory Roles
+
     SUPER_ADMIN: 'super_admin',
     FACILITY_ADMIN: 'facility_admin',
     OWNER: 'owner',
@@ -11,6 +11,14 @@ export const UserRole = {
     STORE_MANAGER: 'store_manager',
     AUDITOR: 'auditor',
 } as const;
+
+export const SUPER_ADMIN_ROLE = 'super_admin';
+
+export function isSuperAdmin(role?: string): boolean {
+    if (!role || typeof role !== 'string') return false;
+    const normalized = role.toLowerCase().replace(/[\s_]+/g, '_');
+    return normalized === 'super_admin';
+}
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
@@ -21,10 +29,8 @@ export interface Organization {
     type?: string;
 }
 
-/** Granular permissions (e.g. inventory:read, pricing:manage) returned from /me. Must match backend PERMISSIONS. */
 export type Permission = string;
 
-/** Permission constants aligned with backend config/permissions.ts */
 export const PERMISSIONS = {
     INVENTORY_READ: 'inventory:read',
     INVENTORY_WRITE: 'inventory:write',
@@ -40,6 +46,10 @@ export const PERMISSIONS = {
     AUDIT_READ: 'audit:read',
     STOCK_MOVEMENTS_READ: 'stock_movements:read',
     USERS_MANAGE: 'users:manage',
+    SUPPLIERS_READ: 'suppliers:read',
+    SUPPLIERS_WRITE: 'suppliers:write',
+    ALERTS_READ: 'alerts:read',
+    ALERTS_WRITE: 'alerts:write',
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
