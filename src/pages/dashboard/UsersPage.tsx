@@ -639,7 +639,11 @@ function EditUserModal({
     onSuccess: () => void;
 }) {
     const [role, setRole] = useState(() => (user.role ?? '').toString().toLowerCase());
-    const [facilityId, setFacilityId] = useState<number | ''>(user.facility_id ?? '');
+    const [facilityId, setFacilityId] = useState<number | ''>(() => {
+        if (user.facility_id) return user.facility_id;
+        if (facilities.length === 1) return facilities[0].id;
+        return '';
+    });
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -697,7 +701,7 @@ function EditUserModal({
                             ))}
                         </select>
                     </div>
-                    {facilities.length > 0 && (
+                    {facilities.length > 1 && (
                         <div>
                             <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">
                                 Facility
@@ -757,7 +761,9 @@ function AddStaffModal({
         last_name: '',
         role: 'pharmacist',
     });
-    const [facilityId, setFacilityId] = useState<number | ''>('');
+    const [facilityId, setFacilityId] = useState<number | ''>(() => {
+        return facilities.length === 1 ? facilities[0].id : '';
+    });
     const [submitting, setSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -863,7 +869,7 @@ function AddStaffModal({
                             ))}
                         </select>
                     </div>
-                    {facilities.length > 0 && (
+                    {facilities.length > 1 && (
                         <div>
                             <label className="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-1">
                                 Facility (optional)

@@ -538,9 +538,10 @@ export function ProcurementPage() {
             setPreviewData(result);
             setPendingFile(file);
             setIsPreviewOpen(true);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Validation failed:', error);
-            toast.error('Failed to parse Excel file. Please ensure it follows the template.');
+            const message = error?.response?.data?.message || 'Failed to parse Excel file. Please ensure it follows the template.';
+            toast.error(message);
         } finally {
             setUploading(false);
             e.target.value = '';
@@ -558,9 +559,10 @@ export function ProcurementPage() {
             setPreviewData(null);
             setPendingFile(null);
             fetchOrders();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Import failed:', error);
-            toast.error('Failed to create Purchase Order.');
+            const message = error?.response?.data?.message || 'Failed to create Purchase Order.';
+            toast.error(message);
         } finally {
             setUploading(false);
         }
