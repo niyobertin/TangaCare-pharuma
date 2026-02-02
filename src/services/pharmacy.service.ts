@@ -17,7 +17,6 @@ import type {
     CreateSaleDto,
 } from '../types/pharmacy';
 
-// Helper to normalize backend responses that might be wrapped in { success, data, ... } or { data: [], total, ... }
 const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
     const result: PaginatedResponse<T> = {
         data: [],
@@ -26,22 +25,18 @@ const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
 
     if (!body) return result;
 
-    // 1. Direct match?
     if (Array.isArray(body.data) && body.meta) {
         return body as PaginatedResponse<T>;
     }
 
-    // 2. Wrap in success/data?
     let payload = body.success && body.data ? body.data : body;
 
-    // 3. Extract items
     if (Array.isArray(payload.data)) {
         result.data = payload.data;
     } else if (Array.isArray(payload)) {
         result.data = payload;
     }
 
-    // 4. Extract meta
     result.meta.total = typeof payload.total === 'number' ? payload.total : result.data.length;
     result.meta.page = typeof payload.page === 'number' ? payload.page : 1;
     result.meta.limit = typeof payload.limit === 'number' ? payload.limit : 10;
@@ -54,10 +49,9 @@ const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
 };
 
 export const pharmacyService = {
-    // Dashboard
     async getDashboardStats(): Promise<DashboardStats> {
         const response = await api.get<{ data: DashboardStats }>('/pharmacy/stats');
-        // backend wraps responses as { success, data, ... }
+
         return (response.data as any).data ?? (response.data as any);
     },
 
@@ -66,7 +60,6 @@ export const pharmacyService = {
         return (response.data as any).data ?? (response.data as any);
     },
 
-    // Reports
     async getStockReport(facilityId: number): Promise<any> {
         const response = await api.get<any>(`/pharmacy/reports/stock/${facilityId}`);
         return (response.data as any).data ?? response.data;
@@ -110,7 +103,6 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    // Audit & Stock Movements
     async getAuditLogs(params?: {
         facilityId?: number;
         entityType?: string;
@@ -172,13 +164,11 @@ export const pharmacyService = {
         };
     },
 
-    // Sales (POS)
     async createSale(payload: CreateSaleDto): Promise<Sale> {
         const response = await api.post<any>('/pharmacy/sales', payload);
         return (response.data as any).data ?? response.data;
     },
 
-    // Medicines
     async getMedicines(params?: {
         page?: number;
         limit?: number;
@@ -203,7 +193,9 @@ export const pharmacyService = {
         return response.data;
     },
 
-    async importMedicines(file: File): Promise<{ imported: number; updated: number; errors: string[] }> {
+    async importMedicines(
+        file: File,
+    ): Promise<{ imported: number; updated: number; errors: string[] }> {
         const formData = new FormData();
         formData.append('file', file);
         const response = await api.post<any>('/pharmacy/medicines/import', formData, {
@@ -240,13 +232,15 @@ export const pharmacyService = {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `medicine_inventory_${new Date().toISOString().split('T')[0]}.xlsx`);
+        link.setAttribute(
+            'download',
+            `medicine_inventory_${new Date().toISOString().split('T')[0]}.xlsx`,
+        );
         document.body.appendChild(link);
         link.click();
         link.remove();
     },
 
-    // Organizations
     async getOrganizations(params?: {
         page?: number;
         limit?: number;
@@ -275,7 +269,6 @@ export const pharmacyService = {
         await api.delete(`/pharmacy/organizations/${id}`);
     },
 
-    /** Step 1 onboarding: create Organization only (no facility). */
     async createOnboardingOrganization(data: {
         organization_name: string;
         organization_code?: string;
@@ -284,7 +277,6 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    /** One-step setup: create Organization + first Facility (legacy). */
     async setupOnboarding(data: {
         organization_name: string;
         organization_code?: string;
@@ -298,11 +290,11 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    // Facilities
     async getFacilities(params?: {
         page?: number;
         limit?: number;
         search?: string;
+        organization_id?: number;
     }): Promise<PaginatedResponse<Facility>> {
         const response = await api.get<any>('/pharmacy/facilities', { params });
         return normalizePaginatedResponse<Facility>(response.data);
@@ -327,7 +319,6 @@ export const pharmacyService = {
         await api.delete(`/pharmacy/facilities/${id}`);
     },
 
-    // Categories (pricing)
     async getCategories(params?: {
         organization_id?: number;
     }): Promise<import('../types/pharmacy').MedicineCategory[]> {
@@ -358,13 +349,12 @@ export const pharmacyService = {
         await api.delete(`/pharmacy/categories/${id}`);
     },
 
-    // Departments
     async getDepartments(params?: {
         facility_id: number;
     }): Promise<import('../types/pharmacy').Department[]> {
         const response = await api.get<any>('/pharmacy/departments', { params });
         const payload = response.data?.data;
-        // The backend returns { data: Department[], total, page, limit }
+
         if (payload && Array.isArray(payload.data)) {
             return payload.data;
         }
@@ -396,13 +386,11 @@ export const pharmacyService = {
         await api.delete(`/pharmacy/departments/${id}`);
     },
 
-    // Batches
     async getBatches(params?: { medicine_id?: number; facility_id?: number }): Promise<Batch[]> {
         const response = await api.get<{ data: Batch[] }>('/pharmacy/batches', { params });
         return response.data.data;
     },
 
-    // Stock
     async getStock(params?: {
         facility_id?: number;
         page?: number;
@@ -436,7 +424,6 @@ export const pharmacyService = {
         await api.delete(`/pharmacy/suppliers/${id}`);
     },
 
-    // Procurement
     async getProcurementOrders(params?: {
         facility_id?: number;
         status?: string;
@@ -470,16 +457,9 @@ export const pharmacyService = {
 
     async receiveProcurementOrder(
         id: number,
-        data: { received_items: any[]; received_date: string }
+        data: { received_items: any[]; received_date: string },
     ): Promise<ProcurementOrder & { skippedItems?: any[] }> {
-        const response = await api.post<any>(
-            `/pharmacy/procurement/${id}/receive`,
-            data,
-        );
-        // The backend returns { data: { order, skippedItems }, ... } OR { data: PurchaseOrder, ... }
-        // Let's inspect the structure from my backend change:
-        // return { order: updatedOrder, skippedItems }; wrapped in ResponseUtil.success(res, result) which wraps in { data: result }
-        // So response.data.data will be { order: ..., skippedItems: ... }
+        const response = await api.post<any>(`/pharmacy/procurement/${id}/receive`, data);
 
         const result = response.data.data;
         if (result && result.order) {
@@ -523,7 +503,6 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    // Alerts
     async getAlerts(params?: {
         facility_id?: number;
         status?: string;
@@ -532,7 +511,6 @@ export const pharmacyService = {
         return normalizePaginatedResponse<Alert>(response.data);
     },
 
-    // Dispensing
     async dispenseMedicine(data: {
         facility_id: number;
         medicine_id: number;
@@ -551,7 +529,7 @@ export const pharmacyService = {
         facility_id: number;
         medicine_id: number;
         batch_id: number;
-        source_department_id: number | null; // null = central/main
+        source_department_id: number | null;
         target_department_id: number;
         quantity: number;
         notes?: string;
@@ -571,7 +549,6 @@ export const pharmacyService = {
         return response.data;
     },
 
-    // Global Search / Users
     async getPatients(query: string): Promise<import('../types/auth').User[]> {
         const response = await api.get<{ data: import('../types/auth').User[] }>('/users', {
             params: {
@@ -580,7 +557,7 @@ export const pharmacyService = {
                 limit: 10,
             },
         });
-        // Handle both simple array or paginated response
+
         const data = response.data.data || response.data;
         return Array.isArray(data) ? data : (data as any)?.users || [];
     },

@@ -7,7 +7,7 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import type { Facility, MedicineCategory } from '../../types/pharmacy';
 
 export function PricingPage() {
-    const { facilityId, organizationId } = useAuth();
+    const { facilityId, organizationId, user } = useAuth();
     const [facility, setFacility] = useState<Facility | null>(null);
     const [categories, setCategories] = useState<MedicineCategory[]>([]);
     const [facilityMarkup, setFacilityMarkup] = useState<string>('');
@@ -80,7 +80,7 @@ export function PricingPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['SUPER_ADMIN', 'FACILITY_ADMIN', 'OWNER', 'ADMIN']}
+            allowedRoles={['SUPER_ADMIN', 'FACILITY_ADMIN', 'OWNER', 'ADMIN', 'AUDITOR']}
             requireFacility
         >
             <div className="p-5 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -111,7 +111,7 @@ export function PricingPage() {
                     </div>
                 ) : (
                     <>
-                        {/* Facility default markup */}
+                        {}
                         {facility && (
                             <section className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6">
                                 <div className="flex items-center gap-2 mb-4">
@@ -140,18 +140,20 @@ export function PricingPage() {
                                         />
                                     </div>
                                     <span className="text-slate-500 text-sm">%</span>
-                                    <button
-                                        onClick={saveFacilityMarkup}
-                                        disabled={savingFacility}
-                                        className="px-4 py-2 bg-healthcare-primary text-white rounded-xl font-black text-xs flex items-center gap-2 disabled:opacity-50"
-                                    >
-                                        <Save size={14} /> Save
-                                    </button>
+                                    {user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+                                        <button
+                                            onClick={saveFacilityMarkup}
+                                            disabled={savingFacility}
+                                            className="px-4 py-2 bg-healthcare-primary text-white rounded-xl font-black text-xs flex items-center gap-2 disabled:opacity-50"
+                                        >
+                                            <Save size={14} /> Save
+                                        </button>
+                                    )}
                                 </div>
                             </section>
                         )}
 
-                        {/* Categories */}
+                        {}
                         <section className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6">
                             <div className="flex items-center gap-2 mb-4">
                                 <Package size={20} className="text-healthcare-primary" />
@@ -204,45 +206,49 @@ export function PricingPage() {
                                                     )}
                                                 </td>
                                                 <td className="p-3">
-                                                    {editingCategoryId === cat.id ? (
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={() =>
-                                                                    saveCategoryMarkup(
-                                                                        cat.id,
-                                                                        parseFloat(editMarkup) || 0,
-                                                                    )
-                                                                }
-                                                                className="p-1.5 rounded-lg bg-healthcare-primary text-white"
-                                                            >
-                                                                <Save size={14} />
-                                                            </button>
+                                                    {user?.role?.toString()?.toLowerCase() !==
+                                                        'auditor' &&
+                                                        (editingCategoryId === cat.id ? (
+                                                            <div className="flex gap-1">
+                                                                <button
+                                                                    onClick={() =>
+                                                                        saveCategoryMarkup(
+                                                                            cat.id,
+                                                                            parseFloat(
+                                                                                editMarkup,
+                                                                            ) || 0,
+                                                                        )
+                                                                    }
+                                                                    className="p-1.5 rounded-lg bg-healthcare-primary text-white"
+                                                                >
+                                                                    <Save size={14} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setEditingCategoryId(null);
+                                                                        setEditMarkup('');
+                                                                    }}
+                                                                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700"
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                            </div>
+                                                        ) : (
                                                             <button
                                                                 onClick={() => {
-                                                                    setEditingCategoryId(null);
-                                                                    setEditMarkup('');
+                                                                    setEditingCategoryId(cat.id);
+                                                                    setEditMarkup(
+                                                                        String(
+                                                                            cat.default_markup_percent ??
+                                                                                '',
+                                                                        ),
+                                                                    );
                                                                 }}
-                                                                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700"
+                                                                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                                                             >
-                                                                Cancel
+                                                                <Pencil size={14} />
                                                             </button>
-                                                        </div>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => {
-                                                                setEditingCategoryId(cat.id);
-                                                                setEditMarkup(
-                                                                    String(
-                                                                        cat.default_markup_percent ??
-                                                                        '',
-                                                                    ),
-                                                                );
-                                                            }}
-                                                            className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                                                        >
-                                                            <Pencil size={14} />
-                                                        </button>
-                                                    )}
+                                                        ))}
                                                 </td>
                                             </tr>
                                         ))}

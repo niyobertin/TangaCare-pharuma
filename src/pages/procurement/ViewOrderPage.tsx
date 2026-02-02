@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from '@tanstack/react-router';
-import { FileText, Download, Printer, Truck, User, Hash, ShoppingCart, ArrowLeft } from 'lucide-react';
+import {
+    FileText,
+    Download,
+    Printer,
+    Truck,
+    User,
+    Hash,
+    ShoppingCart,
+    ArrowLeft,
+} from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { ProcurementOrder } from '../../types/pharmacy';
 import toast from 'react-hot-toast';
@@ -42,7 +51,9 @@ export function ViewOrderPage() {
             <div className="flex items-center justify-center min-h-[400px]">
                 <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl flex flex-col items-center">
                     <div className="w-12 h-12 border-4 border-healthcare-primary/20 border-t-healthcare-primary rounded-full animate-spin mb-4" />
-                    <p className="text-slate-500 font-bold animate-pulse">Loading order details...</p>
+                    <p className="text-slate-500 font-bold animate-pulse">
+                        Loading order details...
+                    </p>
                 </div>
             </div>
         );
@@ -63,7 +74,7 @@ export function ViewOrderPage() {
             </Link>
 
             <div className="w-full bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col border border-slate-100 dark:border-slate-800 print:shadow-none print:rounded-none">
-                {/* Header Actions */}
+                {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 print:hidden">
                     <h2 className="text-xl font-black text-healthcare-dark flex items-center gap-2">
                         <FileText size={20} className="text-healthcare-primary" />
@@ -89,9 +100,9 @@ export function ViewOrderPage() {
                     </div>
                 </div>
 
-                {/* Content */}
+                {}
                 <div className="flex-1 p-8 md:p-12 print:p-0">
-                    {/* Invoice/PO Header */}
+                    {}
                     <div className="flex justify-between items-start mb-16">
                         <div>
                             <div className="flex items-center gap-3 mb-8">
@@ -99,36 +110,72 @@ export function ViewOrderPage() {
                                     <ShoppingCart size={28} />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-black text-healthcare-dark tracking-tight uppercase">TangaCare</h1>
-                                    <p className="text-[10px] font-black uppercase text-healthcare-primary tracking-widest leading-none">Pharmacy & Healthcare</p>
+                                    <h1 className="text-2xl font-black text-healthcare-dark tracking-tight uppercase">
+                                        TangaCare
+                                    </h1>
+                                    <p className="text-[10px] font-black uppercase text-healthcare-primary tracking-widest leading-none">
+                                        Pharmacy & Healthcare
+                                    </p>
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <h3 className="text-lg font-black text-healthcare-dark">{order.facility?.name}</h3>
-                                <p className="text-sm text-slate-500 font-medium max-w-xs">{order.facility?.address}</p>
-                                <p className="text-sm text-slate-500 font-medium">Tel: {order.facility?.phone}</p>
-                                <p className="text-sm text-slate-500 font-medium">{order.facility?.email}</p>
+                                <h3 className="text-lg font-black text-healthcare-dark">
+                                    {order.facility?.name}
+                                </h3>
+                                <p className="text-sm text-slate-500 font-medium max-w-xs">
+                                    {order.facility?.address}
+                                </p>
+                                <p className="text-sm text-slate-500 font-medium">
+                                    Tel: {order.facility?.phone}
+                                </p>
+                                <p className="text-sm text-slate-500 font-medium">
+                                    {order.facility?.email}
+                                </p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <h2 className="text-5xl font-black text-slate-100 dark:text-slate-800 mb-6 uppercase tracking-tighter italic">Purchase Order</h2>
+                            <h2 className="text-5xl font-black text-slate-100 dark:text-slate-800 mb-6 uppercase tracking-tighter italic">
+                                Purchase Order
+                            </h2>
                             <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-shadow whitespace-nowrap">
                                 <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-left">
-                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Order No.</span>
-                                    <span className="text-sm font-black text-healthcare-dark tracking-tight">PO-{order.id.toString().padStart(4, '0')}</span>
+                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                                        Order No.
+                                    </span>
+                                    <span className="text-sm font-black text-healthcare-dark tracking-tight">
+                                        PO-{order.id.toString().padStart(4, '0')}
+                                    </span>
 
-                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Date</span>
-                                    <span className="text-sm font-bold text-healthcare-dark">{new Date(order.order_date).toLocaleDateString()}</span>
+                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                                        Date
+                                    </span>
+                                    <span className="text-sm font-bold text-healthcare-dark">
+                                        {new Date(order.order_date).toLocaleDateString()}
+                                    </span>
 
-                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Status</span>
-                                    <span className={cn(
-                                        "text-[10px] font-black uppercase px-2.5 py-1 rounded-lg w-fit",
-                                        order.status.toUpperCase() === 'RECEIVED' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                                            ['APPROVED', 'ORDERED'].includes(order.status.toUpperCase()) ? 'bg-teal-50 text-teal-600 border border-teal-100' :
-                                                ['PARTIAL', 'PARTIALLY_RECEIVED'].includes(order.status.toUpperCase()) ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' :
-                                                    order.status.toUpperCase() === 'PENDING' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
-                                                        'bg-slate-100 text-slate-500 border border-slate-200'
-                                    )}>{(order.status || '').replace(/_/g, ' ')}</span>
+                                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                                        Status
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            'text-[10px] font-black uppercase px-2.5 py-1 rounded-lg w-fit',
+                                            order.status.toUpperCase() === 'RECEIVED'
+                                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                : ['APPROVED', 'ORDERED'].includes(
+                                                        order.status.toUpperCase(),
+                                                    )
+                                                  ? 'bg-teal-50 text-teal-600 border border-teal-100'
+                                                  : ['PARTIAL', 'PARTIALLY_RECEIVED'].includes(
+                                                          order.status.toUpperCase(),
+                                                      )
+                                                    ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                                    : order.status.toUpperCase() === 'PENDING'
+                                                      ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                      : 'bg-slate-100 text-slate-500 border border-slate-200',
+                                        )}
+                                    >
+                                        {(order.status || '').replace(/_/g, ' ')}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -138,18 +185,26 @@ export function ViewOrderPage() {
                         <div>
                             <div className="flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
                                 <Truck size={14} className="text-slate-400" />
-                                <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Supplier Details</h4>
+                                <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    Supplier Details
+                                </h4>
                             </div>
                             <div className="space-y-4">
-                                <p className="text-lg font-black text-healthcare-dark uppercase tracking-tight leading-tight">{order.supplier?.name}</p>
+                                <p className="text-lg font-black text-healthcare-dark uppercase tracking-tight leading-tight">
+                                    {order.supplier?.name}
+                                </p>
                                 <div className="grid grid-cols-1 gap-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                                             <Hash size={14} />
                                         </div>
                                         <div>
-                                            <p className="text-[9px] font-black uppercase text-slate-400 leading-none mb-0.5">Tax ID</p>
-                                            <p className="text-sm font-bold text-slate-600">{order.supplier?.tax_id || 'N/A'}</p>
+                                            <p className="text-[9px] font-black uppercase text-slate-400 leading-none mb-0.5">
+                                                Tax ID
+                                            </p>
+                                            <p className="text-sm font-bold text-slate-600">
+                                                {order.supplier?.tax_id || 'N/A'}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -157,8 +212,12 @@ export function ViewOrderPage() {
                                             <User size={14} />
                                         </div>
                                         <div>
-                                            <p className="text-[9px] font-black uppercase text-slate-400 leading-none mb-0.5">Contact Person</p>
-                                            <p className="text-sm font-bold text-slate-600">{order.supplier?.contact_person}</p>
+                                            <p className="text-[9px] font-black uppercase text-slate-400 leading-none mb-0.5">
+                                                Contact Person
+                                            </p>
+                                            <p className="text-sm font-bold text-slate-600">
+                                                {order.supplier?.contact_person}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -166,8 +225,12 @@ export function ViewOrderPage() {
                                             <FileText size={14} />
                                         </div>
                                         <div>
-                                            <p className="text-[9px] font-black uppercase text-slate-400 leading-none mb-0.5">Email Address</p>
-                                            <p className="text-sm font-bold text-slate-600 underline underline-offset-2 decoration-slate-200">{order.supplier?.email}</p>
+                                            <p className="text-[9px] font-black uppercase text-slate-400 leading-none mb-0.5">
+                                                Email Address
+                                            </p>
+                                            <p className="text-sm font-bold text-slate-600 underline underline-offset-2 decoration-slate-200">
+                                                {order.supplier?.email}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -176,23 +239,39 @@ export function ViewOrderPage() {
                         <div>
                             <div className="flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
                                 <FileText size={14} className="text-slate-400" />
-                                <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Pricing Summary</h4>
+                                <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    Pricing Summary
+                                </h4>
                             </div>
                             <div className="bg-slate-50/50 dark:bg-slate-800/20 p-6 rounded-2xl space-y-3">
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Subtotal</span>
-                                    <span className="font-bold text-healthcare-dark">RWF {Number(order.subtotal_amount).toLocaleString()}</span>
+                                    <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                                        Subtotal
+                                    </span>
+                                    <span className="font-bold text-healthcare-dark">
+                                        RWF {Number(order.subtotal_amount).toLocaleString()}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">Discount ({order.discount_percent}%)</span>
-                                    <span className="font-bold text-red-500">- RWF {Number(order.discount_amount).toLocaleString()}</span>
+                                    <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                                        Discount ({order.discount_percent}%)
+                                    </span>
+                                    <span className="font-bold text-red-500">
+                                        - RWF {Number(order.discount_amount).toLocaleString()}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">VAT ({order.vat_rate}%)</span>
-                                    <span className="font-bold text-healthcare-dark">RWF {Number(order.vat_amount).toLocaleString()}</span>
+                                    <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                                        VAT ({order.vat_rate}%)
+                                    </span>
+                                    <span className="font-bold text-healthcare-dark">
+                                        RWF {Number(order.vat_amount).toLocaleString()}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-center pt-4 border-t-2 border-dashed border-slate-200 dark:border-slate-700 mt-2">
-                                    <span className="text-sm font-black text-healthcare-dark uppercase tracking-widest">Total Payable</span>
+                                    <span className="text-sm font-black text-healthcare-dark uppercase tracking-widest">
+                                        Total Payable
+                                    </span>
                                     <span className="text-2xl font-black text-healthcare-primary">
                                         RWF {Number(order.total_amount).toLocaleString()}
                                     </span>
@@ -201,26 +280,44 @@ export function ViewOrderPage() {
                         </div>
                     </div>
 
-                    {/* Order Items Table */}
+                    {}
                     <div className="mb-16">
-                        <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 border-b pb-2">Requested Items</h4>
+                        <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 border-b pb-2">
+                            Requested Items
+                        </h4>
                         <div className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm shadow-slate-100/50">
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50 dark:bg-slate-800/50">
                                     <tr>
-                                        <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider">Item / Medicine</th>
-                                        <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider text-right">Qty</th>
-                                        <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider text-right">Unit Price</th>
-                                        <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider text-right">Total</th>
+                                        <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                                            Item / Medicine
+                                        </th>
+                                        <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider text-right">
+                                            Qty
+                                        </th>
+                                        <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider text-right">
+                                            Unit Price
+                                        </th>
+                                        <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider text-right">
+                                            Total
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {order.items?.map((item) => (
-                                        <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <tr
+                                            key={item.id}
+                                            className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                        >
                                             <td className="px-6 py-5">
                                                 <div className="flex flex-col">
-                                                    <span className="font-black text-healthcare-dark text-sm uppercase tracking-tight">{item.medicine?.name}</span>
-                                                    <span className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">{item.medicine?.strength} • {item.medicine?.dosage_form}</span>
+                                                    <span className="font-black text-healthcare-dark text-sm uppercase tracking-tight">
+                                                        {item.medicine?.name}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">
+                                                        {item.medicine?.strength} •{' '}
+                                                        {item.medicine?.dosage_form}
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-right">
@@ -229,10 +326,14 @@ export function ViewOrderPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-right">
-                                                <span className="text-sm font-bold text-slate-500 tracking-tight">RWF {Number(item.unit_price).toLocaleString()}</span>
+                                                <span className="text-sm font-bold text-slate-500 tracking-tight">
+                                                    RWF {Number(item.unit_price).toLocaleString()}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-5 text-right">
-                                                <span className="text-sm font-black text-healthcare-dark tracking-tight">RWF {Number(item.total_price).toLocaleString()}</span>
+                                                <span className="text-sm font-black text-healthcare-dark tracking-tight">
+                                                    RWF {Number(item.total_price).toLocaleString()}
+                                                </span>
                                             </td>
                                         </tr>
                                     ))}
@@ -243,42 +344,57 @@ export function ViewOrderPage() {
 
                     {order.notes && (
                         <div className="mb-16">
-                            <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Order Instructions / Notes</h4>
+                            <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">
+                                Order Instructions / Notes
+                            </h4>
                             <div className="text-sm text-slate-600 bg-teal-50/30 dark:bg-slate-800/30 p-6 rounded-2xl italic font-medium border-l-4 border-teal-500/20">
                                 "{order.notes}"
                             </div>
                         </div>
                     )}
 
-                    {/* Signatures */}
+                    {}
                     <div className="grid grid-cols-2 gap-32 pt-16 mt-16 border-t border-slate-100 dark:border-slate-800">
                         <div className="text-center">
                             <div className="h-24 border-b border-dashed border-slate-200 dark:border-slate-700 mb-4 flex items-center justify-center">
-                                <p className="text-2xl font-serif italic text-slate-200 dark:text-slate-800 select-none">Signature</p>
+                                <p className="text-2xl font-serif italic text-slate-200 dark:text-slate-800 select-none">
+                                    Signature
+                                </p>
                             </div>
-                            <p className="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest">Authorized By</p>
+                            <p className="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest">
+                                Authorized By
+                            </p>
                             <p className="text-[11px] font-black text-healthcare-dark uppercase tracking-wider">
                                 {order.created_by?.first_name} {order.created_by?.last_name}
                             </p>
                         </div>
                         <div className="text-center">
                             <div className="h-24 border-b border-dashed border-slate-200 dark:border-slate-700 mb-4 flex items-center justify-center">
-                                <p className="text-2xl font-serif italic text-slate-200 dark:text-slate-800 select-none">Stamp Here</p>
+                                <p className="text-2xl font-serif italic text-slate-200 dark:text-slate-800 select-none">
+                                    Stamp Here
+                                </p>
                             </div>
-                            <p className="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest">Pharmacy Seal</p>
-                            <p className="text-[11px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest">Pending Verification</p>
+                            <p className="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest">
+                                Pharmacy Seal
+                            </p>
+                            <p className="text-[11px] font-black text-slate-300 dark:text-slate-700 uppercase tracking-widest">
+                                Pending Verification
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Footer Quote */}
+                {}
                 <div className="p-8 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 text-center print:hidden">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Generated via TangaCare Pharmacy ERP Management System</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                        Generated via TangaCare Pharmacy ERP Management System
+                    </p>
                 </div>
             </div>
 
-            <style dangerouslySetInnerHTML={{
-                __html: `
+            <style
+                dangerouslySetInnerHTML={{
+                    __html: `
                 @media print {
                     @page { margin: 0; }
                     body { background: white; }
@@ -292,7 +408,9 @@ export function ViewOrderPage() {
                     .bg-slate-50 { background: white !important; }
                     table { border: 1px solid #f1f5f9 !important; }
                 }
-            `}} />
+            `,
+                }}
+            />
         </div>
     );
 }

@@ -3,7 +3,6 @@ import type { AuthResponse, LoginCredentials, RegisterCredentials, User } from '
 
 export const authService = {
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
-        // Map email to identifier as expected by backend
         const response = await api.post<AuthResponse>('/auth/login', {
             identifier: credentials.email,
             password: credentials.password,
@@ -16,7 +15,7 @@ export const authService = {
         if (user) {
             localStorage.setItem('user_data', JSON.stringify(user));
         }
-        // Organizations and facilities are properties on the user object
+
         const orgs = user?.organizations;
         const facilities = user?.facilities;
         if (orgs?.length) {
@@ -51,7 +50,6 @@ export const authService = {
         return response.data.data;
     },
 
-    /** Refresh access token (e.g. after role/org change so next requests use new context). */
     async refreshToken(): Promise<void> {
         const refreshToken = localStorage.getItem('refresh_token');
         if (!refreshToken) return;
@@ -67,8 +65,6 @@ export const authService = {
     },
 
     async forgotPassword(email: string): Promise<any> {
-        // Backend likely expects identifier based on other endpoints, but let's send both or map it if needed.
-        // Keeping as email for now if that matches api, otherwise:
         const response = await api.post('/auth/forgot-password', { identifier: email });
         return response.data;
     },
@@ -79,8 +75,6 @@ export const authService = {
     },
 
     async verifyRegistrationOtp(email: string, otp: string): Promise<any> {
-        // Using /auth/verify-otp as per plan for account verification
-        // User confirmed payload uses "identifier"
         const response = await api.post('/auth/verify-otp', { identifier: email, otp });
         return response.data;
     },
@@ -94,7 +88,6 @@ export const authService = {
         return response.data;
     },
 
-    /** Set initial password after staff invite verification (authenticated). */
     async setInitialPassword(newPassword: string): Promise<any> {
         const response = await api.post('/auth/set-initial-password', { newPassword });
         return response.data;

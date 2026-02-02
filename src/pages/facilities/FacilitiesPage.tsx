@@ -22,7 +22,6 @@ export function FacilitiesPage() {
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    // Pagination and Search States
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(12);
@@ -41,7 +40,7 @@ export function FacilitiesPage() {
             totalItems !== response.meta?.total && setTotalItems(response.meta?.total || 0);
         } catch (error: any) {
             console.error('Failed to load facilities:', error);
-            // Don't show error toast if it's just an empty result or 404 for facility admins
+
             if (
                 isFacilityAdmin &&
                 (error?.response?.status === 404 || error?.response?.status === 403)
@@ -76,11 +75,19 @@ export function FacilitiesPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'ADMIN']}
+            allowedRoles={[
+                'SUPER_ADMIN',
+                'SUPER ADMIN',
+                'OWNER',
+                'FACILITY_ADMIN',
+                'FACILITY ADMIN',
+                'ADMIN',
+                'AUDITOR',
+            ]}
             requireFacility
         >
             <div className="h-full flex flex-col bg-slate-50/50 dark:bg-slate-900/50">
-                {/* Header */}
+                {}
                 <div className="flex-shrink-0 flex items-center justify-between p-6 pb-4">
                     <div>
                         <h1 className="text-2xl font-black text-healthcare-dark">My Facilities</h1>
@@ -109,29 +116,31 @@ export function FacilitiesPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {/* View Toggle */}
+                        {}
                         <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg p-1 shadow-sm">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                                    ? 'bg-healthcare-primary text-white'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
-                                    }`}
+                                className={`p-2 rounded-md transition-all ${
+                                    viewMode === 'grid'
+                                        ? 'bg-healthcare-primary text-white'
+                                        : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                }`}
                             >
                                 <Grid size={18} />
                             </button>
                             <button
                                 onClick={() => setViewMode('table')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'table'
-                                    ? 'bg-healthcare-primary text-white'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
-                                    }`}
+                                className={`p-2 rounded-md transition-all ${
+                                    viewMode === 'table'
+                                        ? 'bg-healthcare-primary text-white'
+                                        : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                }`}
                             >
                                 <List size={18} />
                             </button>
                         </div>
 
-                        {/* Add Facility: SUPER_ADMIN, OWNER only (Facility Admin manages their assigned facility only) */}
+                        {}
                         {(role === 'SUPER_ADMIN' || role === 'SUPER ADMIN' || role === 'OWNER') && (
                             <button
                                 onClick={() => setShowCreateModal(true)}
@@ -144,9 +153,9 @@ export function FacilitiesPage() {
                     </div>
                 </div>
 
-                {/* Scrollable content + fixed pagination at bottom */}
+                {}
                 <div className="flex-1 flex flex-col min-h-0 px-6">
-                    {/* Content */}
+                    {}
                     {facilities.length === 0 ? (
                         isFacilityAdmin ? (
                             <div className="flex-1 flex items-center justify-center p-8 bg-slate-50/50 dark:bg-slate-900/50">
@@ -173,13 +182,13 @@ export function FacilitiesPage() {
                                     {(role === 'SUPER_ADMIN' ||
                                         role === 'SUPER ADMIN' ||
                                         role === 'OWNER') && (
-                                            <button
-                                                onClick={() => setShowCreateModal(true)}
-                                                className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
-                                            >
-                                                Add Facility
-                                            </button>
-                                        )}
+                                        <button
+                                            onClick={() => setShowCreateModal(true)}
+                                            className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
+                                        >
+                                            Add Facility
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )
@@ -192,19 +201,23 @@ export function FacilitiesPage() {
                                         className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-slate-100 dark:border-slate-700 relative group"
                                     >
                                         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    navigate({
-                                                        to: '/app/facility/$facilityId/settings',
-                                                        params: { facilityId: String(facility.id) },
-                                                    });
-                                                }}
-                                                className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg text-slate-500 hover:text-healthcare-primary transition-colors shadow-sm"
-                                                title="Configure Facility"
-                                            >
-                                                <Settings size={18} />
-                                            </button>
+                                            {role !== 'AUDITOR' && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate({
+                                                            to: '/app/facility/$facilityId/settings',
+                                                            params: {
+                                                                facilityId: String(facility.id),
+                                                            },
+                                                        });
+                                                    }}
+                                                    className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg text-slate-500 hover:text-healthcare-primary transition-colors shadow-sm"
+                                                    title="Configure Facility"
+                                                >
+                                                    <Settings size={18} />
+                                                </button>
+                                            )}
                                         </div>
 
                                         <div className="flex items-start justify-between mb-4">
@@ -248,10 +261,10 @@ export function FacilitiesPage() {
                                             {(role === 'SUPER_ADMIN' ||
                                                 role === 'SUPER ADMIN' ||
                                                 role === 'OWNER') && (
-                                                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                                        Organization
-                                                    </th>
-                                                )}
+                                                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                    Organization
+                                                </th>
+                                            )}
                                             <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                                 Name
                                             </th>
@@ -284,35 +297,43 @@ export function FacilitiesPage() {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <button
-                                                        onClick={() =>
-                                                            navigate({
-                                                                to: '/app/facility/$facilityId/settings',
-                                                                params: {
-                                                                    facilityId: String(facility.id),
-                                                                },
-                                                            })
-                                                        }
-                                                        className="font-bold text-healthcare-primary hover:underline"
-                                                        title="View Details"
-                                                    >
-                                                        #{facility.id}
-                                                    </button>
+                                                    {role === 'AUDITOR' ? (
+                                                        <span className="font-bold text-slate-400">
+                                                            #{facility.id}
+                                                        </span>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() =>
+                                                                navigate({
+                                                                    to: '/app/facility/$facilityId/settings',
+                                                                    params: {
+                                                                        facilityId: String(
+                                                                            facility.id,
+                                                                        ),
+                                                                    },
+                                                                })
+                                                            }
+                                                            className="font-bold text-healthcare-primary hover:underline"
+                                                            title="View Details"
+                                                        >
+                                                            #{facility.id}
+                                                        </button>
+                                                    )}
                                                 </td>
                                                 {(role === 'SUPER_ADMIN' ||
                                                     role === 'SUPER ADMIN' ||
                                                     role === 'OWNER') && (
-                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                                                                {facility.organization?.name || '—'}
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                                                            {facility.organization?.name || '—'}
+                                                        </div>
+                                                        {facility.organization?.code && (
+                                                            <div className="text-xs text-slate-500 font-mono">
+                                                                {facility.organization.code}
                                                             </div>
-                                                            {facility.organization?.code && (
-                                                                <div className="text-xs text-slate-500 font-mono">
-                                                                    {facility.organization.code}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                    )}
+                                                        )}
+                                                    </td>
+                                                )}
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="font-bold text-healthcare-dark">
                                                         {facility.name}
@@ -339,20 +360,24 @@ export function FacilitiesPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <button
-                                                        onClick={() =>
-                                                            navigate({
-                                                                to: '/app/facility/$facilityId/settings',
-                                                                params: {
-                                                                    facilityId: String(facility.id),
-                                                                },
-                                                            })
-                                                        }
-                                                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors"
-                                                        title="Configure"
-                                                    >
-                                                        <Settings size={18} />
-                                                    </button>
+                                                    {role !== 'AUDITOR' && (
+                                                        <button
+                                                            onClick={() =>
+                                                                navigate({
+                                                                    to: '/app/facility/$facilityId/settings',
+                                                                    params: {
+                                                                        facilityId: String(
+                                                                            facility.id,
+                                                                        ),
+                                                                    },
+                                                                })
+                                                            }
+                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors"
+                                                            title="Configure"
+                                                        >
+                                                            <Settings size={18} />
+                                                        </button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}
@@ -362,7 +387,7 @@ export function FacilitiesPage() {
                         </div>
                     )}
 
-                    {/* Pagination - fixed at bottom */}
+                    {}
                     {facilities.length > 0 && (
                         <div className="flex-shrink-0 mt-4 py-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/80 backdrop-blur-sm flex flex-col sm:flex-row justify-between items-center gap-4 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.2)]">
                             <div className="flex items-center gap-6">
@@ -423,7 +448,9 @@ export function FacilitiesPage() {
                                     ))}
                                 </div>
                                 <button
-                                    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                                    onClick={() =>
+                                        setPage((prev) => Math.min(prev + 1, totalPages))
+                                    }
                                     disabled={page === totalPages || isLoading}
                                     className="p-2 border border-slate-100 dark:border-slate-800 rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary transition-all"
                                 >
@@ -434,7 +461,7 @@ export function FacilitiesPage() {
                     )}
                 </div>
 
-                {/* Create Modal */}
+                {}
                 {showCreateModal && (
                     <CreateFacilityModal
                         onClose={() => {
@@ -444,7 +471,7 @@ export function FacilitiesPage() {
                     />
                 )}
 
-                {/* Config Modal */}
+                {}
             </div>
         </ProtectedRoute>
     );

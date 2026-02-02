@@ -2,7 +2,7 @@ import { Building2, Plus } from 'lucide-react';
 
 interface FacilityEmptyStateProps {
     onCreateClick: () => void;
-    /** When true, user has no organization yet — show "Set up your pharmacy" (org + first branch). */
+
     noOrganization?: boolean;
 }
 

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
+import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Facility, CreateFacilityDto } from '../../types/pharmacy';
 import { StatsSkeleton } from '../../components/shared/Skeleton';
@@ -31,7 +32,6 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-// Modal Components
 const FacilityModal = ({
     isOpen,
     onClose,
@@ -309,6 +309,7 @@ const FacilityModal = ({
 };
 
 export function FacilityManagementPage() {
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [facilities, setFacilities] = useState<Facility[]>([]);
     const [loading, setLoading] = useState(true);
@@ -319,7 +320,6 @@ export function FacilityManagementPage() {
     const [limit, setLimit] = useState(10);
     const [search, setSearch] = useState('');
 
-    // Modal States
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -329,7 +329,7 @@ export function FacilityManagementPage() {
         setLoading(true);
         try {
             const response = await pharmacyService.getFacilities({ page, limit, search });
-            // Service returns normalized PaginatedResponse
+
             setFacilities(response?.data || []);
             setTotalPages(response?.meta?.totalPages || 1);
             setTotalItems(response?.meta?.total || 0);
@@ -349,7 +349,6 @@ export function FacilityManagementPage() {
         return () => clearTimeout(timer);
     }, [page, limit, search]);
 
-    // Handlers
     const handleCreate = async (data: Partial<CreateFacilityDto>) => {
         setActionLoading(true);
         try {
@@ -414,7 +413,7 @@ export function FacilityManagementPage() {
     return (
         <ProtectedRoute allowedRoles={['super_admin', 'auditor']}>
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                {/* Header */}
+                {}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
                         <h2 className="text-2xl font-black text-healthcare-dark tracking-tight">
@@ -424,15 +423,17 @@ export function FacilityManagementPage() {
                             System-Wide Infrastructure & Scoping
                         </p>
                     </div>
-                    <button
-                        onClick={() => setIsCreateOpen(true)}
-                        className="px-5 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] flex items-center gap-2"
-                    >
-                        <Plus size={16} /> Register New Facility
-                    </button>
+                    {user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+                        <button
+                            onClick={() => setIsCreateOpen(true)}
+                            className="px-5 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] flex items-center gap-2"
+                        >
+                            <Plus size={16} /> Register New Facility
+                        </button>
+                    )}
                 </div>
 
-                {/* Stats Grid */}
+                {}
                 {loading ? (
                     <StatsSkeleton />
                 ) : (
@@ -464,7 +465,7 @@ export function FacilityManagementPage() {
                     </div>
                 )}
 
-                {/* Filters */}
+                {}
                 <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
                     <div className="flex items-center gap-3">
                         <span className="text-[11px] font-bold text-slate-400 tracking-tight">
@@ -525,7 +526,7 @@ export function FacilityManagementPage() {
                     </div>
                 </div>
 
-                {/* Facilities List */}
+                {}
                 <div className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
                     <div className="min-w-[1000px]">
                         <table className="w-full text-left border-collapse">
@@ -596,8 +597,8 @@ export function FacilityManagementPage() {
                                                                 type.includes('hospital')
                                                                     ? 'bg-teal-500'
                                                                     : type.includes('clinic')
-                                                                        ? 'bg-indigo-500'
-                                                                        : 'bg-amber-500',
+                                                                      ? 'bg-indigo-500'
+                                                                      : 'bg-amber-500',
                                                             )}
                                                         >
                                                             {type.includes('hospital') ? (
@@ -645,7 +646,7 @@ export function FacilityManagementPage() {
                                                             <span className="text-xs lg:text-sm font-bold text-healthcare-dark">
                                                                 {f.facility_admin
                                                                     ? `${f.facility_admin.first_name || ''} ${f.facility_admin.last_name || ''}`.trim() ||
-                                                                    'Admin'
+                                                                      'Admin'
                                                                     : f.admin_name || 'No Admin'}
                                                             </span>
                                                             {f.facility_admin && (
@@ -696,43 +697,50 @@ export function FacilityManagementPage() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        <button
-                                                            onClick={() =>
-                                                                navigate({
-                                                                    to: '/app/facility/$facilityId/settings',
-                                                                    params: {
-                                                                        facilityId: String(f.id),
-                                                                    },
-                                                                })
-                                                            }
-                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors tooltip"
-                                                            title="Assign Admin"
-                                                        >
-                                                            <UserPlus size={16} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() =>
-                                                                navigate({
-                                                                    to: '/app/facility/$facilityId/settings',
-                                                                    params: {
-                                                                        facilityId: String(f.id),
-                                                                    },
-                                                                })
-                                                            }
-                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors tooltip"
-                                                            title="Edit Facility"
-                                                        >
-                                                            <Edit2 size={16} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(f.id)}
-                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-500 transition-colors tooltip"
-                                                            title="Delete Facility"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </div>
+                                                    {user?.role?.toString()?.toLowerCase() !==
+                                                        'auditor' && (
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                onClick={() =>
+                                                                    navigate({
+                                                                        to: '/app/facility/$facilityId/settings',
+                                                                        params: {
+                                                                            facilityId: String(
+                                                                                f.id,
+                                                                            ),
+                                                                        },
+                                                                    })
+                                                                }
+                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors tooltip"
+                                                                title="Assign Admin"
+                                                            >
+                                                                <UserPlus size={16} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    navigate({
+                                                                        to: '/app/facility/$facilityId/settings',
+                                                                        params: {
+                                                                            facilityId: String(
+                                                                                f.id,
+                                                                            ),
+                                                                        },
+                                                                    })
+                                                                }
+                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors tooltip"
+                                                                title="Edit Facility"
+                                                            >
+                                                                <Edit2 size={16} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(f.id)}
+                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-500 transition-colors tooltip"
+                                                                title="Delete Facility"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </td>
                                             </tr>
                                         );
@@ -754,7 +762,7 @@ export function FacilityManagementPage() {
                     </div>
                 </div>
 
-                {/* Pagination */}
+                {}
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm">
                     <div className="text-[11px] font-bold text-slate-400 tracking-tight whitespace-nowrap">
                         Showing{' '}
@@ -801,7 +809,10 @@ export function FacilityManagementPage() {
 
                                 return pages.map((p, i) =>
                                     p === '...' ? (
-                                        <span key={`sep-${i}`} className="px-2 text-slate-400 font-bold">
+                                        <span
+                                            key={`sep-${i}`}
+                                            className="px-2 text-slate-400 font-bold"
+                                        >
                                             ...
                                         </span>
                                     ) : (
@@ -831,7 +842,7 @@ export function FacilityManagementPage() {
                     </div>
                 </div>
 
-                {/* Modals */}
+                {}
                 <FacilityModal
                     isOpen={isCreateOpen}
                     onClose={() => setIsCreateOpen(false)}

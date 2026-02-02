@@ -35,9 +35,9 @@ interface NavItem {
     to: string;
     icon: React.ComponentType<{ size: number }>;
     label: string;
-    /** Show if user has any of these roles (fallback when no allowedPermissions) */
+
     allowedRoles?: string[];
-    /** Show if user has any of these permissions (from /me). Takes precedence when both set. */
+
     allowedPermissions?: string[];
 }
 
@@ -71,14 +71,21 @@ const NAV_ITEMS: NavItem[] = [
         to: '/app/users',
         icon: Users,
         label: 'Users',
-        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER', 'FACILITY_ADMIN', 'FACILITY ADMIN'],
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'SUPER ADMIN',
+            'OWNER',
+            'FACILITY_ADMIN',
+            'FACILITY ADMIN',
+            'AUDITOR',
+        ],
         allowedPermissions: ['users:manage'],
     },
     {
         to: '/app/facilities',
         icon: Factory,
         label: 'Facilities',
-        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER'],
+        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER', 'AUDITOR'],
     },
     {
         to: '/app/procurement',
@@ -232,6 +239,7 @@ const NAV_ITEMS: NavItem[] = [
             'FACILITY ADMIN',
             'OWNER',
             'ADMIN',
+            'AUDITOR',
         ],
         allowedPermissions: ['pricing:manage'],
     },
@@ -277,7 +285,7 @@ export const MainLayout: React.FC = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showSetupModal, setShowSetupModal] = useState(false);
     const [switcherOpen, setSwitcherOpen] = useState(false);
-    const role = user?.role?.toUpperCase();
+    const role = user?.role ? String(user.role).toUpperCase() : '';
     const currentOrg = organizations.find((o) => o.id === organizationId) ?? organizations[0];
     const currentFacility =
         facilityId != null ? (facilities.find((f) => f.id === facilityId) ?? null) : null;
@@ -316,7 +324,7 @@ export const MainLayout: React.FC = () => {
                 isDark && 'dark',
             )}
         >
-            {/* Sidebar */}
+            {}
             <aside
                 className={cn(
                     'glass-card m-3 rounded-xl flex flex-col overflow-hidden border-slate-200 transition-all duration-300 ease-in-out shadow-sm',
@@ -345,9 +353,13 @@ export const MainLayout: React.FC = () => {
                             const perms = item.allowedPermissions || [];
                             const roles = item.allowedRoles || [];
                             const hasPermission = perms.length > 0 && perms.some((p) => can(p));
-                            const normalizedRole = (typeof role === 'string' ? role : '').toUpperCase().replace(/\s+/g, ' ');
+                            const normalizedRole = (typeof role === 'string' ? role : '')
+                                .toUpperCase()
+                                .replace(/\s+/g, ' ');
                             const normalizedAllowed = roles.map((r) =>
-                                (typeof r === 'string' ? r : String(r)).toUpperCase().replace(/\s+/g, ' '),
+                                (typeof r === 'string' ? r : String(r))
+                                    .toUpperCase()
+                                    .replace(/\s+/g, ' '),
                             );
                             const hasRole =
                                 roles.length === 0 || normalizedAllowed.includes(normalizedRole);
@@ -385,7 +397,7 @@ export const MainLayout: React.FC = () => {
                 </div>
             </aside>
 
-            {/* Main Content */}
+            {}
             <main className="flex-1 flex flex-col overflow-hidden relative p-3 pl-0">
                 <header className="glass-header rounded-xl mb-3 px-5 py-3 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-5 flex-1">
@@ -428,7 +440,9 @@ export const MainLayout: React.FC = () => {
                                 </span>
                             </div>
                         ) : (
-                            (organizations.length > 0 || facilities.length > 0 || isSuperAdminUser) && (
+                            (organizations.length > 0 ||
+                                facilities.length > 0 ||
+                                isSuperAdminUser) && (
                                 <div className="relative">
                                     <button
                                         type="button"
@@ -443,8 +457,8 @@ export const MainLayout: React.FC = () => {
                                             {facilityId == null && isSuperAdminUser
                                                 ? 'All Facilities (System)'
                                                 : facilities.length > 0
-                                                    ? switcherLabel
-                                                    : (currentOrg?.name ?? 'Select context')}
+                                                  ? switcherLabel
+                                                  : (currentOrg?.name ?? 'Select context')}
                                         </span>
                                         <ChevronDown
                                             size={14}
@@ -492,7 +506,8 @@ export const MainLayout: React.FC = () => {
                                                         }}
                                                         className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId == null ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
                                                     >
-                                                        🌐 All Facilities {isSuperAdminUser && '(System-Wide)'}
+                                                        🌐 All Facilities{' '}
+                                                        {isSuperAdminUser && '(System-Wide)'}
                                                     </button>
                                                 )}
                                                 {facilities.map((fac) => (

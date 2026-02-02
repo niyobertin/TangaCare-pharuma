@@ -52,7 +52,7 @@ export function ReportsPage() {
                     </div>
                 </div>
 
-                {/* Tabs */}
+                {}
                 <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-1">
                     <button
                         onClick={() => setActiveTab('sales')}

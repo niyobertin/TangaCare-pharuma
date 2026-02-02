@@ -9,7 +9,7 @@ export function VerifyOtpPage() {
     const navigate = useNavigate();
     const search = useSearch({ from: '/auth/verify-otp' }) as any;
     const email = search.email;
-    const type = search.type || 'reset'; // Default to reset for backward compatibility if needed, or based on route
+    const type = search.type || 'reset';
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -30,7 +30,6 @@ export function VerifyOtpPage() {
 
         setOtp([...otp.map((d, idx) => (idx === index ? element.value : d))]);
 
-        // Focus next input
         if (element.value !== '' && index < 5) {
             inputRefs.current[index + 1]?.focus();
         }
@@ -46,7 +45,6 @@ export function VerifyOtpPage() {
         e.preventDefault();
         const pastedData = e.clipboardData.getData('text');
 
-        // Filter out non-numeric characters
         const digits = pastedData.replace(/\D/g, '').slice(0, 6).split('');
 
         if (digits.length === 0) return;
@@ -60,7 +58,6 @@ export function VerifyOtpPage() {
 
         setOtp(newOtp);
 
-        // Focus the appropriate input
         const focusIndex = Math.min(digits.length, 5);
         inputRefs.current[focusIndex]?.focus();
     };

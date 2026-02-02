@@ -95,8 +95,8 @@ export function AuditLogsPage() {
         if (!searchQuery) return true;
         const userLabel = log.user
             ? `${(log.user as any).first_name || ''} ${(log.user as any).last_name || ''}`.trim() ||
-            (log.user as any).email ||
-            ''
+              (log.user as any).email ||
+              ''
             : '';
         const details = log.description || log.entity_name || '';
         return (
@@ -196,8 +196,8 @@ export function AuditLogsPage() {
                             {filteredLogs.map((log) => {
                                 const userLabel = log.user
                                     ? `${(log.user as any).first_name || ''} ${(log.user as any).last_name || ''}`.trim() ||
-                                    (log.user as any).email ||
-                                    '—'
+                                      (log.user as any).email ||
+                                      '—'
                                     : '—';
                                 const roleLabel = (log.user as any)?.role
                                     ? String((log.user as any).role || '').replace(/_/g, ' ')
@@ -217,12 +217,12 @@ export function AuditLogsPage() {
                                                     moduleLabel === 'Facilities'
                                                         ? 'bg-blue-50 text-blue-500'
                                                         : moduleLabel === 'Dispensing'
-                                                            ? 'bg-teal-50 text-teal-500'
-                                                            : moduleLabel === 'Stock'
-                                                                ? 'bg-indigo-50 text-indigo-500'
-                                                                : moduleLabel === 'Procurement'
-                                                                    ? 'bg-amber-50 text-amber-500'
-                                                                    : 'bg-rose-50 text-rose-500',
+                                                          ? 'bg-teal-50 text-teal-500'
+                                                          : moduleLabel === 'Stock'
+                                                            ? 'bg-indigo-50 text-indigo-500'
+                                                            : moduleLabel === 'Procurement'
+                                                              ? 'bg-amber-50 text-amber-500'
+                                                              : 'bg-rose-50 text-rose-500',
                                                 )}
                                             >
                                                 {moduleLabel === 'Facilities' ? (
@@ -247,8 +247,8 @@ export function AuditLogsPage() {
                                                         <span className="text-[10px] font-bold uppercase">
                                                             {log.created_at
                                                                 ? new Date(
-                                                                    log.created_at,
-                                                                ).toLocaleString()
+                                                                      log.created_at,
+                                                                  ).toLocaleString()
                                                                 : '—'}
                                                         </span>
                                                     </div>
@@ -279,8 +279,8 @@ export function AuditLogsPage() {
                                                                 impact === 'High'
                                                                     ? 'bg-rose-500'
                                                                     : impact === 'Medium'
-                                                                        ? 'bg-amber-500'
-                                                                        : 'bg-teal-500',
+                                                                      ? 'bg-amber-500'
+                                                                      : 'bg-teal-500',
                                                             )}
                                                         />
                                                         <span className="text-[10px] font-bold uppercase text-slate-400">

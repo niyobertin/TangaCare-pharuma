@@ -98,7 +98,7 @@ export function SupplierModal({ isOpen, onClose, onSuccess, supplier }: Supplier
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-teal-900/20 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl border border-teal-500/10 overflow-hidden animate-in zoom-in-95 duration-300">
-                {/* Header */}
+                {}
                 <div className="bg-teal-500/5 p-6 flex justify-between items-center border-b border-teal-500/10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20">
@@ -123,105 +123,158 @@ export function SupplierModal({ isOpen, onClose, onSuccess, supplier }: Supplier
 
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
                     <div className="space-y-4">
-                        {/* Company Name */}
+                        {}
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
                                 Company Name
                             </label>
                             <div className="relative">
-                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500" size={16} />
+                                <Building2
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500"
+                                    size={16}
+                                />
                                 <input
                                     {...register('name')}
                                     type="text"
                                     placeholder="Enter company name"
-                                    className={`w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm ${errors.name ? 'border-red-500 focus:ring-red-500/10' : 'border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-teal-500/10'
-                                        }`}
+                                    className={`w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm ${
+                                        errors.name
+                                            ? 'border-red-500 focus:ring-red-500/10'
+                                            : 'border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-teal-500/10'
+                                    }`}
                                 />
                             </div>
-                            {errors.name && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.name.message}</p>}
+                            {errors.name && (
+                                <p className="text-red-500 text-[10px] font-bold ml-1">
+                                    {errors.name.message}
+                                </p>
+                            )}
                         </div>
 
-                        {/* Contact Person */}
+                        {}
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
                                 Contact Person
                             </label>
                             <div className="relative">
-                                <Check className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500" size={16} />
+                                <Check
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500"
+                                    size={16}
+                                />
                                 <input
                                     {...register('contact_person')}
                                     type="text"
                                     placeholder="Full name of contact person"
-                                    className={`w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm ${errors.contact_person ? 'border-red-500 focus:ring-red-500/10' : 'border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-teal-500/10'
-                                        }`}
+                                    className={`w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm ${
+                                        errors.contact_person
+                                            ? 'border-red-500 focus:ring-red-500/10'
+                                            : 'border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-teal-500/10'
+                                    }`}
                                 />
                             </div>
-                            {errors.contact_person && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.contact_person.message}</p>}
+                            {errors.contact_person && (
+                                <p className="text-red-500 text-[10px] font-bold ml-1">
+                                    {errors.contact_person.message}
+                                </p>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Phone */}
+                            {}
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
                                     Phone Number
                                 </label>
                                 <div className="relative">
-                                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500" size={16} />
+                                    <Phone
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500"
+                                        size={16}
+                                    />
                                     <input
                                         {...register('phone')}
                                         type="tel"
                                         placeholder="+254..."
-                                        className={`w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm ${errors.phone ? 'border-red-500 focus:ring-red-500/10' : 'border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-teal-500/10'
-                                            }`}
+                                        className={`w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm ${
+                                            errors.phone
+                                                ? 'border-red-500 focus:ring-red-500/10'
+                                                : 'border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-teal-500/10'
+                                        }`}
                                     />
                                 </div>
-                                {errors.phone && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.phone.message}</p>}
+                                {errors.phone && (
+                                    <p className="text-red-500 text-[10px] font-bold ml-1">
+                                        {errors.phone.message}
+                                    </p>
+                                )}
                             </div>
 
-                            {/* Address */}
+                            {}
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
                                     physical Address
                                 </label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500" size={16} />
+                                    <MapPin
+                                        className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500"
+                                        size={16}
+                                    />
                                     <input
                                         {...register('address')}
                                         type="text"
                                         placeholder="City, Building, Floor..."
-                                        className={`w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm ${errors.address ? 'border-red-500 focus:ring-red-500/10' : 'border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-teal-500/10'
-                                            }`}
+                                        className={`w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm ${
+                                            errors.address
+                                                ? 'border-red-500 focus:ring-red-500/10'
+                                                : 'border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-teal-500/10'
+                                        }`}
                                     />
                                 </div>
-                                {errors.address && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.address.message}</p>}
+                                {errors.address && (
+                                    <p className="text-red-500 text-[10px] font-bold ml-1">
+                                        {errors.address.message}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
-                        {/* Email */}
+                        {}
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
                                 Email Address
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500" size={16} />
+                                <Mail
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500"
+                                    size={16}
+                                />
                                 <input
                                     {...register('email')}
                                     type="email"
                                     placeholder="partner@company.com"
-                                    className={`w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm ${errors.email ? 'border-red-500 focus:ring-red-500/10' : 'border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-teal-500/10'
-                                        }`}
+                                    className={`w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm ${
+                                        errors.email
+                                            ? 'border-red-500 focus:ring-red-500/10'
+                                            : 'border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-teal-500/10'
+                                    }`}
                                 />
                             </div>
-                            {errors.email && <p className="text-red-500 text-[10px] font-bold ml-1">{errors.email.message}</p>}
+                            {errors.email && (
+                                <p className="text-red-500 text-[10px] font-bold ml-1">
+                                    {errors.email.message}
+                                </p>
+                            )}
                         </div>
 
-                        {/* Tax ID */}
+                        {}
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
                                 Tax Reg ID (Optional)
                             </label>
                             <div className="relative">
-                                <Hash className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500" size={16} />
+                                <Hash
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500"
+                                    size={16}
+                                />
                                 <input
                                     {...register('tax_id')}
                                     type="text"

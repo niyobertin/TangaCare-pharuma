@@ -130,7 +130,7 @@ export function OrganizationsPage() {
                     />
                 )}
             </div>
-        </ProtectedRoute >
+        </ProtectedRoute>
     );
 }
 

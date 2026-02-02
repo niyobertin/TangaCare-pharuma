@@ -28,7 +28,7 @@ export function StockTransferModal({
     onClose,
     onSuccess,
 }: StockTransferModalProps) {
-    const { } = useAuth();
+    const {} = useAuth();
     const [batches, setBatches] = useState<Batch[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -58,7 +58,6 @@ export function StockTransferModal({
                     pharmacyService.getDepartments({ facility_id: facilityId }),
                 ]);
 
-                // Filter active batches with stock
                 const activeBatches = (batchesData || []).filter(
                     (b) => b.current_quantity > 0 && new Date(b.expiry_date) > new Date(),
                 );
@@ -91,7 +90,7 @@ export function StockTransferModal({
                 facility_id: facilityId,
                 medicine_id: medicine.id,
                 batch_id: data.batch_id,
-                source_department_id: null, // Assuming from Central Store for now
+                source_department_id: null,
                 target_department_id: data.target_department_id,
                 quantity: data.quantity,
                 notes: data.notes,
@@ -110,7 +109,7 @@ export function StockTransferModal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-                {/* Header */}
+                {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark flex items-center gap-2">
@@ -139,7 +138,7 @@ export function StockTransferModal({
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                            {/* Source (Fixed as Central Store for this version) */}
+                            {}
                             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm">
                                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
                                     From
@@ -149,7 +148,7 @@ export function StockTransferModal({
                                 </div>
                             </div>
 
-                            {/* Batch Selection */}
+                            {}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">
                                     Select Batch
@@ -173,7 +172,7 @@ export function StockTransferModal({
                                 )}
                             </div>
 
-                            {/* Target Department */}
+                            {}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">
                                     Destination Department
@@ -196,7 +195,7 @@ export function StockTransferModal({
                                 )}
                             </div>
 
-                            {/* Quantity */}
+                            {}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">
                                     Quantity to Transfer
@@ -219,7 +218,7 @@ export function StockTransferModal({
                                 )}
                             </div>
 
-                            {/* Notes */}
+                            {}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">
                                     Notes (Optional)

@@ -36,7 +36,9 @@ export const ConfirmModal = ({
             <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[24px] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-300">
                 <div className="p-6 space-y-4">
                     <div className="flex justify-between items-start">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${iconColors[variant]}`}>
+                        <div
+                            className={`w-12 h-12 rounded-2xl flex items-center justify-center ${iconColors[variant]}`}
+                        >
                             <AlertCircle size={24} />
                         </div>
                         <button
@@ -48,9 +50,7 @@ export const ConfirmModal = ({
                     </div>
 
                     <div className="space-y-2">
-                        <h3 className="text-xl font-black text-healthcare-dark">
-                            {title}
-                        </h3>
+                        <h3 className="text-xl font-black text-healthcare-dark">{title}</h3>
                         <p className="text-sm font-semibold text-slate-500 leading-relaxed">
                             {message}
                         </p>
@@ -66,12 +66,13 @@ export const ConfirmModal = ({
                         <button
                             onClick={onConfirm}
                             disabled={loading}
-                            className={`flex-1 px-4 py-2.5 text-xs font-black rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 ${variant === 'danger'
-                                ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-200'
-                                : variant === 'warning'
-                                    ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200'
-                                    : 'bg-healthcare-primary text-white hover:bg-teal-700 shadow-teal-200'
-                                }`}
+                            className={`flex-1 px-4 py-2.5 text-xs font-black rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 ${
+                                variant === 'danger'
+                                    ? 'bg-red-500 text-white hover:bg-red-600 shadow-red-200'
+                                    : variant === 'warning'
+                                      ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200'
+                                      : 'bg-healthcare-primary text-white hover:bg-teal-700 shadow-teal-200'
+                            }`}
                         >
                             {loading ? 'Processing...' : confirmText}
                         </button>

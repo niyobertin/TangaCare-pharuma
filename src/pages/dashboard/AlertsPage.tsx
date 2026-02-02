@@ -14,12 +14,14 @@ import type { Alert } from '../../types/pharmacy';
 import { TableSkeleton } from '../../components/shared/Skeleton';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useAuth } from '../../context/AuthContext';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
 export function AlertsPage() {
+    const { user } = useAuth();
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -64,7 +66,7 @@ export function AlertsPage() {
             requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                {/* Header */}
+                {}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
                         <h2 className="text-2xl font-black text-healthcare-dark tracking-tight flex items-center gap-3">
@@ -77,7 +79,7 @@ export function AlertsPage() {
                     </div>
                 </div>
 
-                {/* Filters */}
+                {}
                 <div className="flex flex-col md:flex-row gap-4 justify-between">
                     <div className="relative flex-1 max-w-lg">
                         <Search
@@ -94,7 +96,7 @@ export function AlertsPage() {
                     </div>
                 </div>
 
-                {/* Alerts List */}
+                {}
                 <div className="grid grid-cols-1 gap-4">
                     {loading ? (
                         <div className="space-y-4">
@@ -117,8 +119,8 @@ export function AlertsPage() {
                                         alert.type === 'expiry'
                                             ? 'bg-rose-50 text-rose-500'
                                             : alert.type === 'low_stock'
-                                                ? 'bg-amber-50 text-amber-500'
-                                                : 'bg-blue-50 text-blue-500',
+                                              ? 'bg-amber-50 text-amber-500'
+                                              : 'bg-blue-50 text-blue-500',
                                     )}
                                 >
                                     {alert.type === 'expiry' ? (
@@ -146,11 +148,12 @@ export function AlertsPage() {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2 self-end md:self-center">
-                                    {alert.status === 'active' && (
-                                        <button className="px-4 py-2 bg-healthcare-primary/10 text-healthcare-primary hover:bg-healthcare-primary hover:text-white rounded-lg text-[10px] font-black uppercase transition-all">
-                                            Acknowledge
-                                        </button>
-                                    )}
+                                    {alert.status === 'active' &&
+                                        user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+                                            <button className="px-4 py-2 bg-healthcare-primary/10 text-healthcare-primary hover:bg-healthcare-primary hover:text-white rounded-lg text-[10px] font-black uppercase transition-all">
+                                                Acknowledge
+                                            </button>
+                                        )}
                                     <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
                                         <AlertCircle size={18} />
                                     </button>

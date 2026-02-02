@@ -51,7 +51,6 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
             return;
         }
 
-        // Validate decrease
         if (['decrease', 'damage', 'expired'].includes(data.type)) {
             if (data.quantity > batch.current_quantity) {
                 toast.error(`Cannot remove more than available stock (${batch.current_quantity})`);
@@ -95,7 +94,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-                {/* Header */}
+                {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark flex items-center gap-2">
@@ -119,7 +118,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
 
                 <div className="p-6">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        {/* Current Info */}
+                        {}
                         <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm flex justify-between items-center">
                             <span className="text-slate-500 font-bold">Current Quantity</span>
                             <span className="text-xl font-black text-healthcare-dark">
@@ -127,7 +126,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             </span>
                         </div>
 
-                        {/* Type */}
+                        {}
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">
                                 Adjustment Type
@@ -149,7 +148,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             </div>
                         </div>
 
-                        {/* Quantity */}
+                        {}
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">
                                 Quantity
@@ -166,7 +165,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             )}
                         </div>
 
-                        {/* Reason */}
+                        {}
                         <div>
                             <label className="block text-sm font-bold text-slate-700 mb-1">
                                 Reason / Notes

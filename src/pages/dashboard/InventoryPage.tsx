@@ -33,7 +33,6 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-// Preview Modal Component
 const MedicineImportPreviewModal = ({
     isOpen,
     onClose,
@@ -55,7 +54,7 @@ const MedicineImportPreviewModal = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-                {/* Header */}
+                {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <div>
                         <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
@@ -74,7 +73,7 @@ const MedicineImportPreviewModal = ({
                     </button>
                 </div>
 
-                {/* Body */}
+                {}
                 <div className="flex-1 overflow-auto p-6">
                     <div className="flex gap-4 mb-6">
                         <div className="flex-1 bg-healthcare-primary/5 rounded-xl p-4 border border-healthcare-primary/10">
@@ -155,7 +154,7 @@ const MedicineImportPreviewModal = ({
                     </div>
                 </div>
 
-                {/* Footer */}
+                {}
                 <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-slate-50/50 dark:bg-slate-800/30">
                     <button
                         onClick={onClose}
@@ -199,7 +198,6 @@ export function InventoryPage() {
     const [limit, setLimit] = useState(10);
     const [selectedMedForTransfer, setSelectedMedForTransfer] = useState<Medicine | null>(null);
 
-    // Import states
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [previewItems, setPreviewItems] = useState<any[]>([]);
@@ -287,10 +285,9 @@ export function InventoryPage() {
         setUploading(true);
         try {
             const result = await pharmacyService.importMedicines(pendingFile);
-            toast.success(
-                `Import complete: ${result.imported} new, ${result.updated} updated.`,
-                { duration: 5000 },
-            );
+            toast.success(`Import complete: ${result.imported} new, ${result.updated} updated.`, {
+                duration: 5000,
+            });
             if (result.errors?.length) {
                 console.error('Import errors:', result.errors);
             }
@@ -373,11 +370,18 @@ export function InventoryPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['admin', 'pharmacist', 'super_admin', 'store_manager', 'facility_admin']}
+            allowedRoles={[
+                'admin',
+                'pharmacist',
+                'super_admin',
+                'store_manager',
+                'facility_admin',
+                'auditor',
+            ]}
             requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                {/* Header Section */}
+                {}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark tracking-tight">
@@ -402,40 +406,42 @@ export function InventoryPage() {
                                 </option>
                             ))}
                         </select>
-                        <div className="flex gap-2">
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleImportFileChange}
-                                className="hidden"
-                                accept=".xlsx,.xls"
-                            />
-                            <button
-                                onClick={downloadTemplate}
-                                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
-                            >
-                                <Download size={14} /> Template
-                            </button>
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={loading}
-                                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
-                            >
-                                {loading && !medicines.length ? (
-                                    <Loader2 className="animate-spin" size={14} />
-                                ) : (
-                                    <Upload size={14} />
-                                )}
-                                Import Excel
-                            </button>
-                            <button className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md shadow-teal-500/10">
-                                <Plus size={16} /> Add Medicine
-                            </button>
-                        </div>
+                        {user?.role?.toString() !== 'auditor' && (
+                            <div className="flex gap-2">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleImportFileChange}
+                                    className="hidden"
+                                    accept=".xlsx,.xls"
+                                />
+                                <button
+                                    onClick={downloadTemplate}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
+                                >
+                                    <Download size={14} /> Template
+                                </button>
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={loading}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
+                                >
+                                    {loading && !medicines.length ? (
+                                        <Loader2 className="animate-spin" size={14} />
+                                    ) : (
+                                        <Upload size={14} />
+                                    )}
+                                    Import Excel
+                                </button>
+                                <button className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md shadow-teal-500/10">
+                                    <Plus size={16} /> Add Medicine
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Stats Section */}
+                {}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-healthcare-primary/30 transition-all group">
                         <div className="flex justify-between items-start mb-2">
@@ -506,7 +512,7 @@ export function InventoryPage() {
                     </div>
                 </div>
 
-                {/* Filters & Actions Bar */}
+                {}
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col md:flex-row gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border-2 border-slate-200/60 dark:border-slate-800/60 shadow-sm">
                         <div className="flex-1 relative group">
@@ -550,12 +556,14 @@ export function InventoryPage() {
                                     </option>
                                 ))}
                             </select>
-                            <button
-                                onClick={handleExport}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all shadow-sm"
-                            >
-                                <Download size={16} /> Export
-                            </button>
+                            {user?.role?.toString() !== 'auditor' && (
+                                <button
+                                    onClick={handleExport}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all shadow-sm"
+                                >
+                                    <Download size={16} /> Export
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -579,7 +587,7 @@ export function InventoryPage() {
                     )}
                 </div>
 
-                {/* Inventory Table */}
+                {}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
@@ -691,18 +699,29 @@ export function InventoryPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                <span className={cn(
-                                                    "text-xs font-bold",
-                                                    med.expiry_date && new Date(med.expiry_date) < new Date()
-                                                        ? "text-red-500"
-                                                        : "text-slate-500"
-                                                )}>
-                                                    {med.expiry_date ? new Date(med.expiry_date).toLocaleDateString() : 'N/A'}
+                                                <span
+                                                    className={cn(
+                                                        'text-xs font-bold',
+                                                        med.expiry_date &&
+                                                            new Date(med.expiry_date) < new Date()
+                                                            ? 'text-red-500'
+                                                            : 'text-slate-500',
+                                                    )}
+                                                >
+                                                    {med.expiry_date
+                                                        ? new Date(
+                                                              med.expiry_date,
+                                                          ).toLocaleDateString()
+                                                        : 'N/A'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center whitespace-nowrap">
                                                 <span className="text-xs font-bold text-slate-500">
-                                                    {med.created_at ? new Date(med.created_at).toLocaleDateString() : 'N/A'}
+                                                    {med.created_at
+                                                        ? new Date(
+                                                              med.created_at,
+                                                          ).toLocaleDateString()
+                                                        : 'N/A'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center whitespace-nowrap">
@@ -712,28 +731,30 @@ export function InventoryPage() {
                                                         (med.stock_quantity || 0) === 0
                                                             ? 'bg-red-50 text-red-600 border-red-100'
                                                             : (med.stock_quantity || 0) <= 20
-                                                                ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                                                : 'bg-teal-50 text-teal-600 border-teal-100',
+                                                              ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                                              : 'bg-teal-50 text-teal-600 border-teal-100',
                                                     )}
                                                 >
                                                     {(med.stock_quantity || 0) === 0
                                                         ? 'Out of Stock'
                                                         : (med.stock_quantity || 0) <= 20
-                                                            ? 'Low Stock'
-                                                            : 'In Stock'}
+                                                          ? 'Low Stock'
+                                                          : 'In Stock'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center justify-end gap-2 transition-all">
-                                                    <button
-                                                        onClick={() =>
-                                                            setSelectedMedForTransfer(med)
-                                                        }
-                                                        title="Transfer Stock"
-                                                        className="p-2 text-blue-600 hover:bg-blue-50 bg-blue-50/10 rounded-lg transition-colors"
-                                                    >
-                                                        <ArrowRightLeft size={16} />
-                                                    </button>
+                                                    {user?.role?.toString() !== 'auditor' && (
+                                                        <button
+                                                            onClick={() =>
+                                                                setSelectedMedForTransfer(med)
+                                                            }
+                                                            title="Transfer Stock"
+                                                            className="p-2 text-blue-600 hover:bg-blue-50 bg-blue-50/10 rounded-lg transition-colors"
+                                                        >
+                                                            <ArrowRightLeft size={16} />
+                                                        </button>
+                                                    )}
                                                     <button className="p-2 text-slate-400 hover:bg-slate-100 bg-slate-50/30 dark:hover:bg-slate-800 rounded-lg transition-colors">
                                                         <MoreVertical size={16} />
                                                     </button>
@@ -746,7 +767,7 @@ export function InventoryPage() {
                         </table>
                     </div>
 
-                    {/* Pagination */}
+                    {}
                     <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-between items-center">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             Showing {medicines.length} of {totalItems} items
@@ -798,7 +819,7 @@ export function InventoryPage() {
                     />
                 )}
 
-                {/* Import Preview Modal */}
+                {}
                 <MedicineImportPreviewModal
                     isOpen={isImportModalOpen}
                     onClose={() => {

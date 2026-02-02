@@ -5,11 +5,11 @@ import { isSuperAdmin, type UserRole } from '../../types/auth';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
-    /** Allow access if user has any of these roles */
+
     allowedRoles?: (UserRole | string)[];
-    /** Allow access if user has any of these permissions (from /me) */
+
     requiredPermissions?: string[];
-    /** When true, Facility Admin must have a facility (redirect/403 if missing) */
+
     requireFacility?: boolean;
 }
 
@@ -127,7 +127,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         allowedRoles.length > 0 &&
         user &&
         !allowedRoles.some((role) => {
-            const r1 = String(role).toUpperCase().replace(/[\s_]+/g, ' ');
+            const r1 = String(role)
+                .toUpperCase()
+                .replace(/[\s_]+/g, ' ');
             const r2 = (user.role || '').toUpperCase().replace(/[\s_]+/g, ' ');
             return r1 === r2;
         })
