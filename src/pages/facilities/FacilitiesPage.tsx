@@ -109,8 +109,8 @@ export function FacilitiesPage() {
                         <button
                             onClick={() => setViewMode('grid')}
                             className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                                    ? 'bg-healthcare-primary text-white'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                ? 'bg-healthcare-primary text-white'
+                                : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
                                 }`}
                         >
                             <Grid size={18} />
@@ -118,8 +118,8 @@ export function FacilitiesPage() {
                         <button
                             onClick={() => setViewMode('table')}
                             className={`p-2 rounded-md transition-all ${viewMode === 'table'
-                                    ? 'bg-healthcare-primary text-white'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                ? 'bg-healthcare-primary text-white'
+                                : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
                                 }`}
                         >
                             <List size={18} />
@@ -211,7 +211,7 @@ export function FacilitiesPage() {
                                         {facility.name}
                                     </h3>
                                     <p className="text-xs text-slate-500 uppercase font-bold mb-4">
-                                        {facility.type.replace('_', ' ')}
+                                        {(facility.type || '').replace('_', ' ')}
                                     </p>
                                     <div className="space-y-2 text-sm">
                                         <p className="text-slate-600 dark:text-slate-400">
@@ -240,6 +240,13 @@ export function FacilitiesPage() {
                                         <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                             ID
                                         </th>
+                                        {(role === 'SUPER_ADMIN' ||
+                                            role === 'SUPER ADMIN' ||
+                                            role === 'OWNER') && (
+                                                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                    Organization
+                                                </th>
+                                            )}
                                         <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                             Name
                                         </th>
@@ -287,6 +294,20 @@ export function FacilitiesPage() {
                                                     #{facility.id}
                                                 </button>
                                             </td>
+                                            {(role === 'SUPER_ADMIN' ||
+                                                role === 'SUPER ADMIN' ||
+                                                role === 'OWNER') && (
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                                                            {facility.organization?.name || '—'}
+                                                        </div>
+                                                        {facility.organization?.code && (
+                                                            <div className="text-xs text-slate-500 font-mono">
+                                                                {facility.organization.code}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                )}
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="font-bold text-healthcare-dark">
                                                     {facility.name}
@@ -294,7 +315,7 @@ export function FacilitiesPage() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="text-sm text-slate-600 dark:text-slate-400 uppercase">
-                                                    {facility.type.replace('_', ' ')}
+                                                    {(facility.type || '').replace('_', ' ')}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">

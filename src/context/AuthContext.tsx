@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import type { User, LoginCredentials, RegisterCredentials, Organization } from '../types/auth';
+import { isSuperAdmin, type User, type LoginCredentials, type RegisterCredentials, type Organization } from '../types/auth';
 import { authService } from '../services/auth.service';
 
 const ORG_KEY = 'selected_organization_id';
@@ -80,8 +80,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Facility admin / owner: default to their single facility and org when not yet selected.
                 // OWNER with multiple facilities: do not set default facility (show "All facilities" / aggregated view).
                 const isOwner = (profile as any).role?.toUpperCase() === 'OWNER';
+                const isSuper = isSuperAdmin((profile as any).role);
                 const multiFacilityOwner = isOwner && (profile.facilities?.length ?? 0) > 1;
-                const defaultFacility = multiFacilityOwner
+                const defaultFacility = (multiFacilityOwner || isSuper)
                     ? null
                     : ((profile as any).facility ??
                         (profile.facilities?.length === 1 ? profile.facilities[0] : null));
@@ -127,8 +128,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setFacilities(Array.isArray(facs) ? facs : []);
             // Facility admin / owner: default to their single facility and org when not yet selected
             const isOwner = (u?.role ?? payload?.user?.role)?.toString().toUpperCase() === 'OWNER';
+            const isSuper = isSuperAdmin(u?.role ?? payload?.user?.role);
             const multiFacilityOwner = isOwner && Array.isArray(facs) && facs.length > 1;
-            const defaultFacility = multiFacilityOwner
+            const defaultFacility = (multiFacilityOwner || isSuper)
                 ? null
                 : (u?.facility ??
                     (Array.isArray(facs) && facs.length === 1 ? facs[0] : null));
@@ -179,8 +181,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (profile.facilities) setFacilities(profile.facilities);
         // Keep tenant in sync for facility admin / owner. OWNER with multiple facilities: do not set default.
         const isOwner = (profile as any).role?.toUpperCase() === 'OWNER';
+        const isSuper = isSuperAdmin((profile as any).role);
         const multiFacilityOwner = isOwner && (profile.facilities?.length ?? 0) > 1;
-        const defaultFacility = multiFacilityOwner
+        const defaultFacility = (multiFacilityOwner || isSuper)
             ? null
             : ((profile as any).facility ??
                 (profile.facilities?.length === 1 ? profile.facilities[0] : null));

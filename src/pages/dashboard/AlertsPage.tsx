@@ -117,8 +117,8 @@ export function AlertsPage() {
                                         alert.type === 'expiry'
                                             ? 'bg-rose-50 text-rose-500'
                                             : alert.type === 'low_stock'
-                                              ? 'bg-amber-50 text-amber-500'
-                                              : 'bg-blue-50 text-blue-500',
+                                                ? 'bg-amber-50 text-amber-500'
+                                                : 'bg-blue-50 text-blue-500',
                                     )}
                                 >
                                     {alert.type === 'expiry' ? (
@@ -132,7 +132,7 @@ export function AlertsPage() {
                                 <div className="flex-1 space-y-1">
                                     <div className="flex justify-between items-start">
                                         <h4 className="font-black text-healthcare-dark text-sm uppercase italic tracking-tight">
-                                            {alert.type.replace('_', ' ')}
+                                            {(alert.type || '').replace('_', ' ')}
                                         </h4>
                                         <div className="flex items-center gap-1.5 text-slate-400">
                                             <Clock size={12} />

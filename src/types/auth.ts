@@ -12,6 +12,15 @@ export const UserRole = {
     AUDITOR: 'auditor',
 } as const;
 
+
+export const SUPER_ADMIN_ROLE = 'super_admin';
+
+export function isSuperAdmin(role?: string): boolean {
+    if (!role || typeof role !== 'string') return false;
+    const normalized = role.toLowerCase().replace(/[\s_]+/g, '_');
+    return normalized === 'super_admin';
+}
+
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface Organization {

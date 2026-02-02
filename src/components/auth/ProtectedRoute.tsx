@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from '@tanstack/react-router';
 import { useAuth } from '../../context/AuthContext';
-import type { UserRole } from '../../types/auth';
+import { isSuperAdmin, type UserRole } from '../../types/auth';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -23,6 +23,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     const location = useLocation();
     const role = (user?.role ?? '').toString().toUpperCase().replace(/\s+/g, ' ');
     const isFacilityAdmin = role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN';
+    const isSuperAdminUser = isSuperAdmin(user?.role);
 
     if (isLoading) {
         return (
@@ -41,7 +42,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         return <Navigate to="/auth/login" search={{ redirect: location.pathname }} />;
     }
 
-    if (requireFacility && isFacilityAdmin && user) {
+    if (requireFacility && isFacilityAdmin && !isSuperAdminUser && user) {
         const hasFacility = facilityId != null || user.facility_id != null;
         if (!hasFacility) {
             return (
@@ -84,6 +85,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     if (
         requiredPermissions &&
         requiredPermissions.length > 0 &&
+        !isSuperAdminUser &&
         !requiredPermissions.some((p) => can(p))
     ) {
         return (

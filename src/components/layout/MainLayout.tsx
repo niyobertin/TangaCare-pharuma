@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
+import { isSuperAdmin } from '../../types/auth';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -283,11 +284,11 @@ export const MainLayout: React.FC = () => {
     const currentFacility =
         facilityId != null ? (facilities.find((f) => f.id === facilityId) ?? null) : null;
     const isOwner = role === 'OWNER';
-    const isSuperAdmin = role === 'SUPER_ADMIN' || role === 'SUPER ADMIN';
-    const showFacilityNameOnly = !isOwner && !isSuperAdmin;
-    const showAllFacilitiesOption = isOwner && facilities.length > 1;
+    const isSuperAdminUser = isSuperAdmin(user?.role);
+    const showFacilityNameOnly = !isOwner && !isSuperAdminUser;
+    const showAllFacilitiesOption = isSuperAdminUser || (isOwner && facilities.length >= 1);
     const switcherLabel =
-        facilityId == null && facilities.length > 0
+        facilityId == null && (facilities.length > 0 || isSuperAdminUser)
             ? 'All facilities'
             : (currentFacility?.name ?? facilities[0]?.name ?? 'Select context');
 
@@ -346,9 +347,9 @@ export const MainLayout: React.FC = () => {
                             const perms = item.allowedPermissions || [];
                             const roles = item.allowedRoles || [];
                             const hasPermission = perms.length > 0 && perms.some((p) => can(p));
-                            const normalizedRole = (role || '').toUpperCase().replace(/\s+/g, ' ');
+                            const normalizedRole = (typeof role === 'string' ? role : '').toUpperCase().replace(/\s+/g, ' ');
                             const normalizedAllowed = roles.map((r) =>
-                                String(r).toUpperCase().replace(/\s+/g, ' '),
+                                (typeof r === 'string' ? r : String(r)).toUpperCase().replace(/\s+/g, ' '),
                             );
                             const hasRole =
                                 roles.length === 0 || normalizedAllowed.includes(normalizedRole);
@@ -429,7 +430,7 @@ export const MainLayout: React.FC = () => {
                                 </span>
                             </div>
                         ) : (
-                            (organizations.length > 0 || facilities.length > 0) && (
+                            (organizations.length > 0 || facilities.length > 0 || isSuperAdminUser) && (
                                 <div className="relative">
                                     <button
                                         type="button"
@@ -441,9 +442,11 @@ export const MainLayout: React.FC = () => {
                                             className="text-healthcare-primary flex-shrink-0"
                                         />
                                         <span className="truncate text-xs font-bold text-healthcare-dark">
-                                            {facilities.length > 0
-                                                ? switcherLabel
-                                                : (currentOrg?.name ?? 'Select context')}
+                                            {facilityId == null && isSuperAdminUser
+                                                ? 'All Facilities (System)'
+                                                : facilities.length > 0
+                                                    ? switcherLabel
+                                                    : (currentOrg?.name ?? 'Select context')}
                                         </span>
                                         <ChevronDown
                                             size={14}
@@ -491,7 +494,7 @@ export const MainLayout: React.FC = () => {
                                                         }}
                                                         className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId == null ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
                                                     >
-                                                        All facilities
+                                                        🌐 All Facilities {isSuperAdminUser && '(System-Wide)'}
                                                     </button>
                                                 )}
                                                 {facilities.map((fac) => (

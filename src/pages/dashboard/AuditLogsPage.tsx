@@ -200,7 +200,7 @@ export function AuditLogsPage() {
                                     '—'
                                     : '—';
                                 const roleLabel = (log.user as any)?.role
-                                    ? String((log.user as any).role).replace(/_/g, ' ')
+                                    ? String((log.user as any).role || '').replace(/_/g, ' ')
                                     : '—';
                                 const moduleLabel =
                                     ENTITY_TYPE_LABELS[log.entity_type] || log.entity_type || '—';

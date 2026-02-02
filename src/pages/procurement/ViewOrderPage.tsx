@@ -128,7 +128,7 @@ export function ViewOrderPage() {
                                                 ['PARTIAL', 'PARTIALLY_RECEIVED'].includes(order.status.toUpperCase()) ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' :
                                                     order.status.toUpperCase() === 'PENDING' ? 'bg-amber-50 text-amber-600 border border-amber-100' :
                                                         'bg-slate-100 text-slate-500 border border-slate-200'
-                                    )}>{order.status.replace(/_/g, ' ')}</span>
+                                    )}>{(order.status || '').replace(/_/g, ' ')}</span>
                                 </div>
                             </div>
                         </div>

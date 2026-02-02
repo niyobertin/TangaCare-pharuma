@@ -675,7 +675,7 @@ export function FacilityManagementPage() {
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
                                                     <span className="text-[10px] font-black bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-slate-500 uppercase tracking-widest">
-                                                        {type.replace('_', ' ')}
+                                                        {(type || '').replace('_', ' ')}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">

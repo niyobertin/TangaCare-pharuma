@@ -692,7 +692,7 @@ function EditUserModal({
                         >
                             {editableRoles.map((r) => (
                                 <option key={r} value={r}>
-                                    {ROLE_LABELS[r] ?? r.replace(/_/g, ' ')}
+                                    {ROLE_LABELS[r] ?? (r || '').replace(/_/g, ' ')}
                                 </option>
                             ))}
                         </select>
