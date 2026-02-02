@@ -23,6 +23,8 @@ import { VerifyOtpPage } from '../pages/auth/VerifyOtpPage';
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 import { SetPasswordPage } from '../pages/auth/SetPasswordPage';
 import { z } from 'zod';
+import { RequirePermission } from '../components/auth/RequirePermission';
+import { PERMISSIONS } from '../types/auth';
 
 const RootComponent = () => {
     return (
@@ -88,6 +90,7 @@ import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
 import { FacilitySettingsPage } from '../pages/dashboard/FacilitySettingsPage';
 import { UsersPage } from '../pages/dashboard/UsersPage';
 import { ViewOrderPage } from '../pages/procurement/ViewOrderPage';
+import { PatientsPage } from '../pages/dashboard/PatientsPage';
 
 const indexRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -97,33 +100,57 @@ const indexRoute = createRoute({
 const inventoryRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'inventory',
-    component: InventoryPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+            <InventoryPage />
+        </RequirePermission>
+    ),
 });
 const dispensingRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'dispensing',
-    component: DispensingPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
+            <DispensingPage />
+        </RequirePermission>
+    ),
 });
 const organizationsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'organizations',
-    component: OrganizationsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.ORGANIZATION_MANAGE}>
+            <OrganizationsPage />
+        </RequirePermission>
+    ),
 });
 
 const facilitiesRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'facilities',
-    component: FacilitiesPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.FACILITY_MANAGE}>
+            <FacilitiesPage />
+        </RequirePermission>
+    ),
 });
 const usersRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'users',
-    component: UsersPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.USERS_MANAGE}>
+            <UsersPage />
+        </RequirePermission>
+    ),
 });
 const procurementRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'procurement',
-    component: ProcurementLayout,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.PROCUREMENT_READ}>
+            <ProcurementLayout />
+        </RequirePermission>
+    ),
 });
 const procurementIndexRoute = createRoute({
     getParentRoute: () => procurementRoute,
@@ -148,12 +175,20 @@ const viewOrderRoute = createRoute({
 const stockRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'stock',
-    component: BatchStockPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+            <BatchStockPage />
+        </RequirePermission>
+    ),
 });
 const auditLogsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'audit-logs',
-    component: AuditLogsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.AUDIT_READ}>
+            <AuditLogsPage />
+        </RequirePermission>
+    ),
     validateSearch: (search: Record<string, unknown>) => {
         return z
             .object({
@@ -165,23 +200,39 @@ const auditLogsRoute = createRoute({
 const stockMovementsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'stock-movements',
-    component: StockMovementsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.STOCK_MOVEMENTS_READ}>
+            <StockMovementsPage />
+        </RequirePermission>
+    ),
 });
 const pricingRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'pricing',
-    component: PricingPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.PRICING_MANAGE}>
+            <PricingPage />
+        </RequirePermission>
+    ),
 });
 const stockRegisterRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'stock-register',
-    component: StockRegisterReportPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.REPORTS_READ}>
+            <StockRegisterReportPage />
+        </RequirePermission>
+    ),
 });
 
 const alertsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'alerts',
-    component: AlertsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.ALERTS_READ}>
+            <AlertsPage />
+        </RequirePermission>
+    ),
 });
 
 const prescriptionsRoute = createRoute({
@@ -198,16 +249,19 @@ const patientsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'patients',
     component: () => (
-        <ModulePlaceholder
-            title="Customer Records"
-            description="Lookup customer history and profiles."
-        />
+        <RequirePermission permission={PERMISSIONS.USERS_MANAGE}>
+            <PatientsPage />
+        </RequirePermission>
     ),
 });
 const analyticsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'analytics',
-    component: ReportsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.REPORTS_READ}>
+            <ReportsPage />
+        </RequirePermission>
+    ),
 });
 const employeeRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -291,7 +345,11 @@ const setPasswordRoute = createRoute({
 const facilitySettingsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'facility/$facilityId/settings',
-    component: FacilitySettingsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.FACILITY_MANAGE}>
+            <FacilitySettingsPage />
+        </RequirePermission>
+    ),
 });
 
 const appRouteTree = appLayoutRoute.addChildren([
@@ -321,7 +379,14 @@ const appRouteTree = appLayoutRoute.addChildren([
     alertsRoute,
 ]);
 
+const authIndexRoute = createRoute({
+    getParentRoute: () => authLayoutRoute,
+    path: '/',
+    component: () => <Navigate to="/auth/login" />,
+});
+
 const authRouteTree = authLayoutRoute.addChildren([
+    authIndexRoute,
     loginRoute,
     registerRoute,
     forgotPasswordRoute,

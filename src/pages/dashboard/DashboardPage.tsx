@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { useNavigate } from '@tanstack/react-router';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -47,6 +49,8 @@ export function DashboardPage() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loadingTransactions, setLoadingTransactions] = useState(false);
     const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [topMedicines, setTopMedicines] = useState<{ name: string; value: number }[]>([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         let mounted = true;
@@ -97,6 +101,17 @@ export function DashboardPage() {
             }
         };
         load();
+
+        const loadTopMedicines = async () => {
+            try {
+                const res = await pharmacyService.getTopSellingMedicines();
+                if (mounted) setTopMedicines(res);
+            } catch {
+                if (mounted) setTopMedicines([]);
+            }
+        };
+        loadTopMedicines();
+
         return () => {
             mounted = false;
         };
@@ -105,16 +120,19 @@ export function DashboardPage() {
     const medicinesInStock = stats?.medicinesInStock ?? '0';
     const lowStockWarning = stats?.lowStockWarning ?? 0;
     const expiringSoon = stats?.expiringSoon ?? 0;
-    const dailySales = stats?.dailySales
-        ? `RWF ${Number(stats.dailySales).toLocaleString()}`
+    const dailySalesVal = Number(stats?.dailySales);
+    const dailySales = !isNaN(dailySalesVal)
+        ? `RWF ${dailySalesVal.toLocaleString()}`
         : 'RWF 0';
 
     const scopeLabel =
         facilityId == null && facilities.length > 0
             ? 'All facilities'
             : facilityId != null
-              ? (facilities.find((f) => f.id === facilityId)?.name ?? `Facility #${facilityId}`)
-              : `Facility #${user?.facility_id ?? '—'}`;
+                ? (facilities.find((f) => f.id === facilityId)?.name ?? `Facility #${facilityId}`)
+                : `Facility #${user?.facility_id ?? '—'}`;
+
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
     return (
         <ProtectedRoute
@@ -167,6 +185,7 @@ export function DashboardPage() {
                         isPositive={stats?.isPositive?.medicines ?? true}
                         color="bg-healthcare-primary"
                         icon={<Package size={20} />}
+                        onClick={() => navigate({ to: '/app/inventory' })}
                     />
                     <StatCard
                         title="Low Stock Warning"
@@ -175,6 +194,7 @@ export function DashboardPage() {
                         isPositive={stats?.isPositive?.lowStock ?? true}
                         color="bg-amber-500"
                         icon={<AlertTriangle size={20} />}
+                        onClick={() => navigate({ to: '/app/alerts' })}
                     />
                     <StatCard
                         title="Expiring Soon"
@@ -183,6 +203,7 @@ export function DashboardPage() {
                         isPositive={stats?.isPositive?.expiring ?? false}
                         color="bg-red-500"
                         icon={<Clock size={20} />}
+                        onClick={() => navigate({ to: '/app/alerts' })}
                     />
                     <StatCard
                         title="Total Daily Sales"
@@ -191,6 +212,7 @@ export function DashboardPage() {
                         isPositive={stats?.isPositive?.sales ?? true}
                         color="bg-healthcare-secondary"
                         icon={<TrendingUp size={20} />}
+                        onClick={() => navigate({ to: '/app/analytics' })}
                     />
                 </div>
 
@@ -207,50 +229,54 @@ export function DashboardPage() {
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-end gap-3 min-h-[200px] pt-4 relative z-10 px-2">
-                                {(() => {
-                                    const chartArray =
-                                        stats?.dailySalesChart && stats.dailySalesChart.length > 0
-                                            ? stats.dailySalesChart
-                                            : Array.from({ length: 14 }, (_, i) => {
-                                                  const d = new Date();
-                                                  d.setDate(d.getDate() - (13 - i));
-                                                  return {
-                                                      date: d.toISOString().split('T')[0],
-                                                      sales: 0,
-                                                  };
-                                              });
-                                    const maxSales = Math.max(...chartArray.map((x) => x.sales), 1);
-                                    return chartArray.map((day, i) => {
-                                        const heightPct = Math.round((day.sales / maxSales) * 100);
-                                        const dayLabel = new Date(day.date).toLocaleDateString(
-                                            'en-US',
-                                            { weekday: 'short' },
-                                        )[0];
-                                        return (
-                                            <div
-                                                key={day.date}
-                                                className="flex-1 flex flex-col items-center gap-3 group/bar"
-                                            >
-                                                <div className="w-full relative h-[160px] flex items-end">
-                                                    <div
-                                                        style={{ height: `${heightPct}%` }}
-                                                        className={cn(
-                                                            'w-full rounded-t-md transition-all duration-500 relative shadow-sm min-h-[4px]',
-                                                            heightPct > 0 &&
-                                                                i === chartArray.length - 1
-                                                                ? 'bg-healthcare-primary'
-                                                                : 'bg-teal-500/20 dark:bg-teal-500/30 group-hover/bar:bg-healthcare-primary/40 dark:group-hover/bar:bg-healthcare-primary/60',
-                                                        )}
-                                                    ></div>
-                                                </div>
-                                                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-tighter">
-                                                    {dayLabel}
-                                                </span>
-                                            </div>
-                                        );
-                                    });
-                                })()}
+                            <div className="w-full h-[250px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart
+                                        data={
+                                            stats?.dailySalesChart && stats.dailySalesChart.length > 0
+                                                ? stats.dailySalesChart
+                                                : Array.from({ length: 7 }, (_, i) => {
+                                                    const d = new Date();
+                                                    d.setDate(d.getDate() - (6 - i));
+                                                    return {
+                                                        date: d.toISOString().split('T')[0],
+                                                        sales: 0,
+                                                    };
+                                                })
+                                        }
+                                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                                    >
+                                        <defs>
+                                            <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#0d9488" stopOpacity={0.1} />
+                                                <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                        <XAxis
+                                            dataKey="date"
+                                            tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { weekday: 'short' })}
+                                            tick={{ fontSize: 10, fill: '#64748B', fontWeight: 'bold' }}
+                                            axisLine={false}
+                                            tickLine={false}
+                                        />
+                                        <YAxis
+                                            hide={true}
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                            cursor={{ stroke: '#0d9488', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                        />
+                                        <Area
+                                            type="monotone"
+                                            dataKey="sales"
+                                            stroke="#0d9488"
+                                            strokeWidth={3}
+                                            fillOpacity={1}
+                                            fill="url(#colorSales)"
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -261,11 +287,12 @@ export function DashboardPage() {
                                     loadingStats
                                         ? '—'
                                         : typeof stats?.staffCount === 'number'
-                                          ? `${stats.staffCount} staff in scope`
-                                          : '—'
+                                            ? `${stats.staffCount} staff in scope`
+                                            : '—'
                                 }
                                 description="Users in facility or organization"
                                 color="bg-blue-50 dark:bg-blue-900"
+                                onClick={() => navigate({ to: '/app/users' })}
                             />
                             <SummaryFeature
                                 icon={<ShieldCheck size={18} className="text-healthcare-accent" />}
@@ -274,8 +301,8 @@ export function DashboardPage() {
                                     loadingStats
                                         ? '—'
                                         : (stats?.activeAlertsCount ?? 0) === 0
-                                          ? '100% Optimized'
-                                          : `${Math.max(0, 100 - (stats?.activeAlertsCount ?? 0) * 2)}% attention`
+                                            ? '100% Optimized'
+                                            : `${Math.max(0, 100 - (stats?.activeAlertsCount ?? 0) * 2)}% attention`
                                 }
                                 description={
                                     (stats?.activeAlertsCount ?? 0) === 0
@@ -287,37 +314,85 @@ export function DashboardPage() {
                                         ? 'bg-emerald-50 dark:bg-emerald-900'
                                         : 'bg-amber-50 dark:bg-amber-900'
                                 }
+                                onClick={() => navigate({ to: '/app/audit-logs' })}
                             />
                         </div>
                     </div>
                     <div className="space-y-6">
-                        <div className="glass-card p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                        <div
+                            className="glass-card p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm min-h-[300px] flex flex-col cursor-pointer hover:border-healthcare-primary/30 transition-colors"
+                            onClick={() => navigate({ to: '/app/analytics' })}
+                        >
                             <h3 className="font-black text-sm text-healthcare-dark mb-5 flex items-center gap-2">
-                                <Zap size={16} className="text-amber-500 fill-amber-500" /> Quick
-                                Actions
+                                <Zap size={16} className="text-amber-500 fill-amber-500" /> Most Sold Medicines
                             </h3>
-                            <div className="space-y-3">
-                                <QuickAction
-                                    icon={<Package size={16} />}
-                                    title="Inventory Restock"
-                                    description="Add new medicine batches"
-                                    color="bg-healthcare-primary"
-                                />
-                                <QuickAction
-                                    icon={<Pill size={16} />}
-                                    title="New Sale"
-                                    description="Dispense medicine to patient"
-                                    color="bg-healthcare-secondary"
-                                />
-                                <QuickAction
-                                    icon={<TrendingUp size={16} />}
-                                    title="Monthly Reports"
-                                    description="Analyze stock movements"
-                                    color="bg-slate-800"
-                                />
-                            </div>
+                            {topMedicines.length === 0 ? (
+                                <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">
+                                    No data available
+                                </div>
+                            ) : (
+                                <div className="relative flex-1 w-full min-h-[300px] flex flex-col items-center justify-center">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={topMedicines}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius="60%"
+                                                outerRadius="80%"
+                                                fill="#8884d8"
+                                                paddingAngle={4}
+                                                dataKey="value"
+                                                stroke="none"
+                                            >
+                                                {topMedicines.map((_, index) => (
+                                                    <Cell
+                                                        key={`cell-${index}`}
+                                                        fill={COLORS[index % COLORS.length]}
+                                                        className="hover:opacity-80 transition-opacity cursor-pointer"
+                                                    />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip
+                                                cursor={{ fill: 'transparent' }}
+                                                content={({ active, payload }) => {
+                                                    if (active && payload && payload.length) {
+                                                        const data = payload[0].payload;
+                                                        const total = topMedicines.reduce((sum, item) => sum + item.value, 0);
+                                                        const percent = total > 0 ? ((data.value / total) * 100).toFixed(1) : '0';
+
+                                                        return (
+                                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl border border-slate-100 dark:border-700 z-50">
+                                                                <p className="font-bold text-healthcare-dark mb-1">{data.name}</p>
+                                                                <div className="flex items-center gap-3 text-sm">
+                                                                    <span className="font-black text-healthcare-primary">{data.value} Units</span>
+                                                                    <span className="text-slate-400 font-medium">|</span>
+                                                                    <span className="font-bold text-slate-500">{percent}%</span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                }}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+
+                                    {/* Center Label for Total */}
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                        <span className="text-4xl font-black text-healthcare-dark tracking-tight">
+                                            {topMedicines.reduce((acc, curr) => acc + curr.value, 0)}
+                                        </span>
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                            Total Sold
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <div className="glass-card p-5 rounded-2xl border-2 border-red-100 dark:border-red-900 bg-white dark:bg-slate-900 shadow-sm">
+                        <div className="glass-card p-5 rounded-2xl border-2 border-red-100 dark:border-red-900 bg-white dark:bg-slate-900 shadow-sm cursor-pointer hover:border-red-300 transition-colors"
+                            onClick={() => navigate({ to: '/app/alerts' })}
+                        >
                             <h3 className="font-black text-sm text-healthcare-dark mb-5">
                                 Critical Alerts
                             </h3>
@@ -336,8 +411,8 @@ export function DashboardPage() {
                                                     alert.type === 'expiry'
                                                         ? 'expiry'
                                                         : alert.type === 'low_stock'
-                                                          ? 'stock'
-                                                          : 'audit'
+                                                            ? 'stock'
+                                                            : 'audit'
                                                 }
                                                 title={
                                                     alert.message.slice(0, 40) +
@@ -350,8 +425,8 @@ export function DashboardPage() {
                                 )}
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </div >
+                </div >
 
                 <div className="glass-card rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -363,6 +438,12 @@ export function DashboardPage() {
                                 Real-time dispensing activity
                             </p>
                         </div>
+                        <button
+                            onClick={() => navigate({ to: '/app/stock-movements' })}
+                            className="text-xs font-bold text-healthcare-primary hover:text-healthcare-dark transition-colors"
+                        >
+                            View All Transactions &rarr;
+                        </button>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
@@ -418,14 +499,17 @@ export function DashboardPage() {
                         </table>
                     </div>
                 </div>
-            </div>
-        </ProtectedRoute>
+            </div >
+        </ProtectedRoute >
     );
 }
 
-function StatCard({ title, value, trend, isPositive, color, icon }: any) {
+function StatCard({ title, value, trend, isPositive, color, icon, onClick }: any) {
     return (
-        <div className="glass-card p-5 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 group transition-all duration-300 shadow-sm relative overflow-hidden cursor-pointer border-2">
+        <div
+            onClick={onClick}
+            className="glass-card p-5 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 group transition-all duration-300 shadow-sm relative overflow-hidden cursor-pointer border-2 hover:border-healthcare-primary/30 hover:scale-[1.02]"
+        >
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
                     <div
@@ -459,9 +543,12 @@ function StatCard({ title, value, trend, isPositive, color, icon }: any) {
     );
 }
 
-function SummaryFeature({ icon, title, value, description, color }: any) {
+function SummaryFeature({ icon, title, value, description, color, onClick }: any) {
     return (
-        <div className="flex items-center gap-4 p-4 glass-card rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all shadow-sm">
+        <div
+            onClick={onClick}
+            className="flex items-center gap-4 p-4 glass-card rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all shadow-sm cursor-pointer hover:border-blue-200"
+        >
             <div className={cn('p-3 rounded-xl shadow-inner', color)}>{icon}</div>
             <div>
                 <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mb-1.5">
@@ -473,31 +560,6 @@ function SummaryFeature({ icon, title, value, description, color }: any) {
                 </p>
             </div>
         </div>
-    );
-}
-
-function QuickAction({ icon, title, description, color }: any) {
-    return (
-        <button className="w-full flex items-center gap-4 p-3.5 rounded-2xl border-2 border-transparent hover:border-teal-100 dark:hover:border-teal-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-300 group text-left">
-            <div
-                className={cn(
-                    'p-2.5 rounded-xl text-white transition-all group-hover:scale-110 shadow-sm',
-                    color,
-                )}
-            >
-                {icon}
-            </div>
-            <div className="flex-1">
-                <h4 className="font-black text-healthcare-dark text-sm leading-tight">{title}</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-0.5">
-                    {description}
-                </p>
-            </div>
-            <ChevronRight
-                size={16}
-                className="text-slate-300 group-hover:text-healthcare-primary group-hover:translate-x-1 transition-all"
-            />
-        </button>
     );
 }
 
@@ -517,8 +579,8 @@ function AlertItem({ type, title, info, isUrgent = false }: any) {
                     isUrgent
                         ? 'bg-red-500 animate-pulse'
                         : type === 'expiry'
-                          ? 'bg-red-400'
-                          : 'bg-amber-400',
+                            ? 'bg-red-400'
+                            : 'bg-amber-400',
                 )}
             ></div>
             <div className="flex-1">
@@ -580,8 +642,8 @@ function TableRow({
                         isStockIn
                             ? 'text-emerald-500'
                             : qty.startsWith('-')
-                              ? 'text-amber-500'
-                              : 'text-slate-600 dark:text-slate-300',
+                                ? 'text-amber-500'
+                                : 'text-slate-600 dark:text-slate-300',
                     )}
                 >
                     {qty}
@@ -594,8 +656,8 @@ function TableRow({
                         isPending
                             ? 'bg-amber-50 dark:bg-amber-900 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800'
                             : isStockIn
-                              ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
-                              : 'bg-emerald-50 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 border-teal-200 dark:border-teal-800',
+                                ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                                : 'bg-emerald-50 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400 border-teal-200 dark:border-teal-800',
                     )}
                 >
                     {status}

@@ -60,6 +60,11 @@ export const pharmacyService = {
         return (response.data as any).data ?? (response.data as any);
     },
 
+    async getTopSellingMedicines(): Promise<{ name: string; value: number }[]> {
+        const response = await api.get('/pharmacy/top-selling');
+        return (response.data as any).data ?? (response.data as any);
+    },
+
     async getStockReport(facilityId: number): Promise<any> {
         const response = await api.get<any>(`/pharmacy/reports/stock/${facilityId}`);
         return (response.data as any).data ?? response.data;
@@ -549,17 +554,23 @@ export const pharmacyService = {
         return response.data;
     },
 
-    async getPatients(query: string): Promise<import('../types/auth').User[]> {
-        const response = await api.get<{ data: import('../types/auth').User[] }>('/users', {
+    async getPatients(params?: {
+        search?: string;
+        page?: number;
+        limit?: number;
+    }): Promise<PaginatedResponse<import('../types/auth').User>> {
+        const response = await api.get('/users', {
             params: {
                 role: 'patient',
-                search: query,
-                limit: 10,
+                ...params,
             },
         });
+        return normalizePaginatedResponse(response.data);
+    },
 
-        const data = response.data.data || response.data;
-        return Array.isArray(data) ? data : (data as any)?.users || [];
+    async updatePatient(id: number, data: any): Promise<import('../types/auth').User> {
+        const response = await api.put<{ data: import('../types/auth').User }>(`/users/${id}`, data);
+        return (response.data as any).data ?? response.data;
     },
 
     async exportProcurementOrder(id: number): Promise<void> {

@@ -254,6 +254,7 @@ const NAV_ITEMS: NavItem[] = [
 import { CreateFacilityModal } from '../facility/CreateFacilityModal';
 import { FacilityEmptyState } from '../facility/FacilityEmptyState';
 import { SetupPharmacyModal } from '../facility/SetupPharmacyModal';
+import { NotificationBell } from '../ui/NotificationBell';
 
 const PHARMACY_ROLES = [
     'FACILITY_ADMIN',
@@ -324,7 +325,7 @@ export const MainLayout: React.FC = () => {
                 isDark && 'dark',
             )}
         >
-            {}
+            { }
             <aside
                 className={cn(
                     'glass-card m-3 rounded-xl flex flex-col overflow-hidden border-slate-200 transition-all duration-300 ease-in-out shadow-sm',
@@ -397,7 +398,7 @@ export const MainLayout: React.FC = () => {
                 </div>
             </aside>
 
-            {}
+            { }
             <main className="flex-1 flex flex-col overflow-hidden relative p-3 pl-0">
                 <header className="glass-header rounded-xl mb-3 px-5 py-3 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-5 flex-1">
@@ -457,8 +458,8 @@ export const MainLayout: React.FC = () => {
                                             {facilityId == null && isSuperAdminUser
                                                 ? 'All Facilities (System)'
                                                 : facilities.length > 0
-                                                  ? switcherLabel
-                                                  : (currentOrg?.name ?? 'Select context')}
+                                                    ? switcherLabel
+                                                    : (currentOrg?.name ?? 'Select context')}
                                         </span>
                                         <ChevronDown
                                             size={14}
@@ -531,10 +532,9 @@ export const MainLayout: React.FC = () => {
                             )
                         )}
                         <div className="flex items-center gap-1.5 mr-1">
-                            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors relative">
-                                <Bell size={18} />
-                                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full border border-white dark:border-slate-900"></span>
-                            </button>
+                            {/* Replaced static bell with smart component */}
+                            <NotificationBell />
+
                             <button
                                 onClick={toggleTheme}
                                 className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
