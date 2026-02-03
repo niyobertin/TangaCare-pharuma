@@ -29,7 +29,7 @@ export function ReportsPage() {
             <div className="p-6 space-y-8 animate-in fade-in duration-500">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-black text-healthcare-dark">
+                        <h1 className="text-2xl font-black text-healthcare-dark dark:text-white">
                             Reports & Analytics
                         </h1>
                         <p className="text-slate-500 text-sm mt-1">
@@ -278,7 +278,9 @@ function SummaryCard({ title, value, trend, icon, color = 'teal' }: any) {
                 {icon}
             </div>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">{title}</p>
-            <h3 className="text-2xl font-black text-healthcare-dark mt-1">{value}</h3>
+            <h3 className="text-2xl font-black text-healthcare-dark dark:text-white mt-1">
+                {value}
+            </h3>
             <p
                 className={`text-xs font-bold mt-2 ${trend.includes('+') ? 'text-emerald-500' : trend.includes('-') ? 'text-rose-500' : 'text-amber-500'}`}
             >

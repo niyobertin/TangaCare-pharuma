@@ -24,7 +24,7 @@ export function DemandPlanningPanel() {
 
     if (loading) {
         return (
-            <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm h-[400px] flex items-center justify-center">
+            <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm h-[400px] flex items-center justify-center">
                 <p className="text-slate-400 text-sm font-bold uppercase tracking-widest animate-pulse">
                     Calculating Demand...
                 </p>
@@ -33,10 +33,10 @@ export function DemandPlanningPanel() {
     }
 
     return (
-        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col h-[400px]">
+        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[400px]">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h3 className="text-base font-black text-healthcare-dark flex items-center gap-2">
+                    <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                         <TrendingUp size={18} className="text-healthcare-primary" />
                         Demand Planning & Reordering
                     </h3>
@@ -65,7 +65,7 @@ export function DemandPlanningPanel() {
                         >
                             <div className="flex justify-between items-start mb-2">
                                 <div>
-                                    <h4 className="text-[13px] font-black text-healthcare-dark leading-tight line-clamp-1">
+                                    <h4 className="text-[13px] font-black text-healthcare-dark dark:text-white leading-tight line-clamp-1">
                                         {item.medicine_name}
                                     </h4>
                                     <div className="flex items-center gap-2 mt-1">
@@ -96,7 +96,7 @@ export function DemandPlanningPanel() {
                                     <ArrowRight size={12} className="text-healthcare-primary" />
                                     Suggested Order:
                                 </span>
-                                <span className="text-healthcare-dark font-black px-2 py-0.5 bg-white dark:bg-slate-700 rounded-lg border border-slate-100 dark:border-slate-600">
+                                <span className="text-healthcare-dark dark:text-white font-black px-2 py-0.5 bg-white dark:bg-slate-700 rounded-lg border border-slate-100 dark:border-slate-600">
                                     {item.suggested_quantity} Units
                                 </span>
                             </div>

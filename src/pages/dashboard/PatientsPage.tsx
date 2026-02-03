@@ -23,7 +23,9 @@ export const PatientsPage: React.FC = () => {
         <div className="space-y-6 h-full flex flex-col">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-healthcare-dark">Customer Records</h1>
+                    <h1 className="text-2xl font-black text-healthcare-dark dark:text-white">
+                        Customer Records
+                    </h1>
                     <p className="text-slate-500 text-sm">Manage patient profiles and history</p>
                 </div>
                 <button
@@ -35,7 +37,7 @@ export const PatientsPage: React.FC = () => {
                 </button>
             </div>
 
-            <div className="glass-card p-4 rounded-xl flex items-center gap-3 border border-slate-200 dark:border-slate-800 bg-white/50">
+            <div className="glass-card p-4 rounded-xl flex items-center gap-3 border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
                 <Search size={20} className="text-slate-400" />
                 <input
                     type="text"
@@ -114,7 +116,7 @@ export const PatientsPage: React.FC = () => {
                                                     {patient.last_name?.[0]}
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-healthcare-dark text-sm">
+                                                    <p className="font-bold text-healthcare-dark dark:text-white text-sm">
                                                         {patient.first_name} {patient.last_name}
                                                     </p>
                                                     <p className="text-xs text-slate-400">

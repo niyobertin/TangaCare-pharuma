@@ -24,10 +24,10 @@ export const ExpiryHeatMap = () => {
 
     // Simple heat map visualization
     return (
-        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-base font-black text-healthcare-dark flex items-center gap-2">
+                    <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                         <Calendar size={18} className="text-healthcare-primary" />
                         Expiry Heat Map (90 Days)
                     </h3>
@@ -53,7 +53,7 @@ export const ExpiryHeatMap = () => {
                         {dates.slice(0, 5).map((d) => (
                             <div
                                 key={d.date}
-                                className="flex items-center gap-4 p-3 bg-red-50 rounded-lg border border-red-100"
+                                className="flex items-center gap-4 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900/30"
                             >
                                 <div className="text-center min-w-[60px]">
                                     <p className="text-[10px] font-black uppercase text-red-400">
@@ -70,7 +70,7 @@ export const ExpiryHeatMap = () => {
                                         {d.batches.map((b, i) => (
                                             <span
                                                 key={i}
-                                                className="text-xs font-bold text-slate-700"
+                                                className="text-xs font-bold text-slate-700 dark:text-slate-300"
                                             >
                                                 {b.medicine_name} ({b.quantity} units)
                                                 {i < d.batches.length - 1 ? ',' : ''}

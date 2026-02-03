@@ -60,7 +60,7 @@ export function RegisterPage() {
             <div className="max-w-md w-full animate-in zoom-in duration-500 relative z-10">
                 <form
                     onSubmit={handleSubmit(onSubmit)}
-                    className="glass-card shadow-2xl p-10 space-y-6 bg-white/95 dark:bg-slate-900/95 border border-white/20 overflow-y-auto max-h-[90vh] rounded-2xl"
+                    className="glass-card shadow-2xl p-10 space-y-6 bg-white/95 border border-white/20 overflow-y-auto max-h-[90vh] rounded-2xl"
                 >
                     <div className="text-center space-y-2">
                         <h2 className="text-3xl font-black text-healthcare-dark tracking-tight">
@@ -78,7 +78,7 @@ export function RegisterPage() {
                             </label>
                             <input
                                 {...register('first_name')}
-                                className={`w-full px-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl text-sm font-medium focus:outline-none transition-all ${errors.first_name ? 'border-red-400' : 'border-slate-200 dark:border-slate-700 focus:border-healthcare-primary'}`}
+                                className={`w-full px-4 py-3 bg-white border-2 rounded-2xl text-sm font-medium focus:outline-none transition-all ${errors.first_name ? 'border-red-400' : 'border-slate-200 focus:border-healthcare-primary'}`}
                             />
                             {errors.first_name && (
                                 <p className="text-[9px] font-normal text-red-500">
@@ -92,7 +92,7 @@ export function RegisterPage() {
                             </label>
                             <input
                                 {...register('last_name')}
-                                className={`w-full px-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl text-sm font-medium focus:outline-none transition-all ${errors.last_name ? 'border-red-400' : 'border-slate-200 dark:border-slate-700 focus:border-healthcare-primary'}`}
+                                className={`w-full px-4 py-3 bg-white border-2 rounded-2xl text-sm font-medium focus:outline-none transition-all ${errors.last_name ? 'border-red-400' : 'border-slate-200 focus:border-healthcare-primary'}`}
                             />
                             {errors.last_name && (
                                 <p className="text-[9px] font-normal text-red-500">
@@ -110,7 +110,7 @@ export function RegisterPage() {
                             <input
                                 {...register('email')}
                                 type="email"
-                                className={`w-full px-4 py-3 bg-white dark:bg-slate-800 border-2 rounded-2xl text-sm font-medium focus:outline-none transition-all ${errors.email ? 'border-red-400' : 'border-slate-200 dark:border-slate-700 focus:border-healthcare-primary'}`}
+                                className={`w-full px-4 py-3 bg-white border-2 rounded-2xl text-sm font-medium focus:outline-none transition-all ${errors.email ? 'border-red-400' : 'border-slate-200 focus:border-healthcare-primary'}`}
                             />
                             {errors.email && (
                                 <p className="text-[9px] font-normal text-red-500">
@@ -130,7 +130,7 @@ export function RegisterPage() {
                             <input
                                 {...register('phone_number')}
                                 placeholder="+250 788 ..."
-                                className={`w-full px-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-medium focus:outline-none focus:border-healthcare-primary transition-all`}
+                                className={`w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:border-healthcare-primary transition-all`}
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -141,7 +141,7 @@ export function RegisterPage() {
                                 <input
                                     {...register('password')}
                                     type={showPassword ? 'text' : 'password'}
-                                    className={`w-full px-4 py-3 pr-12 bg-white dark:bg-slate-800 border-2 rounded-2xl text-sm font-medium focus:outline-none transition-all ${errors.password ? 'border-red-400' : 'border-slate-200 dark:border-slate-700 focus:border-healthcare-primary'}`}
+                                    className={`w-full px-4 py-3 pr-12 bg-white border-2 rounded-2xl text-sm font-medium focus:outline-none transition-all ${errors.password ? 'border-red-400' : 'border-slate-200 focus:border-healthcare-primary'}`}
                                 />
                                 <button
                                     type="button"

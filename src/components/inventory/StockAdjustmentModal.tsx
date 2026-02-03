@@ -97,7 +97,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                 {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
                     <div>
-                        <h2 className="text-xl font-black text-healthcare-dark flex items-center gap-2">
+                        <h2 className="text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                             <ArrowDownWideNarrow size={20} className="text-healthcare-primary" />
                             Adjust Stock
                         </h2>
@@ -119,22 +119,22 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                 <div className="p-6">
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         {}
-                        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm flex justify-between items-center">
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm flex justify-between items-center">
                             <span className="text-slate-500 font-bold">Current Quantity</span>
-                            <span className="text-xl font-black text-healthcare-dark">
+                            <span className="text-xl font-black text-healthcare-dark dark:text-white">
                                 {batch.current_quantity}
                             </span>
                         </div>
 
                         {}
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                 Adjustment Type
                             </label>
                             <div className="relative">
                                 <select
                                     {...register('type')}
-                                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white appearance-none"
+                                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white appearance-none"
                                 >
                                     <option value="decrease">Standard Decrease (Correction)</option>
                                     <option value="increase">Standard Increase (Correction)</option>
@@ -150,13 +150,13 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
 
                         {}
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                 Quantity
                             </label>
                             <input
                                 type="number"
                                 {...register('quantity')}
-                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold"
+                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                             />
                             {errors.quantity && (
                                 <p className="text-red-500 text-xs mt-1">
@@ -167,12 +167,12 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
 
                         {}
                         <div>
-                            <label className="block text-sm font-bold text-slate-700 mb-1">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                 Reason / Notes
                             </label>
                             <textarea
                                 {...register('reason')}
-                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm"
+                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                 rows={2}
                                 placeholder="Explain why this adjustment is being made..."
                             />

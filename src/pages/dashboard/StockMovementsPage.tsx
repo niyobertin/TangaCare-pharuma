@@ -87,7 +87,7 @@ export function StockMovementsPage() {
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
-                        <h2 className="text-2xl font-black text-healthcare-dark tracking-tight">
+                        <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
                             Stock Movement History
                         </h2>
                         <p className="text-slate-500 font-bold text-xs uppercase tracking-wider">
@@ -104,13 +104,13 @@ export function StockMovementsPage() {
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="px-3 py-2 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-bold"
+                        className="px-3 py-2 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-900 dark:text-white"
                     />
                     <input
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="px-3 py-2 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-bold"
+                        className="px-3 py-2 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-900 dark:text-white"
                     />
                 </div>
 
@@ -136,22 +136,22 @@ export function StockMovementsPage() {
                             <table className="w-full text-left text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-100 dark:border-slate-800">
-                                        <th className="p-4 font-black text-healthcare-dark uppercase text-xs">
+                                        <th className="p-4 font-black text-healthcare-dark dark:text-white uppercase text-xs">
                                             Date
                                         </th>
-                                        <th className="p-4 font-black text-healthcare-dark uppercase text-xs">
+                                        <th className="p-4 font-black text-healthcare-dark dark:text-white uppercase text-xs">
                                             Type
                                         </th>
-                                        <th className="p-4 font-black text-healthcare-dark uppercase text-xs">
+                                        <th className="p-4 font-black text-healthcare-dark dark:text-white uppercase text-xs">
                                             Reference
                                         </th>
-                                        <th className="p-4 font-black text-healthcare-dark uppercase text-xs">
+                                        <th className="p-4 font-black text-healthcare-dark dark:text-white uppercase text-xs">
                                             User
                                         </th>
-                                        <th className="p-4 font-black text-healthcare-dark uppercase text-xs">
+                                        <th className="p-4 font-black text-healthcare-dark dark:text-white uppercase text-xs">
                                             Description
                                         </th>
-                                        <th className="p-4 font-black text-healthcare-dark uppercase text-xs text-right">
+                                        <th className="p-4 font-black text-healthcare-dark dark:text-white uppercase text-xs text-right">
                                             Qty Δ
                                         </th>
                                     </tr>
@@ -197,7 +197,7 @@ export function StockMovementsPage() {
                                                         row.movement_type}
                                                 </span>
                                             </td>
-                                            <td className="p-4 font-medium text-healthcare-dark">
+                                            <td className="p-4 font-medium text-healthcare-dark dark:text-white">
                                                 {row.reference || '—'}
                                             </td>
                                             <td className="p-4 text-slate-600 dark:text-slate-400">

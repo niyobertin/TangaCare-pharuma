@@ -26,6 +26,7 @@ import { useAuth } from '../../context/AuthContext';
 import { isSuperAdmin } from '../../types/auth';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useTheme } from '../../context/ThemeContext';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -282,7 +283,7 @@ export const MainLayout: React.FC = () => {
     } = useAuth();
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [isDark, setIsDark] = useState(false);
+    const { isDark, toggleTheme } = useTheme();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showSetupModal, setShowSetupModal] = useState(false);
     const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -309,20 +310,10 @@ export const MainLayout: React.FC = () => {
         navigate({ to: '/auth/login' });
     };
 
-    const toggleTheme = () => {
-        setIsDark(!isDark);
-        if (!isDark) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    };
-
     return (
         <div
             className={cn(
                 'flex h-screen bg-healthcare-surface font-sans transition-colors duration-300',
-                isDark && 'dark',
             )}
         >
             {}
@@ -342,7 +333,7 @@ export const MainLayout: React.FC = () => {
                         <img src={logo} alt="TangaCare Logo" className="w-7 h-7 object-contain" />
                     </div>
                     {!isCollapsed && (
-                        <span className="text-lg font-black text-healthcare-dark whitespace-nowrap overflow-hidden transition-all duration-300 tracking-tight">
+                        <span className="text-lg font-black text-healthcare-dark dark:text-white whitespace-nowrap overflow-hidden transition-all duration-300 tracking-tight">
                             TangaCare
                         </span>
                     )}
@@ -417,16 +408,16 @@ export const MainLayout: React.FC = () => {
                             <input
                                 type="text"
                                 placeholder="Search..."
-                                className="w-full pl-9 pr-4 py-1.5 bg-slate-100 dark:bg-slate-800 border border-transparent focus:bg-white dark:focus:bg-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-healthcare-primary/10 focus:border-healthcare-primary transition-all text-sm"
+                                className="w-full pl-9 pr-4 py-1.5 bg-slate-100 dark:bg-slate-900/50 border border-transparent dark:border-slate-700/50 focus:bg-white dark:focus:bg-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-healthcare-primary/10 focus:border-healthcare-primary transition-all text-sm dark:text-white dark:placeholder:text-slate-500"
                             />
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3 font-sans">
                         {showFacilityNameOnly ? (
-                            <div className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-w-0 max-w-[180px]">
+                            <div className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 min-w-0 max-w-[180px]">
                                 <span
-                                    className="truncate block text-xs font-bold text-healthcare-dark"
+                                    className="truncate block text-xs font-bold text-healthcare-dark dark:text-white"
                                     title={
                                         currentFacility?.name ??
                                         facilities[0]?.name ??
@@ -448,13 +439,13 @@ export const MainLayout: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => setSwitcherOpen(!switcherOpen)}
-                                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-left min-w-0 max-w-[180px]"
+                                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-left min-w-0 max-w-[180px]"
                                     >
                                         <Building2
                                             size={16}
                                             className="text-healthcare-primary flex-shrink-0"
                                         />
-                                        <span className="truncate text-xs font-bold text-healthcare-dark">
+                                        <span className="truncate text-xs font-bold text-healthcare-dark dark:text-white">
                                             {facilityId == null && isSuperAdminUser
                                                 ? 'All Facilities (System)'
                                                 : facilities.length > 0
@@ -545,7 +536,7 @@ export const MainLayout: React.FC = () => {
 
                         <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-800">
                             <div className="flex flex-col items-end">
-                                <span className="font-bold text-healthcare-dark text-xs uppercase tracking-tight">
+                                <span className="font-bold text-healthcare-dark dark:text-white text-xs uppercase tracking-tight">
                                     {user
                                         ? `${user.firstName || user.first_name} ${user.lastName || user.last_name}`
                                         : 'Loading...'}
@@ -614,7 +605,7 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isCollapsed 
             to={to}
             activeProps={{
                 className:
-                    'bg-healthcare-primary/10 text-healthcare-primary dark:bg-healthcare-primary shadow-none',
+                    'bg-healthcare-primary/10 text-healthcare-primary dark:bg-healthcare-primary dark:text-white shadow-none',
             }}
             className={cn(
                 'flex items-center px-4 py-2.5 text-slate-500 hover:bg-teal-50 dark:hover:bg-teal-900 hover:text-healthcare-primary rounded-lg transition-all group',

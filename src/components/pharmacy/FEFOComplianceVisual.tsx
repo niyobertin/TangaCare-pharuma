@@ -24,7 +24,7 @@ export function FEFOComplianceVisual() {
 
     if (loading) {
         return (
-            <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm h-[400px] flex items-center justify-center">
+            <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm h-[400px] flex items-center justify-center">
                 <p className="text-slate-400 text-sm font-bold uppercase tracking-widest animate-pulse">
                     Auditing Safety...
                 </p>
@@ -35,10 +35,10 @@ export function FEFOComplianceVisual() {
     const complianceRate = data?.compliance_rate || 0;
 
     return (
-        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col h-[400px]">
+        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[400px]">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h3 className="text-base font-black text-healthcare-dark flex items-center gap-2">
+                    <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                         <ShieldCheck size={18} className="text-healthcare-primary" />
                         FEFO Compliance Audit
                     </h3>
@@ -67,19 +67,19 @@ export function FEFOComplianceVisual() {
 
             <div className="flex-1 min-h-0 flex flex-col">
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <p className="text-[10px] font-black text-slate-400 uppercase mb-1">
                             Compliant Tx
                         </p>
-                        <p className="text-2xl font-black text-healthcare-dark">
+                        <p className="text-2xl font-black text-healthcare-dark dark:text-white">
                             {data?.compliant_transactions}
                         </p>
                     </div>
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <p className="text-[10px] font-black text-slate-400 uppercase mb-1">
                             Total Audited
                         </p>
-                        <p className="text-2xl font-black text-healthcare-dark">
+                        <p className="text-2xl font-black text-healthcare-dark dark:text-white">
                             {data?.total_transactions}
                         </p>
                     </div>
@@ -97,7 +97,7 @@ export function FEFOComplianceVisual() {
                                 className="p-3 bg-red-50/50 dark:bg-red-900/10 rounded-xl border border-red-100/50 dark:border-red-900/30"
                             >
                                 <div className="flex justify-between items-start">
-                                    <p className="text-[11px] font-black text-healthcare-dark truncate">
+                                    <p className="text-[11px] font-black text-healthcare-dark dark:text-white truncate">
                                         {v.medicine_name}
                                     </p>
                                     <span className="text-[9px] font-black text-red-500 uppercase">

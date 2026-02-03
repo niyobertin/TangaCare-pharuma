@@ -14,6 +14,7 @@ import {
     AreaChart,
     Area,
 } from 'recharts';
+import { useTheme } from '../../context/ThemeContext';
 
 // --- Types ---
 export interface InventoryData {
@@ -34,6 +35,15 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 // --- Components ---
 
 export const InventoryStatusChart: React.FC<{ data: InventoryData[] }> = ({ data }) => {
+    const { isDark } = useTheme();
+    const axisColor = isDark ? '#94a3b8' : '#475569';
+    const gridColor = isDark ? '#334155' : '#e2e8f0';
+    const tooltipStyle = {
+        backgroundColor: isDark ? '#1e293b' : '#ffffff',
+        borderColor: isDark ? '#334155' : '#e2e8f0',
+        color: isDark ? '#f8fafc' : '#0f172a',
+    };
+
     return (
         <ResponsiveContainer width="100%" height={300}>
             <BarChart
@@ -41,10 +51,16 @@ export const InventoryStatusChart: React.FC<{ data: InventoryData[] }> = ({ data
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
             >
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                <XAxis type="number" />
-                <YAxis dataKey="category" type="category" width={100} />
+                <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={true}
+                    vertical={false}
+                    stroke={gridColor}
+                />
+                <XAxis type="number" stroke={axisColor} />
+                <YAxis dataKey="category" type="category" width={100} stroke={axisColor} />
                 <Tooltip
+                    contentStyle={tooltipStyle}
                     formatter={(value: any, name: any) => [
                         name === 'value' && typeof value === 'number'
                             ? `$${value.toLocaleString()}`
@@ -60,8 +76,14 @@ export const InventoryStatusChart: React.FC<{ data: InventoryData[] }> = ({ data
 };
 
 export const InventoryValuePieChart: React.FC<{ data: InventoryData[] }> = ({ data }) => {
+    const { isDark } = useTheme();
     // Filter out small values for cleaner pie chart
     const filteredData = data.filter((d) => d.value > 0);
+    const tooltipStyle = {
+        backgroundColor: isDark ? '#1e293b' : '#ffffff',
+        borderColor: isDark ? '#334155' : '#e2e8f0',
+        color: isDark ? '#f8fafc' : '#0f172a',
+    };
 
     return (
         <ResponsiveContainer width="100%" height={300}>
@@ -83,7 +105,10 @@ export const InventoryValuePieChart: React.FC<{ data: InventoryData[] }> = ({ da
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                 </Pie>
-                <Tooltip formatter={(value: any) => `$${Number(value).toLocaleString()}`} />
+                <Tooltip
+                    formatter={(value: any) => `$${Number(value).toLocaleString()}`}
+                    contentStyle={tooltipStyle}
+                />
                 <Legend layout="horizontal" verticalAlign="bottom" align="center" />
             </PieChart>
         </ResponsiveContainer>
@@ -91,6 +116,15 @@ export const InventoryValuePieChart: React.FC<{ data: InventoryData[] }> = ({ da
 };
 
 export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data }) => {
+    const { isDark } = useTheme();
+    const axisColor = isDark ? '#94a3b8' : '#475569';
+    const gridColor = isDark ? '#334155' : '#e2e8f0';
+    const tooltipStyle = {
+        backgroundColor: isDark ? '#1e293b' : '#ffffff',
+        borderColor: isDark ? '#334155' : '#e2e8f0',
+        color: isDark ? '#f8fafc' : '#0f172a',
+    };
+
     return (
         <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -106,14 +140,18 @@ export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data })
                 </defs>
                 <XAxis
                     dataKey="date"
+                    stroke={axisColor}
                     tickFormatter={(str) => {
                         const date = new Date(str);
                         return `${date.getMonth() + 1}/${date.getDate()}`;
                     }}
                 />
-                <YAxis />
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <Tooltip labelFormatter={(label) => new Date(label).toLocaleDateString()} />
+                <YAxis stroke={axisColor} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                <Tooltip
+                    labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                    contentStyle={tooltipStyle}
+                />
                 <Legend />
                 <Area
                     type="monotone"
@@ -139,6 +177,15 @@ export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data })
 };
 
 export const ExpiryRiskChart: React.FC<{ data: any }> = ({ data }) => {
+    const { isDark } = useTheme();
+    const axisColor = isDark ? '#94a3b8' : '#475569';
+    const gridColor = isDark ? '#334155' : '#e2e8f0';
+    const tooltipStyle = {
+        backgroundColor: isDark ? '#1e293b' : '#ffffff',
+        borderColor: isDark ? '#334155' : '#e2e8f0',
+        color: isDark ? '#f8fafc' : '#0f172a',
+    };
+
     // Transform backend data to chart format if needed, or assume data is ready
     // Expected data: { "0-30 days": 10, "30-60 days": 5, ... } array or object
     // Adapting to generic array for now
@@ -151,10 +198,10 @@ export const ExpiryRiskChart: React.FC<{ data: any }> = ({ data }) => {
     return (
         <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                <XAxis dataKey="name" stroke={axisColor} />
+                <YAxis stroke={axisColor} />
+                <Tooltip contentStyle={tooltipStyle} />
                 <Legend />
                 <Bar dataKey="count" name="Batches Expiring" radius={[4, 4, 0, 0]}>
                     {chartData.map((entry, index) => (

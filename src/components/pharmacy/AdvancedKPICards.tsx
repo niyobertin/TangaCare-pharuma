@@ -14,15 +14,17 @@ interface KPICardProps {
 
 const KPICard = ({ title, value, target, status, icon, subtitle, onClick }: KPICardProps) => {
     const statusColors = {
-        good: 'bg-green-50 border-green-200 text-green-700',
-        warning: 'bg-yellow-50 border-yellow-200 text-yellow-700',
-        critical: 'bg-red-50 border-red-200 text-red-700',
+        good: 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400',
+        warning:
+            'bg-yellow-50 border-yellow-200 text-yellow-700 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-400',
+        critical:
+            'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400',
     };
 
     const iconColors = {
-        good: 'text-green-600',
-        warning: 'text-yellow-600',
-        critical: 'text-red-600',
+        good: 'text-green-600 dark:text-green-400',
+        warning: 'text-yellow-600 dark:text-yellow-400',
+        critical: 'text-red-600 dark:text-red-400',
     };
 
     return (
@@ -34,8 +36,10 @@ const KPICard = ({ title, value, target, status, icon, subtitle, onClick }: KPIC
         >
             <div className="flex items-start justify-between">
                 <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-                    <p className="text-3xl font-bold mb-2">{value}</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">
+                        {title}
+                    </p>
+                    <p className="text-3xl font-bold mb-2 dark:text-white">{value}</p>
                     {target !== undefined && (
                         <p className="text-xs text-gray-500">
                             Target: {target}
@@ -50,9 +54,15 @@ const KPICard = ({ title, value, target, status, icon, subtitle, onClick }: KPIC
                             )}
                         </p>
                     )}
-                    {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+                    {subtitle && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
+                    )}
                 </div>
-                <div className={`p-3 rounded-full bg-white ${iconColors[status]}`}>{icon}</div>
+                <div
+                    className={`p-3 rounded-full bg-white dark:bg-slate-800 ${iconColors[status]}`}
+                >
+                    {icon}
+                </div>
             </div>
         </div>
     );
@@ -69,7 +79,10 @@ export const AdvancedKPICards = () => {
         return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />
+                    <div
+                        key={i}
+                        className="h-32 bg-gray-100 dark:bg-slate-800 rounded-lg animate-pulse"
+                    />
                 ))}
             </div>
         );

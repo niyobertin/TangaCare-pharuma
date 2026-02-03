@@ -24,7 +24,7 @@ export function ABCAnalysisVisual() {
 
     if (loading) {
         return (
-            <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm h-[400px] flex items-center justify-center">
+            <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm h-[400px] flex items-center justify-center">
                 <p className="text-slate-400 text-sm font-bold uppercase tracking-widest animate-pulse">
                     Classifying Inventory...
                 </p>
@@ -39,10 +39,10 @@ export function ABCAnalysisVisual() {
     ];
 
     return (
-        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col h-[450px]">
+        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[450px]">
             <div className="flex justify-between items-center mb-4">
                 <div>
-                    <h3 className="text-base font-black text-healthcare-dark flex items-center gap-2">
+                    <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                         <Layers size={18} className="text-healthcare-primary" />
                         ABC Inventory Analysis
                     </h3>
@@ -58,7 +58,7 @@ export function ABCAnalysisVisual() {
                     <div className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm">
                         <Info size={16} className="text-healthcare-primary" />
                     </div>
-                    <p className="text-xs font-bold text-healthcare-dark italic leading-relaxed">
+                    <p className="text-xs font-bold text-healthcare-dark dark:text-white italic leading-relaxed">
                         <span className="text-healthcare-primary font-black not-italic">
                             Class A items
                         </span>{' '}
@@ -71,7 +71,7 @@ export function ABCAnalysisVisual() {
             {/* Numbers horizontal under description */}
             <div className="flex justify-center gap-12 mb-4">
                 <div className="text-center">
-                    <p className="text-[24px] font-black text-healthcare-dark leading-none">
+                    <p className="text-[24px] font-black text-healthcare-dark dark:text-white leading-none">
                         {data?.class_a.length}
                     </p>
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">
@@ -79,7 +79,7 @@ export function ABCAnalysisVisual() {
                     </p>
                 </div>
                 <div className="text-center">
-                    <p className="text-[24px] font-black text-healthcare-dark leading-none">
+                    <p className="text-[24px] font-black text-healthcare-dark dark:text-white leading-none">
                         {data?.class_b.length}
                     </p>
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">
@@ -87,7 +87,7 @@ export function ABCAnalysisVisual() {
                     </p>
                 </div>
                 <div className="text-center">
-                    <p className="text-[24px] font-black text-healthcare-dark leading-none">
+                    <p className="text-[24px] font-black text-healthcare-dark dark:text-white leading-none">
                         {data?.class_c.length}
                     </p>
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">
@@ -105,7 +105,7 @@ export function ABCAnalysisVisual() {
                                 className="w-3 h-3 rounded-[3px]"
                                 style={{ backgroundColor: item.color }}
                             />
-                            <span className="text-[10px] font-black text-healthcare-dark uppercase tracking-tight">
+                            <span className="text-[10px] font-black text-healthcare-dark dark:text-white uppercase tracking-tight">
                                 {item.name.split(' (')[0]}
                                 <span className="text-slate-400 ml-1">
                                     ({item.name.split(' (')[1].replace(')', '')})

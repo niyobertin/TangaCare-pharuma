@@ -24,7 +24,7 @@ export function SupplierMetrics() {
 
     if (loading) {
         return (
-            <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm h-[400px] flex items-center justify-center">
+            <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm h-[400px] flex items-center justify-center">
                 <p className="text-slate-400 text-sm font-bold uppercase tracking-widest animate-pulse">
                     Analyzing Suppliers...
                 </p>
@@ -35,10 +35,10 @@ export function SupplierMetrics() {
     const COLORS = ['#0f766e', '#0d9488', '#2dd4bf', '#99f6e4'];
 
     return (
-        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col h-[400px]">
+        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[400px]">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h3 className="text-base font-black text-healthcare-dark flex items-center gap-2">
+                    <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                         <Truck size={18} className="text-healthcare-primary" />
                         Supplier Performance
                     </h3>
@@ -96,7 +96,7 @@ export function SupplierMetrics() {
                                 key={item.supplier_id}
                                 className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800"
                             >
-                                <h4 className="text-[11px] font-black text-healthcare-dark uppercase truncate">
+                                <h4 className="text-[11px] font-black text-healthcare-dark dark:text-white uppercase truncate">
                                     {item.supplier_name}
                                 </h4>
                                 <div className="grid grid-cols-2 gap-2 mt-2">
@@ -109,7 +109,7 @@ export function SupplierMetrics() {
                                             <span className="text-[9px] text-slate-400 font-bold uppercase leading-none">
                                                 Fulfillment
                                             </span>
-                                            <span className="text-[11px] font-black">
+                                            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">
                                                 {item.fulfillment_rate.toFixed(0)}%
                                             </span>
                                         </div>
@@ -120,7 +120,7 @@ export function SupplierMetrics() {
                                             <span className="text-[9px] text-slate-400 font-bold uppercase leading-none">
                                                 On-Time
                                             </span>
-                                            <span className="text-[11px] font-black">
+                                            <span className="text-[11px] font-black text-slate-700 dark:text-slate-300">
                                                 {item.on_time_delivery_rate.toFixed(0)}%
                                             </span>
                                         </div>

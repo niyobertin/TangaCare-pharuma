@@ -277,7 +277,7 @@ export function DispensingPage() {
                             placeholder="Search medicine by name, code, brand, or barcode..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:border-healthcare-primary transition-all text-sm font-bold shadow-sm"
+                            className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:border-healthcare-primary transition-all text-sm font-bold text-slate-900 dark:text-white shadow-sm"
                         />
                     </div>
 
@@ -324,7 +324,7 @@ export function DispensingPage() {
                                                 </span>
                                             </div>
                                             <div>
-                                                <h4 className="font-black text-healthcare-dark text-sm leading-tight">
+                                                <h4 className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
                                                     {med.name}
                                                 </h4>
                                                 <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-tight">
@@ -332,7 +332,7 @@ export function DispensingPage() {
                                                 </p>
                                             </div>
                                             <div className="flex items-center justify-between mt-1 pt-3 border-t border-slate-50 dark:border-slate-800">
-                                                <span className="text-sm font-black text-healthcare-dark">
+                                                <span className="text-sm font-black text-healthcare-dark dark:text-white">
                                                     RWF {med.selling_price.toLocaleString()}
                                                 </span>
                                                 <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-400 group-hover:text-healthcare-primary transition-colors">
@@ -349,7 +349,7 @@ export function DispensingPage() {
 
                 <div className="w-full lg:w-[400px] flex flex-col gap-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative min-h-[500px]">
                     <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3">
-                        <div className="flex items-center justify-between text-healthcare-dark font-black text-sm">
+                        <div className="flex items-center justify-between text-healthcare-dark dark:text-white font-black text-sm">
                             <div className="flex items-center gap-2">
                                 <User size={16} />
                                 <span>Patient Details</span>
@@ -375,7 +375,7 @@ export function DispensingPage() {
                                             setPatientQuery(e.target.value);
                                             setShowPatientResults(true);
                                         }}
-                                        className="w-full px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-healthcare-primary/20 outline-none pr-8"
+                                        className="w-full px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-healthcare-primary/20 outline-none pr-8 bg-white dark:bg-slate-800 dark:border-slate-700 text-slate-900 dark:text-white"
                                     />
                                     <ChevronDown
                                         size={16}
@@ -465,7 +465,9 @@ export function DispensingPage() {
                             <div className="w-10 h-10 rounded-xl bg-healthcare-primary/10 flex items-center justify-center text-healthcare-primary border border-healthcare-primary/20">
                                 <ShoppingCart size={18} />
                             </div>
-                            <h3 className="font-black text-healthcare-dark">Current Cart</h3>
+                            <h3 className="font-black text-healthcare-dark dark:text-white">
+                                Current Cart
+                            </h3>
                         </div>
                         <span className="text-xs font-black bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-slate-500 uppercase">
                             {cart.length} Items
@@ -480,7 +482,7 @@ export function DispensingPage() {
                                     className="flex gap-4 p-3 bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800 group animate-in slide-in-from-right-2 duration-300"
                                 >
                                     <div className="flex-1 flex flex-col justify-center">
-                                        <h5 className="text-xs font-black text-healthcare-dark">
+                                        <h5 className="text-xs font-black text-healthcare-dark dark:text-white">
                                             {item.name}
                                         </h5>
                                         <div className="flex gap-2 mt-1">
@@ -565,7 +567,7 @@ export function DispensingPage() {
                                 <span>RWF {tax.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between py-2 mt-2 border-t border-slate-200 dark:border-slate-700">
-                                <span className="text-sm font-black text-healthcare-dark">
+                                <span className="text-sm font-black text-healthcare-dark dark:text-white">
                                     Total
                                 </span>
                                 <span className="text-sm font-black text-healthcare-primary">

@@ -37,10 +37,10 @@ const CriticalMedicineItem = ({ medicine }: CriticalMedicineItemProps) => {
     const expiryInfo = expiryRiskConfig[medicine.expiry_risk];
 
     return (
-        <div className="p-4 bg-white border rounded-lg hover:shadow-md transition-shadow">
+        <div className="p-4 bg-white dark:bg-slate-800/50 border dark:border-slate-700 rounded-lg hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{medicine.name}</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{medicine.name}</h4>
                     <div className="flex items-center gap-2 mt-1">
                         <span
                             className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${statusInfo.color}`}
@@ -60,12 +60,16 @@ const CriticalMedicineItem = ({ medicine }: CriticalMedicineItemProps) => {
 
             <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                    <p className="text-gray-500">Current Stock</p>
-                    <p className="font-semibold text-gray-900">{medicine.current_quantity}</p>
+                    <p className="text-gray-500 dark:text-gray-400">Current Stock</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                        {medicine.current_quantity}
+                    </p>
                 </div>
                 <div>
-                    <p className="text-gray-500">Min Threshold</p>
-                    <p className="font-semibold text-gray-900">{medicine.min_threshold}</p>
+                    <p className="text-gray-500 dark:text-gray-400">Min Threshold</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">
+                        {medicine.min_threshold}
+                    </p>
                 </div>
             </div>
 
@@ -93,14 +97,17 @@ export const CriticalMedicinesPanel = () => {
 
     if (isLoading) {
         return (
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="glass-card rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-red-600" />
                     Critical Medicines
                 </h3>
                 <div className="space-y-3">
                     {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+                        <div
+                            key={i}
+                            className="h-24 bg-gray-100 dark:bg-slate-800 rounded-lg animate-pulse"
+                        />
                     ))}
                 </div>
             </div>
@@ -109,7 +116,7 @@ export const CriticalMedicinesPanel = () => {
 
     if (error) {
         return (
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="glass-card rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-red-600" />
                     Critical Medicines
@@ -124,9 +131,9 @@ export const CriticalMedicinesPanel = () => {
     const lowStockCount = medicines.filter((m) => m.status === 'low_stock').length;
 
     return (
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="glass-card rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
+                <h3 className="text-lg font-semibold flex items-center gap-2 text-healthcare-dark dark:text-white">
                     <AlertTriangle className="w-5 h-5 text-red-600" />
                     Critical Medicines
                 </h3>

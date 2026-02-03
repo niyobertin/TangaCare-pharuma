@@ -26,6 +26,11 @@ import {
     type InventoryData,
     type TrendData,
 } from '../../components/dashboard/DashboardCharts';
+import {
+    StatCardSkeleton,
+    ChartSkeleton,
+    TableSkeleton,
+} from '../../components/dashboard/DashboardSkeletons';
 import { AdvancedKPICards } from '../../components/pharmacy/AdvancedKPICards';
 import { CriticalMedicinesPanel } from '../../components/pharmacy/CriticalMedicinesPanel';
 import { ExpiryHeatMap } from '../../components/pharmacy/ExpiryHeatMap';
@@ -146,7 +151,7 @@ export function DashboardPage() {
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h2 className="text-xl font-black text-healthcare-dark tracking-tight">
+                        <h2 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
                             Pharmacy{' '}
                             <span className="text-healthcare-primary">Analytics Command</span>
                         </h2>
@@ -184,56 +189,61 @@ export function DashboardPage() {
                 <AdvancedKPICards />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                    <StatCard
-                        title="Medicines in Stock"
-                        value={
-                            loadingStats
-                                ? '—'
-                                : medicinesInStock.toLocaleString?.() || medicinesInStock
-                        }
-                        color="bg-healthcare-primary"
-                        icon={<Package size={18} />}
-                        onClick={() => navigate({ to: '/app/inventory' })}
-                    />
-                    <StatCard
-                        title="Low Stock Warning"
-                        value={loadingStats ? '—' : String(lowStockWarning)}
-                        color="bg-amber-500"
-                        icon={<AlertTriangle size={18} />}
-                        onClick={() => navigate({ to: '/app/alerts' })}
-                    />
-                    <StatCard
-                        title="Expiring Soon"
-                        value={loadingStats ? '—' : String(expiringSoon)}
-                        color="bg-red-500"
-                        icon={<Clock size={18} />}
-                        onClick={() => navigate({ to: '/app/alerts' })}
-                    />
-                    <StatCard
-                        title="Total Daily Sales"
-                        value={loadingStats ? '—' : dailySales}
-                        color="bg-healthcare-secondary"
-                        icon={<TrendingUp size={18} />}
-                        onClick={() => navigate({ to: '/app/analytics' })}
-                    />
-                    <StatCard
-                        title="Total All-Time Sales"
-                        value={loadingStats ? '—' : totalSalesAllTime}
-                        color="bg-blue-600"
-                        icon={<TrendingUp size={18} />}
-                        onClick={() => navigate({ to: '/app/analytics' })}
-                    />
-                    <StatCard
-                        title="Total Inventory Value"
-                        value={
-                            loadingStats
-                                ? '—'
-                                : `RWF ${stats?.totalInventoryValue?.toLocaleString() || '0'}`
-                        }
-                        color="bg-emerald-600"
-                        icon={<ShieldCheck size={18} />}
-                        onClick={() => navigate({ to: '/app/inventory' })}
-                    />
+                    {loadingStats ? (
+                        <>
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                        </>
+                    ) : (
+                        <>
+                            <StatCard
+                                title="Medicines in Stock"
+                                value={medicinesInStock.toLocaleString?.() || medicinesInStock}
+                                color="bg-healthcare-primary"
+                                icon={<Package size={18} />}
+                                onClick={() => navigate({ to: '/app/inventory' })}
+                            />
+                            <StatCard
+                                title="Low Stock Warning"
+                                value={String(lowStockWarning)}
+                                color="bg-amber-500"
+                                icon={<AlertTriangle size={18} />}
+                                onClick={() => navigate({ to: '/app/alerts' })}
+                            />
+                            <StatCard
+                                title="Expiring Soon"
+                                value={String(expiringSoon)}
+                                color="bg-red-500"
+                                icon={<Clock size={18} />}
+                                onClick={() => navigate({ to: '/app/alerts' })}
+                            />
+                            <StatCard
+                                title="Total Daily Sales"
+                                value={dailySales}
+                                color="bg-healthcare-secondary"
+                                icon={<TrendingUp size={18} />}
+                                onClick={() => navigate({ to: '/app/analytics' })}
+                            />
+                            <StatCard
+                                title="Total All-Time Sales"
+                                value={totalSalesAllTime}
+                                color="bg-blue-600"
+                                icon={<TrendingUp size={18} />}
+                                onClick={() => navigate({ to: '/app/analytics' })}
+                            />
+                            <StatCard
+                                title="Total Inventory Value"
+                                value={`RWF ${stats?.totalInventoryValue?.toLocaleString() || '0'}`}
+                                color="bg-emerald-600"
+                                icon={<ShieldCheck size={18} />}
+                                onClick={() => navigate({ to: '/app/inventory' })}
+                            />
+                        </>
+                    )}
                 </div>
 
                 {/* Operational Intelligence Section */}
@@ -245,39 +255,43 @@ export function DashboardPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-base font-black text-healthcare-dark flex items-center gap-2">
+                            <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                                 <Package size={18} className="text-healthcare-primary" />
                                 Inventory Status
                             </h3>
                         </div>
-                        {inventoryStatus ? (
+                        {loadingStats ? (
+                            <ChartSkeleton />
+                        ) : inventoryStatus ? (
                             <div className="h-[300px]">
                                 <InventoryStatusChart data={inventoryStatus.by_category} />
                             </div>
                         ) : (
                             <div className="h-[300px] flex items-center justify-center text-slate-400">
-                                Loading Inventory...
+                                No Data
                             </div>
                         )}
                     </div>
 
-                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-base font-black text-healthcare-dark flex items-center gap-2">
+                            <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                                 <TrendingUp size={18} className="text-healthcare-primary" />
                                 Consumption Trends
                             </h3>
                         </div>
-                        {consumptionTrends?.daily_trends &&
-                        consumptionTrends.daily_trends.length > 0 ? (
+                        {loadingStats ? (
+                            <ChartSkeleton />
+                        ) : consumptionTrends?.daily_trends &&
+                          consumptionTrends.daily_trends.length > 0 ? (
                             <div className="h-[300px]">
                                 <ConsumptionTrendChart data={consumptionTrends.daily_trends} />
                             </div>
                         ) : (
                             <div className="h-[300px] flex items-center justify-center text-slate-400">
-                                Loading Trends...
+                                No Data
                             </div>
                         )}
                     </div>
@@ -285,20 +299,22 @@ export function DashboardPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <CriticalMedicinesPanel />
-                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-base font-black text-healthcare-dark flex items-center gap-2">
+                            <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                                 <AlertTriangle size={18} className="text-red-500" />
                                 Expiry Risk Analysis
                             </h3>
                         </div>
-                        {expiryRisk ? (
+                        {loadingStats ? (
+                            <ChartSkeleton />
+                        ) : expiryRisk ? (
                             <div className="h-[300px]">
                                 <ExpiryRiskChart data={expiryRisk} />
                             </div>
                         ) : (
                             <div className="h-[300px] flex items-center justify-center text-slate-400">
-                                Loading Risk Data...
+                                No Data
                             </div>
                         )}
                     </div>
@@ -306,10 +322,10 @@ export function DashboardPage() {
 
                 <ExpiryHeatMap />
 
-                <div className="glass-card rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md">
+                <div className="glass-card rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 shadow-md">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <h3 className="text-base font-black text-healthcare-dark">
+                            <h3 className="text-base font-black text-healthcare-dark dark:text-white">
                                 Recent Medicine Sales
                             </h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
@@ -339,11 +355,23 @@ export function DashboardPage() {
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[13px] font-medium">
                                 {loadingTransactions ? (
                                     <tr>
-                                        <td
-                                            colSpan={7}
-                                            className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 text-sm"
-                                        >
-                                            Loading…
+                                        <td colSpan={7} className="p-0 border-none">
+                                            <div className="p-6">
+                                                <div className="space-y-4">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="flex gap-4 animate-pulse"
+                                                        >
+                                                            <div className="h-4 w-16 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                            <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                            <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                            <div className="h-4 w-12 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                            <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : transactions.length === 0 ? (
@@ -397,7 +425,7 @@ function StatCard({ title, value, color, icon, onClick, subtitle }: StatCardProp
     return (
         <div
             onClick={onClick}
-            className="glass-card p-4 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 group transition-all duration-300 shadow-sm relative overflow-hidden cursor-pointer border-2 hover:border-healthcare-primary/30 hover:scale-[1.02]"
+            className="glass-card p-4 rounded-2xl border-slate-200 dark:border-slate-800 group transition-all duration-300 shadow-sm relative overflow-hidden cursor-pointer border-2 hover:border-healthcare-primary/30 hover:scale-[1.02]"
         >
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-3">
@@ -413,7 +441,7 @@ function StatCard({ title, value, color, icon, onClick, subtitle }: StatCardProp
                 <h3 className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-1.5 truncate">
                     {title}
                 </h3>
-                <p className="text-lg font-black text-healthcare-dark leading-none tracking-tight">
+                <p className="text-lg font-black text-healthcare-dark dark:text-white leading-none tracking-tight">
                     {value}
                 </p>
                 {subtitle && (
@@ -458,7 +486,7 @@ function TableRow({
             </td>
             <td className="px-6 py-4">
                 <div className="flex flex-col">
-                    <span className="font-black text-healthcare-dark text-[13px] leading-tight">
+                    <span className="font-black text-healthcare-dark dark:text-white text-[13px] leading-tight">
                         {name}
                     </span>
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mt-0.5">

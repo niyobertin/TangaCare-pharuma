@@ -78,7 +78,7 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                 {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <div>
-                        <h2 className="text-xl font-black text-healthcare-dark flex items-center gap-2">
+                        <h2 className="text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                             <CheckCircle size={20} className="text-healthcare-primary" />
                             Receive Order #{order.order_number}
                         </h2>
@@ -98,7 +98,7 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                     <form id="receive-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                         <div className="border rounded-xl overflow-hidden">
                             <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-50 text-xs uppercase font-bold text-slate-500">
+                                <thead className="bg-slate-50 dark:bg-slate-800 text-xs uppercase font-bold text-slate-500 dark:text-slate-400">
                                     <tr>
                                         <th className="px-4 py-3">Item</th>
                                         <th className="px-4 py-3">Ordered Qty</th>
@@ -115,15 +115,15 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                                         return (
                                             <tr
                                                 key={field.id}
-                                                className="group hover:bg-slate-50/50"
+                                                className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50"
                                             >
-                                                <td className="p-4 font-medium text-slate-700">
+                                                <td className="p-4 font-medium text-slate-700 dark:text-white">
                                                     {originalItem?.medicine?.name}
                                                     <span className="block text-xs text-slate-400 font-normal">
                                                         {originalItem?.medicine?.strength}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 font-bold text-slate-600">
+                                                <td className="p-4 font-bold text-slate-600 dark:text-slate-300">
                                                     {originalItem?.quantity_ordered}
                                                 </td>
                                                 <td className="p-2">
@@ -132,7 +132,7 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                                                         {...register(
                                                             `items.${index}.quantity_received`,
                                                         )}
-                                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 bg-white"
+                                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
                                                     />
                                                     {errors.items?.[index]?.quantity_received && (
                                                         <p className="text-red-500 text-[10px]">
@@ -154,7 +154,7 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                                                             {...register(
                                                                 `items.${index}.batch_number`,
                                                             )}
-                                                            className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 bg-white uppercase font-mono text-xs"
+                                                            className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 uppercase font-mono text-xs"
                                                             placeholder="BATCH-001"
                                                         />
                                                     </div>
@@ -174,7 +174,7 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                                                             {...register(
                                                                 `items.${index}.expiry_date`,
                                                             )}
-                                                            className="w-full pl-3 pr-2 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 bg-white text-xs"
+                                                            className="w-full pl-3 pr-2 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 text-xs"
                                                         />
                                                     </div>
                                                     {errors.items?.[index]?.expiry_date && (
@@ -198,7 +198,7 @@ export function ReceiveOrderModal({ order, onClose, onSuccess }: ReceiveOrderMod
                 <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+                        className="px-6 py-2 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     >
                         Cancel
                     </button>

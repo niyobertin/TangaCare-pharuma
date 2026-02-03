@@ -25,6 +25,7 @@ import { SetPasswordPage } from '../pages/auth/SetPasswordPage';
 import { z } from 'zod';
 import { RequirePermission } from '../components/auth/RequirePermission';
 import { PERMISSIONS } from '../types/auth';
+import { GlobalLoading } from '../components/ui/GlobalLoading';
 
 const RootComponent = () => {
     return (
@@ -408,7 +409,10 @@ const routeTree = rootRoute.addChildren([
     authRouteTree,
 ]);
 
-export const router = createRouter({ routeTree });
+export const router = createRouter({
+    routeTree,
+    defaultPendingComponent: GlobalLoading,
+});
 
 declare module '@tanstack/react-router' {
     interface Register {

@@ -63,7 +63,9 @@ const ImportPreviewModal = ({
             <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
                 <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                     <div>
-                        <h3 className="text-xl font-black text-healthcare-dark">Import Preview</h3>
+                        <h3 className="text-xl font-black text-healthcare-dark dark:text-white">
+                            Import Preview
+                        </h3>
                         <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
                             Review items before creating Purchase Order
                         </p>
@@ -103,7 +105,7 @@ const ImportPreviewModal = ({
                                     key={idx}
                                     className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                                 >
-                                    <td className="py-4 font-bold text-healthcare-dark text-sm">
+                                    <td className="py-4 font-bold text-healthcare-dark dark:text-white text-sm">
                                         {item.medicine_name}
                                     </td>
                                     <td className="py-4 text-center">
@@ -111,7 +113,7 @@ const ImportPreviewModal = ({
                                             {item.medicine_code}
                                         </span>
                                     </td>
-                                    <td className="py-4 text-center text-sm font-black text-healthcare-dark">
+                                    <td className="py-4 text-center text-sm font-black text-healthcare-dark dark:text-white">
                                         {item.quantity_ordered}
                                     </td>
                                     <td className="py-4 text-right text-sm font-bold text-slate-500">
@@ -132,7 +134,7 @@ const ImportPreviewModal = ({
                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
                                 Total Items
                             </p>
-                            <p className="text-lg font-black text-healthcare-dark">
+                            <p className="text-lg font-black text-healthcare-dark dark:text-white">
                                 {items.length}
                             </p>
                         </div>
@@ -253,7 +255,7 @@ const SuppliersTab = () => {
                         placeholder="Search by supplier name or contact..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:bg-white focus:border-healthcare-primary rounded-xl text-sm font-bold transition-all outline-none"
+                        className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:bg-white focus:border-healthcare-primary rounded-xl text-sm font-bold text-slate-900 dark:text-white transition-all outline-none"
                     />
                 </div>
                 <div className="flex items-center gap-3">
@@ -266,7 +268,7 @@ const SuppliersTab = () => {
                             setLimit(Number(e.target.value));
                             setPage(1);
                         }}
-                        className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1 text-[10px] font-black text-healthcare-dark focus:outline-none focus:border-healthcare-primary"
+                        className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1 text-[10px] font-black text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary"
                     >
                         {[10, 25, 50, 100].map((l) => (
                             <option key={l} value={l}>
@@ -277,7 +279,7 @@ const SuppliersTab = () => {
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value as any)}
-                        className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest text-healthcare-dark focus:outline-none focus:border-healthcare-primary transition-all"
+                        className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
                     >
                         <option value="all">All Status</option>
                         <option value="active">Active Partners</option>
@@ -338,7 +340,7 @@ const SuppliersTab = () => {
                                         <td className="px-6 py-4 font-bold text-slate-400">
                                             #{supplier.id.toString().padStart(3, '0')}
                                         </td>
-                                        <td className="px-6 py-4 font-black text-healthcare-dark">
+                                        <td className="px-6 py-4 font-black text-healthcare-dark dark:text-white">
                                             {supplier.name}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -686,14 +688,14 @@ export function ProcurementPage() {
             value: orders.filter((o) => o.status === 'PENDING').length,
             icon: Clock,
             color: 'text-amber-500',
-            bg: 'bg-amber-50',
+            bg: 'bg-amber-50 dark:bg-amber-900/20',
         },
         {
             label: 'Active Orders',
             value: orders.filter((o) => o.status === 'ORDERED').length,
             icon: Truck,
             color: 'text-blue-500',
-            bg: 'bg-blue-50',
+            bg: 'bg-blue-50 dark:bg-blue-900/20',
         },
         {
             label: 'Total Value',
@@ -703,14 +705,14 @@ export function ProcurementPage() {
                 'M',
             icon: ShoppingCart,
             color: 'text-teal-500',
-            bg: 'bg-teal-50',
+            bg: 'bg-teal-50 dark:bg-teal-900/20',
         },
         {
             label: 'Total Orders',
             value: totalItems,
             icon: FileText,
             color: 'text-rose-500',
-            bg: 'bg-rose-50',
+            bg: 'bg-rose-50 dark:bg-rose-900/20',
         },
     ];
 
@@ -733,7 +735,7 @@ export function ProcurementPage() {
                 {}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
-                        <h2 className="text-2xl font-black text-healthcare-dark tracking-tight">
+                        <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
                             Procurement & Orders
                         </h2>
                         <div className="flex items-center gap-1 mt-1">
@@ -767,7 +769,7 @@ export function ProcurementPage() {
                                 <select
                                     value={selectedSupplierId || ''}
                                     onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
-                                    className="px-4 py-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold focus:outline-none focus:border-healthcare-primary h-[42px]"
+                                    className="px-4 py-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-healthcare-primary h-[42px]"
                                 >
                                     <option value="">Select Supplier to Import</option>
                                     {suppliers.map((s) => (
@@ -833,7 +835,7 @@ export function ProcurementPage() {
                                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
                                                 {stat.label}
                                             </p>
-                                            <p className="text-xl font-black text-healthcare-dark">
+                                            <p className="text-xl font-black text-healthcare-dark dark:text-white">
                                                 {stat.value}
                                             </p>
                                         </div>
@@ -855,7 +857,7 @@ export function ProcurementPage() {
                                         placeholder="Search PO#, Supplier..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-xs font-bold transition-all outline-none"
+                                        className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-xs font-bold text-slate-900 dark:text-white transition-all outline-none"
                                     />
                                 </div>
 
@@ -870,7 +872,7 @@ export function ProcurementPage() {
                                                 setStatusFilter(e.target.value);
                                                 setPage(1);
                                             }}
-                                            className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest text-healthcare-dark focus:outline-none focus:border-healthcare-primary transition-all"
+                                            className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
                                         >
                                             <option value="All">All Status</option>
                                             <option value="Draft">Draft</option>
@@ -892,7 +894,7 @@ export function ProcurementPage() {
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
-                                                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase transition-all outline-none"
+                                                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
                                             />
                                         </div>
                                         <span className="text-slate-400 font-black text-[10px]">
@@ -907,7 +909,7 @@ export function ProcurementPage() {
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.target.value)}
-                                                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase transition-all outline-none"
+                                                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
                                             />
                                         </div>
                                     </div>
@@ -966,7 +968,7 @@ export function ProcurementPage() {
                                                 >
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col">
-                                                            <span className="font-black text-healthcare-dark text-sm leading-tight">
+                                                            <span className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
                                                                 PO-
                                                                 {order.id
                                                                     .toString()
@@ -986,14 +988,14 @@ export function ProcurementPage() {
                                                             <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-slate-800 text-healthcare-primary border border-teal-100 dark:border-slate-700">
                                                                 <Truck size={14} />
                                                             </div>
-                                                            <span className="text-xs font-bold text-healthcare-dark">
+                                                            <span className="text-xs font-bold text-healthcare-dark dark:text-white">
                                                                 {order.supplier?.name ||
                                                                     'Unknown Supplier'}
                                                             </span>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <span className="text-sm font-black text-healthcare-dark">
+                                                        <span className="text-sm font-black text-healthcare-dark dark:text-white">
                                                             RWF{' '}
                                                             {order.total_amount.toLocaleString()}
                                                         </span>
