@@ -60,8 +60,23 @@ export const pharmacyService = {
         return (response.data as any).data ?? (response.data as any);
     },
 
-    async getTopSellingMedicines(): Promise<{ name: string; value: number }[]> {
-        const response = await api.get('/pharmacy/top-selling');
+    async getTopSellingMedicines(order: 'ASC' | 'DESC' = 'DESC'): Promise<{ name: string; value: number }[]> {
+        const response = await api.get('/pharmacy/top-selling', { params: { order } });
+        return (response.data as any).data ?? (response.data as any);
+    },
+
+    async getInventoryStatus(): Promise<any> {
+        const response = await api.get('/pharmacy/inventory-status');
+        return (response.data as any).data ?? (response.data as any);
+    },
+
+    async getConsumptionTrends(days: number = 30): Promise<any> {
+        const response = await api.get('/pharmacy/consumption-trends', { params: { days } });
+        return (response.data as any).data ?? (response.data as any);
+    },
+
+    async getExpiryRisk(days: number = 90): Promise<any> {
+        const response = await api.get('/pharmacy/expiry-risk', { params: { days } });
         return (response.data as any).data ?? (response.data as any);
     },
 

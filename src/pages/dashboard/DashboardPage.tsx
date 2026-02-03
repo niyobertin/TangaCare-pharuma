@@ -11,18 +11,17 @@ import {
     Zap,
     Stethoscope,
     ShieldCheck,
-    Pill,
     ArrowUpRight,
     ArrowDownRight,
-    ChevronRight,
     MoreVertical,
     Download,
     Filter,
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { useNavigate } from '@tanstack/react-router';
+import { InventoryStatusChart, ConsumptionTrendChart, ExpiryRiskChart, InventoryValuePieChart } from '../../components/dashboard/DashboardCharts';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -50,7 +49,22 @@ export function DashboardPage() {
     const [loadingTransactions, setLoadingTransactions] = useState(false);
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [topMedicines, setTopMedicines] = useState<{ name: string; value: number }[]>([]);
+    const [medicinesSortOrder, setMedicinesSortOrder] = useState<'ASC' | 'DESC'>('DESC');
+
+    // New Data States
+    const [inventoryStatus, setInventoryStatus] = useState<any>(null);
+    const [consumptionTrends, setConsumptionTrends] = useState<any>(null);
+    const [expiryRisk, setExpiryRisk] = useState<any>(null);
     const navigate = useNavigate();
+
+    const fetchTopMedicines = async (order: 'ASC' | 'DESC') => {
+        try {
+            const data = await pharmacyService.getTopSellingMedicines(order);
+            setTopMedicines(data);
+        } catch (error) {
+            console.error('Failed to fetch medicines ranking:', error);
+        }
+    };
 
     useEffect(() => {
         let mounted = true;
@@ -59,6 +73,9 @@ export function DashboardPage() {
             try {
                 const data = await pharmacyService.getDashboardStats();
                 if (mounted) setStats(data);
+
+                // Initial fetch for medicines
+                await fetchTopMedicines(medicinesSortOrder);
             } catch (e) {
                 if (mounted) setStats(null);
             } finally {
@@ -111,6 +128,24 @@ export function DashboardPage() {
             }
         };
         loadTopMedicines();
+
+        const loadAdvancedStats = async () => {
+            try {
+                const [invStatus, trends, risk] = await Promise.all([
+                    pharmacyService.getInventoryStatus(),
+                    pharmacyService.getConsumptionTrends(30),
+                    pharmacyService.getExpiryRisk(90)
+                ]);
+                if (mounted) {
+                    setInventoryStatus(invStatus);
+                    setConsumptionTrends(trends);
+                    setExpiryRisk(risk);
+                }
+            } catch (e) {
+                console.error("Failed to load advanced dashboard stats", e);
+            }
+        };
+        loadAdvancedStats();
 
         return () => {
             mounted = false;
@@ -173,7 +208,7 @@ export function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                     <StatCard
                         title="Medicines in Stock"
                         value={
@@ -214,219 +249,248 @@ export function DashboardPage() {
                         icon={<TrendingUp size={20} />}
                         onClick={() => navigate({ to: '/app/analytics' })}
                     />
+                    <StatCard
+                        title="Total Inventory Value"
+                        value={
+                            loadingStats
+                                ? '—'
+                                : `RWF ${stats?.totalInventoryValue?.toLocaleString() || '0'}`
+                        }
+                        trend="0%"
+                        isPositive={true}
+                        color="bg-emerald-600"
+                        icon={<ShieldCheck size={20} />}
+                        onClick={() => navigate({ to: '/app/inventory' })}
+                    />
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 relative overflow-hidden shadow-sm">
-                            <div className="flex justify-between items-center mb-8">
-                                <div>
-                                    <h3 className="text-base font-black text-healthcare-dark">
-                                        Medicine Demand Trend
-                                    </h3>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
-                                        Daily dispensing patterns
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="w-full h-[250px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart
-                                        data={
-                                            stats?.dailySalesChart && stats.dailySalesChart.length > 0
-                                                ? stats.dailySalesChart
-                                                : Array.from({ length: 7 }, (_, i) => {
-                                                    const d = new Date();
-                                                    d.setDate(d.getDate() - (6 - i));
-                                                    return {
-                                                        date: d.toISOString().split('T')[0],
-                                                        sales: 0,
-                                                    };
-                                                })
-                                        }
-                                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                                    >
-                                        <defs>
-                                            <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#0d9488" stopOpacity={0.1} />
-                                                <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                                        <XAxis
-                                            dataKey="date"
-                                            tickFormatter={(val) => new Date(val).toLocaleDateString('en-US', { weekday: 'short' })}
-                                            tick={{ fontSize: 10, fill: '#64748B', fontWeight: 'bold' }}
-                                            axisLine={false}
-                                            tickLine={false}
-                                        />
-                                        <YAxis
-                                            hide={true}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                            cursor={{ stroke: '#0d9488', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="sales"
-                                            stroke="#0d9488"
-                                            strokeWidth={3}
-                                            fillOpacity={1}
-                                            fill="url(#colorSales)"
-                                        />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <SummaryFeature
-                                icon={<Stethoscope size={18} className="text-blue-600" />}
-                                title="Pharmacy Staff"
-                                value={
-                                    loadingStats
-                                        ? '—'
-                                        : typeof stats?.staffCount === 'number'
-                                            ? `${stats.staffCount} staff in scope`
-                                            : '—'
-                                }
-                                description="Users in facility or organization"
-                                color="bg-blue-50 dark:bg-blue-900"
-                                onClick={() => navigate({ to: '/app/users' })}
-                            />
-                            <SummaryFeature
-                                icon={<ShieldCheck size={18} className="text-healthcare-accent" />}
-                                title="System Compliance"
-                                value={
-                                    loadingStats
-                                        ? '—'
-                                        : (stats?.activeAlertsCount ?? 0) === 0
-                                            ? '100% Optimized'
-                                            : `${Math.max(0, 100 - (stats?.activeAlertsCount ?? 0) * 2)}% attention`
-                                }
-                                description={
-                                    (stats?.activeAlertsCount ?? 0) === 0
-                                        ? 'All regulatory checks passed'
-                                        : `${stats?.activeAlertsCount} active alert(s)`
-                                }
-                                color={
-                                    (stats?.activeAlertsCount ?? 0) === 0
-                                        ? 'bg-emerald-50 dark:bg-emerald-900'
-                                        : 'bg-amber-50 dark:bg-amber-900'
-                                }
-                                onClick={() => navigate({ to: '/app/audit-logs' })}
-                            />
+                {/* Row 2: Full Width Consumption Trends */}
+                <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 relative overflow-hidden shadow-sm w-full">
+                    <div className="flex justify-between items-center mb-8">
+                        <div>
+                            <h3 className="text-base font-black text-healthcare-dark">
+                                Consumption Trends (30 Days)
+                            </h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
+                                Daily dispensing patterns
+                            </p>
                         </div>
                     </div>
-                    <div className="space-y-6">
-                        <div
-                            className="glass-card p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm min-h-[300px] flex flex-col cursor-pointer hover:border-healthcare-primary/30 transition-colors"
-                            onClick={() => navigate({ to: '/app/analytics' })}
-                        >
-                            <h3 className="font-black text-sm text-healthcare-dark mb-5 flex items-center gap-2">
-                                <Zap size={16} className="text-amber-500 fill-amber-500" /> Most Sold Medicines
-                            </h3>
-                            {topMedicines.length === 0 ? (
-                                <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">
-                                    No data available
-                                </div>
+                    <div className="w-full h-[350px]">
+                        {consumptionTrends?.daily_trends && consumptionTrends.daily_trends.length > 0 ? (
+                            <ConsumptionTrendChart data={consumptionTrends.daily_trends} />
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-slate-400 text-xs">
+                                No trend data available for this period.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Row 3: Alerts & Compliance Features */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="glass-card p-5 rounded-2xl border-2 border-red-100 dark:border-red-900 bg-white dark:bg-slate-900 shadow-sm cursor-pointer hover:border-red-300 transition-colors"
+                        onClick={() => navigate({ to: '/app/alerts' })}
+                    >
+                        <h3 className="font-black text-sm text-healthcare-dark mb-5">
+                            Critical Alerts
+                        </h3>
+                        <div className="space-y-4">
+                            {alerts.length === 0 ? (
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                    No active alerts.
+                                </p>
                             ) : (
-                                <div className="relative flex-1 w-full min-h-[300px] flex flex-col items-center justify-center">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={topMedicines}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius="60%"
-                                                outerRadius="80%"
-                                                fill="#8884d8"
-                                                paddingAngle={4}
-                                                dataKey="value"
-                                                stroke="none"
-                                            >
-                                                {topMedicines.map((_, index) => (
-                                                    <Cell
-                                                        key={`cell-${index}`}
-                                                        fill={COLORS[index % COLORS.length]}
-                                                        className="hover:opacity-80 transition-opacity cursor-pointer"
-                                                    />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip
-                                                cursor={{ fill: 'transparent' }}
-                                                content={({ active, payload }) => {
-                                                    if (active && payload && payload.length) {
-                                                        const data = payload[0].payload;
-                                                        const total = topMedicines.reduce((sum, item) => sum + item.value, 0);
-                                                        const percent = total > 0 ? ((data.value / total) * 100).toFixed(1) : '0';
-
-                                                        return (
-                                                            <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl border border-slate-100 dark:border-700 z-50">
-                                                                <p className="font-bold text-healthcare-dark mb-1">{data.name}</p>
-                                                                <div className="flex items-center gap-3 text-sm">
-                                                                    <span className="font-black text-healthcare-primary">{data.value} Units</span>
-                                                                    <span className="text-slate-400 font-medium">|</span>
-                                                                    <span className="font-bold text-slate-500">{percent}%</span>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    }
-                                                    return null;
-                                                }}
-                                            />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-
-                                    {/* Center Label for Total */}
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                        <span className="text-4xl font-black text-healthcare-dark tracking-tight">
-                                            {topMedicines.reduce((acc, curr) => acc + curr.value, 0)}
-                                        </span>
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                            Total Sold
-                                        </span>
-                                    </div>
-                                </div>
+                                alerts
+                                    .slice(0, 5)
+                                    .map((alert) => (
+                                        <AlertItem
+                                            key={alert.id}
+                                            type={
+                                                alert.type === 'expiry'
+                                                    ? 'expiry'
+                                                    : alert.type === 'low_stock'
+                                                        ? 'stock'
+                                                        : 'audit'
+                                            }
+                                            title={
+                                                alert.message.slice(0, 40) +
+                                                (alert.message.length > 40 ? '…' : '')
+                                            }
+                                            info={new Date(alert.created_at).toLocaleString()}
+                                            isUrgent={alert.status === 'active'}
+                                        />
+                                    ))
                             )}
                         </div>
-                        <div className="glass-card p-5 rounded-2xl border-2 border-red-100 dark:border-red-900 bg-white dark:bg-slate-900 shadow-sm cursor-pointer hover:border-red-300 transition-colors"
-                            onClick={() => navigate({ to: '/app/alerts' })}
-                        >
-                            <h3 className="font-black text-sm text-healthcare-dark mb-5">
-                                Critical Alerts
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+                        <SummaryFeature
+                            icon={<Stethoscope size={18} className="text-blue-600" />}
+                            title="Pharmacy Staff"
+                            value={
+                                loadingStats
+                                    ? '—'
+                                    : typeof stats?.staffCount === 'number'
+                                        ? `${stats.staffCount} staff in scope`
+                                        : '—'
+                            }
+                            description="Users in facility or organization"
+                            color="bg-blue-50 dark:bg-blue-900"
+                            onClick={() => navigate({ to: '/app/users' })}
+                        />
+                        <SummaryFeature
+                            icon={<ShieldCheck size={18} className="text-healthcare-accent" />}
+                            title="System Compliance"
+                            value={
+                                loadingStats
+                                    ? '—'
+                                    : (stats?.activeAlertsCount ?? 0) === 0
+                                        ? '100% Optimized'
+                                        : `${Math.max(0, 100 - (stats?.activeAlertsCount ?? 0) * 2)}% attention`
+                            }
+                            description={
+                                (stats?.activeAlertsCount ?? 0) === 0
+                                    ? 'All regulatory checks passed'
+                                    : `${stats?.activeAlertsCount} active alert(s)`
+                            }
+                            color={
+                                (stats?.activeAlertsCount ?? 0) === 0
+                                    ? 'bg-emerald-50 dark:bg-emerald-900'
+                                    : 'bg-amber-50 dark:bg-amber-900'
+                            }
+                            onClick={() => navigate({ to: '/app/audit-logs' })}
+                        />
+                    </div>
+                </div>
+
+                {/* Advanced Analytics Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                        <h3 className="text-base font-black text-healthcare-dark mb-4">Inventory Status</h3>
+                        {inventoryStatus ? (
+                            <InventoryStatusChart data={inventoryStatus.by_category} />
+                        ) : (
+                            <div className="h-[300px] flex items-center justify-center text-slate-400">Loading Inventory...</div>
+                        )}
+                    </div>
+
+                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                        <h3 className="text-base font-black text-healthcare-dark mb-4">Expiry Risk Overview</h3>
+                        {expiryRisk ? (
+                            <ExpiryRiskChart data={expiryRisk} />
+                        ) : (
+                            <div className="h-[300px] flex items-center justify-center text-slate-400">Loading Risk Data...</div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div
+                        className="glass-card p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm min-h-[400px] flex flex-col cursor-pointer hover:border-healthcare-primary/30 transition-colors"
+                        onClick={() => navigate({ to: '/app/analytics' })}
+                    >
+                        <div className="flex items-center justify-between mb-5">
+                            <h3 className="font-black text-sm text-healthcare-dark flex items-center gap-2">
+                                <Zap size={16} className={`text-${medicinesSortOrder === 'DESC' ? 'amber' : 'red'}-500 fill-${medicinesSortOrder === 'DESC' ? 'amber' : 'red'}-500`} />
+                                {medicinesSortOrder === 'DESC' ? 'Most' : 'Least'} Sold Medicines
                             </h3>
-                            <div className="space-y-4">
-                                {alerts.length === 0 ? (
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                        No active alerts.
-                                    </p>
-                                ) : (
-                                    alerts
-                                        .slice(0, 5)
-                                        .map((alert) => (
-                                            <AlertItem
-                                                key={alert.id}
-                                                type={
-                                                    alert.type === 'expiry'
-                                                        ? 'expiry'
-                                                        : alert.type === 'low_stock'
-                                                            ? 'stock'
-                                                            : 'audit'
-                                                }
-                                                title={
-                                                    alert.message.slice(0, 40) +
-                                                    (alert.message.length > 40 ? '…' : '')
-                                                }
-                                                info={new Date(alert.created_at).toLocaleString()}
-                                                isUrgent={alert.status === 'active'}
-                                            />
-                                        ))
-                                )}
+                            <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                    onClick={() => {
+                                        setMedicinesSortOrder('DESC');
+                                        fetchTopMedicines('DESC');
+                                    }}
+                                    className={cn(
+                                        "px-2 py-1 text-xs font-semibold rounded-md transition-all",
+                                        medicinesSortOrder === 'DESC'
+                                            ? "bg-white dark:bg-slate-700 text-healthcare-primary shadow-sm"
+                                            : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                    )}
+                                >
+                                    Most
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setMedicinesSortOrder('ASC');
+                                        fetchTopMedicines('ASC');
+                                    }}
+                                    className={cn(
+                                        "px-2 py-1 text-xs font-semibold rounded-md transition-all",
+                                        medicinesSortOrder === 'ASC'
+                                            ? "bg-white dark:bg-slate-700 text-healthcare-primary shadow-sm"
+                                            : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                    )}
+                                >
+                                    Least
+                                </button>
                             </div>
                         </div>
-                    </div >
-                </div >
+                        {topMedicines.length === 0 ? (
+                            <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">
+                                No data available
+                            </div>
+                        ) : (
+                            <div className="relative flex-1 w-full min-h-[300px] flex flex-col items-center justify-center">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={topMedicines}
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={100}
+                                            fill="#8884d8"
+                                            dataKey="value"
+                                            nameKey="name"
+                                            label={({ name, percent }: any) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                        >
+                                            {topMedicines.map((_, index) => (
+                                                <Cell
+                                                    key={`cell-${index}`}
+                                                    fill={COLORS[index % COLORS.length]}
+                                                    className="hover:opacity-80 transition-opacity cursor-pointer"
+                                                />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            cursor={{ fill: 'transparent' }}
+                                            content={({ active, payload }) => {
+                                                if (active && payload && payload.length) {
+                                                    const data = payload[0].payload;
+                                                    const total = topMedicines.reduce((sum, item) => sum + item.value, 0);
+                                                    const percent = total > 0 ? ((data.value / total) * 100).toFixed(1) : '0';
+
+                                                    return (
+                                                        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-xl border border-slate-100 dark:border-700 z-50">
+                                                            <p className="font-bold text-healthcare-dark mb-1">{data.name}</p>
+                                                            <div className="flex items-center gap-3 text-sm">
+                                                                <span className="font-black text-healthcare-primary">{data.value} Units</span>
+                                                                <span className="text-slate-400 font-medium">|</span>
+                                                                <span className="font-bold text-slate-500">{percent}%</span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            }}
+                                        />
+                                        <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col min-h-[400px]">
+                        <h3 className="text-base font-black text-healthcare-dark mb-4">Inventory Value Distribution</h3>
+                        {inventoryStatus ? (
+                            <InventoryValuePieChart data={inventoryStatus.by_category} />
+                        ) : (
+                            <div className="h-[300px] flex items-center justify-center text-slate-400">Loading Value Data...</div>
+                        )}
+                    </div>
+                </div>
 
                 <div className="glass-card rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

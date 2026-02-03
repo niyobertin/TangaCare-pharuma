@@ -19,6 +19,7 @@ export interface DashboardStats {
     dailySalesChart?: Array<{ date: string; sales: number }>;
 
     staffCount?: number;
+    totalInventoryValue?: number;
 
     activeAlertsCount?: number;
     trends: {
