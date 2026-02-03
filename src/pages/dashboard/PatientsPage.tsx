@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-    Plus,
-    Search,
-    User,
-    Phone,
-    MapPin,
-    Calendar,
-    History,
-    Edit,
-} from 'lucide-react';
+import { Plus, Search, User, Phone, MapPin, Calendar, History, Edit } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { CreatePatientModal } from '../../components/patients/CreatePatientModal';
 import { format } from 'date-fns';
@@ -60,18 +51,33 @@ export const PatientsPage: React.FC = () => {
                     <table className="w-full text-left border-collapse">
                         <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10 backdrop-blur-sm">
                             <tr>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">ID</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Customer</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Contact</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Location</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Joined</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    ID
+                                </th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Customer
+                                </th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Contact
+                                </th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Location
+                                </th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Joined
+                                </th>
+                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
+                                    Actions
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-12 text-center text-slate-400"
+                                    >
                                         Loading customers...
                                     </td>
                                 </tr>
@@ -84,40 +90,54 @@ export const PatientsPage: React.FC = () => {
                                             </div>
                                             <span className="font-medium">No customers found</span>
                                             <p className="text-xs text-slate-400 max-w-xs text-center">
-                                                Get started by adding a new customer record to the system.
+                                                Get started by adding a new customer record to the
+                                                system.
                                             </p>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
                                 patients.map((patient) => (
-                                    <tr key={patient.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+                                    <tr
+                                        key={patient.id}
+                                        className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group"
+                                    >
                                         <td className="px-6 py-4">
-                                            <span className="text-sm text-slate-500 font-mono">#{patient.id}</span>
+                                            <span className="text-sm text-slate-500 font-mono">
+                                                #{patient.id}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-healthcare-primary font-bold text-sm border border-healthcare-primary/10">
-                                                    {patient.first_name?.[0]}{patient.last_name?.[0]}
+                                                    {patient.first_name?.[0]}
+                                                    {patient.last_name?.[0]}
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-healthcare-dark text-sm">
                                                         {patient.first_name} {patient.last_name}
                                                     </p>
-                                                    <p className="text-xs text-slate-400">{patient.email || 'No email'}</p>
+                                                    <p className="text-xs text-slate-400">
+                                                        {patient.email || 'No email'}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                                                 <Phone size={14} className="text-slate-400" />
-                                                <span className="font-medium">{patient.phone_number}</span>
+                                                <span className="font-medium">
+                                                    {patient.phone_number}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                                                 <MapPin size={14} className="text-slate-400" />
-                                                <span className="truncate max-w-[150px]" title={patient.address || ''}>
+                                                <span
+                                                    className="truncate max-w-[150px]"
+                                                    title={patient.address || ''}
+                                                >
                                                     {patient.address || '—'}
                                                 </span>
                                             </div>
@@ -125,7 +145,14 @@ export const PatientsPage: React.FC = () => {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2 text-xs text-slate-500">
                                                 <Calendar size={14} className="text-slate-400" />
-                                                <span>{patient.created_at ? format(new Date(patient.created_at), 'MMM d, yyyy') : '—'}</span>
+                                                <span>
+                                                    {patient.created_at
+                                                        ? format(
+                                                              new Date(patient.created_at),
+                                                              'MMM d, yyyy',
+                                                          )
+                                                        : '—'}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">

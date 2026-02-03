@@ -74,6 +74,12 @@ const rootIndexRoute = createRoute({
     component: () => <Navigate to="/app" />,
 });
 
+const loginFallbackRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/login',
+    component: () => <Navigate to="/auth/login" />,
+});
+
 const authLayoutRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/auth',
@@ -395,7 +401,12 @@ const authRouteTree = authLayoutRoute.addChildren([
     setPasswordRoute,
 ]);
 
-const routeTree = rootRoute.addChildren([rootIndexRoute, appRouteTree, authRouteTree]);
+const routeTree = rootRoute.addChildren([
+    rootIndexRoute,
+    loginFallbackRoute,
+    appRouteTree,
+    authRouteTree,
+]);
 
 export const router = createRouter({ routeTree });
 

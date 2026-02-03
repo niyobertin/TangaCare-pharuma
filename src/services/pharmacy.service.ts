@@ -60,7 +60,9 @@ export const pharmacyService = {
         return (response.data as any).data ?? (response.data as any);
     },
 
-    async getTopSellingMedicines(order: 'ASC' | 'DESC' = 'DESC'): Promise<{ name: string; value: number }[]> {
+    async getTopSellingMedicines(
+        order: 'ASC' | 'DESC' = 'DESC',
+    ): Promise<{ name: string; value: number }[]> {
         const response = await api.get('/pharmacy/top-selling', { params: { order } });
         return (response.data as any).data ?? (response.data as any);
     },
@@ -584,7 +586,10 @@ export const pharmacyService = {
     },
 
     async updatePatient(id: number, data: any): Promise<import('../types/auth').User> {
-        const response = await api.put<{ data: import('../types/auth').User }>(`/users/${id}`, data);
+        const response = await api.put<{ data: import('../types/auth').User }>(
+            `/users/${id}`,
+            data,
+        );
         return (response.data as any).data ?? response.data;
     },
 
@@ -599,5 +604,79 @@ export const pharmacyService = {
         document.body.appendChild(link);
         link.click();
         link.remove();
+    },
+
+    // Advanced Analytics Methods
+    async getAdvancedKPIs(): Promise<import('../types/pharmacy').AdvancedKPIs> {
+        const response = await api.get<{ data: import('../types/pharmacy').AdvancedKPIs }>(
+            '/pharmacy/analytics/kpis',
+        );
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getCriticalMedicines(): Promise<{
+        medicines: import('../types/pharmacy').CriticalMedicine[];
+    }> {
+        const response = await api.get<any>('/pharmacy/analytics/critical-medicines');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getExpiryHeatMap(params: {
+        start: string;
+        end: string;
+    }): Promise<import('../types/pharmacy').ExpiryHeatMapData> {
+        const response = await api.get<any>('/pharmacy/analytics/expiry-heatmap', { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getFEFOCompliance(
+        days?: number,
+    ): Promise<import('../types/pharmacy').FEFOComplianceData> {
+        const response = await api.get<any>('/pharmacy/analytics/fefo-compliance', {
+            params: { days },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getABCAnalysis(period?: number): Promise<import('../types/pharmacy').ABCAnalysisData> {
+        const response = await api.get<any>('/pharmacy/analytics/abc-analysis', {
+            params: { period },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getMultiLocationComparison(
+        metric: string,
+    ): Promise<import('../types/pharmacy').MultiLocationData> {
+        const response = await api.get<any>('/pharmacy/analytics/multi-location', {
+            params: { metric },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getOverstockReport(): Promise<import('../types/pharmacy').OverstockData> {
+        const response = await api.get<any>('/pharmacy/analytics/overstock');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async recalculateConsumption(
+        days?: number,
+    ): Promise<{ updated_count: number; results: any[] }> {
+        const response = await api.post<any>('/pharmacy/analytics/recalculate-consumption', {
+            days,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getReorderSuggestions(): Promise<{
+        suggestions: import('../types/pharmacy').ReorderSuggestion[];
+    }> {
+        const response = await api.get<any>('/pharmacy/analytics/reorder-suggestions');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getSupplierPerformance(): Promise<import('../types/pharmacy').SupplierPerformanceItem[]> {
+        const response = await api.get<any>('/pharmacy/analytics/supplier-performance');
+        return (response.data as any).data ?? response.data;
     },
 };

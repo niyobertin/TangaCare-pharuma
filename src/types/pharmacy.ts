@@ -15,6 +15,7 @@ export interface DashboardStats {
     lowStockWarning: number;
     expiringSoon: number;
     dailySales: string;
+    totalSalesAllTime?: number;
 
     dailySalesChart?: Array<{ date: string; sales: number }>;
 
@@ -276,13 +277,126 @@ export interface CreateSaleDto {
     vat_rate?: number;
     items: Array<{
         medicine_id: number;
-        batch_id?: number;
+        batch_id: number;
         quantity: number;
         unit_price: number;
     }>;
-    payments?: Array<{
+    payments: Array<{
         method: SalePaymentMethod;
         amount: number;
         reference?: string;
     }>;
+}
+
+// Advanced Analytics Types
+export interface AdvancedKPIs {
+    inventory_turnover: {
+        ratio: number;
+        period: string;
+        target: number;
+    };
+    days_on_hand: {
+        average: number;
+        critical_items: number;
+        target: number;
+    };
+    inventory_accuracy: {
+        rate: number;
+        last_count_date: string | null;
+        target: number;
+    };
+    controlled_drug_variance: {
+        status: 'compliant' | 'variance';
+        variance_count: number;
+    };
+}
+
+export interface CriticalMedicine {
+    id: number;
+    name: string;
+    current_quantity: number;
+    min_threshold: number;
+    status: 'adequate' | 'low_stock' | 'critical';
+    expiry_risk: 'safe' | 'warning' | 'critical';
+    last_dispensed: string | null;
+}
+
+export interface ExpiryHeatMapData {
+    dates: Array<{
+        date: string;
+        batches: Array<{
+            batch_number: string;
+            medicine_name: string;
+            quantity: number;
+        }>;
+        total_value: number;
+    }>;
+}
+
+export interface FEFOComplianceData {
+    compliance_rate: number;
+    total_transactions: number;
+    compliant_transactions: number;
+    violations: Array<{
+        transaction_id: number;
+        date: string;
+        medicine_name: string;
+        batch_used: string;
+        batch_expiry: string;
+        earlier_batch_available: string;
+        earlier_expiry: string;
+    }>;
+}
+
+export interface ABCAnalysisData {
+    class_a: Array<ABCAnalysisItem>;
+    class_b: Array<ABCAnalysisItem>;
+    class_c: Array<ABCAnalysisItem>;
+    all_items: Array<ABCAnalysisItem>;
+}
+
+export interface ABCAnalysisItem {
+    medicine_id: number;
+    medicine_name: string;
+    consumption_value: number;
+    cumulative_percentage: number;
+    classification: 'A' | 'B' | 'C';
+}
+
+export interface MultiLocationData {
+    facilities: Array<{
+        facility_id: number;
+        facility_name: string;
+        metric_value: number;
+        rank: number;
+    }>;
+}
+
+export interface OverstockData {
+    items: Array<{
+        medicine_id: number;
+        medicine_name: string;
+        current_quantity: number;
+        target_quantity: number;
+        excess: number;
+        excess_value: number;
+    }>;
+}
+
+export interface ReorderSuggestion {
+    medicine_id: number;
+    medicine_name: string;
+    current_quantity: number;
+    reorder_point: number;
+    suggested_quantity: number;
+    urgency: 'low' | 'medium' | 'high';
+}
+
+export interface SupplierPerformanceItem {
+    supplier_id: number;
+    supplier_name: string;
+    total_orders: number;
+    avg_lead_time_days: number;
+    fulfillment_rate: number;
+    on_time_delivery_rate: number;
 }

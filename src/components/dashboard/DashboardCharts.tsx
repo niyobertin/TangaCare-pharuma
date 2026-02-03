@@ -16,13 +16,13 @@ import {
 } from 'recharts';
 
 // --- Types ---
-interface InventoryData {
+export interface InventoryData {
     category: string;
     count: number;
     value: number;
 }
 
-interface TrendData {
+export interface TrendData {
     date: string;
     dispensed: number;
     received: number;
@@ -36,14 +36,20 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 export const InventoryStatusChart: React.FC<{ data: InventoryData[] }> = ({ data }) => {
     return (
         <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+            <BarChart
+                data={data}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+            >
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                 <XAxis type="number" />
                 <YAxis dataKey="category" type="category" width={100} />
                 <Tooltip
                     formatter={(value: any, name: any) => [
-                        name === 'value' && typeof value === 'number' ? `$${value.toLocaleString()}` : value,
-                        name === 'value' ? 'Stock Value' : 'Item Count'
+                        name === 'value' && typeof value === 'number'
+                            ? `$${value.toLocaleString()}`
+                            : value,
+                        name === 'value' ? 'Stock Value' : 'Item Count',
                     ]}
                 />
                 <Legend />
@@ -55,7 +61,7 @@ export const InventoryStatusChart: React.FC<{ data: InventoryData[] }> = ({ data
 
 export const InventoryValuePieChart: React.FC<{ data: InventoryData[] }> = ({ data }) => {
     // Filter out small values for cleaner pie chart
-    const filteredData = data.filter(d => d.value > 0);
+    const filteredData = data.filter((d) => d.value > 0);
 
     return (
         <ResponsiveContainer width="100%" height={300}>
@@ -65,7 +71,9 @@ export const InventoryValuePieChart: React.FC<{ data: InventoryData[] }> = ({ da
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }: any) => (percent ?? 0) > 0.05 ? `${name} ${((percent ?? 0) * 100).toFixed(0)}%` : ''}
+                    label={({ name, percent }: any) =>
+                        (percent ?? 0) > 0.05 ? `${name} ${((percent ?? 0) * 100).toFixed(0)}%` : ''
+                    }
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -80,7 +88,7 @@ export const InventoryValuePieChart: React.FC<{ data: InventoryData[] }> = ({ da
             </PieChart>
         </ResponsiveContainer>
     );
-}
+};
 
 export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data }) => {
     return (
@@ -107,8 +115,24 @@ export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data })
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <Tooltip labelFormatter={(label) => new Date(label).toLocaleDateString()} />
                 <Legend />
-                <Area type="monotone" dataKey="dispensed" stackId="1" stroke="#8884d8" fillOpacity={1} fill="url(#colorDispensed)" name="Dispensed" />
-                <Area type="monotone" dataKey="received" stackId="1" stroke="#82ca9d" fillOpacity={1} fill="url(#colorReceived)" name="Received" />
+                <Area
+                    type="monotone"
+                    dataKey="dispensed"
+                    stackId="1"
+                    stroke="#8884d8"
+                    fillOpacity={1}
+                    fill="url(#colorDispensed)"
+                    name="Dispensed"
+                />
+                <Area
+                    type="monotone"
+                    dataKey="received"
+                    stackId="1"
+                    stroke="#82ca9d"
+                    fillOpacity={1}
+                    fill="url(#colorReceived)"
+                    name="Received"
+                />
             </AreaChart>
         </ResponsiveContainer>
     );

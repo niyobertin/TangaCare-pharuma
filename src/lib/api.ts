@@ -20,7 +20,7 @@ api.interceptors.request.use(
                 const parsed = JSON.parse(userData);
                 const role = (parsed?.role ?? '').toString().toUpperCase();
                 isFacilityAdmin = role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN';
-            } catch { }
+            } catch {}
         }
         const organizationId = localStorage.getItem('selected_organization_id');
         const facilityId = localStorage.getItem('selected_facility_id');
@@ -65,7 +65,7 @@ api.interceptors.response.use(
                 localStorage.removeItem('access_token');
                 localStorage.removeItem('refresh_token');
                 localStorage.removeItem('user_data');
-                window.location.href = '/login';
+                window.location.href = '/auth/login';
                 return Promise.reject(error);
             }
         }

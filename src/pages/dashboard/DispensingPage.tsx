@@ -93,7 +93,10 @@ export function DispensingPage() {
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (patientSearchRef.current && !patientSearchRef.current.contains(event.target as Node)) {
+            if (
+                patientSearchRef.current &&
+                !patientSearchRef.current.contains(event.target as Node)
+            ) {
                 setShowPatientResults(false);
             }
         };
@@ -301,7 +304,7 @@ export function DispensingPage() {
                                             'group p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl text-left transition-all hover:border-healthcare-primary/30 hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden',
                                             ((med.stock_quantity || 0) === 0 ||
                                                 user?.role?.toString() === 'auditor') &&
-                                            'opacity-50 cursor-not-allowed grayscale',
+                                                'opacity-50 cursor-not-allowed grayscale',
                                         )}
                                     >
                                         <div className="flex flex-col gap-3">
@@ -398,8 +401,17 @@ export function DispensingPage() {
                                                         {p.last_name || p.lastName || ''}
                                                     </div>
                                                     <div className="text-xs text-slate-500 flex justify-between">
-                                                        <span>{p.phone_number || p.phoneNumber || p.phone || '—'}</span>
-                                                        {p.email && <span className="text-slate-400">{p.email}</span>}
+                                                        <span>
+                                                            {p.phone_number ||
+                                                                p.phoneNumber ||
+                                                                p.phone ||
+                                                                '—'}
+                                                        </span>
+                                                        {p.email && (
+                                                            <span className="text-slate-400">
+                                                                {p.email}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
@@ -409,43 +421,43 @@ export function DispensingPage() {
                             )}
                         {(selectedPatient ||
                             user?.role?.toString()?.toLowerCase() === 'auditor') && (
-                                <div className="flex justify-between items-center bg-white p-2 rounded-lg border text-sm">
-                                    <div>
-                                        <div className="font-bold">
-                                            {selectedPatient ? (
-                                                <>
-                                                    {selectedPatient.first_name ||
-                                                        selectedPatient.firstName ||
-                                                        selectedPatient.name ||
-                                                        ''}{' '}
-                                                    {selectedPatient.last_name ||
-                                                        selectedPatient.lastName ||
-                                                        ''}
-                                                </>
-                                            ) : (
-                                                'No Patient Selected'
-                                            )}
-                                        </div>
-                                        <div className="text-xs text-slate-500">
-                                            {selectedPatient
-                                                ? selectedPatient.phone_number ||
-                                                selectedPatient.phoneNumber ||
-                                                selectedPatient.phone ||
-                                                '—'
-                                                : 'Patient info is unavailable in browse mode'}
-                                        </div>
-                                    </div>
-                                    {selectedPatient &&
-                                        user?.role?.toString()?.toLowerCase() !== 'auditor' && (
-                                            <button
-                                                onClick={() => setSelectedPatient(null)}
-                                                className="text-slate-400 hover:text-red-500"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
+                            <div className="flex justify-between items-center bg-white p-2 rounded-lg border text-sm">
+                                <div>
+                                    <div className="font-bold">
+                                        {selectedPatient ? (
+                                            <>
+                                                {selectedPatient.first_name ||
+                                                    selectedPatient.firstName ||
+                                                    selectedPatient.name ||
+                                                    ''}{' '}
+                                                {selectedPatient.last_name ||
+                                                    selectedPatient.lastName ||
+                                                    ''}
+                                            </>
+                                        ) : (
+                                            'No Patient Selected'
                                         )}
+                                    </div>
+                                    <div className="text-xs text-slate-500">
+                                        {selectedPatient
+                                            ? selectedPatient.phone_number ||
+                                              selectedPatient.phoneNumber ||
+                                              selectedPatient.phone ||
+                                              '—'
+                                            : 'Patient info is unavailable in browse mode'}
+                                    </div>
                                 </div>
-                            )}
+                                {selectedPatient &&
+                                    user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+                                        <button
+                                            onClick={() => setSelectedPatient(null)}
+                                            className="text-slate-400 hover:text-red-500"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center justify-between mb-2">
@@ -479,8 +491,8 @@ export function DispensingPage() {
                                                 EXP:{' '}
                                                 {item.selectedBatch?.expiry_date
                                                     ? new Date(
-                                                        item.selectedBatch.expiry_date,
-                                                    ).toLocaleDateString()
+                                                          item.selectedBatch.expiry_date,
+                                                      ).toLocaleDateString()
                                                     : 'N/A'}
                                             </span>
                                         </div>

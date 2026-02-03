@@ -105,13 +105,12 @@ export const NotificationBell: React.FC = () => {
 
             {isOpen && (
                 <>
-                    <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setIsOpen(false)}
-                    />
+                    <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
                     <div className="absolute right-0 top-full mt-2 w-80 md:w-96 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-20 overflow-hidden flex flex-col max-h-[80vh]">
                         <div className="p-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                            <h3 className="font-bold text-sm text-healthcare-dark">Notifications</h3>
+                            <h3 className="font-bold text-sm text-healthcare-dark">
+                                Notifications
+                            </h3>
                             {unreadCount > 0 && (
                                 <button
                                     onClick={() => markAllReadMutation.mutate()}
@@ -124,7 +123,9 @@ export const NotificationBell: React.FC = () => {
 
                         <div className="overflow-y-auto flex-1 custom-scrollbar">
                             {isLoading ? (
-                                <div className="p-8 text-center text-slate-400 text-sm">Loading...</div>
+                                <div className="p-8 text-center text-slate-400 text-sm">
+                                    Loading...
+                                </div>
                             ) : notifications.length === 0 ? (
                                 <div className="p-8 text-center text-slate-400 text-sm flex flex-col items-center gap-2">
                                     <Bell size={24} className="text-slate-200" />
@@ -137,16 +138,24 @@ export const NotificationBell: React.FC = () => {
                                             key={n.id}
                                             className={clsx(
                                                 'p-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex gap-3 text-left group',
-                                                !n.is_read && 'bg-teal-50/30 dark:bg-teal-900/10'
+                                                !n.is_read && 'bg-teal-50/30 dark:bg-teal-900/10',
                                             )}
                                         >
                                             <div className="flex-1 space-y-1">
                                                 <div className="flex items-start justify-between">
-                                                    <p className={clsx("text-sm font-medium text-healthcare-dark", !n.is_read && "text-healthcare-primary")}>
+                                                    <p
+                                                        className={clsx(
+                                                            'text-sm font-medium text-healthcare-dark',
+                                                            !n.is_read && 'text-healthcare-primary',
+                                                        )}
+                                                    >
                                                         {n.title}
                                                     </p>
                                                     <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">
-                                                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                                                        {formatDistanceToNow(
+                                                            new Date(n.created_at),
+                                                            { addSuffix: true },
+                                                        )}
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">

@@ -31,10 +31,19 @@ interface CreatePatientModalProps {
     onUpdate?: (patient: any) => void;
 }
 
-export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({ onClose, initialData, onCreate, onUpdate }) => {
+export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({
+    onClose,
+    initialData,
+    onCreate,
+    onUpdate,
+}) => {
     const queryClient = useQueryClient();
 
-    const { register, handleSubmit, formState: { errors } } = useForm<CreatePatientForm>({
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<CreatePatientForm>({
         resolver: yupResolver(schema) as any,
         defaultValues: initialData || {
             first_name: '',
@@ -60,14 +69,16 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({ onClose,
                     ...data,
                     role: 'patient',
                     password: 'ChangeMe123!',
-                    must_set_password: true
+                    must_set_password: true,
                 });
                 return response.data;
             }
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['patients'] });
-            toast.success(initialData ? 'Patient updated successfully' : 'Patient created successfully');
+            toast.success(
+                initialData ? 'Patient updated successfully' : 'Patient created successfully',
+            );
 
             if (initialData && onUpdate) {
                 onUpdate(data);
@@ -80,7 +91,10 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({ onClose,
             onClose();
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || (initialData ? 'Failed to update patient' : 'Failed to create patient'));
+            toast.error(
+                error.response?.data?.message ||
+                    (initialData ? 'Failed to update patient' : 'Failed to create patient'),
+            );
         },
     });
 
@@ -112,48 +126,74 @@ export const CreatePatientModal: React.FC<CreatePatientModalProps> = ({ onClose,
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4 overflow-y-auto">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">First Name</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                First Name
+                            </label>
                             <input
                                 {...register('first_name')}
                                 className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary transition-all text-sm font-medium"
                                 placeholder="John"
                             />
-                            {errors.first_name && <p className="text-xs text-red-500 font-medium">{errors.first_name.message}</p>}
+                            {errors.first_name && (
+                                <p className="text-xs text-red-500 font-medium">
+                                    {errors.first_name.message}
+                                </p>
+                            )}
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Last Name</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Last Name
+                            </label>
                             <input
                                 {...register('last_name')}
                                 className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary transition-all text-sm font-medium"
                                 placeholder="Doe"
                             />
-                            {errors.last_name && <p className="text-xs text-red-500 font-medium">{errors.last_name.message}</p>}
+                            {errors.last_name && (
+                                <p className="text-xs text-red-500 font-medium">
+                                    {errors.last_name.message}
+                                </p>
+                            )}
                         </div>
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phone Number</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Phone Number
+                        </label>
                         <input
                             {...register('phone_number')}
                             className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary transition-all text-sm font-medium"
                             placeholder="+256..."
                         />
-                        {errors.phone_number && <p className="text-xs text-red-500 font-medium">{errors.phone_number.message}</p>}
+                        {errors.phone_number && (
+                            <p className="text-xs text-red-500 font-medium">
+                                {errors.phone_number.message}
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email (Optional)</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Email (Optional)
+                        </label>
                         <input
                             {...register('email')}
                             className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary transition-all text-sm font-medium"
                             placeholder="john.doe@example.com"
                         />
-                        {errors.email && <p className="text-xs text-red-500 font-medium">{errors.email.message}</p>}
+                        {errors.email && (
+                            <p className="text-xs text-red-500 font-medium">
+                                {errors.email.message}
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Address (Optional)</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Address (Optional)
+                        </label>
                         <textarea
                             {...register('address')}
                             className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary transition-all text-sm font-medium resize-none h-20"
