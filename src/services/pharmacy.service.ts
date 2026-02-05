@@ -205,9 +205,12 @@ export const pharmacyService = {
         facilityId: number,
         params?: { start_date?: string; end_date?: string },
     ): Promise<any> {
-        const response = await api.get<any>(`/pharmacy/reports/employee-performance/${facilityId}`, {
-            params,
-        });
+        const response = await api.get<any>(
+            `/pharmacy/reports/employee-performance/${facilityId}`,
+            {
+                params,
+            },
+        );
         return (response.data as any).data ?? response.data;
     },
 
@@ -710,7 +713,9 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async getBatchTraceability(batchId: number): Promise<import('../types/pharmacy').BatchTraceabilityReport> {
+    async getBatchTraceability(
+        batchId: number,
+    ): Promise<import('../types/pharmacy').BatchTraceabilityReport> {
         const response = await api.get<any>(`/pharmacy/reports/batch-traceability/${batchId}`);
         return (response.data as any).data ?? response.data;
     },
@@ -746,9 +751,7 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async getPhysicalCount(
-        countId: number,
-    ): Promise<import('../types/pharmacy').PhysicalCount> {
+    async getPhysicalCount(countId: number): Promise<import('../types/pharmacy').PhysicalCount> {
         const response = await api.get<any>(`/pharmacy/physical-counts/${countId}`);
         return (response.data as any).data ?? response.data;
     },
