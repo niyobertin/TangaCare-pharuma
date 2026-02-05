@@ -353,6 +353,14 @@ export interface ABCAnalysisData {
     class_b: Array<ABCAnalysisItem>;
     class_c: Array<ABCAnalysisItem>;
     all_items: Array<ABCAnalysisItem>;
+    summary: {
+        totalValue: number;
+        classes: {
+            A: { itemCount: number; totalValue: number; percentage: number };
+            B: { itemCount: number; totalValue: number; percentage: number };
+            C: { itemCount: number; totalValue: number; percentage: number };
+        };
+    };
 }
 
 export interface ABCAnalysisItem {

@@ -136,7 +136,7 @@ const facilitiesRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'facilities',
     component: () => (
-        <RequirePermission permission={PERMISSIONS.FACILITY_MANAGE}>
+        <RequirePermission permissions={[PERMISSIONS.FACILITY_READ, PERMISSIONS.FACILITY_MANAGE]}>
             <FacilitiesPage />
         </RequirePermission>
     ),
@@ -145,7 +145,7 @@ const usersRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'users',
     component: () => (
-        <RequirePermission permission={PERMISSIONS.USERS_MANAGE}>
+        <RequirePermission permissions={[PERMISSIONS.USERS_READ, PERMISSIONS.USERS_MANAGE]}>
             <UsersPage />
         </RequirePermission>
     ),
@@ -217,7 +217,7 @@ const pricingRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'pricing',
     component: () => (
-        <RequirePermission permission={PERMISSIONS.PRICING_MANAGE}>
+        <RequirePermission permissions={[PERMISSIONS.PRICING_READ, PERMISSIONS.PRICING_MANAGE]}>
             <PricingPage />
         </RequirePermission>
     ),
@@ -256,7 +256,7 @@ const patientsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'patients',
     component: () => (
-        <RequirePermission permission={PERMISSIONS.USERS_MANAGE}>
+        <RequirePermission permissions={[PERMISSIONS.USERS_READ, PERMISSIONS.USERS_MANAGE]}>
             <PatientsPage />
         </RequirePermission>
     ),

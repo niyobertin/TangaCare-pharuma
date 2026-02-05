@@ -5,11 +5,16 @@ import { isSuperAdmin } from '../../types/auth';
 import type { Permission } from '../../types/auth';
 
 interface RequirePermissionProps {
-    permission: Permission;
+    permission?: Permission;
+    permissions?: Permission[];
     children: React.ReactNode;
 }
 
-export const RequirePermission: React.FC<RequirePermissionProps> = ({ permission, children }) => {
+export const RequirePermission: React.FC<RequirePermissionProps> = ({
+    permission,
+    permissions,
+    children,
+}) => {
     const { can, user, isLoading } = useAuth();
 
     if (isLoading) {
@@ -29,8 +34,11 @@ export const RequirePermission: React.FC<RequirePermissionProps> = ({ permission
         return <>{children}</>;
     }
 
-    // Check if user has the specific permission
-    if (!can(permission)) {
+    // Check permissions
+    const requiredList = permissions || (permission ? [permission] : []);
+    const hasAny = requiredList.some((p) => can(p));
+
+    if (requiredList.length > 0 && !hasAny) {
         return (
             <div className="h-full w-full flex items-center justify-center bg-healthcare-surface p-10">
                 <div className="glass-card p-10 max-w-md w-full text-center space-y-4 rounded-2xl border-2 border-red-100">
@@ -57,7 +65,7 @@ export const RequirePermission: React.FC<RequirePermissionProps> = ({ permission
                         <p className="text-slate-500 text-sm mt-2">
                             You do not have permission to access this resource. Required permission:{' '}
                             <code className="bg-slate-100 px-1 py-0.5 rounded text-xs">
-                                {permission}
+                                {requiredList.join(' OR ')}
                             </code>
                         </p>
                     </div>

@@ -80,13 +80,14 @@ const NAV_ITEMS: NavItem[] = [
             'FACILITY ADMIN',
             'AUDITOR',
         ],
-        allowedPermissions: ['users:manage'],
+        allowedPermissions: ['users:read', 'users:manage'],
     },
     {
         to: '/app/facilities',
         icon: Factory,
         label: 'Facilities',
         allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER', 'AUDITOR'],
+        allowedPermissions: ['facility:read', 'facility:manage'],
     },
     {
         to: '/app/procurement',
@@ -242,7 +243,7 @@ const NAV_ITEMS: NavItem[] = [
             'ADMIN',
             'AUDITOR',
         ],
-        allowedPermissions: ['pricing:manage'],
+        allowedPermissions: ['pricing:read', 'pricing:manage'],
     },
     {
         to: '/app/settings',
@@ -303,7 +304,13 @@ export const MainLayout: React.FC = () => {
     const isPharmacyRole = role && PHARMACY_ROLES.includes(role);
     const needsOnboarding = isPharmacyRole && !user?.organization_id;
     const isUnassignedAdmin =
-        isPharmacyRole && user?.organization_id && !user?.facility_id && !user?.facility;
+        isPharmacyRole &&
+        user?.organization_id &&
+        !user?.facility_id &&
+        !user?.facility &&
+        role !== 'AUDITOR' &&
+        role !== 'SUPER_ADMIN' &&
+        role !== 'SUPER ADMIN';
 
     const handleLogout = async () => {
         await logout();
@@ -316,7 +323,7 @@ export const MainLayout: React.FC = () => {
                 'flex h-screen bg-healthcare-surface font-sans transition-colors duration-300',
             )}
         >
-            {}
+            { }
             <aside
                 className={cn(
                     'glass-card m-3 rounded-xl flex flex-col overflow-hidden border-slate-200 transition-all duration-300 ease-in-out shadow-sm',
@@ -389,7 +396,7 @@ export const MainLayout: React.FC = () => {
                 </div>
             </aside>
 
-            {}
+            { }
             <main className="flex-1 flex flex-col overflow-hidden relative p-3 pl-0">
                 <header className="glass-header rounded-xl mb-3 px-5 py-3 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-5 flex-1">
@@ -449,8 +456,8 @@ export const MainLayout: React.FC = () => {
                                             {facilityId == null && isSuperAdminUser
                                                 ? 'All Facilities (System)'
                                                 : facilities.length > 0
-                                                  ? switcherLabel
-                                                  : (currentOrg?.name ?? 'Select context')}
+                                                    ? switcherLabel
+                                                    : (currentOrg?.name ?? 'Select context')}
                                         </span>
                                         <ChevronDown
                                             size={14}

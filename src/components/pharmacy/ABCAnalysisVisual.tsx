@@ -33,9 +33,21 @@ export function ABCAnalysisVisual() {
     }
 
     const chartData = [
-        { name: 'Class A (80% Value)', value: data?.class_a.length || 0, color: '#0f766e' },
-        { name: 'Class B (15% Value)', value: data?.class_b.length || 0, color: '#0d9488' },
-        { name: 'Class C (5% Value)', value: data?.class_c.length || 0, color: '#2dd4bf' },
+        {
+            name: `Class A (${data?.summary.classes.A.percentage.toFixed(1)}% Value)`,
+            value: data?.summary.classes.A.totalValue || 0,
+            color: '#0f766e',
+        },
+        {
+            name: `Class B (${data?.summary.classes.B.percentage.toFixed(1)}% Value)`,
+            value: data?.summary.classes.B.totalValue || 0,
+            color: '#0d9488',
+        },
+        {
+            name: `Class C (${data?.summary.classes.C.percentage.toFixed(1)}% Value)`,
+            value: data?.summary.classes.C.totalValue || 0,
+            color: '#2dd4bf',
+        },
     ];
 
     return (
@@ -62,8 +74,9 @@ export function ABCAnalysisVisual() {
                         <span className="text-healthcare-primary font-black not-italic">
                             Class A items
                         </span>{' '}
-                        contribute 80% of your total consumption value. Focus on tight control and
-                        frequent cycle counting for these items.
+                        contribute {data?.summary.classes.A.percentage.toFixed(1)}% of your total
+                        consumption value. Focus on tight control and frequent cycle counting for
+                        these items.
                     </p>
                 </div>
             </div>

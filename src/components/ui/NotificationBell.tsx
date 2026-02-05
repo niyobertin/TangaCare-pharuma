@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Check, Trash2 } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '../../lib/api';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -16,78 +14,75 @@ interface Notification {
 }
 
 export const NotificationBell: React.FC = () => {
-    const { socket } = useSocket();
-    const queryClient = useQueryClient();
+    const { socket, isConnected } = useSocket();
     const [isOpen, setIsOpen] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Fetch unread count
-    const { data: unreadData } = useQuery({
-        queryKey: ['notifications', 'unread-count'],
-        queryFn: async () => {
-            const res = await api.get('/notifications/unread-count');
-            return res.data.data;
-        },
-        refetchInterval: 30000,
-    });
+    // Initial sync
+    useEffect(() => {
+        if (socket && isConnected) {
+            socket.emit('notification:sync');
+        }
+    }, [socket, isConnected]);
 
-    const unreadCount = unreadData?.count || 0;
-
-    // Fetch notifications list when open
-    const { data: listData, isLoading } = useQuery({
-        queryKey: ['notifications', 'list'],
-        queryFn: async () => {
-            const res = await api.get('/notifications?limit=10');
-            return res.data.data;
-        },
-        enabled: isOpen,
-    });
-
-    const notifications: Notification[] = listData?.notifications || [];
-
-    // Real-time listener
+    // Real-time listeners
     useEffect(() => {
         if (!socket) return;
 
-        const handleNotification = (_newNotification: Notification) => {
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
-
+        const handleNewNotification = (newNotification: Notification) => {
+            setNotifications((prev) => [newNotification, ...prev]);
+            setUnreadCount((prev) => prev + 1);
             // Optional: Play sound or show toast
         };
 
-        socket.on('notification', handleNotification);
+        const handleSync = (data: { notifications: Notification[]; unreadCount: number }) => {
+            setNotifications(data.notifications);
+            setUnreadCount(data.unreadCount);
+            setIsLoading(false);
+        };
+
+        const handleReadSuccess = ({ notificationId }: { notificationId: number }) => {
+            setNotifications((prev) =>
+                prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n)),
+            );
+            setUnreadCount((prev) => Math.max(0, prev - 1));
+        };
+
+        const handleReadAllSuccess = () => {
+            setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+            setUnreadCount(0);
+        };
+
+        socket.on('notification:new', handleNewNotification);
+        socket.on('notification:sync', handleSync);
+        socket.on('notification:read_success', handleReadSuccess);
+        socket.on('notification:read_all_success', handleReadAllSuccess);
 
         return () => {
-            socket.off('notification', handleNotification);
+            socket.off('notification:new', handleNewNotification);
+            socket.off('notification:sync', handleSync);
+            socket.off('notification:read_success', handleReadSuccess);
+            socket.off('notification:read_all_success', handleReadAllSuccess);
         };
-    }, [socket, queryClient]);
+    }, [socket]);
 
-    // Mutations
-    const markAsReadMutation = useMutation({
-        mutationFn: async (id: number) => {
-            await api.put(`/notifications/${id}/read`);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        },
-    });
+    const markAsRead = (id: number) => {
+        if (socket) {
+            socket.emit('notification:read', { notificationId: id });
+        }
+    };
 
-    const markAllReadMutation = useMutation({
-        mutationFn: async () => {
-            await api.put(`/notifications/read-all`);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        },
-    });
+    const markAllRead = () => {
+        if (socket) {
+            socket.emit('notification:read_all');
+        }
+    };
 
-    const deleteMutation = useMutation({
-        mutationFn: async (id: number) => {
-            await api.delete(`/notifications/${id}`);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        },
-    });
+    const deleteNotification = (id: number) => {
+        setNotifications((prev) => prev.filter((n) => n.id !== id));
+    };
 
     return (
         <div className="relative">
@@ -113,7 +108,7 @@ export const NotificationBell: React.FC = () => {
                             </h3>
                             {unreadCount > 0 && (
                                 <button
-                                    onClick={() => markAllReadMutation.mutate()}
+                                    onClick={() => markAllRead()}
                                     className="text-xs text-healthcare-primary hover:underline font-medium"
                                 >
                                     Mark all as read
@@ -167,7 +162,7 @@ export const NotificationBell: React.FC = () => {
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            markAsReadMutation.mutate(n.id);
+                                                            markAsRead(n.id);
                                                         }}
                                                         className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded text-teal-600"
                                                         title="Mark as read"
@@ -178,7 +173,7 @@ export const NotificationBell: React.FC = () => {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        deleteMutation.mutate(n.id);
+                                                        deleteNotification(n.id);
                                                     }}
                                                     className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded text-red-400 hover:text-red-500"
                                                     title="Delete"
