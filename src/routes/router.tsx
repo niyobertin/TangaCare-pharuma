@@ -69,10 +69,12 @@ const appLayoutRoute = createRoute({
     component: AppLayoutComponent,
 });
 
+import { LandingPage } from '../pages/marketing/LandingPage';
+
 const rootIndexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: () => <Navigate to="/app" />,
+    component: LandingPage,
 });
 
 const loginFallbackRoute = createRoute({
