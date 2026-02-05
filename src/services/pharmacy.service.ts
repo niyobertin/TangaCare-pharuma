@@ -186,6 +186,36 @@ export const pharmacyService = {
         };
     },
 
+    async getTaxSummary(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/tax-summary/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getCustomerLoyaltyReport(facilityId: number): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/customer-loyalty/${facilityId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getEmployeePerformanceReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/employee-performance/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getVendorReturnsReport(facilityId: number): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/vendor-returns/${facilityId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
     async createSale(payload: CreateSaleDto): Promise<Sale> {
         const response = await api.post<any>('/pharmacy/sales', payload);
         return (response.data as any).data ?? response.data;
@@ -677,6 +707,68 @@ export const pharmacyService = {
 
     async getSupplierPerformance(): Promise<import('../types/pharmacy').SupplierPerformanceItem[]> {
         const response = await api.get<any>('/pharmacy/analytics/supplier-performance');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getBatchTraceability(batchId: number): Promise<import('../types/pharmacy').BatchTraceabilityReport> {
+        const response = await api.get<any>(`/pharmacy/reports/batch-traceability/${batchId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getControlledDrugRegister(
+        facilityId: number,
+        medicineId: number,
+    ): Promise<import('../types/pharmacy').ControlledDrugRegisterReport> {
+        const response = await api.get<any>(
+            `/pharmacy/reports/controlled-drug-register/${facilityId}/${medicineId}`,
+        );
+        return (response.data as any).data ?? response.data;
+    },
+
+    // Physical Count & Stocktaking
+    async startPhysicalCount(
+        facilityId: number,
+        medicineIds?: number[],
+    ): Promise<import('../types/pharmacy').PhysicalCount> {
+        const response = await api.post<any>('/pharmacy/physical-counts/start', {
+            facility_id: facilityId,
+            medicineIds,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getPhysicalCounts(
+        facilityId: number,
+    ): Promise<import('../types/pharmacy').PhysicalCount[]> {
+        const response = await api.get<any>('/pharmacy/physical-counts', {
+            params: { facility_id: facilityId },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getPhysicalCount(
+        countId: number,
+    ): Promise<import('../types/pharmacy').PhysicalCount> {
+        const response = await api.get<any>(`/pharmacy/physical-counts/${countId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async updatePhysicalCountItem(
+        itemId: number,
+        countedQuantity: number,
+        notes?: string,
+    ): Promise<import('../types/pharmacy').PhysicalCountItem> {
+        const response = await api.put<any>(`/pharmacy/physical-counts/items/${itemId}`, {
+            countedQuantity,
+            notes,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async approvePhysicalCount(
+        countId: number,
+    ): Promise<import('../types/pharmacy').PhysicalCount> {
+        const response = await api.post<any>(`/pharmacy/physical-counts/${countId}/approve`);
         return (response.data as any).data ?? response.data;
     },
 };

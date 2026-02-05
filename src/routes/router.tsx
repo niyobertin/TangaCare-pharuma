@@ -98,6 +98,7 @@ import { FacilitySettingsPage } from '../pages/dashboard/FacilitySettingsPage';
 import { UsersPage } from '../pages/dashboard/UsersPage';
 import { ViewOrderPage } from '../pages/procurement/ViewOrderPage';
 import { PatientsPage } from '../pages/dashboard/PatientsPage';
+import { PhysicalCountPage } from '../pages/dashboard/PhysicalCountPage';
 
 const indexRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -228,6 +229,15 @@ const stockRegisterRoute = createRoute({
     component: () => (
         <RequirePermission permission={PERMISSIONS.REPORTS_READ}>
             <StockRegisterReportPage />
+        </RequirePermission>
+    ),
+});
+const stocktakingRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'stocktaking',
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.INVENTORY_WRITE}>
+            <PhysicalCountPage />
         </RequirePermission>
     ),
 });
@@ -378,6 +388,7 @@ const appRouteTree = appLayoutRoute.addChildren([
     stockMovementsRoute,
     pricingRoute,
     stockRegisterRoute,
+    stocktakingRoute,
     prescriptionsRoute,
     patientsRoute,
     analyticsRoute,

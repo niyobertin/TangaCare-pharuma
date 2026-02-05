@@ -408,3 +408,71 @@ export interface SupplierPerformanceItem {
     fulfillment_rate: number;
     on_time_delivery_rate: number;
 }
+
+export interface BatchTraceabilityRow {
+    transaction_id: number;
+    transaction_number: string;
+    date: string;
+    patient_id: number | null;
+    patient_name: string;
+    quantity: number;
+    dispensed_by: string;
+}
+
+export interface BatchTraceabilityReport {
+    batch_id: number;
+    batch_number: string;
+    medicine_name: string;
+    expiry_date: string;
+    total_dispensed: number;
+    patients: BatchTraceabilityRow[];
+}
+
+export interface ControlledDrugRegisterRow {
+    id: number;
+    date: string;
+    type: string;
+    reference: string;
+    quantity_in: number;
+    quantity_out: number;
+    balance: number;
+    user_name: string;
+    notes: string;
+}
+
+export interface ControlledDrugRegisterReport {
+    medicine_id: number;
+    medicine_name: string;
+    current_balance: number;
+    movements: ControlledDrugRegisterRow[];
+}
+
+export type PhysicalCountStatus = 'in_progress' | 'completed' | 'approved' | 'cancelled';
+
+export interface PhysicalCountItem {
+    id: number;
+    physical_count_id: number;
+    medicine_id: number;
+    batch_id: number;
+    system_quantity: number;
+    counted_quantity: number;
+    variance: number;
+    notes?: string;
+    medicine?: Medicine;
+    batch?: Batch;
+}
+
+export interface PhysicalCount {
+    id: number;
+    facility_id: number;
+    count_date: string;
+    status: PhysicalCountStatus;
+    counted_by_id: number;
+    approved_by_id?: number;
+    approved_at?: string;
+    notes?: string;
+    created_at: string;
+    items?: PhysicalCountItem[];
+    counted_by?: import('./auth').User;
+    approved_by?: import('./auth').User;
+}
