@@ -396,7 +396,10 @@ export interface ReorderSuggestion {
     medicine_name: string;
     current_quantity: number;
     reorder_point: number;
+    min_stock_level?: number; // Alias for legacy support if needed
     suggested_quantity: number;
+    average_daily_usage?: number;
+    days_remaining?: number;
     urgency: 'low' | 'medium' | 'high';
 }
 

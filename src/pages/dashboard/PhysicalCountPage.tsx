@@ -97,7 +97,13 @@ export function PhysicalCountPage() {
                         disabled={loading}
                         className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition-colors shadow-md disabled:opacity-50"
                     >
-                        {loading ? 'Starting...' : <><Plus size={18} /> New Stock Count</>}
+                        {loading ? (
+                            'Starting...'
+                        ) : (
+                            <>
+                                <Plus size={18} /> New Stock Count
+                            </>
+                        )}
                     </button>
                 </div>
 
@@ -108,44 +114,69 @@ export function PhysicalCountPage() {
                         <table className="w-full text-left text-sm">
                             <thead className="bg-slate-50 dark:bg-slate-800/50">
                                 <tr>
-                                    <th className="px-6 py-4 font-semibold text-slate-500">Date Started</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-500">Status</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-500">Initiated By</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-500">Approved By</th>
-                                    <th className="px-6 py-4 font-semibold text-slate-500 text-right">Actions</th>
+                                    <th className="px-6 py-4 font-semibold text-slate-500">
+                                        Date Started
+                                    </th>
+                                    <th className="px-6 py-4 font-semibold text-slate-500">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-4 font-semibold text-slate-500">
+                                        Initiated By
+                                    </th>
+                                    <th className="px-6 py-4 font-semibold text-slate-500">
+                                        Approved By
+                                    </th>
+                                    <th className="px-6 py-4 font-semibold text-slate-500 text-right">
+                                        Actions
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {counts.length > 0 ? (
                                     counts.map((count) => (
-                                        <tr key={count.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                        <tr
+                                            key={count.id}
+                                            className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                        >
                                             <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
                                                 {format(new Date(count.created_at), 'PPP')}
-                                                <div className="text-xs text-slate-400">{format(new Date(count.created_at), 'p')}</div>
+                                                <div className="text-xs text-slate-400">
+                                                    {format(new Date(count.created_at), 'p')}
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <StatusBadge status={count.status} />
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                                                {count.counted_by?.first_name} {count.counted_by?.last_name}
+                                                {count.counted_by?.first_name}{' '}
+                                                {count.counted_by?.last_name}
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                                                {count.approved_by ? `${count.approved_by.first_name} ${count.approved_by.last_name}` : '—'}
+                                                {count.approved_by
+                                                    ? `${count.approved_by.first_name} ${count.approved_by.last_name}`
+                                                    : '—'}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <button
                                                     onClick={() => handleViewCount(count.id)}
                                                     className="px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors inline-flex items-center gap-1"
                                                 >
-                                                    {count.status === 'in_progress' ? 'Continue' : 'View Details'} <ChevronRight size={14} />
+                                                    {count.status === 'in_progress'
+                                                        ? 'Continue'
+                                                        : 'View Details'}{' '}
+                                                    <ChevronRight size={14} />
                                                 </button>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                                            No stock counts found. Start a new one to reconcile inventory.
+                                        <td
+                                            colSpan={5}
+                                            className="px-6 py-12 text-center text-slate-400"
+                                        >
+                                            No stock counts found. Start a new one to reconcile
+                                            inventory.
                                         </td>
                                     </tr>
                                 )}
@@ -158,22 +189,35 @@ export function PhysicalCountPage() {
     );
 }
 
-function PhysicalCountDetail({ count, onBack, onUpdate }: { count: PhysicalCount, onBack: () => void, onUpdate: () => void }) {
+function PhysicalCountDetail({
+    count,
+    onBack,
+    onUpdate,
+}: {
+    count: PhysicalCount;
+    onBack: () => void;
+    onUpdate: () => void;
+}) {
     const [items, setItems] = useState<PhysicalCountItem[]>(count.items || []);
     const [filter, setFilter] = useState('');
     const [saving, setSaving] = useState<number | null>(null);
     const [approving, setApproving] = useState(false);
 
-    const filteredItems = items.filter(item =>
-        item.medicine?.name.toLowerCase().includes(filter.toLowerCase()) ||
-        item.batch?.batch_number.toLowerCase().includes(filter.toLowerCase())
+    const filteredItems = items.filter(
+        (item) =>
+            item.medicine?.name.toLowerCase().includes(filter.toLowerCase()) ||
+            item.batch?.batch_number.toLowerCase().includes(filter.toLowerCase()),
     );
 
     const handleQuantityChange = async (itemId: number, qty: number) => {
         setSaving(itemId);
         try {
             // Optimistic update
-            const updatedItems = items.map(i => i.id === itemId ? { ...i, counted_quantity: qty, variance: qty - i.system_quantity } : i);
+            const updatedItems = items.map((i) =>
+                i.id === itemId
+                    ? { ...i, counted_quantity: qty, variance: qty - i.system_quantity }
+                    : i,
+            );
             setItems(updatedItems);
 
             await pharmacyService.updatePhysicalCountItem(itemId, qty);
@@ -186,7 +230,12 @@ function PhysicalCountDetail({ count, onBack, onUpdate }: { count: PhysicalCount
     };
 
     const handleApprove = async () => {
-        if (!window.confirm('Are you sure you want to approve this count? This will update stock levels.')) return;
+        if (
+            !window.confirm(
+                'Are you sure you want to approve this count? This will update stock levels.',
+            )
+        )
+            return;
         setApproving(true);
         try {
             await pharmacyService.approvePhysicalCount(count.id);
@@ -204,7 +253,10 @@ function PhysicalCountDetail({ count, onBack, onUpdate }: { count: PhysicalCount
     return (
         <div className="p-6 space-y-6 animate-in slide-in-from-right duration-300">
             <div className="flex items-center gap-4 mb-6">
-                <button onClick={onBack} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <button
+                    onClick={onBack}
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                >
                     <ChevronRight size={20} className="rotate-180 text-slate-500" />
                 </button>
                 <div className="flex-1">
@@ -224,14 +276,23 @@ function PhysicalCountDetail({ count, onBack, onUpdate }: { count: PhysicalCount
                         disabled={approving}
                         className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors shadow-lg disabled:opacity-50"
                     >
-                        {approving ? 'Approving...' : <><CheckCircle size={18} /> Complete & Approve</>}
+                        {approving ? (
+                            'Approving...'
+                        ) : (
+                            <>
+                                <CheckCircle size={18} /> Complete & Approve
+                            </>
+                        )}
                     </button>
                 )}
             </div>
 
             <div className="sticky top-0 z-10 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur py-4 border-b border-gray-200 dark:border-gray-800 flex gap-4">
                 <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        size={18}
+                    />
                     <input
                         type="text"
                         placeholder="Search medicine or batch..."
@@ -246,19 +307,42 @@ function PhysicalCountDetail({ count, onBack, onUpdate }: { count: PhysicalCount
                 <table className="w-full text-left text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-800/50">
                         <tr>
-                            <th className="px-6 py-3 font-semibold text-slate-500">Medicine Details</th>
-                            <th className="px-6 py-3 font-semibold text-slate-500 text-right">System Qty</th>
-                            <th className="px-6 py-3 font-semibold text-slate-500 text-right">Counted Qty</th>
-                            <th className="px-6 py-3 font-semibold text-slate-500 text-right">Variance</th>
+                            <th className="px-6 py-3 font-semibold text-slate-500">
+                                Medicine Details
+                            </th>
+                            <th className="px-6 py-3 font-semibold text-slate-500">Batch Info</th>
+                            <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                System Qty
+                            </th>
+                            <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                Counted Qty
+                            </th>
+                            <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                Variance
+                            </th>
                             <th className="px-6 py-3 font-semibold text-slate-500">Status</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {filteredItems.map((item) => (
-                            <tr key={item.id} className={item.variance !== 0 ? 'bg-amber-50/30 dark:bg-amber-900/10' : ''}>
+                            <tr
+                                key={item.id}
+                                className={
+                                    item.variance !== 0 ? 'bg-amber-50/30 dark:bg-amber-900/10' : ''
+                                }
+                            >
                                 <td className="px-6 py-4">
-                                    <div className="font-bold text-slate-900 dark:text-white">{item.medicine?.name}</div>
-                                    <div className="text-xs text-slate-500">Batch: <span className="font-mono">{item.batch?.batch_number}</span></div>
+                                    <div className="font-bold text-slate-900 dark:text-white">
+                                        {item.medicine?.name}
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    <div className="text-sm font-mono text-slate-700 dark:text-slate-300">
+                                        {item.batch?.batch_number}
+                                        <span className="text-slate-400 text-xs ml-1">
+                                            ({item.batch?.id})
+                                        </span>
+                                    </div>
                                 </td>
                                 <td className="px-6 py-4 text-right font-medium text-slate-600 dark:text-slate-400">
                                     {item.system_quantity}
@@ -270,16 +354,28 @@ function PhysicalCountDetail({ count, onBack, onUpdate }: { count: PhysicalCount
                                                 type="number"
                                                 className="w-20 px-2 py-1 text-right font-bold border border-slate-300 dark:border-slate-600 rounded focus:ring-2 focus:ring-healthcare-primary outline-none bg-transparent"
                                                 value={item.counted_quantity}
-                                                onChange={(e) => handleQuantityChange(item.id, Number(e.target.value))}
+                                                onChange={(e) =>
+                                                    handleQuantityChange(
+                                                        item.id,
+                                                        Number(e.target.value),
+                                                    )
+                                                }
                                             />
-                                            {saving === item.id && <div className="animate-spin rounded-full h-3 w-3 border-2 border-healthcare-primary border-t-transparent"></div>}
+                                            {saving === item.id && (
+                                                <div className="animate-spin rounded-full h-3 w-3 border-2 border-healthcare-primary border-t-transparent"></div>
+                                            )}
                                         </div>
                                     ) : (
-                                        <span className="font-bold text-slate-900 dark:text-white">{item.counted_quantity}</span>
+                                        <span className="font-bold text-slate-900 dark:text-white">
+                                            {item.counted_quantity}
+                                        </span>
                                     )}
                                 </td>
-                                <td className={`px-6 py-4 text-right font-bold ${item.variance === 0 ? 'text-slate-400' : item.variance > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {item.variance > 0 ? '+' : ''}{item.variance}
+                                <td
+                                    className={`px-6 py-4 text-right font-bold ${item.variance === 0 ? 'text-slate-400' : item.variance > 0 ? 'text-emerald-600' : 'text-rose-600'}`}
+                                >
+                                    {item.variance > 0 ? '+' : ''}
+                                    {item.variance}
                                 </td>
                                 <td className="px-6 py-4">
                                     {item.variance === 0 ? (
@@ -304,12 +400,28 @@ function PhysicalCountDetail({ count, onBack, onUpdate }: { count: PhysicalCount
 function StatusBadge({ status }: { status: string }) {
     switch (status) {
         case 'in_progress':
-            return <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100">In Progress</span>;
+            return (
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100">
+                    In Progress
+                </span>
+            );
         case 'approved':
-            return <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100">Approved</span>;
+            return (
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100">
+                    Approved
+                </span>
+            );
         case 'cancelled':
-            return <span className="px-2.5 py-0.5 rounded-full bg-slate-50 text-slate-500 text-xs font-bold border border-slate-100">Cancelled</span>;
+            return (
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-50 text-slate-500 text-xs font-bold border border-slate-100">
+                    Cancelled
+                </span>
+            );
         default:
-            return <span className="px-2.5 py-0.5 rounded-full bg-gray-50 text-gray-600 text-xs font-bold border border-gray-100">{status}</span>;
+            return (
+                <span className="px-2.5 py-0.5 rounded-full bg-gray-50 text-gray-600 text-xs font-bold border border-gray-100">
+                    {status}
+                </span>
+            );
     }
 }

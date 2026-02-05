@@ -14,35 +14,56 @@ export const TaxSummaryTable = ({ data, totalTaxable, totalVat }: TaxSummaryTabl
     return (
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-gray-100 dark:border-slate-800">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tax / VAT Summary</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Tax / VAT Summary
+                </h3>
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
                     <thead>
                         <tr className="bg-gray-50 dark:bg-slate-800/50">
-                            <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tax Rate (%)</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Taxable Amount</th>
-                            <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">VAT Amount</th>
+                            <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Tax Rate (%)
+                            </th>
+                            <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
+                                Taxable Amount
+                            </th>
+                            <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">
+                                VAT Amount
+                            </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
                         {data.map((item, index) => (
-                            <tr key={index} className="hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">
+                            <tr
+                                key={index}
+                                className="hover:bg-gray-50 dark:hover:bg-slate-800/30 transition-colors"
+                            >
+                                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">
                                     {(item.tax_rate * 100).toFixed(0)}%
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-right">
-                                    RWF {Number(item.taxable_amount).toLocaleString()}
+                                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-right whitespace-nowrap">
+                                    RWF{' '}
+                                    {Number(item.taxable_amount).toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    })}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-right">
-                                    RWF {Number(item.tax_amount).toLocaleString()}
+                                <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-right whitespace-nowrap">
+                                    RWF{' '}
+                                    {Number(item.tax_amount).toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    })}
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                     <tfoot>
                         <tr className="bg-gray-50 dark:bg-slate-800/50 font-bold">
-                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">Total</td>
+                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                Total
+                            </td>
                             <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-right">
                                 RWF {totalTaxable.toLocaleString()}
                             </td>

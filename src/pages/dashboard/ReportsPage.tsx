@@ -76,7 +76,7 @@ export function ReportsPage() {
                     </div>
                 </div>
 
-                { }
+                {}
                 <div className="flex gap-1 border-b border-slate-200 dark:border-slate-800 pb-px overflow-x-auto scroller-none">
                     <TabButton
                         active={activeTab === 'sales'}
@@ -123,9 +123,21 @@ export function ReportsPage() {
                 </div>
 
                 <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 min-h-[400px]">
-                    {activeTab === 'sales' && <SalesReports facilityId={effectiveFacilityId} startDate={startDate} endDate={endDate} />}
+                    {activeTab === 'sales' && (
+                        <SalesReports
+                            facilityId={effectiveFacilityId}
+                            startDate={startDate}
+                            endDate={endDate}
+                        />
+                    )}
                     {activeTab === 'stock' && <StockReports facilityId={effectiveFacilityId} />}
-                    {activeTab === 'performance' && <PerformanceReports facilityId={effectiveFacilityId} startDate={startDate} endDate={endDate} />}
+                    {activeTab === 'performance' && (
+                        <PerformanceReports
+                            facilityId={effectiveFacilityId}
+                            startDate={startDate}
+                            endDate={endDate}
+                        />
+                    )}
                     {activeTab === 'procurement' && (
                         <div className="space-y-6">
                             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
@@ -137,15 +149,31 @@ export function ReportsPage() {
                         </div>
                     )}
                     {activeTab === 'loyalty' && <LoyaltyReports facilityId={effectiveFacilityId} />}
-                    {activeTab === 'tax' && <TaxReports facilityId={effectiveFacilityId} startDate={startDate} endDate={endDate} />}
-                    {activeTab === 'recall' && <BatchRecallReports facilityId={effectiveFacilityId} />}
+                    {activeTab === 'tax' && (
+                        <TaxReports
+                            facilityId={effectiveFacilityId}
+                            startDate={startDate}
+                            endDate={endDate}
+                        />
+                    )}
+                    {activeTab === 'recall' && (
+                        <BatchRecallReports facilityId={effectiveFacilityId} />
+                    )}
                 </div>
             </div>
         </ProtectedRoute>
     );
 }
 
-function PerformanceReports({ facilityId, startDate, endDate }: { facilityId?: number, startDate: string, endDate: string }) {
+function PerformanceReports({
+    facilityId,
+    startDate,
+    endDate,
+}: {
+    facilityId?: number;
+    startDate: string;
+    endDate: string;
+}) {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<any | null>(null);
 
@@ -154,7 +182,10 @@ function PerformanceReports({ facilityId, startDate, endDate }: { facilityId?: n
         const load = async () => {
             setLoading(true);
             try {
-                const res = await pharmacyService.getEmployeePerformanceReport(facilityId, { start_date: startDate, end_date: endDate });
+                const res = await pharmacyService.getEmployeePerformanceReport(facilityId, {
+                    start_date: startDate,
+                    end_date: endDate,
+                });
                 setData(res);
             } finally {
                 setLoading(false);
@@ -187,25 +218,49 @@ function PerformanceReports({ facilityId, startDate, endDate }: { facilityId?: n
 
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div className="p-4 border-b border-gray-100 dark:border-slate-800">
-                    <h4 className="font-bold text-slate-700 dark:text-slate-200">Dispensing Efficiency</h4>
+                    <h4 className="font-bold text-slate-700 dark:text-slate-200">
+                        Dispensing Efficiency
+                    </h4>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-slate-800/50">
                             <tr>
                                 <th className="px-6 py-3 font-semibold text-slate-500">Employee</th>
-                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">Transactions</th>
-                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">Total Sales</th>
-                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">Avg Value</th>
+                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                    Transactions
+                                </th>
+                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                    Total Sales
+                                </th>
+                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                    Avg Value
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                             {data?.performers?.map((p: any) => (
                                 <tr key={p.employee_id}>
-                                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{p.employee_name}</td>
-                                    <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">{p.transaction_count}</td>
-                                    <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">RWF {p.total_sales.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right font-bold text-healthcare-primary">RWF {p.average_transaction_value.toLocaleString()}</td>
+                                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white whitespace-nowrap">
+                                        {p.employee_name}
+                                    </td>
+                                    <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                        {p.transaction_count}
+                                    </td>
+                                    <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                        RWF{' '}
+                                        {p.total_sales.toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                        })}
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-bold text-healthcare-primary whitespace-nowrap">
+                                        RWF{' '}
+                                        {p.average_transaction_value.toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                        })}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -240,37 +295,68 @@ function LoyaltyReports({ facilityId }: { facilityId?: number }) {
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-6 bg-healthcare-primary/5 rounded-2xl border border-healthcare-primary/10">
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Total Unique Patients</p>
-                    <p className="text-4xl font-black text-healthcare-primary">{data?.total_patients || 0}</p>
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">
+                        Total Unique Patients
+                    </p>
+                    <p className="text-4xl font-black text-healthcare-primary">
+                        {data?.total_patients || 0}
+                    </p>
                 </div>
                 <div className="p-6 bg-teal-500/5 rounded-2xl border border-teal-500/10">
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Repeat Customers</p>
-                    <p className="text-4xl font-black text-teal-600">{data?.repeat_customers || 0}</p>
-                    <p className="text-xs text-slate-400 mt-2">({((data?.repeat_customers / data?.total_patients) * 100 || 0).toFixed(1)}% loyalty rate)</p>
+                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">
+                        Repeat Customers
+                    </p>
+                    <p className="text-4xl font-black text-teal-600">
+                        {data?.repeat_customers || 0}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-2">
+                        ({((data?.repeat_customers / data?.total_patients) * 100 || 0).toFixed(1)}%
+                        loyalty rate)
+                    </p>
                 </div>
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm">
                 <div className="p-4 border-b border-gray-100 dark:border-slate-800">
-                    <h4 className="font-bold text-slate-700 dark:text-slate-200">Top Contributing Patients</h4>
+                    <h4 className="font-bold text-slate-700 dark:text-slate-200">
+                        Top Contributing Patients
+                    </h4>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-slate-800/50">
                             <tr>
                                 <th className="px-6 py-3 font-semibold text-slate-500">Patient</th>
-                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">Visits</th>
-                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">Total Spent</th>
-                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">Last Visit</th>
+                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                    Visits
+                                </th>
+                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                    Total Spent
+                                </th>
+                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                    Last Visit
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                             {data?.top_patients?.map((p: any) => (
                                 <tr key={p.patient_id}>
-                                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{p.patient_name}</td>
-                                    <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">{p.visit_count}</td>
-                                    <td className="px-6 py-4 text-right font-bold text-healthcare-primary">RWF {p.total_spent.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right text-slate-400 text-xs">{new Date(p.last_visit).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4 font-medium text-slate-900 dark:text-white whitespace-nowrap">
+                                        {p.patient_name}
+                                    </td>
+                                    <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                                        {p.visit_count}
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-bold text-healthcare-primary whitespace-nowrap">
+                                        RWF{' '}
+                                        {p.total_spent.toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                        })}
+                                    </td>
+                                    <td className="px-6 py-4 text-right text-slate-400 text-xs whitespace-nowrap">
+                                        {new Date(p.last_visit).toLocaleDateString()}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -281,7 +367,15 @@ function LoyaltyReports({ facilityId }: { facilityId?: number }) {
     );
 }
 
-function TaxReports({ facilityId, startDate, endDate }: { facilityId?: number, startDate: string, endDate: string }) {
+function TaxReports({
+    facilityId,
+    startDate,
+    endDate,
+}: {
+    facilityId?: number;
+    startDate: string;
+    endDate: string;
+}) {
     const [loading, setLoading] = useState(false);
     const [taxData, setTaxData] = useState<any | null>(null);
     const [returnsData, setReturnsData] = useState<any | null>(null);
@@ -292,8 +386,11 @@ function TaxReports({ facilityId, startDate, endDate }: { facilityId?: number, s
             setLoading(true);
             try {
                 const [tax, returns] = await Promise.all([
-                    pharmacyService.getTaxSummary(facilityId, { start_date: startDate, end_date: endDate }),
-                    pharmacyService.getVendorReturnsReport(facilityId)
+                    pharmacyService.getTaxSummary(facilityId, {
+                        start_date: startDate,
+                        end_date: endDate,
+                    }),
+                    pharmacyService.getVendorReturnsReport(facilityId),
                 ]);
                 setTaxData(tax);
                 setReturnsData(returns);
@@ -330,10 +427,16 @@ function TaxReports({ facilityId, startDate, endDate }: { facilityId?: number, s
 
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm">
                 <div className="p-6 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Returns & Adjustments</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Returns & Adjustments
+                    </h3>
                     <div className="text-right">
-                        <p className="text-xs text-slate-400 uppercase font-bold tracking-widest">Total Returned</p>
-                        <p className="text-xl font-black text-rose-600">RWF {Number(returnsData?.total_returned_amount || 0).toLocaleString()}</p>
+                        <p className="text-xs text-slate-400 uppercase font-bold tracking-widest">
+                            Total Returned
+                        </p>
+                        <p className="text-xl font-black text-rose-600">
+                            RWF {Number(returnsData?.total_returned_amount || 0).toLocaleString()}
+                        </p>
                     </div>
                 </div>
                 <div className="overflow-x-auto">
@@ -343,18 +446,36 @@ function TaxReports({ facilityId, startDate, endDate }: { facilityId?: number, s
                                 <th className="px-6 py-3 font-semibold text-slate-500">Note #</th>
                                 <th className="px-6 py-3 font-semibold text-slate-500">Sale #</th>
                                 <th className="px-6 py-3 font-semibold text-slate-500">Reason</th>
-                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">Amount</th>
-                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">Date</th>
+                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                    Amount
+                                </th>
+                                <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                    Date
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                             {returnsData?.recent_notes?.map((n: any) => (
                                 <tr key={n.note_id}>
-                                    <td className="px-6 py-4 font-mono text-xs">{n.note_number}</td>
-                                    <td className="px-6 py-4 text-slate-500">{n.sale_number}</td>
-                                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400 italic">"{n.reason}"</td>
-                                    <td className="px-6 py-4 text-right font-bold text-rose-600">RWF {n.amount.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right text-slate-400 text-xs">{new Date(n.created_at).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4 font-mono text-xs whitespace-nowrap">
+                                        {n.note_number}
+                                    </td>
+                                    <td className="px-6 py-4 text-slate-500 whitespace-nowrap">
+                                        {n.sale_number}
+                                    </td>
+                                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400 italic whitespace-nowrap">
+                                        "{n.reason}"
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-bold text-rose-600 whitespace-nowrap">
+                                        RWF{' '}
+                                        {n.amount.toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                        })}
+                                    </td>
+                                    <td className="px-6 py-4 text-right text-slate-400 text-xs whitespace-nowrap">
+                                        {new Date(n.created_at).toLocaleDateString()}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -365,14 +486,25 @@ function TaxReports({ facilityId, startDate, endDate }: { facilityId?: number, s
     );
 }
 
-function TabButton({ active, onClick, label, icon }: { active: boolean, onClick: () => void, label: string, icon: React.ReactNode }) {
+function TabButton({
+    active,
+    onClick,
+    label,
+    icon,
+}: {
+    active: boolean;
+    onClick: () => void;
+    label: string;
+    icon: React.ReactNode;
+}) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 px-6 py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${active
-                ? 'border-healthcare-primary text-healthcare-primary bg-healthcare-primary/5 dark:bg-slate-800/50'
-                : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50/50'
-                }`}
+            className={`flex items-center gap-2 px-6 py-3 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
+                active
+                    ? 'border-healthcare-primary text-healthcare-primary bg-healthcare-primary/5 dark:bg-slate-800/50'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50/50'
+            }`}
         >
             {icon}
             {label}
@@ -383,7 +515,9 @@ function TabButton({ active, onClick, label, icon }: { active: boolean, onClick:
 function BatchRecallReports({ facilityId }: { facilityId?: number }) {
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(false);
-    const [data, setData] = useState<import('../../types/pharmacy').BatchTraceabilityReport | null>(null);
+    const [data, setData] = useState<import('../../types/pharmacy').BatchTraceabilityReport | null>(
+        null,
+    );
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -435,25 +569,37 @@ function BatchRecallReports({ facilityId }: { facilityId?: number }) {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                             <p className="text-xs text-slate-400 font-bold uppercase">Medicine</p>
-                            <p className="font-bold text-slate-900 dark:text-white mt-1">{data.medicine_name}</p>
+                            <p className="font-bold text-slate-900 dark:text-white mt-1">
+                                {data.medicine_name}
+                            </p>
                         </div>
                         <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                             <p className="text-xs text-slate-400 font-bold uppercase">Batch #</p>
-                            <p className="font-bold text-slate-900 dark:text-white mt-1">{data.batch_number}</p>
+                            <p className="font-bold text-slate-900 dark:text-white mt-1">
+                                {data.batch_number}
+                            </p>
                         </div>
                         <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
                             <p className="text-xs text-slate-400 font-bold uppercase">Expiry</p>
-                            <p className="font-bold text-rose-600 mt-1">{new Date(data.expiry_date).toLocaleDateString()}</p>
+                            <p className="font-bold text-rose-600 mt-1">
+                                {new Date(data.expiry_date).toLocaleDateString()}
+                            </p>
                         </div>
                         <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-                            <p className="text-xs text-slate-400 font-bold uppercase">Total Dispensed</p>
-                            <p className="font-black text-rose-600 mt-1">{data.total_dispensed} units</p>
+                            <p className="text-xs text-slate-400 font-bold uppercase">
+                                Total Dispensed
+                            </p>
+                            <p className="font-black text-rose-600 mt-1">
+                                {data.total_dispensed} units
+                            </p>
                         </div>
                     </div>
 
                     <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm">
                         <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
-                            <h4 className="font-bold text-slate-700 dark:text-slate-200">Affected Patients</h4>
+                            <h4 className="font-bold text-slate-700 dark:text-slate-200">
+                                Affected Patients
+                            </h4>
                             <button className="text-xs text-healthcare-primary font-bold hover:underline flex items-center gap-1">
                                 <Download size={14} /> Export Patient List
                             </button>
@@ -462,26 +608,51 @@ function BatchRecallReports({ facilityId }: { facilityId?: number }) {
                             <table className="w-full text-left text-sm">
                                 <thead className="bg-slate-50 dark:bg-slate-800/50">
                                     <tr>
-                                        <th className="px-6 py-3 font-semibold text-slate-500">Date</th>
-                                        <th className="px-6 py-3 font-semibold text-slate-500">Transaction #</th>
-                                        <th className="px-6 py-3 font-semibold text-slate-500">Patient Name</th>
-                                        <th className="px-6 py-3 font-semibold text-slate-500 text-right">Quantity</th>
-                                        <th className="px-6 py-3 font-semibold text-slate-500">Dispensed By</th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500">
+                                            Date
+                                        </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500">
+                                            Transaction #
+                                        </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500">
+                                            Patient Name
+                                        </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                            Quantity
+                                        </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500">
+                                            Dispensed By
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {data.patients?.map((p) => (
                                         <tr key={p.transaction_id}>
-                                            <td className="px-6 py-4 text-xs text-slate-400">{new Date(p.date).toLocaleDateString()}</td>
-                                            <td className="px-6 py-4 font-mono text-xs font-bold text-slate-900 dark:text-white">{p.transaction_number}</td>
-                                            <td className="px-6 py-4 font-bold text-healthcare-primary">{p.patient_name}</td>
-                                            <td className="px-6 py-4 text-right font-black">{p.quantity}</td>
-                                            <td className="px-6 py-4 text-slate-500">{p.dispensed_by}</td>
+                                            <td className="px-6 py-4 text-xs text-slate-400 whitespace-nowrap">
+                                                {new Date(p.date).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 font-mono text-xs font-bold text-slate-900 dark:text-white whitespace-nowrap">
+                                                {p.transaction_number}
+                                            </td>
+                                            <td className="px-6 py-4 font-bold text-healthcare-primary whitespace-nowrap">
+                                                {p.patient_name}
+                                            </td>
+                                            <td className="px-6 py-4 text-right font-black whitespace-nowrap">
+                                                {p.quantity}
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-500 whitespace-nowrap">
+                                                {p.dispensed_by}
+                                            </td>
                                         </tr>
                                     ))}
                                     {data.patients?.length === 0 && (
                                         <tr>
-                                            <td colSpan={5} className="px-6 py-12 text-center text-slate-400 italic">No patients found for this batch.</td>
+                                            <td
+                                                colSpan={5}
+                                                className="px-6 py-12 text-center text-slate-400 italic"
+                                            >
+                                                No patients found for this batch.
+                                            </td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -502,13 +673,18 @@ function BatchRecallReports({ facilityId }: { facilityId?: number }) {
 function ControlledDrugRegister({ facilityId }: { facilityId?: number }) {
     const [loading, setLoading] = useState(false);
     const [medicineId, setMedicineId] = useState('');
-    const [data, setData] = useState<import('../../types/pharmacy').ControlledDrugRegisterReport | null>(null);
+    const [data, setData] = useState<
+        import('../../types/pharmacy').ControlledDrugRegisterReport | null
+    >(null);
 
     const handleFetch = async () => {
         if (!facilityId || !medicineId) return;
         setLoading(true);
         try {
-            const res = await pharmacyService.getControlledDrugRegister(facilityId, Number(medicineId));
+            const res = await pharmacyService.getControlledDrugRegister(
+                facilityId,
+                Number(medicineId),
+            );
             setData(res);
         } finally {
             setLoading(false);
@@ -518,7 +694,9 @@ function ControlledDrugRegister({ facilityId }: { facilityId?: number }) {
     return (
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
             <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex flex-wrap gap-4 justify-between items-center">
-                <h4 className="font-bold text-slate-700 dark:text-slate-200">Controlled Drug Register Record</h4>
+                <h4 className="font-bold text-slate-700 dark:text-slate-200">
+                    Controlled Drug Register Record
+                </h4>
                 <div className="flex gap-2">
                     <input
                         type="text"
@@ -544,28 +722,61 @@ function ControlledDrugRegister({ facilityId }: { facilityId?: number }) {
                     <table className="w-full text-left text-xs">
                         <thead className="bg-slate-50 dark:bg-slate-800/50">
                             <tr>
-                                <th className="px-4 py-3 font-semibold text-slate-500">Date/Time</th>
-                                <th className="px-4 py-3 font-semibold text-slate-500">Transaction Details</th>
-                                <th className="px-4 py-3 font-semibold text-slate-500 text-right">Qty In</th>
-                                <th className="px-4 py-3 font-semibold text-slate-500 text-right">Qty Out</th>
-                                <th className="px-4 py-3 font-semibold text-slate-500 text-right">Balance</th>
-                                <th className="px-4 py-3 font-semibold text-slate-500">Pharmacist/Witness</th>
+                                <th className="px-4 py-3 font-semibold text-slate-500">
+                                    Date/Time
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-slate-500">
+                                    Transaction Details
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-slate-500 text-right">
+                                    Qty In
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-slate-500 text-right">
+                                    Qty Out
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-slate-500 text-right">
+                                    Balance
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-slate-500">
+                                    Pharmacist/Witness
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                             {data.movements?.map((m) => (
-                                <tr key={m.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                                    <td className="px-4 py-3 text-slate-400 whitespace-nowrap">{format(new Date(m.date), 'dd/MM/yy HH:mm')}</td>
-                                    <td className="px-4 py-3">
-                                        <div className="font-semibold text-slate-900 dark:text-white uppercase text-[10px]">{m.type}</div>
-                                        <div className="text-slate-400 italic text-[10px]">{m.reference}</div>
+                                <tr
+                                    key={m.id}
+                                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
+                                >
+                                    <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
+                                        {format(new Date(m.date), 'dd/MM/yy HH:mm')}
                                     </td>
-                                    <td className="px-4 py-3 text-right text-emerald-600 font-bold">{m.quantity_in || '-'}</td>
-                                    <td className="px-4 py-3 text-right text-rose-600 font-bold">{m.quantity_out || '-'}</td>
-                                    <td className="px-4 py-3 text-right bg-slate-50/50 dark:bg-slate-800/50 font-black text-slate-900 dark:text-white text-sm">{m.balance}</td>
                                     <td className="px-4 py-3">
-                                        <div className="text-slate-600 dark:text-slate-300 font-medium">{m.user_name}</div>
-                                        {m.notes && <div className="text-[10px] text-slate-400 truncate w-32">"{m.notes}"</div>}
+                                        <div className="font-semibold text-slate-900 dark:text-white uppercase text-[10px]">
+                                            {m.type}
+                                        </div>
+                                        <div className="text-slate-400 italic text-[10px]">
+                                            {m.reference}
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-right text-emerald-600 font-bold">
+                                        {m.quantity_in || '-'}
+                                    </td>
+                                    <td className="px-4 py-3 text-right text-rose-600 font-bold">
+                                        {m.quantity_out || '-'}
+                                    </td>
+                                    <td className="px-4 py-3 text-right bg-slate-50/50 dark:bg-slate-800/50 font-black text-slate-900 dark:text-white text-sm">
+                                        {m.balance}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="text-slate-600 dark:text-slate-300 font-medium">
+                                            {m.user_name}
+                                        </div>
+                                        {m.notes && (
+                                            <div className="text-[10px] text-slate-400 truncate w-32">
+                                                "{m.notes}"
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -581,7 +792,15 @@ function ControlledDrugRegister({ facilityId }: { facilityId?: number }) {
     );
 }
 
-function SalesReports({ facilityId, startDate, endDate }: { facilityId?: number, startDate?: string, endDate?: string }) {
+function SalesReports({
+    facilityId,
+    startDate,
+    endDate,
+}: {
+    facilityId?: number;
+    startDate?: string;
+    endDate?: string;
+}) {
     const [loading, setLoading] = useState(false);
     const [sales, setSales] = useState<any | null>(null);
     const [profit, setProfit] = useState<any | null>(null);
@@ -648,52 +867,84 @@ function SalesReports({ facilityId, startDate, endDate }: { facilityId?: number,
 
                     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                         <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                            <h4 className="font-bold text-slate-700 dark:text-slate-200">Recent Sales Transactions</h4>
-                            <span className="text-xs font-medium text-slate-400">Showing last {sales?.transactions?.length || 0} transactions</span>
+                            <h4 className="font-bold text-slate-700 dark:text-slate-200">
+                                Recent Sales Transactions
+                            </h4>
+                            <span className="text-xs font-medium text-slate-400">
+                                Showing last {sales?.transactions?.length || 0} transactions
+                            </span>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
                                 <thead className="bg-slate-50 dark:bg-slate-800/50">
                                     <tr>
-                                        <th className="px-6 py-3 font-semibold text-slate-500">ID</th>
-                                        <th className="px-6 py-3 font-semibold text-slate-500">Date</th>
-                                        <th className="px-6 py-3 font-semibold text-slate-500">Receipt #</th>
-                                        <th className="px-6 py-3 font-semibold text-slate-500">Medicine</th>
-                                        <th className="px-6 py-3 font-semibold text-slate-500">Patient</th>
-                                        <th className="px-6 py-3 font-semibold text-slate-500 text-right">Qty</th>
-                                        <th className="px-6 py-3 font-semibold text-slate-500 text-right">Total</th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500">
+                                            ID
+                                        </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500">
+                                            Date
+                                        </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500">
+                                            Receipt #
+                                        </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500">
+                                            Medicine
+                                        </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500">
+                                            Patient
+                                        </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                            Qty
+                                        </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                            Total
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {sales?.transactions?.length > 0 ? (
                                         sales.transactions.map((t: any) => (
-                                            <tr key={t.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                                <td className="px-6 py-4 font-mono text-[10px] text-slate-400">
+                                            <tr
+                                                key={t.id}
+                                                className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                            >
+                                                <td className="px-6 py-4 font-mono text-[10px] text-slate-400 whitespace-nowrap">
                                                     #{t.id}
                                                 </td>
-                                                <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
+                                                <td className="px-6 py-4 font-medium text-slate-900 dark:text-white whitespace-nowrap">
                                                     {new Date(t.date).toLocaleDateString()}
                                                 </td>
-                                                <td className="px-6 py-4 font-mono text-[10px] text-healthcare-primary font-bold uppercase">
+                                                <td className="px-6 py-4 font-mono text-[10px] text-healthcare-primary font-bold uppercase whitespace-nowrap">
                                                     {t.transaction_number}
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="text-slate-600 dark:text-slate-300 font-medium">{t.medicine_name}</span>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="text-slate-600 dark:text-slate-300 font-medium">
+                                                        {t.medicine_name}
+                                                    </span>
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="text-slate-500 dark:text-slate-400">{t.patient_name}</span>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="text-slate-500 dark:text-slate-400">
+                                                        {t.patient_name}
+                                                    </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">
+                                                <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400 whitespace-nowrap">
                                                     {t.quantity}
                                                 </td>
-                                                <td className="px-6 py-4 text-right font-bold text-healthcare-primary">
-                                                    RWF {t.total_amount.toLocaleString()}
+                                                <td className="px-6 py-4 text-right font-bold text-healthcare-primary whitespace-nowrap">
+                                                    RWF{' '}
+                                                    {t.total_amount.toLocaleString(undefined, {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                    })}
                                                 </td>
                                             </tr>
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                                            <td
+                                                colSpan={7}
+                                                className="px-6 py-12 text-center text-slate-400"
+                                            >
                                                 No transactions found for the selected period.
                                             </td>
                                         </tr>
@@ -776,12 +1027,13 @@ function SummaryCard({ title, value, trend, icon, color = 'teal' }: any) {
     return (
         <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl p-5 shadow-sm">
             <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 ${color === 'teal'
-                    ? 'bg-teal-50 text-teal-600'
-                    : color === 'amber'
-                        ? 'bg-amber-50 text-amber-600'
-                        : 'bg-rose-50 text-rose-600'
-                    }`}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 ${
+                    color === 'teal'
+                        ? 'bg-teal-50 text-teal-600'
+                        : color === 'amber'
+                          ? 'bg-amber-50 text-amber-600'
+                          : 'bg-rose-50 text-rose-600'
+                }`}
             >
                 {icon}
             </div>

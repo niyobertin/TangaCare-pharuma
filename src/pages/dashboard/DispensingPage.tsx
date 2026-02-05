@@ -122,8 +122,7 @@ export function DispensingPage() {
                 const fetchedPatients = results.data || [];
 
                 // Always include Walk-in in results if query is empty or matches
-                const showWalkIn =
-                    !patientQuery || 'walk-in'.includes(patientQuery.toLowerCase());
+                const showWalkIn = !patientQuery || 'walk-in'.includes(patientQuery.toLowerCase());
                 setPatients(showWalkIn ? [WALK_IN_PATIENT, ...fetchedPatients] : fetchedPatients);
             } catch (err) {
                 console.warn('Patient API not reachable, mocking results');
@@ -318,7 +317,7 @@ export function DispensingPage() {
                                             'group p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl text-left transition-all hover:border-healthcare-primary/30 hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden',
                                             ((med.stock_quantity || 0) === 0 ||
                                                 user?.role?.toString() === 'auditor') &&
-                                            'opacity-50 cursor-not-allowed grayscale',
+                                                'opacity-50 cursor-not-allowed grayscale',
                                         )}
                                     >
                                         <div className="flex flex-col gap-3">
@@ -446,7 +445,7 @@ export function DispensingPage() {
                                 </div>
                             )}
                         {(selectedPatient && !selectedPatient.is_walk_in) ||
-                            user?.role?.toString()?.toLowerCase() === 'auditor' ? (
+                        user?.role?.toString()?.toLowerCase() === 'auditor' ? (
                             <div className="flex justify-between items-center bg-white dark:bg-slate-800 px-2 py-1.5 rounded-lg border dark:border-slate-700 text-sm">
                                 <div>
                                     <div className="font-bold text-healthcare-dark dark:text-white">
@@ -526,8 +525,8 @@ export function DispensingPage() {
                                                 EXP:{' '}
                                                 {item.selectedBatch?.expiry_date
                                                     ? new Date(
-                                                        item.selectedBatch.expiry_date,
-                                                    ).toLocaleDateString()
+                                                          item.selectedBatch.expiry_date,
+                                                      ).toLocaleDateString()
                                                     : 'N/A'}
                                             </span>
                                         </div>
