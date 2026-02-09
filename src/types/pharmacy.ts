@@ -15,10 +15,12 @@ export interface DashboardStats {
     lowStockWarning: number;
     expiringSoon: number;
     dailySales: string;
+    totalSalesAllTime?: number;
 
     dailySalesChart?: Array<{ date: string; sales: number }>;
 
     staffCount?: number;
+    totalInventoryValue?: number;
 
     activeAlertsCount?: number;
     trends: {
@@ -201,10 +203,17 @@ export interface ProcurementOrder {
 export interface Alert {
     id: number;
     facility_id: number;
-    type: 'low_stock' | 'expiry' | 'system';
+    type: 'low_stock' | 'expiry' | 'system' | 'expiry_soon' | 'expired';
     message: string;
-    status: 'active' | 'acknowledged';
+    title: string;
+    status: 'active' | 'acknowledged' | 'resolved';
     created_at: string;
+    medicine_id?: number;
+    batch_id?: number;
+    current_value?: number;
+    threshold_value?: number;
+    medicine?: Medicine;
+    batch?: Batch;
 }
 
 export interface Transaction {
@@ -244,7 +253,9 @@ export interface SaleItem {
     id: number;
     sale_id: number;
     medicine_id: number;
+    medicine?: Medicine;
     batch_id: number;
+    batch?: Batch;
     quantity: number;
     unit_price: number;
     total_price: number;
@@ -275,13 +286,386 @@ export interface CreateSaleDto {
     vat_rate?: number;
     items: Array<{
         medicine_id: number;
-        batch_id?: number;
+        batch_id: number;
         quantity: number;
         unit_price: number;
     }>;
-    payments?: Array<{
+    payments: Array<{
         method: SalePaymentMethod;
         amount: number;
         reference?: string;
     }>;
+}
+
+// Advanced Analytics Types
+export interface AdvancedKPIs {
+    inventory_turnover: {
+        ratio: number;
+        period: string;
+        target: number;
+    };
+    days_on_hand: {
+        average: number;
+        critical_items: number;
+        target: number;
+    };
+    inventory_accuracy: {
+        rate: number;
+        last_count_date: string | null;
+        target: number;
+    };
+    controlled_drug_variance: {
+        status: 'compliant' | 'variance';
+        variance_count: number;
+    };
+}
+
+export interface CriticalMedicine {
+    id: number;
+    name: string;
+    current_quantity: number;
+    min_threshold: number;
+    status: 'adequate' | 'low_stock' | 'critical';
+    expiry_risk: 'safe' | 'warning' | 'critical';
+    last_dispensed: string | null;
+}
+
+export interface ExpiryHeatMapData {
+    dates: Array<{
+        date: string;
+        batches: Array<{
+            batch_number: string;
+            medicine_name: string;
+            quantity: number;
+        }>;
+        total_value: number;
+    }>;
+}
+
+export interface FEFOComplianceData {
+    compliance_rate: number;
+    total_transactions: number;
+    compliant_transactions: number;
+    violations: Array<{
+        transaction_id: number;
+        date: string;
+        medicine_name: string;
+        batch_used: string;
+        batch_expiry: string;
+        earlier_batch_available: string;
+        earlier_expiry: string;
+    }>;
+}
+
+export interface ABCAnalysisData {
+    class_a: Array<ABCAnalysisItem>;
+    class_b: Array<ABCAnalysisItem>;
+    class_c: Array<ABCAnalysisItem>;
+    all_items: Array<ABCAnalysisItem>;
+    summary: {
+        totalValue: number;
+        classes: {
+            A: { itemCount: number; totalValue: number; percentage: number };
+            B: { itemCount: number; totalValue: number; percentage: number };
+            C: { itemCount: number; totalValue: number; percentage: number };
+        };
+    };
+}
+
+export interface ABCAnalysisItem {
+    medicine_id: number;
+    medicine_name: string;
+    consumption_value: number;
+    cumulative_percentage: number;
+    classification: 'A' | 'B' | 'C';
+}
+
+export interface MultiLocationData {
+    facilities: Array<{
+        facility_id: number;
+        facility_name: string;
+        metric_value: number;
+        rank: number;
+    }>;
+}
+
+export interface OverstockData {
+    items: Array<{
+        medicine_id: number;
+        medicine_name: string;
+        current_quantity: number;
+        target_quantity: number;
+        excess: number;
+        excess_value: number;
+    }>;
+}
+
+export interface ReorderSuggestion {
+    medicine_id: number;
+    medicine_name: string;
+    current_quantity: number;
+    reorder_point: number;
+    min_stock_level?: number; // Alias for legacy support if needed
+    suggested_quantity: number;
+    average_daily_usage?: number;
+    days_remaining?: number;
+    urgency: 'low' | 'medium' | 'high';
+}
+
+export interface SupplierPerformanceItem {
+    supplier_id: number;
+    supplier_name: string;
+    total_orders: number;
+    avg_lead_time_days: number;
+    fulfillment_rate: number;
+    on_time_delivery_rate: number;
+}
+
+export interface BatchTraceabilityRow {
+    transaction_id: number;
+    transaction_number: string;
+    date: string;
+    patient_id: number | null;
+    patient_name: string;
+    quantity: number;
+    dispensed_by: string;
+}
+
+export interface BatchTraceabilityReport {
+    batch_id: number;
+    batch_number: string;
+    medicine_name: string;
+    expiry_date: string;
+    total_dispensed: number;
+    patients: BatchTraceabilityRow[];
+}
+
+export interface ControlledDrugRegisterRow {
+    id: number;
+    date: string;
+    type: string;
+    reference: string;
+    quantity_in: number;
+    quantity_out: number;
+    balance: number;
+    user_name: string;
+    notes: string;
+}
+
+export interface ControlledDrugRegisterReport {
+    medicine_id: number;
+    medicine_name: string;
+    current_balance: number;
+    movements: ControlledDrugRegisterRow[];
+}
+
+export type PhysicalCountStatus = 'in_progress' | 'completed' | 'approved' | 'cancelled';
+
+export interface PhysicalCountItem {
+    id: number;
+    physical_count_id: number;
+    medicine_id: number;
+    batch_id: number;
+    system_quantity: number;
+    counted_quantity: number;
+    variance: number;
+    notes?: string;
+    medicine?: Medicine;
+    batch?: Batch;
+}
+
+export interface PhysicalCount {
+    id: number;
+    facility_id: number;
+    count_date: string;
+    status: PhysicalCountStatus;
+    counted_by_id: number;
+    approved_by_id?: number;
+    approved_at?: string;
+    notes?: string;
+    created_at: string;
+    items?: PhysicalCountItem[];
+    counted_by?: import('./auth').User;
+    approved_by?: import('./auth').User;
+}
+// Returns System Types
+export type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'completed';
+export type RefundMethod = 'cash' | 'mobile_money' | 'card' | 'credit_note';
+export type ReturnReason = 'customer_request' | 'damaged' | 'expired' | 'wrong_item';
+export type ItemCondition = 'resellable' | 'damaged' | 'expired';
+
+export interface CustomerReturnItem {
+    id: number;
+    return_id: number;
+    sale_item_id: number;
+    medicine_id: number;
+    medicine?: Medicine;
+    batch_id: number;
+    batch?: Batch;
+    quantity_returned: number;
+    reason: ReturnReason;
+    condition: ItemCondition;
+    refund_amount: number;
+    restore_to_stock: boolean;
+}
+
+export interface CustomerReturn {
+    id: number;
+    return_number: string;
+    sale_id: number;
+    sale?: Sale;
+    facility_id: number;
+    processed_by_id: number;
+    processedBy?: User;
+    approved_by_id?: number | null;
+    approvedBy?: User | null;
+    total_refund_amount: number;
+    refund_method: RefundMethod;
+    status: ReturnStatus;
+    notes?: string;
+    credit_note_id?: number | null;
+    approved_at?: string | null;
+    created_at: string;
+    items?: CustomerReturnItem[];
+}
+
+// Detailed Sales Report Types
+export interface DailySalesReport {
+    facility_id: number;
+    date: string;
+    summary: {
+        total_sales: number;
+        total_transactions: number;
+        average_sale_value: number;
+        total_vat: number;
+        total_items_sold: number;
+    };
+    sales: any[];
+    payment_methods: Record<string, { amount: number; count: number }>;
+    hourly_breakdown: Array<{ hour: number; amount: number; count: number }>;
+}
+
+export interface MonthlySalesReport {
+    facility_id: number;
+    year: number;
+    month: number;
+    summary: {
+        total_sales: number;
+        total_transactions: number;
+        total_profit: number;
+        profit_margin: number;
+        total_vat: number;
+    };
+    daily_breakdown: Array<{ date: string; amount: number; count: number }>;
+    top_medicines: Array<{
+        medicine_id: number;
+        medicine_name: string;
+        quantity: number;
+        revenue: number;
+    }>;
+}
+
+export interface SalesByMedicineReport {
+    facility_id: number;
+    period: { start: string; end: string };
+    medicines: Array<{
+        medicine_id: number;
+        medicine_name: string;
+        quantity_sold: number;
+        revenue: number;
+        cost: number;
+        profit: number;
+        profit_margin: number;
+        transaction_count: number;
+    }>;
+}
+
+// KPI Types
+export interface FinancialKPIs {
+    facility_id: number;
+    period: { start: string; end: string };
+    total_revenue: number;
+    total_cost: number;
+    gross_profit: number;
+    gross_profit_margin: number;
+    net_profit: number;
+    net_profit_margin: number;
+    average_transaction_value: number;
+    total_transactions: number;
+    revenue_per_day: number;
+}
+
+export interface InventoryKPIs {
+    facility_id: number;
+    total_inventory_value: number;
+    total_items: number;
+    low_stock_items: number;
+    out_of_stock_items: number;
+    expiring_soon_items: number;
+    expired_items: number;
+    inventory_turnover_ratio: number;
+    days_inventory_outstanding: number;
+    stock_health_score: number;
+}
+
+export interface OperationalKPIs {
+    facility_id: number;
+    period: { start: string; end: string };
+    total_sales_volume: number;
+    return_rate: number;
+    average_items_per_sale: number;
+    top_selling_medicine: {
+        medicine_id: number;
+        medicine_name: string;
+        quantity_sold: number;
+        revenue: number;
+    } | null;
+    sales_growth_rate: number;
+    customer_count: number;
+    repeat_customer_rate: number;
+}
+
+export interface ComprehensiveKPIs {
+    financial: FinancialKPIs;
+    inventory: InventoryKPIs;
+    operational: OperationalKPIs;
+}
+
+export interface PaymentBreakdown {
+    payment_method: string;
+    total_amount: number;
+    transaction_count: number;
+    percentage: number;
+}
+
+export interface ExpiryRiskBuckets {
+    under_30_days: { count: number; value: number };
+    under_60_days: { count: number; value: number };
+    under_90_days: { count: number; value: number };
+}
+
+export interface TopRevenueMedicine {
+    medicine_id: number;
+    medicine_name: string;
+    revenue: number;
+    quantity: number;
+    profit: number;
+}
+
+export interface CategorySummary {
+    category_id: number;
+    category_name: string;
+    quantity_sold: number;
+    revenue: number;
+    profit: number;
+}
+
+export interface DashboardSummary {
+    today: ComprehensiveKPIs;
+    month: ComprehensiveKPIs;
+    top_medicines: TopRevenueMedicine[];
+    categories: CategorySummary[];
+    payments: PaymentBreakdown[];
+    expiry_risk: ExpiryRiskBuckets;
+    sales_trend?: Array<{ date: string; sales: number }>;
 }

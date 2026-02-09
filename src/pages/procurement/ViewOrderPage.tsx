@@ -76,7 +76,7 @@ export function ViewOrderPage() {
             <div className="w-full bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col border border-slate-100 dark:border-slate-800 print:shadow-none print:rounded-none">
                 {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 print:hidden">
-                    <h2 className="text-xl font-black text-healthcare-dark flex items-center gap-2">
+                    <h2 className="text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                         <FileText size={20} className="text-healthcare-primary" />
                         PO-{order.id.toString().padStart(4, '0')}
                     </h2>
@@ -119,7 +119,7 @@ export function ViewOrderPage() {
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <h3 className="text-lg font-black text-healthcare-dark">
+                                <h3 className="text-lg font-black text-healthcare-dark dark:text-white">
                                     {order.facility?.name}
                                 </h3>
                                 <p className="text-sm text-slate-500 font-medium max-w-xs">
@@ -134,7 +134,7 @@ export function ViewOrderPage() {
                             </div>
                         </div>
                         <div className="text-right">
-                            <h2 className="text-5xl font-black text-slate-100 dark:text-slate-800 mb-6 uppercase tracking-tighter italic">
+                            <h2 className="text-5xl font-black text-slate-100 dark:text-slate-700 mb-6 uppercase tracking-tighter italic">
                                 Purchase Order
                             </h2>
                             <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-shadow whitespace-nowrap">
@@ -142,14 +142,14 @@ export function ViewOrderPage() {
                                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
                                         Order No.
                                     </span>
-                                    <span className="text-sm font-black text-healthcare-dark tracking-tight">
+                                    <span className="text-sm font-black text-healthcare-dark dark:text-white tracking-tight">
                                         PO-{order.id.toString().padStart(4, '0')}
                                     </span>
 
                                     <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
                                         Date
                                     </span>
-                                    <span className="text-sm font-bold text-healthcare-dark">
+                                    <span className="text-sm font-bold text-healthcare-dark dark:text-white">
                                         {new Date(order.order_date).toLocaleDateString()}
                                     </span>
 
@@ -190,7 +190,7 @@ export function ViewOrderPage() {
                                 </h4>
                             </div>
                             <div className="space-y-4">
-                                <p className="text-lg font-black text-healthcare-dark uppercase tracking-tight leading-tight">
+                                <p className="text-lg font-black text-healthcare-dark dark:text-white uppercase tracking-tight leading-tight">
                                     {order.supplier?.name}
                                 </p>
                                 <div className="grid grid-cols-1 gap-3">
@@ -248,7 +248,7 @@ export function ViewOrderPage() {
                                     <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                                         Subtotal
                                     </span>
-                                    <span className="font-bold text-healthcare-dark">
+                                    <span className="font-bold text-healthcare-dark dark:text-white">
                                         RWF {Number(order.subtotal_amount).toLocaleString()}
                                     </span>
                                 </div>
@@ -264,12 +264,12 @@ export function ViewOrderPage() {
                                     <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">
                                         VAT ({order.vat_rate}%)
                                     </span>
-                                    <span className="font-bold text-healthcare-dark">
+                                    <span className="font-bold text-healthcare-dark dark:text-white">
                                         RWF {Number(order.vat_amount).toLocaleString()}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center pt-4 border-t-2 border-dashed border-slate-200 dark:border-slate-700 mt-2">
-                                    <span className="text-sm font-black text-healthcare-dark uppercase tracking-widest">
+                                    <span className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-widest">
                                         Total Payable
                                     </span>
                                     <span className="text-2xl font-black text-healthcare-primary">
@@ -311,7 +311,7 @@ export function ViewOrderPage() {
                                         >
                                             <td className="px-6 py-5">
                                                 <div className="flex flex-col">
-                                                    <span className="font-black text-healthcare-dark text-sm uppercase tracking-tight">
+                                                    <span className="font-black text-healthcare-dark dark:text-white text-sm uppercase tracking-tight">
                                                         {item.medicine?.name}
                                                     </span>
                                                     <span className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">
@@ -321,7 +321,7 @@ export function ViewOrderPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-right">
-                                                <div className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-healthcare-dark">
+                                                <div className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-healthcare-dark dark:text-white">
                                                     {item.quantity_ordered}
                                                 </div>
                                             </td>
@@ -331,7 +331,7 @@ export function ViewOrderPage() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5 text-right">
-                                                <span className="text-sm font-black text-healthcare-dark tracking-tight">
+                                                <span className="text-sm font-black text-healthcare-dark dark:text-white tracking-tight">
                                                     RWF {Number(item.total_price).toLocaleString()}
                                                 </span>
                                             </td>
@@ -364,7 +364,7 @@ export function ViewOrderPage() {
                             <p className="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest">
                                 Authorized By
                             </p>
-                            <p className="text-[11px] font-black text-healthcare-dark uppercase tracking-wider">
+                            <p className="text-[11px] font-black text-healthcare-dark dark:text-white uppercase tracking-wider">
                                 {order.created_by?.first_name} {order.created_by?.last_name}
                             </p>
                         </div>

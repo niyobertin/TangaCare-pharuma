@@ -151,7 +151,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                             <Package size={20} />
                         </div>
                         <div>
-                            <h3 className="text-xl font-black text-healthcare-dark">
+                            <h3 className="text-xl font-black text-healthcare-dark dark:text-white">
                                 Receive Inventory
                             </h3>
                             <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
@@ -213,7 +213,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                         className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors align-top ${isMissingInfo ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}
                                     >
                                         <td className="py-4 px-2">
-                                            <div className="font-bold text-healthcare-dark text-sm">
+                                            <div className="font-bold text-healthcare-dark dark:text-white text-sm">
                                                 {item.medicine_name}
                                             </div>
                                             {isMissingInfo && (
@@ -236,7 +236,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                         Number(e.target.value),
                                                     )
                                                 }
-                                                className="w-20 px-2 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg text-center font-black text-sm outline-none focus:border-emerald-500"
+                                                className="w-20 px-2 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                                             />
                                         </td>
                                         <td className="py-4 px-2">
@@ -251,7 +251,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                         e.target.value,
                                                     )
                                                 }
-                                                className={`w-full px-3 py-1.5 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs outline-none focus:border-emerald-500 mb-2 ${isMissingInfo ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
+                                                className={`w-full px-3 py-1.5 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 mb-2 ${isMissingInfo ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
                                                 required={item.quantity_received > 0}
                                             />
                                         </td>
@@ -270,7 +270,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                             e.target.value,
                                                         )
                                                     }
-                                                    className={`px-2 py-1 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs outline-none focus:border-emerald-500 ${isMissingInfo ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
+                                                    className={`px-2 py-1 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
                                                     required={item.quantity_received > 0}
                                                 />
                                             </div>
@@ -288,7 +288,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                             e.target.value,
                                                         )
                                                     }
-                                                    className="px-2 py-1 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg font-bold text-xs outline-none focus:border-emerald-500"
+                                                    className="px-2 py-1 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                                                 />
                                             </div>
                                         </td>

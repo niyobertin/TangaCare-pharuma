@@ -154,7 +154,7 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
                 {step === 1 && (
                     <form onSubmit={handleStep1} className="p-6 space-y-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Organization name *
                             </label>
                             <input
@@ -171,7 +171,7 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Organization code (optional)
                             </label>
                             <input
@@ -207,7 +207,7 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
                 {step === 2 && (
                     <form onSubmit={handleStep2} className="p-6 space-y-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Branch / facility name *
                             </label>
                             <input
@@ -221,7 +221,7 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Type
                             </label>
                             <select
@@ -240,7 +240,7 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
                             </select>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center gap-1">
                                 <MapPin size={12} /> Address
                             </label>
                             <input
@@ -254,7 +254,7 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                     Phone
                                 </label>
                                 <input
@@ -267,7 +267,7 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                     Email
                                 </label>
                                 <input

@@ -8,23 +8,29 @@ import {
     TrendingUp,
     AlertTriangle,
     Clock,
-    Zap,
-    Stethoscope,
     ShieldCheck,
-    Pill,
-    ArrowUpRight,
-    ArrowDownRight,
-    ChevronRight,
     MoreVertical,
-    Download,
-    Filter,
+    ArrowRightLeft,
+    FilePlus,
+    RefreshCw,
 } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
-}
+import { ABCAnalysisVisual } from '../../components/pharmacy/ABCAnalysisVisual';
+import { FEFOComplianceVisual } from '../../components/pharmacy/FEFOComplianceVisual';
+import { DemandPlanningPanel } from '../../components/pharmacy/DemandPlanningPanel';
+import { SupplierMetrics } from '../../components/pharmacy/SupplierMetrics';
+import { useNavigate } from '@tanstack/react-router';
+import {
+    InventoryStatusChart,
+    ConsumptionTrendChart,
+    ExpiryRiskChart,
+    type InventoryData,
+    type TrendData,
+} from '../../components/dashboard/DashboardCharts';
+import { StatCardSkeleton, ChartSkeleton } from '../../components/dashboard/DashboardSkeletons';
+import { AdvancedKPICards } from '../../components/pharmacy/AdvancedKPICards';
+import { CriticalMedicinesPanel } from '../../components/pharmacy/CriticalMedicinesPanel';
+import { ExpiryHeatMap } from '../../components/pharmacy/ExpiryHeatMap';
+import { cn } from '../../lib/utils';
 
 function formatRelativeTime(isoDate: string): string {
     const d = new Date(isoDate);
@@ -45,69 +51,73 @@ export function DashboardPage() {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loadingStats, setLoadingStats] = useState(false);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [loadingTransactions, setLoadingTransactions] = useState(false);
-    const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [loadingTransactions] = useState(false);
+    const [, setAlerts] = useState<Alert[]>([]);
+    const [, setTopMedicines] = useState<{ name: string; value: number }[]>([]);
+    const [medicinesSortOrder] = useState<'ASC' | 'DESC'>('DESC');
+
+    const [inventoryStatus, setInventoryStatus] = useState<{ by_category: InventoryData[] } | null>(
+        null,
+    );
+    const [consumptionTrends, setConsumptionTrends] = useState<{
+        daily_trends: TrendData[];
+    } | null>(null);
+    const [expiryRisk, setExpiryRisk] = useState<any>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         let mounted = true;
         const load = async () => {
             setLoadingStats(true);
             try {
-                const data = await pharmacyService.getDashboardStats();
-                if (mounted) setStats(data);
-            } catch (e) {
-                if (mounted) setStats(null);
+                const results = await Promise.allSettled([
+                    pharmacyService.getDashboardStats(),
+                    pharmacyService.getTopSellingMedicines(medicinesSortOrder),
+                    pharmacyService.getInventoryStatus(),
+                    pharmacyService.getConsumptionTrends(30),
+                    pharmacyService.getExpiryRisk(90),
+                    pharmacyService.getAlerts({ status: 'active', facility_id: facilityId }),
+                    pharmacyService.getRecentSales(),
+                ]);
+
+                if (mounted) {
+                    if (results[0].status === 'fulfilled') setStats(results[0].value);
+                    if (results[1].status === 'fulfilled') setTopMedicines(results[1].value);
+                    if (results[2].status === 'fulfilled') setInventoryStatus(results[2].value);
+                    if (results[3].status === 'fulfilled') setConsumptionTrends(results[3].value);
+                    if (results[4].status === 'fulfilled') setExpiryRisk(results[4].value);
+                    if (results[5].status === 'fulfilled') setAlerts(results[5].value?.data ?? []);
+                    if (results[6].status === 'fulfilled')
+                        setTransactions(Array.isArray(results[6].value) ? results[6].value : []);
+
+                    // Log errors for debugging
+                    results.forEach((res, i) => {
+                        if (res.status === 'rejected') {
+                            console.error(`Dashboard fetch error [${i}]:`, res.reason);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Unexpected dashboard error:', error);
             } finally {
                 if (mounted) setLoadingStats(false);
             }
         };
         load();
-        return () => {
-            mounted = false;
-        };
-    }, [facilityId]);
 
-    useEffect(() => {
-        let mounted = true;
-        const load = async () => {
-            setLoadingTransactions(true);
-            try {
-                const list = await pharmacyService.getRecentSales();
-                if (mounted) setTransactions(Array.isArray(list) ? list : []);
-            } catch {
-                if (mounted) setTransactions([]);
-            } finally {
-                if (mounted) setLoadingTransactions(false);
-            }
-        };
-        load();
         return () => {
             mounted = false;
         };
-    }, [facilityId]);
-
-    useEffect(() => {
-        let mounted = true;
-        const load = async () => {
-            try {
-                const res = await pharmacyService.getAlerts({ status: 'active' });
-                if (mounted) setAlerts(res?.data ?? []);
-            } catch {
-                if (mounted) setAlerts([]);
-            }
-        };
-        load();
-        return () => {
-            mounted = false;
-        };
-    }, [facilityId]);
+    }, [facilityId, medicinesSortOrder]);
 
     const medicinesInStock = stats?.medicinesInStock ?? '0';
     const lowStockWarning = stats?.lowStockWarning ?? 0;
     const expiringSoon = stats?.expiringSoon ?? 0;
-    const dailySales = stats?.dailySales
-        ? `RWF ${Number(stats.dailySales).toLocaleString()}`
-        : 'RWF 0';
+    const dailySalesVal = Number(stats?.dailySales);
+    const dailySales = !isNaN(dailySalesVal) ? `RWF ${dailySalesVal.toLocaleString()}` : 'RWF 0';
+
+    const totalSalesAllTimeVal = stats?.totalSalesAllTime ?? 0;
+    const totalSalesAllTime = `RWF ${totalSalesAllTimeVal.toLocaleString()}`;
 
     const scopeLabel =
         facilityId == null && facilities.length > 0
@@ -137,232 +147,193 @@ export function DashboardPage() {
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h2 className="text-xl font-black text-healthcare-dark tracking-tight">
-                            Pharmacy Management
+                        <h2 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
+                            Pharmacy{' '}
+                            <span className="text-healthcare-primary">Analytics Command</span>
                         </h2>
                         <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-2 mt-0.5 text-xs uppercase tracking-wider">
                             <span className="flex h-2 w-2 rounded-full bg-healthcare-accent animate-pulse"></span>
-                            Live Pharmacy Status • {scopeLabel}
+                            Live Compliance & Inventory • {scopeLabel}
                         </p>
                     </div>
-                    <div className="flex gap-2">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm">
-                            <Filter size={14} /> Filter View
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            onClick={() => navigate({ to: '/app/procurement' })}
+                            className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md shadow-teal-500/10"
+                        >
+                            <FilePlus size={14} /> New Order
                         </button>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md shadow-teal-500/10">
-                            <Download size={14} /> Export Report
+                        <button
+                            onClick={() => navigate({ to: '/app/inventory' })}
+                            className="flex items-center gap-2 px-4 py-2 bg-healthcare-dark text-white rounded-lg text-sm font-black hover:opacity-90 transition-all shadow-md shadow-slate-900/10"
+                        >
+                            <ArrowRightLeft size={14} /> Transfer
+                        </button>
+                        <button
+                            onClick={async () => {
+                                await pharmacyService.recalculateConsumption();
+                                window.location.reload();
+                            }}
+                            className="p-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 hover:text-healthcare-primary transition-all shadow-sm"
+                            title="Recalculate AI Demand"
+                        >
+                            <RefreshCw size={14} />
                         </button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <StatCard
-                        title="Medicines in Stock"
-                        value={
-                            loadingStats
-                                ? '—'
-                                : medicinesInStock.toLocaleString?.() || medicinesInStock
-                        }
-                        trend={stats?.trends?.medicines ?? '0%'}
-                        isPositive={stats?.isPositive?.medicines ?? true}
-                        color="bg-healthcare-primary"
-                        icon={<Package size={20} />}
-                    />
-                    <StatCard
-                        title="Low Stock Warning"
-                        value={loadingStats ? '—' : String(lowStockWarning)}
-                        trend={stats?.trends?.lowStock ?? '0%'}
-                        isPositive={stats?.isPositive?.lowStock ?? true}
-                        color="bg-amber-500"
-                        icon={<AlertTriangle size={20} />}
-                    />
-                    <StatCard
-                        title="Expiring Soon"
-                        value={loadingStats ? '—' : String(expiringSoon)}
-                        trend={stats?.trends?.expiring ?? '0%'}
-                        isPositive={stats?.isPositive?.expiring ?? false}
-                        color="bg-red-500"
-                        icon={<Clock size={20} />}
-                    />
-                    <StatCard
-                        title="Total Daily Sales"
-                        value={loadingStats ? '—' : dailySales}
-                        trend={stats?.trends?.sales ?? '0%'}
-                        isPositive={stats?.isPositive?.sales ?? true}
-                        color="bg-healthcare-secondary"
-                        icon={<TrendingUp size={20} />}
-                    />
+                <AdvancedKPICards />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    {loadingStats ? (
+                        <>
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                            <StatCardSkeleton />
+                        </>
+                    ) : (
+                        <>
+                            <StatCard
+                                title="Medicines in Stock"
+                                value={medicinesInStock.toLocaleString?.() || medicinesInStock}
+                                color="bg-healthcare-primary"
+                                icon={<Package size={18} />}
+                                onClick={() => navigate({ to: '/app/inventory' })}
+                            />
+                            <StatCard
+                                title="Low Stock Warning"
+                                value={String(lowStockWarning)}
+                                color="bg-amber-500"
+                                icon={<AlertTriangle size={18} />}
+                                onClick={() => navigate({ to: '/app/alerts' })}
+                            />
+                            <StatCard
+                                title="Expiring Soon"
+                                value={String(expiringSoon)}
+                                color="bg-red-500"
+                                icon={<Clock size={18} />}
+                                onClick={() => navigate({ to: '/app/alerts' })}
+                            />
+                            <StatCard
+                                title="Total Daily Sales"
+                                value={dailySales}
+                                color="bg-healthcare-secondary"
+                                icon={<TrendingUp size={18} />}
+                                onClick={() => navigate({ to: '/app/analytics' })}
+                            />
+                            <StatCard
+                                title="Total All-Time Sales"
+                                value={totalSalesAllTime}
+                                color="bg-blue-600"
+                                icon={<TrendingUp size={18} />}
+                                onClick={() => navigate({ to: '/app/analytics' })}
+                            />
+                            <StatCard
+                                title="Total Inventory Value"
+                                value={`RWF ${stats?.totalInventoryValue?.toLocaleString() || '0'}`}
+                                color="bg-emerald-600"
+                                icon={<ShieldCheck size={18} />}
+                                onClick={() => navigate({ to: '/app/inventory' })}
+                            />
+                        </>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 relative overflow-hidden shadow-sm">
-                            <div className="flex justify-between items-center mb-8">
-                                <div>
-                                    <h3 className="text-base font-black text-healthcare-dark">
-                                        Medicine Demand Trend
-                                    </h3>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
-                                        Daily dispensing patterns
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-end gap-3 min-h-[200px] pt-4 relative z-10 px-2">
-                                {(() => {
-                                    const chartArray =
-                                        stats?.dailySalesChart && stats.dailySalesChart.length > 0
-                                            ? stats.dailySalesChart
-                                            : Array.from({ length: 14 }, (_, i) => {
-                                                  const d = new Date();
-                                                  d.setDate(d.getDate() - (13 - i));
-                                                  return {
-                                                      date: d.toISOString().split('T')[0],
-                                                      sales: 0,
-                                                  };
-                                              });
-                                    const maxSales = Math.max(...chartArray.map((x) => x.sales), 1);
-                                    return chartArray.map((day, i) => {
-                                        const heightPct = Math.round((day.sales / maxSales) * 100);
-                                        const dayLabel = new Date(day.date).toLocaleDateString(
-                                            'en-US',
-                                            { weekday: 'short' },
-                                        )[0];
-                                        return (
-                                            <div
-                                                key={day.date}
-                                                className="flex-1 flex flex-col items-center gap-3 group/bar"
-                                            >
-                                                <div className="w-full relative h-[160px] flex items-end">
-                                                    <div
-                                                        style={{ height: `${heightPct}%` }}
-                                                        className={cn(
-                                                            'w-full rounded-t-md transition-all duration-500 relative shadow-sm min-h-[4px]',
-                                                            heightPct > 0 &&
-                                                                i === chartArray.length - 1
-                                                                ? 'bg-healthcare-primary'
-                                                                : 'bg-teal-500/20 dark:bg-teal-500/30 group-hover/bar:bg-healthcare-primary/40 dark:group-hover/bar:bg-healthcare-primary/60',
-                                                        )}
-                                                    ></div>
-                                                </div>
-                                                <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-tighter">
-                                                    {dayLabel}
-                                                </span>
-                                            </div>
-                                        );
-                                    });
-                                })()}
-                            </div>
+                {/* Operational Intelligence Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <ABCAnalysisVisual />
+                    <FEFOComplianceVisual />
+                    <DemandPlanningPanel />
+                    <SupplierMetrics />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
+                                <Package size={18} className="text-healthcare-primary" />
+                                Inventory Status
+                            </h3>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <SummaryFeature
-                                icon={<Stethoscope size={18} className="text-blue-600" />}
-                                title="Pharmacy Staff"
-                                value={
-                                    loadingStats
-                                        ? '—'
-                                        : typeof stats?.staffCount === 'number'
-                                          ? `${stats.staffCount} staff in scope`
-                                          : '—'
-                                }
-                                description="Users in facility or organization"
-                                color="bg-blue-50 dark:bg-blue-900"
-                            />
-                            <SummaryFeature
-                                icon={<ShieldCheck size={18} className="text-healthcare-accent" />}
-                                title="System Compliance"
-                                value={
-                                    loadingStats
-                                        ? '—'
-                                        : (stats?.activeAlertsCount ?? 0) === 0
-                                          ? '100% Optimized'
-                                          : `${Math.max(0, 100 - (stats?.activeAlertsCount ?? 0) * 2)}% attention`
-                                }
-                                description={
-                                    (stats?.activeAlertsCount ?? 0) === 0
-                                        ? 'All regulatory checks passed'
-                                        : `${stats?.activeAlertsCount} active alert(s)`
-                                }
-                                color={
-                                    (stats?.activeAlertsCount ?? 0) === 0
-                                        ? 'bg-emerald-50 dark:bg-emerald-900'
-                                        : 'bg-amber-50 dark:bg-amber-900'
-                                }
-                            />
-                        </div>
+                        {loadingStats ? (
+                            <ChartSkeleton />
+                        ) : inventoryStatus ? (
+                            <div className="h-[300px]">
+                                <InventoryStatusChart data={inventoryStatus.by_category} />
+                            </div>
+                        ) : (
+                            <div className="h-[300px] flex items-center justify-center text-slate-400">
+                                No Data
+                            </div>
+                        )}
                     </div>
-                    <div className="space-y-6">
-                        <div className="glass-card p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-                            <h3 className="font-black text-sm text-healthcare-dark mb-5 flex items-center gap-2">
-                                <Zap size={16} className="text-amber-500 fill-amber-500" /> Quick
-                                Actions
+
+                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
+                                <TrendingUp size={18} className="text-healthcare-primary" />
+                                Consumption Trends
                             </h3>
-                            <div className="space-y-3">
-                                <QuickAction
-                                    icon={<Package size={16} />}
-                                    title="Inventory Restock"
-                                    description="Add new medicine batches"
-                                    color="bg-healthcare-primary"
-                                />
-                                <QuickAction
-                                    icon={<Pill size={16} />}
-                                    title="New Sale"
-                                    description="Dispense medicine to patient"
-                                    color="bg-healthcare-secondary"
-                                />
-                                <QuickAction
-                                    icon={<TrendingUp size={16} />}
-                                    title="Monthly Reports"
-                                    description="Analyze stock movements"
-                                    color="bg-slate-800"
-                                />
-                            </div>
                         </div>
-                        <div className="glass-card p-5 rounded-2xl border-2 border-red-100 dark:border-red-900 bg-white dark:bg-slate-900 shadow-sm">
-                            <h3 className="font-black text-sm text-healthcare-dark mb-5">
-                                Critical Alerts
-                            </h3>
-                            <div className="space-y-4">
-                                {alerts.length === 0 ? (
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                        No active alerts.
-                                    </p>
-                                ) : (
-                                    alerts
-                                        .slice(0, 5)
-                                        .map((alert) => (
-                                            <AlertItem
-                                                key={alert.id}
-                                                type={
-                                                    alert.type === 'expiry'
-                                                        ? 'expiry'
-                                                        : alert.type === 'low_stock'
-                                                          ? 'stock'
-                                                          : 'audit'
-                                                }
-                                                title={
-                                                    alert.message.slice(0, 40) +
-                                                    (alert.message.length > 40 ? '…' : '')
-                                                }
-                                                info={new Date(alert.created_at).toLocaleString()}
-                                                isUrgent={alert.status === 'active'}
-                                            />
-                                        ))
-                                )}
+                        {loadingStats ? (
+                            <ChartSkeleton />
+                        ) : consumptionTrends?.daily_trends &&
+                          consumptionTrends.daily_trends.length > 0 ? (
+                            <div className="h-[300px]">
+                                <ConsumptionTrendChart data={consumptionTrends.daily_trends} />
                             </div>
-                        </div>
+                        ) : (
+                            <div className="h-[300px] flex items-center justify-center text-slate-400">
+                                No Data
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="glass-card rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <CriticalMedicinesPanel />
+                    <div className="glass-card p-6 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-base font-black text-healthcare-dark dark:text-white flex items-center gap-2">
+                                <AlertTriangle size={18} className="text-red-500" />
+                                Expiry Risk Analysis
+                            </h3>
+                        </div>
+                        {loadingStats ? (
+                            <ChartSkeleton />
+                        ) : expiryRisk ? (
+                            <div className="h-[300px]">
+                                <ExpiryRiskChart data={expiryRisk} />
+                            </div>
+                        ) : (
+                            <div className="h-[300px] flex items-center justify-center text-slate-400">
+                                No Data
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <ExpiryHeatMap />
+
+                <div className="glass-card rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 shadow-md">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <h3 className="text-base font-black text-healthcare-dark">
+                            <h3 className="text-base font-black text-healthcare-dark dark:text-white">
                                 Recent Medicine Sales
                             </h3>
                             <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">
                                 Real-time dispensing activity
                             </p>
                         </div>
+                        <button
+                            onClick={() => navigate({ to: '/app/stock-movements' })}
+                            className="text-xs font-bold text-healthcare-primary hover:text-healthcare-dark transition-colors"
+                        >
+                            View All Transactions &rarr;
+                        </button>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
@@ -380,11 +351,23 @@ export function DashboardPage() {
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[13px] font-medium">
                                 {loadingTransactions ? (
                                     <tr>
-                                        <td
-                                            colSpan={7}
-                                            className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 text-sm"
-                                        >
-                                            Loading…
+                                        <td colSpan={7} className="p-0 border-none">
+                                            <div className="p-6">
+                                                <div className="space-y-4">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="flex gap-4 animate-pulse"
+                                                        >
+                                                            <div className="h-4 w-16 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                            <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                            <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                            <div className="h-4 w-12 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                            <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : transactions.length === 0 ? (
@@ -423,121 +406,60 @@ export function DashboardPage() {
     );
 }
 
-function StatCard({ title, value, trend, isPositive, color, icon }: any) {
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    trend?: string;
+    isPositive?: boolean;
+    color: string;
+    icon: React.ReactNode;
+    onClick?: () => void;
+    subtitle?: string;
+}
+
+function StatCard({ title, value, color, icon, onClick, subtitle }: StatCardProps) {
     return (
-        <div className="glass-card p-5 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 group transition-all duration-300 shadow-sm relative overflow-hidden cursor-pointer border-2">
+        <div
+            onClick={onClick}
+            className="glass-card p-4 rounded-2xl border-slate-200 dark:border-slate-800 group transition-all duration-300 shadow-sm relative overflow-hidden cursor-pointer border-2 hover:border-healthcare-primary/30 hover:scale-[1.02]"
+        >
             <div className="relative z-10">
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-start mb-3">
                     <div
                         className={cn(
-                            'w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group:scale-110',
+                            'w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-md transition-all duration-300 group:scale-110',
                             color,
                         )}
                     >
                         {icon}
                     </div>
-                    <div
-                        className={cn(
-                            'flex items-center gap-1 text-[11px] font-black px-2 py-1 rounded-lg',
-                            isPositive
-                                ? 'bg-emerald-50 dark:bg-emerald-900 text-healthcare-accent'
-                                : 'bg-red-50 dark:bg-red-900 text-red-500',
-                        )}
-                    >
-                        {isPositive ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
-                        {trend}
-                    </div>
                 </div>
-                <h3 className="text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1 truncate">
+                <h3 className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-1.5 truncate">
                     {title}
                 </h3>
-                <p className="text-xl font-black text-healthcare-dark leading-none tracking-tight">
+                <p className="text-lg font-black text-healthcare-dark dark:text-white leading-none tracking-tight">
                     {value}
                 </p>
-            </div>
-        </div>
-    );
-}
-
-function SummaryFeature({ icon, title, value, description, color }: any) {
-    return (
-        <div className="flex items-center gap-4 p-4 glass-card rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all shadow-sm">
-            <div className={cn('p-3 rounded-xl shadow-inner', color)}>{icon}</div>
-            <div>
-                <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mb-1.5">
-                    {title}
-                </p>
-                <p className="text-lg font-black text-healthcare-dark leading-none mb-1">{value}</p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight">
-                    {description}
-                </p>
-            </div>
-        </div>
-    );
-}
-
-function QuickAction({ icon, title, description, color }: any) {
-    return (
-        <button className="w-full flex items-center gap-4 p-3.5 rounded-2xl border-2 border-transparent hover:border-teal-100 dark:hover:border-teal-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-300 group text-left">
-            <div
-                className={cn(
-                    'p-2.5 rounded-xl text-white transition-all group-hover:scale-110 shadow-sm',
-                    color,
+                {subtitle && (
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-tight mt-1.5 line-clamp-1">
+                        {subtitle}
+                    </p>
                 )}
-            >
-                {icon}
-            </div>
-            <div className="flex-1">
-                <h4 className="font-black text-healthcare-dark text-sm leading-tight">{title}</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-0.5">
-                    {description}
-                </p>
-            </div>
-            <ChevronRight
-                size={16}
-                className="text-slate-300 group-hover:text-healthcare-primary group-hover:translate-x-1 transition-all"
-            />
-        </button>
-    );
-}
-
-function AlertItem({ type, title, info, isUrgent = false }: any) {
-    return (
-        <div
-            className={cn(
-                'p-3.5 rounded-2xl border-2 flex items-center gap-4 group cursor-pointer transition-all',
-                isUrgent
-                    ? 'bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-900 shadow-sm'
-                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm',
-            )}
-        >
-            <div
-                className={cn(
-                    'w-2 h-2 rounded-full',
-                    isUrgent
-                        ? 'bg-red-500 animate-pulse'
-                        : type === 'expiry'
-                          ? 'bg-red-400'
-                          : 'bg-amber-400',
-                )}
-            ></div>
-            <div className="flex-1">
-                <h4 className="font-bold text-healthcare-dark text-sm leading-none mb-1.5">
-                    {title}
-                </h4>
-                <p
-                    className={cn(
-                        'text-[10px] font-black uppercase tracking-widest',
-                        isUrgent
-                            ? 'text-red-600 dark:text-red-400'
-                            : 'text-slate-500 dark:text-slate-400',
-                    )}
-                >
-                    {info}
-                </p>
             </div>
         </div>
     );
+}
+
+interface TableRowProps {
+    id: string;
+    name: string;
+    category: string;
+    qty: string;
+    status: 'Completed' | 'In Process' | 'Restocked' | string;
+    date: string;
+    sku: string;
+    isStockIn?: boolean;
+    isPending?: boolean;
 }
 
 function TableRow({
@@ -550,7 +472,7 @@ function TableRow({
     sku,
     isStockIn = false,
     isPending = false,
-}: any) {
+}: TableRowProps) {
     return (
         <tr className="group hover:bg-teal-50/30 dark:hover:bg-teal-900/10 transition-all">
             <td className="px-6 py-4">
@@ -560,7 +482,7 @@ function TableRow({
             </td>
             <td className="px-6 py-4">
                 <div className="flex flex-col">
-                    <span className="font-black text-healthcare-dark text-[13px] leading-tight">
+                    <span className="font-black text-healthcare-dark dark:text-white text-[13px] leading-tight">
                         {name}
                     </span>
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mt-0.5">

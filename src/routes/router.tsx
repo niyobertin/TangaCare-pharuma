@@ -23,6 +23,9 @@ import { VerifyOtpPage } from '../pages/auth/VerifyOtpPage';
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 import { SetPasswordPage } from '../pages/auth/SetPasswordPage';
 import { z } from 'zod';
+import { RequirePermission } from '../components/auth/RequirePermission';
+import { PERMISSIONS } from '../types/auth';
+import { GlobalLoading } from '../components/ui/GlobalLoading';
 
 const RootComponent = () => {
     return (
@@ -66,10 +69,18 @@ const appLayoutRoute = createRoute({
     component: AppLayoutComponent,
 });
 
+import { LandingPage } from '../pages/marketing/LandingPage';
+
 const rootIndexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: () => <Navigate to="/app" />,
+    component: LandingPage,
+});
+
+const loginFallbackRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/login',
+    component: () => <Navigate to="/auth/login" />,
 });
 
 const authLayoutRoute = createRoute({
@@ -88,6 +99,8 @@ import { OrganizationsPage } from '../pages/organizations/OrganizationsPage';
 import { FacilitySettingsPage } from '../pages/dashboard/FacilitySettingsPage';
 import { UsersPage } from '../pages/dashboard/UsersPage';
 import { ViewOrderPage } from '../pages/procurement/ViewOrderPage';
+import { PatientsPage } from '../pages/dashboard/PatientsPage';
+import { PhysicalCountPage } from '../pages/dashboard/PhysicalCountPage';
 
 const indexRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -97,33 +110,57 @@ const indexRoute = createRoute({
 const inventoryRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'inventory',
-    component: InventoryPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+            <InventoryPage />
+        </RequirePermission>
+    ),
 });
 const dispensingRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'dispensing',
-    component: DispensingPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
+            <DispensingPage />
+        </RequirePermission>
+    ),
 });
 const organizationsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'organizations',
-    component: OrganizationsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.ORGANIZATION_MANAGE}>
+            <OrganizationsPage />
+        </RequirePermission>
+    ),
 });
 
 const facilitiesRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'facilities',
-    component: FacilitiesPage,
+    component: () => (
+        <RequirePermission permissions={[PERMISSIONS.FACILITY_READ, PERMISSIONS.FACILITY_MANAGE]}>
+            <FacilitiesPage />
+        </RequirePermission>
+    ),
 });
 const usersRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'users',
-    component: UsersPage,
+    component: () => (
+        <RequirePermission permissions={[PERMISSIONS.USERS_READ, PERMISSIONS.USERS_MANAGE]}>
+            <UsersPage />
+        </RequirePermission>
+    ),
 });
 const procurementRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'procurement',
-    component: ProcurementLayout,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.PROCUREMENT_READ}>
+            <ProcurementLayout />
+        </RequirePermission>
+    ),
 });
 const procurementIndexRoute = createRoute({
     getParentRoute: () => procurementRoute,
@@ -148,12 +185,20 @@ const viewOrderRoute = createRoute({
 const stockRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'stock',
-    component: BatchStockPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+            <BatchStockPage />
+        </RequirePermission>
+    ),
 });
 const auditLogsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'audit-logs',
-    component: AuditLogsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.AUDIT_READ}>
+            <AuditLogsPage />
+        </RequirePermission>
+    ),
     validateSearch: (search: Record<string, unknown>) => {
         return z
             .object({
@@ -165,23 +210,57 @@ const auditLogsRoute = createRoute({
 const stockMovementsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'stock-movements',
-    component: StockMovementsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.STOCK_MOVEMENTS_READ}>
+            <StockMovementsPage />
+        </RequirePermission>
+    ),
 });
 const pricingRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'pricing',
-    component: PricingPage,
+    component: () => (
+        <RequirePermission permissions={[PERMISSIONS.PRICING_READ, PERMISSIONS.PRICING_MANAGE]}>
+            <PricingPage />
+        </RequirePermission>
+    ),
 });
 const stockRegisterRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'stock-register',
-    component: StockRegisterReportPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.REPORTS_READ}>
+            <StockRegisterReportPage />
+        </RequirePermission>
+    ),
+});
+const stocktakingRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'stocktaking',
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.INVENTORY_WRITE}>
+            <PhysicalCountPage />
+        </RequirePermission>
+    ),
 });
 
 const alertsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'alerts',
-    component: AlertsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.ALERTS_READ}>
+            <AlertsPage />
+        </RequirePermission>
+    ),
+    validateSearch: (search: Record<string, unknown>) => {
+        return z
+            .object({
+                search: z.string().optional(),
+                type: z.enum(['all', 'low_stock', 'expiry']).optional(),
+                status: z.enum(['active', 'resolved']).optional(),
+            })
+            .parse(search);
+    },
 });
 
 const prescriptionsRoute = createRoute({
@@ -198,16 +277,73 @@ const patientsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'patients',
     component: () => (
-        <ModulePlaceholder
-            title="Customer Records"
-            description="Lookup customer history and profiles."
-        />
+        <RequirePermission permissions={[PERMISSIONS.USERS_READ, PERMISSIONS.USERS_MANAGE]}>
+            <PatientsPage />
+        </RequirePermission>
     ),
 });
 const analyticsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'analytics',
-    component: ReportsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.REPORTS_READ}>
+            <Outlet />
+        </RequirePermission>
+    ),
+});
+
+const analyticsIndexRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: '/',
+    component: () => <Navigate to="/app/analytics/sales" />,
+});
+
+const analyticsSalesRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'sales',
+    component: () => <ReportsPage defaultTab="sales" />,
+});
+
+const analyticsReturnsRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'returns',
+    component: () => <ReportsPage defaultTab="returns" />,
+});
+
+const analyticsInventoryRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'inventory',
+    component: () => <ReportsPage defaultTab="stock" />,
+});
+
+const analyticsPerformanceRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'performance',
+    component: () => <ReportsPage defaultTab="performance" />,
+});
+
+const analyticsProcurementRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'procurement',
+    component: () => <ReportsPage defaultTab="procurement" />,
+});
+
+const analyticsLoyaltyRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'loyalty',
+    component: () => <ReportsPage defaultTab="loyalty" />,
+});
+
+const analyticsTaxRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'tax',
+    component: () => <ReportsPage defaultTab="tax" />,
+});
+
+const analyticsRecallRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'recall',
+    component: () => <ReportsPage defaultTab="recall" />,
 });
 const employeeRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -291,7 +427,11 @@ const setPasswordRoute = createRoute({
 const facilitySettingsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'facility/$facilityId/settings',
-    component: FacilitySettingsPage,
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.FACILITY_MANAGE}>
+            <FacilitySettingsPage />
+        </RequirePermission>
+    ),
 });
 
 const appRouteTree = appLayoutRoute.addChildren([
@@ -313,15 +453,33 @@ const appRouteTree = appLayoutRoute.addChildren([
     stockMovementsRoute,
     pricingRoute,
     stockRegisterRoute,
+    stocktakingRoute,
     prescriptionsRoute,
     patientsRoute,
-    analyticsRoute,
+    analyticsRoute.addChildren([
+        analyticsIndexRoute,
+        analyticsSalesRoute,
+        analyticsReturnsRoute,
+        analyticsInventoryRoute,
+        analyticsPerformanceRoute,
+        analyticsProcurementRoute,
+        analyticsLoyaltyRoute,
+        analyticsTaxRoute,
+        analyticsRecallRoute,
+    ]),
     employeeRoute,
     settingsRoute,
     alertsRoute,
 ]);
 
+const authIndexRoute = createRoute({
+    getParentRoute: () => authLayoutRoute,
+    path: '/',
+    component: () => <Navigate to="/auth/login" />,
+});
+
 const authRouteTree = authLayoutRoute.addChildren([
+    authIndexRoute,
     loginRoute,
     registerRoute,
     forgotPasswordRoute,
@@ -330,9 +488,17 @@ const authRouteTree = authLayoutRoute.addChildren([
     setPasswordRoute,
 ]);
 
-const routeTree = rootRoute.addChildren([rootIndexRoute, appRouteTree, authRouteTree]);
+const routeTree = rootRoute.addChildren([
+    rootIndexRoute,
+    loginFallbackRoute,
+    appRouteTree,
+    authRouteTree,
+]);
 
-export const router = createRouter({ routeTree });
+export const router = createRouter({
+    routeTree,
+    defaultPendingComponent: GlobalLoading,
+});
 
 declare module '@tanstack/react-router' {
     interface Register {

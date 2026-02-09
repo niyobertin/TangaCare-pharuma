@@ -122,7 +122,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
             <div className="w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
                 {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-                    <h2 className="text-xl font-black text-healthcare-dark flex items-center gap-2">
+                    <h2 className="text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                         <ShoppingCart size={20} className="text-healthcare-primary" />
                         Create Purchase Order
                     </h2>
@@ -153,7 +153,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                     </label>
                                     <select
                                         {...register('supplier_id')}
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary bg-white font-medium"
+                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary bg-white dark:bg-slate-800 font-medium text-slate-900 dark:text-white dark:border-slate-700"
                                     >
                                         <option value="">Select Supplier...</option>
                                         {suppliers.map((s) => (
@@ -175,7 +175,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                     <input
                                         type="date"
                                         {...register('order_date')}
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary font-medium"
+                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary font-medium bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:border-slate-700"
                                     />
                                     {errors.order_date && (
                                         <p className="text-red-500 text-xs mt-1">
@@ -196,7 +196,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                         max="100"
                                         step="0.01"
                                         {...register('discount_percent')}
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary font-medium"
+                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary font-medium bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:border-slate-700"
                                     />
                                 </div>
                                 <div>
@@ -209,7 +209,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                         max="100"
                                         step="0.01"
                                         {...register('vat_rate')}
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary font-medium"
+                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary font-medium bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:border-slate-700"
                                     />
                                 </div>
                             </div>
@@ -328,7 +328,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                 >
                                                     Subtotal
                                                 </td>
-                                                <td className="px-4 py-2 text-right font-black text-healthcare-dark">
+                                                <td className="px-4 py-2 text-right font-black text-healthcare-dark dark:text-white">
                                                     RWF {subtotal.toLocaleString()}
                                                 </td>
                                                 <td></td>
@@ -340,7 +340,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                 >
                                                     Discount ({discountPercent}%)
                                                 </td>
-                                                <td className="px-4 py-2 text-right font-black text-healthcare-dark">
+                                                <td className="px-4 py-2 text-right font-black text-healthcare-dark dark:text-white">
                                                     - RWF {discountAmount.toLocaleString()}
                                                 </td>
                                                 <td></td>
@@ -352,7 +352,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                 >
                                                     VAT ({vatRate}%)
                                                 </td>
-                                                <td className="px-4 py-2 text-right font-black text-healthcare-dark">
+                                                <td className="px-4 py-2 text-right font-black text-healthcare-dark dark:text-white">
                                                     RWF {vatAmount.toLocaleString()}
                                                 </td>
                                                 <td></td>
@@ -364,7 +364,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                 >
                                                     Total Amount
                                                 </td>
-                                                <td className="px-4 py-3 text-right font-black text-healthcare-dark text-lg">
+                                                <td className="px-4 py-3 text-right font-black text-healthcare-dark dark:text-white text-lg">
                                                     RWF {grandTotal.toLocaleString()}
                                                 </td>
                                                 <td></td>

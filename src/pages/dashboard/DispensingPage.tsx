@@ -9,6 +9,7 @@ import {
     Pill,
     CheckCircle2,
     User,
+    ChevronDown,
 } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -16,6 +17,7 @@ import type { Medicine, Batch } from '../../types/pharmacy';
 import { useAuth } from '../../context/AuthContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { TableSkeleton } from '../../components/shared/Skeleton';
+import { CreatePatientModal } from '../../components/patients/CreatePatientModal';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-hot-toast';
@@ -28,6 +30,15 @@ interface CartItem extends Medicine {
     quantity: number;
     selectedBatch?: Batch;
 }
+
+const WALK_IN_PATIENT = {
+    id: null,
+    first_name: 'Walk-in',
+    last_name: 'Customer',
+    phone_number: 'N/A',
+    email: null,
+    is_walk_in: true,
+};
 
 export function DispensingPage() {
     const { user } = useAuth();
@@ -42,9 +53,10 @@ export function DispensingPage() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [patientQuery, setPatientQuery] = useState('');
     const [patients, setPatients] = useState<any[]>([]);
-    const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
+    const [selectedPatient, setSelectedPatient] = useState<any | null>(WALK_IN_PATIENT);
     const [showSuccess, setShowSuccess] = useState(false);
     const [processing, setProcessing] = useState(false);
+    const [showCreatePatient, setShowCreatePatient] = useState(false);
 
     useEffect(() => {
         setPage(1);
@@ -85,26 +97,39 @@ export function DispensingPage() {
         }
     };
 
+    const [showPatientResults, setShowPatientResults] = useState(false);
+    const patientSearchRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
-        if (!patientQuery) {
-            setPatients([]);
-            return;
-        }
-        const searchPatients = async () => {
-            try {
-                const results = await pharmacyService.getPatients(patientQuery);
-                setPatients(results || []);
-            } catch (err) {
-                console.warn('Patient API not reachable, mocking results');
-                setPatients(
-                    [
-                        { id: 1, name: 'John Doe', phone: '0780000001' },
-                        { id: 2, name: 'Jane Smith', phone: '0780000002' },
-                    ].filter((p) => p.name.toLowerCase().includes(patientQuery.toLowerCase())),
-                );
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                patientSearchRef.current &&
+                !patientSearchRef.current.contains(event.target as Node)
+            ) {
+                setShowPatientResults(false);
             }
         };
-        const timer = setTimeout(searchPatients, 500);
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        const searchPatients = async () => {
+            try {
+                const params = patientQuery ? { search: patientQuery } : { limit: 10 };
+                const results = await pharmacyService.getPatients(params);
+                const fetchedPatients = results.data || [];
+
+                // Always include Walk-in in results if query is empty or matches
+                const showWalkIn = !patientQuery || 'walk-in'.includes(patientQuery.toLowerCase());
+                setPatients(showWalkIn ? [WALK_IN_PATIENT, ...fetchedPatients] : fetchedPatients);
+            } catch (err) {
+                console.warn('Patient API not reachable, mocking results');
+                setPatients([]);
+            }
+        };
+        const timer = setTimeout(searchPatients, 300);
         return () => clearTimeout(timer);
     }, [patientQuery]);
 
@@ -228,7 +253,7 @@ export function DispensingPage() {
                 setCart([]);
                 setSearchQuery('');
                 setPatientQuery('');
-                setSelectedPatient(null);
+                setSelectedPatient(WALK_IN_PATIENT);
                 fetchMedicines();
             }, 3000);
         } catch (error) {
@@ -265,7 +290,7 @@ export function DispensingPage() {
                             placeholder="Search medicine by name, code, brand, or barcode..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:border-healthcare-primary transition-all text-sm font-bold shadow-sm"
+                            className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:border-healthcare-primary transition-all text-sm font-bold text-slate-900 dark:text-white shadow-sm"
                         />
                     </div>
 
@@ -312,7 +337,7 @@ export function DispensingPage() {
                                                 </span>
                                             </div>
                                             <div>
-                                                <h4 className="font-black text-healthcare-dark text-sm leading-tight">
+                                                <h4 className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
                                                     {med.name}
                                                 </h4>
                                                 <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-tight">
@@ -320,7 +345,7 @@ export function DispensingPage() {
                                                 </p>
                                             </div>
                                             <div className="flex items-center justify-between mt-1 pt-3 border-t border-slate-50 dark:border-slate-800">
-                                                <span className="text-sm font-black text-healthcare-dark">
+                                                <span className="text-sm font-black text-healthcare-dark dark:text-white">
                                                     RWF {med.selling_price.toLocaleString()}
                                                 </span>
                                                 <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-400 group-hover:text-healthcare-primary transition-colors">
@@ -336,58 +361,95 @@ export function DispensingPage() {
                 </div>
 
                 <div className="w-full lg:w-[400px] flex flex-col gap-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative min-h-[500px]">
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3">
-                        <div className="flex items-center gap-2 text-healthcare-dark font-black text-sm">
-                            <User size={16} />
-                            <span>Patient Details</span>
+                    <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 space-y-2">
+                        <div className="flex items-center justify-between text-healthcare-dark dark:text-white font-black text-sm">
+                            <div className="flex items-center gap-2">
+                                <User size={16} />
+                                <span>Patient Details</span>
+                            </div>
+                            {user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+                                <button
+                                    onClick={() => setShowCreatePatient(true)}
+                                    className="p-1 px-2 bg-healthcare-primary/10 hover:bg-healthcare-primary/20 text-healthcare-primary rounded text-xs transition-colors"
+                                >
+                                    + New
+                                </button>
+                            )}
                         </div>
                         {user?.role?.toString()?.toLowerCase() !== 'auditor' &&
-                            !selectedPatient && (
-                                <div className="relative">
+                            (!selectedPatient || selectedPatient.is_walk_in) && (
+                                <div className="relative" ref={patientSearchRef}>
                                     <input
                                         type="text"
-                                        placeholder="Search patient..."
+                                        placeholder="Search or select patient..."
                                         value={patientQuery}
-                                        onChange={(e) => setPatientQuery(e.target.value)}
-                                        className="w-full px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-healthcare-primary/20 outline-none"
+                                        onFocus={() => setShowPatientResults(true)}
+                                        onClick={() => setShowPatientResults(true)}
+                                        onChange={(e) => {
+                                            setPatientQuery(e.target.value);
+                                            setShowPatientResults(true);
+                                        }}
+                                        className="w-full px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-healthcare-primary/20 outline-none pr-8 bg-white dark:bg-slate-800 dark:border-slate-700 text-slate-900 dark:text-white"
                                     />
-                                    {patients.length > 0 && (
-                                        <div className="absolute top-full left-0 right-0 bg-white border rounded-lg shadow-lg mt-1 z-10 max-h-40 overflow-y-auto">
-                                            {patients.map((p) => (
-                                                <div
-                                                    key={p.id}
-                                                    onClick={() => {
-                                                        setSelectedPatient(p);
-                                                        setPatientQuery('');
-                                                        setPatients([]);
-                                                    }}
-                                                    className="p-2 hover:bg-slate-50 cursor-pointer text-sm"
-                                                >
-                                                    <div className="font-bold">
-                                                        {p.first_name ||
-                                                            p.firstName ||
-                                                            p.name ||
-                                                            ''}{' '}
-                                                        {p.last_name || p.lastName || ''}
+                                    <ChevronDown
+                                        size={16}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                                    />
+                                    {showPatientResults && (
+                                        <div className="absolute top-full left-0 right-0 bg-white dark:bg-slate-900 border dark:border-slate-800 rounded-lg shadow-lg mt-1 z-10 max-h-60 overflow-y-auto custom-scrollbar">
+                                            {patients.length > 0 ? (
+                                                patients.map((p, idx) => (
+                                                    <div
+                                                        key={p.id || `patient-${idx}`}
+                                                        onClick={() => {
+                                                            setSelectedPatient(p);
+                                                            setPatientQuery('');
+                                                            setShowPatientResults(false);
+                                                        }}
+                                                        className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer text-sm border-b border-slate-50 dark:border-slate-800/50 last:border-0"
+                                                    >
+                                                        <div className="font-bold text-healthcare-dark dark:text-white">
+                                                            {p.first_name ||
+                                                                p.firstName ||
+                                                                p.name ||
+                                                                ''}{' '}
+                                                            {p.last_name || p.lastName || ''}
+                                                            {p.is_walk_in && (
+                                                                <span className="ml-2 text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 font-black uppercase">
+                                                                    Default
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-xs text-slate-500 flex justify-between mt-0.5">
+                                                            <span>
+                                                                {p.phone_number ||
+                                                                    p.phoneNumber ||
+                                                                    p.phone ||
+                                                                    '—'}
+                                                            </span>
+                                                            {p.email && (
+                                                                <span className="text-slate-400">
+                                                                    {p.email}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div className="text-xs text-slate-500">
-                                                        {p.phone_number ||
-                                                            p.phoneNumber ||
-                                                            p.phone ||
-                                                            '—'}
-                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="p-4 text-center text-xs text-slate-400 font-bold uppercase tracking-wider">
+                                                    No patients found
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
                                     )}
                                 </div>
                             )}
-                        {(selectedPatient ||
-                            user?.role?.toString()?.toLowerCase() === 'auditor') && (
-                            <div className="flex justify-between items-center bg-white p-2 rounded-lg border text-sm">
+                        {(selectedPatient && !selectedPatient.is_walk_in) ||
+                        user?.role?.toString()?.toLowerCase() === 'auditor' ? (
+                            <div className="flex justify-between items-center bg-white dark:bg-slate-800 px-2 py-1.5 rounded-lg border dark:border-slate-700 text-sm">
                                 <div>
-                                    <div className="font-bold">
-                                        {selectedPatient ? (
+                                    <div className="font-bold text-healthcare-dark dark:text-white">
+                                        {selectedPatient && !selectedPatient.is_walk_in ? (
                                             <>
                                                 {selectedPatient.first_name ||
                                                     selectedPatient.firstName ||
@@ -401,26 +463,33 @@ export function DispensingPage() {
                                             'No Patient Selected'
                                         )}
                                     </div>
-                                    <div className="text-xs text-slate-500">
-                                        {selectedPatient
-                                            ? selectedPatient.phone_number ||
-                                              selectedPatient.phoneNumber ||
-                                              selectedPatient.phone ||
-                                              '—'
-                                            : 'Patient info is unavailable in browse mode'}
+                                    <div className="text-xs text-slate-500 flex flex-col gap-0.5 mt-0.5">
+                                        {selectedPatient && !selectedPatient.is_walk_in ? (
+                                            <>
+                                                <span>
+                                                    {selectedPatient.phone_number ||
+                                                        selectedPatient.phoneNumber ||
+                                                        selectedPatient.phone ||
+                                                        '—'}
+                                                </span>
+                                            </>
+                                        ) : (
+                                            <span>Patient info is unavailable in browse mode</span>
+                                        )}
                                     </div>
                                 </div>
                                 {selectedPatient &&
+                                    !selectedPatient.is_walk_in &&
                                     user?.role?.toString()?.toLowerCase() !== 'auditor' && (
                                         <button
-                                            onClick={() => setSelectedPatient(null)}
-                                            className="text-slate-400 hover:text-red-500"
+                                            onClick={() => setSelectedPatient(WALK_IN_PATIENT)}
+                                            className="text-slate-400 hover:text-red-500 p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                         >
                                             <Trash2 size={14} />
                                         </button>
                                     )}
                             </div>
-                        )}
+                        ) : null}
                     </div>
 
                     <div className="flex items-center justify-between mb-2">
@@ -428,7 +497,9 @@ export function DispensingPage() {
                             <div className="w-10 h-10 rounded-xl bg-healthcare-primary/10 flex items-center justify-center text-healthcare-primary border border-healthcare-primary/20">
                                 <ShoppingCart size={18} />
                             </div>
-                            <h3 className="font-black text-healthcare-dark">Current Cart</h3>
+                            <h3 className="font-black text-healthcare-dark dark:text-white">
+                                Current Cart
+                            </h3>
                         </div>
                         <span className="text-xs font-black bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-slate-500 uppercase">
                             {cart.length} Items
@@ -443,7 +514,7 @@ export function DispensingPage() {
                                     className="flex gap-4 p-3 bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800 group animate-in slide-in-from-right-2 duration-300"
                                 >
                                     <div className="flex-1 flex flex-col justify-center">
-                                        <h5 className="text-xs font-black text-healthcare-dark">
+                                        <h5 className="text-xs font-black text-healthcare-dark dark:text-white">
                                             {item.name}
                                         </h5>
                                         <div className="flex gap-2 mt-1">
@@ -528,7 +599,7 @@ export function DispensingPage() {
                                 <span>RWF {tax.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between py-2 mt-2 border-t border-slate-200 dark:border-slate-700">
-                                <span className="text-sm font-black text-healthcare-dark">
+                                <span className="text-sm font-black text-healthcare-dark dark:text-white">
                                     Total
                                 </span>
                                 <span className="text-sm font-black text-healthcare-primary">
@@ -566,6 +637,15 @@ export function DispensingPage() {
                     )}
                 </div>
             </div>
+            {showCreatePatient && (
+                <CreatePatientModal
+                    onClose={() => setShowCreatePatient(false)}
+                    onCreate={(patient) => {
+                        setSelectedPatient(patient);
+                        setShowCreatePatient(false);
+                    }}
+                />
+            )}
         </ProtectedRoute>
     );
 }

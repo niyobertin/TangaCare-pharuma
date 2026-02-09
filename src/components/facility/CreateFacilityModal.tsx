@@ -88,7 +88,7 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                 )}
                 <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                             Facility Name
                         </label>
                         <input
@@ -109,7 +109,7 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Type
                             </label>
                             <select
@@ -133,7 +133,7 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-500 uppercase">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                                 Phone
                             </label>
                             <input
@@ -154,7 +154,9 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Email</label>
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                            Email
+                        </label>
                         <input
                             {...register('email')}
                             type="email"
@@ -173,7 +175,7 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                     </div>
 
                     <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
                             Address
                         </label>
                         <input

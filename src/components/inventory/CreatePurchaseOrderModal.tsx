@@ -11,6 +11,11 @@ interface CreatePurchaseOrderModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    initialItem?: {
+        medicine_id: number;
+        medicine_name: string;
+        quantity: number;
+    } | null;
 }
 
 const poItemSchema = yup.object({
@@ -34,6 +39,7 @@ export function CreatePurchaseOrderModal({
     isOpen,
     onClose,
     onSuccess,
+    initialItem,
 }: CreatePurchaseOrderModalProps) {
     const [loading, setLoading] = useState(false);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -71,16 +77,34 @@ export function CreatePurchaseOrderModal({
                         pharmacyService.getMedicines({ limit: 100 }),
                     ]);
                     setSuppliers(sRes.data || []);
-                    setMedicines(mRes.data || []);
+                    const fetchedMedicines = mRes.data || [];
+                    setMedicines(fetchedMedicines);
+
+                    // Handle initial item if present
+                    if (initialItem) {
+                        const med = fetchedMedicines.find((m) => m.id === initialItem.medicine_id);
+                        reset({
+                            supplier_id: 0,
+                            items: [
+                                {
+                                    medicine_id: initialItem.medicine_id,
+                                    medicine_name: initialItem.medicine_name,
+                                    quantity: initialItem.quantity,
+                                    unit_price: med?.cost_price || 0,
+                                },
+                            ],
+                        });
+                    } else {
+                        reset({ supplier_id: 0, items: [] });
+                    }
                 } catch (error) {
                     console.error('Failed to load PO data:', error);
                     toast.error('Failed to load suppliers and medicines');
                 }
             };
             loadData();
-            reset({ supplier_id: 0, items: [] });
         }
-    }, [isOpen, reset]);
+    }, [isOpen, reset, initialItem]);
 
     if (!isOpen) return null;
 

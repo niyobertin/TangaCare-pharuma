@@ -52,7 +52,7 @@ export function LoginPage() {
             <div className="max-w-md w-full animate-in zoom-in duration-500 relative z-10">
                 <form
                     onSubmit={handleSubmit(onSubmit)}
-                    className="glass-card shadow-2xl p-10 space-y-8 bg-white/95 dark:bg-slate-900/95 border border-white/20 rounded-2xl"
+                    className="glass-card shadow-2xl p-10 space-y-8 bg-white/95 border border-white/20 rounded-2xl"
                 >
                     <div className="text-center space-y-2">
                         <h2 className="text-3xl font-black text-healthcare-dark tracking-tight">
@@ -77,7 +77,7 @@ export function LoginPage() {
                                     {...register('email')}
                                     type="email"
                                     placeholder="your@email.com"
-                                    className={`w-full pl-12 pr-4 py-3.5 bg-white dark:bg-slate-800 border-2 rounded-2xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 transition-all text-sm font-medium ${errors.email ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-healthcare-primary'}`}
+                                    className={`w-full pl-12 pr-4 py-3.5 bg-white border-2 rounded-2xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 transition-all text-sm font-medium ${errors.email ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-healthcare-primary'}`}
                                 />
                             </div>
                             {errors.email && (
@@ -107,7 +107,7 @@ export function LoginPage() {
                                     {...register('password')}
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder="••••••••"
-                                    className={`w-full pl-12 pr-12 py-3.5 bg-white dark:bg-slate-800 border-2 rounded-2xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 transition-all text-sm font-medium ${errors.password ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-healthcare-primary'}`}
+                                    className={`w-full pl-12 pr-12 py-3.5 bg-white border-2 rounded-2xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 transition-all text-sm font-medium ${errors.password ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-healthcare-primary'}`}
                                 />
                                 <button
                                     type="button"

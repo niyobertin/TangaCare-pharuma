@@ -384,7 +384,7 @@ export function InventoryPage() {
                 {}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h2 className="text-xl font-black text-healthcare-dark tracking-tight">
+                        <h2 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
                             Medicine Inventory
                         </h2>
                         <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-2 mt-0.5 text-xs uppercase tracking-wider">
@@ -398,7 +398,7 @@ export function InventoryPage() {
                         <select
                             value={limit}
                             onChange={(e) => setLimit(Number(e.target.value))}
-                            className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-black text-healthcare-dark focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
+                            className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-black text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
                         >
                             {[10, 25, 50, 100].map((l) => (
                                 <option key={l} value={l}>
@@ -535,14 +535,14 @@ export function InventoryPage() {
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="bg-transparent text-[10px] font-black text-slate-700 dark:text-slate-300 focus:outline-none"
+                                    className="bg-transparent text-[10px] font-black text-slate-700 dark:text-white focus:outline-none"
                                 />
                                 <span className="text-slate-300">/</span>
                                 <input
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="bg-transparent text-[10px] font-black text-slate-700 dark:text-slate-300 focus:outline-none"
+                                    className="bg-transparent text-[10px] font-black text-slate-700 dark:text-white focus:outline-none"
                                 />
                             </div>
                             <select

@@ -113,10 +113,12 @@ export function UsersPage() {
             allowedRoles={['OWNER', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'AUDITOR']}
             requireFacility
         >
-            <div className="h-full flex flex-col p-6 bg-slate-50/50 dark:bg-slate-900/50">
+            <div className="h-full flex flex-col p-6 bg-slate-50/50 dark:bg-slate-900">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h1 className="text-2xl font-black text-healthcare-dark">Users</h1>
+                        <h1 className="text-2xl font-black text-healthcare-dark dark:text-white">
+                            Users
+                        </h1>
                         <p className="text-sm text-slate-500 mt-1">
                             {canAddStaff
                                 ? 'View and add staff with roles'
@@ -148,7 +150,7 @@ export function UsersPage() {
                                 setSearch(e.target.value);
                                 setPage(1);
                             }}
-                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
+                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                         />
                     </div>
                     {facilities && facilities.length > 0 && (
@@ -160,7 +162,7 @@ export function UsersPage() {
                                 );
                                 setPage(1);
                             }}
-                            className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
+                            className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                         >
                             <option value="">All facilities</option>
                             {user?.role?.toUpperCase().includes('SUPER')
@@ -186,7 +188,7 @@ export function UsersPage() {
                             setStatusFilter(e.target.value as 'all' | 'active' | 'inactive');
                             setPage(1);
                         }}
-                        className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
+                        className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                     >
                         <option value="all">All status</option>
                         <option value="active">Active</option>
@@ -198,7 +200,7 @@ export function UsersPage() {
                             setRoleFilter(e.target.value);
                             setPage(1);
                         }}
-                        className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
+                        className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20"
                     >
                         <option value="all">All roles</option>
                         {Object.entries(ROLE_LABELS).map(([val, label]) => (
@@ -279,7 +281,7 @@ export function UsersPage() {
                                                     <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap dark:text-slate-400">
                                                         {joinedDate}
                                                     </td>
-                                                    <td className="px-6 py-4 font-bold whitespace-nowrap text-healthcare-dark">
+                                                    <td className="px-6 py-4 font-bold whitespace-nowrap text-healthcare-dark dark:text-white">
                                                         {displayName(u)}
                                                     </td>
                                                     <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
@@ -340,7 +342,7 @@ export function UsersPage() {
                                                 setLimit(Number(e.target.value));
                                                 setPage(1);
                                             }}
-                                            className="bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl px-3 py-1 text-[11px] font-black text-healthcare-dark focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
+                                            className="bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl px-3 py-1 text-[11px] font-black text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
                                         >
                                             {[20, 40, 60, 100].map((l) => (
                                                 <option key={l} value={l}>
@@ -521,7 +523,7 @@ function UserActionsIcons({
                                 <AlertTriangle size={24} />
                             </div>
                             <div>
-                                <h2 className="text-lg font-black text-healthcare-dark">
+                                <h2 className="text-lg font-black text-healthcare-dark dark:text-white">
                                     Deactivate user
                                 </h2>
                                 <p className="text-sm text-slate-500 mt-0.5">
@@ -566,7 +568,7 @@ function UserActionsIcons({
                                 <UserCheck size={24} />
                             </div>
                             <div>
-                                <h2 className="text-lg font-black text-healthcare-dark">
+                                <h2 className="text-lg font-black text-healthcare-dark dark:text-white">
                                     Activate user
                                 </h2>
                                 <p className="text-sm text-slate-500 mt-0.5">
@@ -611,7 +613,7 @@ function UserActionsIcons({
                                 <AlertTriangle size={24} />
                             </div>
                             <div>
-                                <h2 className="text-lg font-black text-healthcare-dark">
+                                <h2 className="text-lg font-black text-healthcare-dark dark:text-white">
                                     Archive user
                                 </h2>
                                 <p className="text-sm text-slate-500 mt-0.5">
@@ -698,7 +700,9 @@ function EditUserModal({
                 className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl max-w-md w-full p-6"
                 onClick={(e) => e.stopPropagation()}
             >
-                <h2 className="text-xl font-black text-healthcare-dark mb-4">Edit user</h2>
+                <h2 className="text-xl font-black text-healthcare-dark dark:text-white mb-4">
+                    Edit user
+                </h2>
                 <p className="text-sm text-slate-500 mb-4">
                     {[user.first_name ?? user.firstName, user.last_name ?? user.lastName]
                         .filter(Boolean)

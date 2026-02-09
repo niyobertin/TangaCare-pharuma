@@ -112,7 +112,7 @@ export function StockTransferModal({
                 {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
                     <div>
-                        <h2 className="text-xl font-black text-healthcare-dark flex items-center gap-2">
+                        <h2 className="text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                             <ArrowRightLeft size={20} className="text-healthcare-primary" />
                             Transfer Stock
                         </h2>
@@ -139,23 +139,23 @@ export function StockTransferModal({
                     ) : (
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                             {}
-                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm">
+                            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm">
                                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
                                     From
                                 </span>
-                                <div className="font-bold text-healthcare-dark flex items-center gap-2">
+                                <div className="font-bold text-healthcare-dark dark:text-white flex items-center gap-2">
                                     <Building2 size={16} /> Central Store / Main Pharmacy
                                 </div>
                             </div>
 
                             {}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Select Batch
                                 </label>
                                 <select
                                     {...register('batch_id')}
-                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white"
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                 >
                                     <option value="">Select a batch...</option>
                                     {batches.map((b) => (
@@ -174,12 +174,12 @@ export function StockTransferModal({
 
                             {}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Destination Department
                                 </label>
                                 <select
                                     {...register('target_department_id')}
-                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white"
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                 >
                                     <option value="">Select destination...</option>
                                     {departments.map((d) => (
@@ -197,14 +197,14 @@ export function StockTransferModal({
 
                             {}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Quantity to Transfer
                                 </label>
                                 <div className="flex items-center gap-2">
                                     <input
                                         type="number"
                                         {...register('quantity')}
-                                        className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold"
+                                        className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                         max={selectedBatch?.current_quantity}
                                     />
                                     <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-2 rounded-lg border border-slate-200">
@@ -220,12 +220,12 @@ export function StockTransferModal({
 
                             {}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Notes (Optional)
                                 </label>
                                 <textarea
                                     {...register('notes')}
-                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm"
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     rows={2}
                                 />
                             </div>

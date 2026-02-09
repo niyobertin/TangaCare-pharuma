@@ -15,6 +15,19 @@ import type {
     PaginatedResponse,
     Sale,
     CreateSaleDto,
+    ReturnStatus,
+    RefundMethod,
+    ReturnReason,
+    ItemCondition,
+    CustomerReturn,
+    DailySalesReport,
+    MonthlySalesReport,
+    SalesByMedicineReport,
+    ComprehensiveKPIs,
+    FinancialKPIs,
+    InventoryKPIs,
+    OperationalKPIs,
+    DashboardSummary,
 } from '../types/pharmacy';
 
 const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
@@ -57,6 +70,36 @@ export const pharmacyService = {
 
     async getRecentSales(): Promise<Transaction[]> {
         const response = await api.get<{ data: Transaction[] }>('/pharmacy/transactions');
+        return (response.data as any).data ?? (response.data as any);
+    },
+
+    async getTopSellingMedicines(
+        order: 'ASC' | 'DESC' = 'DESC',
+    ): Promise<{ name: string; value: number }[]> {
+        const response = await api.get('/pharmacy/top-selling', { params: { order } });
+        return (response.data as any).data ?? (response.data as any);
+    },
+
+    async getInventoryStatus(): Promise<any> {
+        const response = await api.get('/pharmacy/inventory-status');
+        return (response.data as any).data ?? (response.data as any);
+    },
+
+    async resolveAlert(
+        id: number,
+        data: { action_taken: string; action_reason: string },
+    ): Promise<Alert> {
+        const response = await api.put<{ data: Alert }>(`/pharmacy/alerts/${id}/resolve`, data);
+        return (response.data as any).data ?? (response.data as any);
+    },
+
+    async getConsumptionTrends(days: number = 30): Promise<any> {
+        const response = await api.get('/pharmacy/consumption-trends', { params: { days } });
+        return (response.data as any).data ?? (response.data as any);
+    },
+
+    async getExpiryRisk(days: number = 90): Promise<any> {
+        const response = await api.get('/pharmacy/expiry-risk', { params: { days } });
         return (response.data as any).data ?? (response.data as any);
     },
 
@@ -162,6 +205,39 @@ export const pharmacyService = {
             limit: payload.limit ?? 100,
             period: payload.period,
         };
+    },
+
+    async getTaxSummary(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/tax-summary/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getCustomerLoyaltyReport(facilityId: number): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/customer-loyalty/${facilityId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getEmployeePerformanceReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(
+            `/pharmacy/reports/employee-performance/${facilityId}`,
+            {
+                params,
+            },
+        );
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getVendorReturnsReport(facilityId: number): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/vendor-returns/${facilityId}`);
+        return (response.data as any).data ?? response.data;
     },
 
     async createSale(payload: CreateSaleDto): Promise<Sale> {
@@ -549,17 +625,26 @@ export const pharmacyService = {
         return response.data;
     },
 
-    async getPatients(query: string): Promise<import('../types/auth').User[]> {
-        const response = await api.get<{ data: import('../types/auth').User[] }>('/users', {
+    async getPatients(params?: {
+        search?: string;
+        page?: number;
+        limit?: number;
+    }): Promise<PaginatedResponse<import('../types/auth').User>> {
+        const response = await api.get('/users', {
             params: {
                 role: 'patient',
-                search: query,
-                limit: 10,
+                ...params,
             },
         });
+        return normalizePaginatedResponse(response.data);
+    },
 
-        const data = response.data.data || response.data;
-        return Array.isArray(data) ? data : (data as any)?.users || [];
+    async updatePatient(id: number, data: any): Promise<import('../types/auth').User> {
+        const response = await api.put<{ data: import('../types/auth').User }>(
+            `/users/${id}`,
+            data,
+        );
+        return (response.data as any).data ?? response.data;
     },
 
     async exportProcurementOrder(id: number): Promise<void> {
@@ -573,5 +658,306 @@ export const pharmacyService = {
         document.body.appendChild(link);
         link.click();
         link.remove();
+    },
+
+    // Advanced Analytics Methods
+    async getAdvancedKPIs(): Promise<import('../types/pharmacy').AdvancedKPIs> {
+        const response = await api.get<{ data: import('../types/pharmacy').AdvancedKPIs }>(
+            '/pharmacy/analytics/kpis',
+        );
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getCriticalMedicines(): Promise<{
+        medicines: import('../types/pharmacy').CriticalMedicine[];
+    }> {
+        const response = await api.get<any>('/pharmacy/analytics/critical-medicines');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getExpiryHeatMap(params: {
+        start: string;
+        end: string;
+    }): Promise<import('../types/pharmacy').ExpiryHeatMapData> {
+        const response = await api.get<any>('/pharmacy/analytics/expiry-heatmap', { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getFEFOCompliance(
+        days?: number,
+    ): Promise<import('../types/pharmacy').FEFOComplianceData> {
+        const response = await api.get<any>('/pharmacy/analytics/fefo-compliance', {
+            params: { days },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getABCAnalysis(period?: number): Promise<import('../types/pharmacy').ABCAnalysisData> {
+        const response = await api.get<any>('/pharmacy/analytics/abc-analysis', {
+            params: { period },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getMultiLocationComparison(
+        metric: string,
+    ): Promise<import('../types/pharmacy').MultiLocationData> {
+        const response = await api.get<any>('/pharmacy/analytics/multi-location', {
+            params: { metric },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getOverstockReport(): Promise<import('../types/pharmacy').OverstockData> {
+        const response = await api.get<any>('/pharmacy/analytics/overstock');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async recalculateConsumption(
+        days?: number,
+    ): Promise<{ updated_count: number; results: any[] }> {
+        const response = await api.post<any>('/pharmacy/analytics/recalculate-consumption', {
+            days,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getReorderSuggestions(): Promise<{
+        suggestions: import('../types/pharmacy').ReorderSuggestion[];
+    }> {
+        const response = await api.get<any>('/pharmacy/analytics/reorder-suggestions');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getSupplierPerformance(): Promise<import('../types/pharmacy').SupplierPerformanceItem[]> {
+        const response = await api.get<any>('/pharmacy/analytics/supplier-performance');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getBatchTraceability(
+        batchId: number,
+    ): Promise<import('../types/pharmacy').BatchTraceabilityReport> {
+        const response = await api.get<any>(`/pharmacy/reports/batch-traceability/${batchId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getControlledDrugRegister(
+        facilityId: number,
+        medicineId: number,
+    ): Promise<import('../types/pharmacy').ControlledDrugRegisterReport> {
+        const response = await api.get<any>(
+            `/pharmacy/reports/controlled-drug-register/${facilityId}/${medicineId}`,
+        );
+        return (response.data as any).data ?? response.data;
+    },
+
+    // Physical Count & Stocktaking
+    async startPhysicalCount(
+        facilityId: number,
+        medicineIds?: number[],
+    ): Promise<import('../types/pharmacy').PhysicalCount> {
+        const response = await api.post<any>('/pharmacy/physical-counts/start', {
+            facility_id: facilityId,
+            medicineIds,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getPhysicalCounts(
+        facilityId: number,
+    ): Promise<import('../types/pharmacy').PhysicalCount[]> {
+        const response = await api.get<any>('/pharmacy/physical-counts', {
+            params: { facility_id: facilityId },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getPhysicalCount(countId: number): Promise<import('../types/pharmacy').PhysicalCount> {
+        const response = await api.get<any>(`/pharmacy/physical-counts/${countId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async updatePhysicalCountItem(
+        itemId: number,
+        countedQuantity: number,
+        notes?: string,
+    ): Promise<import('../types/pharmacy').PhysicalCountItem> {
+        const response = await api.put<any>(`/pharmacy/physical-counts/items/${itemId}`, {
+            countedQuantity,
+            notes,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    approvePhysicalCount(countId: number): Promise<import('../types/pharmacy').PhysicalCount> {
+        return api
+            .post<any>(`/pharmacy/physical-counts/${countId}/approve`)
+            .then((res) => res.data.data);
+    },
+
+    // Returns System Methods
+    async getReturns(params?: {
+        facility_id?: number;
+        status?: ReturnStatus;
+        sale_number?: string;
+        page?: number;
+        limit?: number;
+    }): Promise<PaginatedResponse<CustomerReturn>> {
+        const response = await api.get<any>('/pharmacy/returns', { params });
+        return normalizePaginatedResponse<CustomerReturn>(response.data);
+    },
+
+    async getReturn(id: number): Promise<CustomerReturn> {
+        const response = await api.get<any>(`/pharmacy/returns/${id}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async createReturn(payload: {
+        sale_id: number;
+        facility_id: number;
+        refund_method: RefundMethod;
+        notes?: string;
+        items: Array<{
+            sale_item_id: number;
+            quantity_returned: number;
+            reason: ReturnReason;
+            condition: ItemCondition;
+        }>;
+    }): Promise<CustomerReturn> {
+        const response = await api.post<any>('/pharmacy/returns', payload);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async approveReturn(id: number): Promise<CustomerReturn> {
+        const response = await api.post<any>(`/pharmacy/returns/${id}/approve`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async rejectReturn(id: number, reason: string): Promise<CustomerReturn> {
+        const response = await api.post<any>(`/pharmacy/returns/${id}/reject`, { reason });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async processRefund(id: number): Promise<CustomerReturn> {
+        const response = await api.post<any>(`/pharmacy/returns/${id}/process-refund`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    // Detailed Sales Report Methods
+    async getDailySalesReport(
+        facilityId: number,
+        params: { date: string },
+    ): Promise<DailySalesReport> {
+        const response = await api.get<any>(`/pharmacy/reports/sales/daily/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getMonthlySalesReport(
+        facilityId: number,
+        params: { year: number; month: number },
+    ): Promise<MonthlySalesReport> {
+        const response = await api.get<any>(`/pharmacy/reports/sales/monthly/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getSalesByMedicineReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<SalesByMedicineReport> {
+        const response = await api.get<any>(`/pharmacy/reports/sales/by-medicine/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getSalesByCategoryReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/sales/by-category/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getSalesByCashierReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/sales/by-cashier/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getPaymentMethodSummary(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(
+            `/pharmacy/reports/sales/payment-methods/${facilityId}`,
+            {
+                params,
+            },
+        );
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getGrossVsNetSalesReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/sales/gross-vs-net/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    // KPI Methods
+    async getComprehensiveKPIs(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<ComprehensiveKPIs> {
+        const response = await api.get<any>(`/pharmacy/kpis/comprehensive/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getFinancialKPIs(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<FinancialKPIs> {
+        const response = await api.get<any>(`/pharmacy/kpis/financial/${facilityId}`, { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getInventoryKPIs(facilityId: number): Promise<InventoryKPIs> {
+        const response = await api.get<any>(`/pharmacy/kpis/inventory/${facilityId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getOperationalKPIs(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<OperationalKPIs> {
+        const response = await api.get<any>(`/pharmacy/kpis/operational/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getSale(id: number): Promise<Sale> {
+        const response = await api.get<any>(`/pharmacy/sales/${id}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getDashboardSummary(facilityId: number): Promise<DashboardSummary> {
+        const response = await api.get<any>(`/pharmacy/kpis/summary/${facilityId}`);
+        return (response.data as any).data ?? response.data;
     },
 };

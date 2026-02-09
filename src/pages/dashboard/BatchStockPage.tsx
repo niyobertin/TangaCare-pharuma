@@ -109,7 +109,7 @@ export function BatchStockPage() {
                 {}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
-                        <h2 className="text-2xl font-black text-healthcare-dark tracking-tight">
+                        <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
                             Stock & Batch Tracking
                         </h2>
                         <p className="text-slate-500 font-bold text-xs uppercase tracking-wider">
@@ -141,7 +141,7 @@ export function BatchStockPage() {
                                     <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
                                         {stat.label}
                                     </p>
-                                    <p className="text-xl font-black text-healthcare-dark">
+                                    <p className="text-xl font-black text-healthcare-dark dark:text-white">
                                         {stat.value}
                                     </p>
                                 </div>
@@ -162,7 +162,7 @@ export function BatchStockPage() {
                             placeholder="Search by batch number..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary transition-all text-sm font-bold shadow-sm"
+                            className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary transition-all text-sm font-bold text-slate-900 dark:text-white shadow-sm"
                         />
                     </div>
                 </div>
@@ -208,7 +208,7 @@ export function BatchStockPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col">
-                                                    <span className="font-black text-healthcare-dark text-sm leading-tight">
+                                                    <span className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
                                                         Med ID: {batch.medicine_id}
                                                     </span>
                                                     <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">
@@ -218,7 +218,7 @@ export function BatchStockPage() {
                                             </td>
                                             <td className="px-6 py-4 text-center">
                                                 <div className="flex flex-col items-center">
-                                                    <span className="text-xs font-black text-healthcare-dark">
+                                                    <span className="text-xs font-black text-healthcare-dark dark:text-white">
                                                         {(
                                                             batch.current_quantity || 0
                                                         ).toLocaleString()}{' '}
