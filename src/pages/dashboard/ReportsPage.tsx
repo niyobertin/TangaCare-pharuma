@@ -20,11 +20,11 @@ import { cn } from '../../lib/utils';
 
 import { ReorderSuggestions } from '../../components/pharmacy/reports/ReorderSuggestions';
 import { DeadStockReport } from '../../components/pharmacy/reports/DeadStockReport';
-import { SupplierPerformanceReport } from '../../components/pharmacy/reports/SupplierPerformanceReport';
 import { ExpiryReport } from '../../components/pharmacy/reports/ExpiryReport';
 import { DashboardOwner } from '../../components/dashboard/DashboardOwner';
 import { CreateReturnModal } from '../../components/pharmacy/returns/CreateReturnModal';
 import { ABCAnalysisReport } from '../../components/pharmacy/reports/ABCAnalysisReport';
+import { PurchaseReport } from '../../components/pharmacy/reports/PurchaseReport';
 
 export interface ReportsPageProps {
     defaultTab?: string;
@@ -71,6 +71,35 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         }
     }, [defaultTab]);
 
+    const [days, setDays] = useState(30);
+
+    const handleExport = async (format: 'excel' | 'pdf') => {
+        let type = defaultTab;
+        // Map tab names to backend report types
+        if (type === 'reorder') type = 'low-stock';
+        if (type === 'recall' || type === 'expiry') type = 'expiry';
+        if (type === 'movement') type = 'stock-movement';
+
+        const params: any = {
+            facilityId: effectiveFacilityId,
+        };
+
+        if (['sales', 'profit', 'tax', 'performance', 'staff', 'purchase'].includes(type)) {
+            params.start_date = startDate;
+            params.end_date = endDate;
+        }
+
+        if (type === 'expiry') {
+            params.days = days;
+        }
+
+        try {
+            await pharmacyService.downloadReport(type, format, params);
+        } catch (error) {
+            console.error('Export failed:', error);
+        }
+    };
+
     return (
         <ProtectedRoute
             allowedRoles={[
@@ -99,25 +128,56 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         </p>
                     </div>
                     <div className="flex gap-4 flex-wrap items-center">
-                        <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
-                            <Calendar size={14} className="text-slate-400" />
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
-                            />
-                            <span className="text-slate-300 px-1">—</span>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
-                            />
+                        {(defaultTab === 'expiry' || defaultTab === 'recall') && (
+                            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
+                                <span className="text-[10px] font-black text-slate-400 uppercase">
+                                    Days:
+                                </span>
+                                <select
+                                    value={days}
+                                    onChange={(e) => setDays(Number(e.target.value))}
+                                    className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
+                                >
+                                    <option value={30}>30 Days</option>
+                                    <option value={60}>60 Days</option>
+                                    <option value={90}>90 Days</option>
+                                </select>
+                            </div>
+                        )}
+                        {['sales', 'profit', 'tax', 'performance', 'staff', 'purchase'].includes(
+                            defaultTab,
+                        ) && (
+                                <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
+                                    <Calendar size={14} className="text-slate-400" />
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
+                                    />
+                                    <span className="text-slate-300 px-1">—</span>
+                                    <input
+                                        type="date"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
+                                    />
+                                </div>
+                            )}
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => handleExport('excel')}
+                                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md shadow-emerald-500/20"
+                            >
+                                <Download size={14} /> Excel
+                            </button>
+                            <button
+                                onClick={() => handleExport('pdf')}
+                                className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-md shadow-rose-500/20"
+                            >
+                                <Download size={14} /> PDF
+                            </button>
                         </div>
-                        <button className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md">
-                            <Download size={16} /> Export
-                        </button>
                     </div>
                 </div>
 
@@ -165,12 +225,11 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         <LoyaltyReports facilityId={effectiveFacilityId} />
                     )}
                     {(defaultTab === 'purchase' || defaultTab === 'procurement') && (
-                        <div className="space-y-6">
-                            <h2 className="text-xl font-black text-healthcare-dark dark:text-white mb-6 uppercase">
-                                Supplier Performance
-                            </h2>
-                            <SupplierPerformanceReport />
-                        </div>
+                        <PurchaseReport
+                            facilityId={effectiveFacilityId}
+                            startDate={startDate}
+                            endDate={endDate}
+                        />
                     )}
                     {(defaultTab === 'staff' || defaultTab === 'performance') && (
                         <PerformanceReports
@@ -681,8 +740,8 @@ function SummaryCard({ title, value, trend, icon, color = 'teal' }: any) {
                         color === 'teal'
                             ? 'bg-teal-50 text-teal-600'
                             : color === 'amber'
-                              ? 'bg-amber-50 text-amber-600'
-                              : 'bg-rose-50 text-rose-600',
+                                ? 'bg-amber-50 text-amber-600'
+                                : 'bg-rose-50 text-rose-600',
                     )}
                 >
                     {icon}

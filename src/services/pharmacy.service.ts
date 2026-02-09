@@ -242,6 +242,47 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
+    async getPurchaseReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/purchase/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async downloadReport(
+        type: string,
+        format: 'excel' | 'pdf',
+        params?: { start_date?: string; end_date?: string; days?: number },
+    ): Promise<void> {
+        const response = await api.get(`/pharmacy/reports/export/${type}/${format}`, {
+            params,
+            responseType: 'blob',
+        });
+
+        const blob = new Blob([response.data], {
+            type:
+                format === 'excel'
+                    ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    : 'application/pdf',
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        const timestamp = new Date().toISOString().split('T')[0];
+        const fileName = `${type}_report_${timestamp}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    },
+
     async createSale(payload: CreateSaleDto): Promise<Sale> {
         const response = await api.post<any>('/pharmacy/sales', payload);
         return (response.data as any).data ?? response.data;
