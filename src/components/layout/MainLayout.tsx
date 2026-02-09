@@ -20,6 +20,9 @@ import {
     Building2,
     ChevronDown,
     FileText,
+    Activity,
+    AlertTriangle,
+    ArrowRightLeft,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -203,14 +206,16 @@ const NAV_ITEMS: NavItem[] = [
         ],
         allowedPermissions: ['reports:read'],
         children: [
-            { to: '/app/analytics/sales', label: 'Sales & Revenue', icon: TrendingUp },
-            { to: '/app/analytics/returns', label: 'Returns', icon: LogOut },
-            { to: '/app/analytics/inventory', label: 'Inventory', icon: ShoppingCart },
-            { to: '/app/analytics/performance', label: 'Ops & Reorder', icon: Users },
-            { to: '/app/analytics/procurement', label: 'Supplier & Procurement', icon: Factory },
-            { to: '/app/analytics/loyalty', label: 'Customers', icon: Users },
+            { to: '/app/analytics/sales', label: 'Sales Report', icon: TrendingUp },
+            { to: '/app/analytics/profit', label: 'Profit Report', icon: Activity },
+            { to: '/app/analytics/inventory', label: 'Stock Report', icon: ShoppingCart },
+            { to: '/app/analytics/low-stock', label: 'Low Stock & Reorder', icon: Package },
+            { to: '/app/analytics/recall', label: 'Expiry Report', icon: AlertTriangle },
+            { to: '/app/analytics/movement', label: 'Item Movement', icon: ArrowRightLeft },
             { to: '/app/analytics/tax', label: 'Tax & Compliance', icon: FileText },
-            { to: '/app/analytics/recall', label: 'Batch Recall', icon: Search },
+            { to: '/app/analytics/loyalty', label: 'Customer Report', icon: Users },
+            { to: '/app/analytics/procurement', label: 'Purchase Report', icon: Factory },
+            { to: '/app/analytics/performance', label: 'Staff Performance', icon: Users },
         ],
     },
     {

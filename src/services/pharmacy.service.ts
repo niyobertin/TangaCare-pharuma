@@ -112,7 +112,9 @@ export const pharmacyService = {
         facilityId: number,
         params?: { start_date?: string; end_date?: string },
     ): Promise<any> {
-        const response = await api.get<any>(`/pharmacy/reports/sales/${facilityId}`, { params });
+        const response = await api.get<any>(`/pharmacy/reports/sales-summary/${facilityId}`, {
+            params,
+        });
         return (response.data as any).data ?? response.data;
     },
 
@@ -259,6 +261,11 @@ export const pharmacyService = {
 
     async createMedicine(data: CreateMedicineDto): Promise<Medicine> {
         const response = await api.post<{ data: Medicine }>('/pharmacy/medicines', data);
+        return response.data.data;
+    },
+
+    async updateMedicine(id: number, data: Partial<Medicine>): Promise<Medicine> {
+        const response = await api.put<{ data: Medicine }>(`/pharmacy/medicines/${id}`, data);
         return response.data.data;
     },
 

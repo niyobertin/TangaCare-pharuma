@@ -345,6 +345,24 @@ const analyticsRecallRoute = createRoute({
     path: 'recall',
     component: () => <ReportsPage defaultTab="recall" />,
 });
+
+const analyticsProfitRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'profit',
+    component: () => <ReportsPage defaultTab="profit" />,
+});
+
+const analyticsLowStockRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'low-stock',
+    component: () => <ReportsPage defaultTab="low-stock" />,
+});
+
+const analyticsMovementRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'movement',
+    component: () => <ReportsPage defaultTab="movement" />,
+});
 const employeeRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'employees',
@@ -466,6 +484,9 @@ const appRouteTree = appLayoutRoute.addChildren([
         analyticsLoyaltyRoute,
         analyticsTaxRoute,
         analyticsRecallRoute,
+        analyticsProfitRoute,
+        analyticsLowStockRoute,
+        analyticsMovementRoute,
     ]),
     employeeRoute,
     settingsRoute,

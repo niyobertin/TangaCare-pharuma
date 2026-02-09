@@ -55,6 +55,9 @@ export interface Medicine {
     stock_quantity?: number;
     expiry_date?: string;
     created_at?: string;
+    allow_partial_sales?: boolean;
+    units_per_package?: number;
+    base_unit?: string;
 }
 
 export interface Organization {
