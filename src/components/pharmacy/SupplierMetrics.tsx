@@ -62,7 +62,7 @@ export function SupplierMetrics() {
                             Lead Time (Days)
                         </p>
                         <div className="flex-1 min-h-[150px]">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <BarChart data={performance}>
                                     <XAxis dataKey="supplier_name" hide />
                                     <YAxis />

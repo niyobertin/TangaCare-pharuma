@@ -17,6 +17,8 @@ interface AuthContextType {
     isLoading: boolean;
     organizationId: number | null;
     facilityId: number | null;
+    currentOrg: Organization | null;
+    currentFacility: { id: number; name: string; type?: string; organization_id?: number } | null;
     organizations: Organization[];
     facilities: Array<{ id: number; name: string; type?: string; organization_id?: number }>;
     setOrganization: (id: number | null) => void;
@@ -230,6 +232,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 isLoading,
                 organizationId,
                 facilityId,
+                currentOrg: organizations.find((o) => o.id === organizationId) || null,
+                currentFacility: facilities.find((f) => f.id === facilityId) || null,
                 organizations,
                 facilities,
                 setOrganization,

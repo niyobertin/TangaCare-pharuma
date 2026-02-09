@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart3, PieChart, TrendingUp, Calendar, Download, FileText } from 'lucide-react';
+import {
+    BarChart3,
+    PieChart,
+    TrendingUp,
+    Calendar,
+    Download,
+    FileText,
+    Activity,
+    Users,
+    ShieldCheck,
+    ShoppingBag,
+    RotateCcw,
+} from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { TableSkeleton } from '../../components/shared/Skeleton';
@@ -7,16 +19,25 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import { useAuth } from '../../context/AuthContext';
 import { PerformanceChart } from '../../components/pharmacy/PerformanceChart';
 import { TaxSummaryTable } from '../../components/pharmacy/TaxSummaryTable';
-import { Users, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { format, subDays } from 'date-fns';
 
 import { ReorderSuggestions } from '../../components/pharmacy/reports/ReorderSuggestions';
 import { DeadStockReport } from '../../components/pharmacy/reports/DeadStockReport';
 import { SupplierPerformanceReport } from '../../components/pharmacy/reports/SupplierPerformanceReport';
 import { ABCAnalysisReport } from '../../components/pharmacy/reports/ABCAnalysisReport';
+import { OwnerDashboard } from '../../components/pharmacy/kpi/OwnerDashboard';
+import { ReturnManagement } from '../../components/pharmacy/returns/ReturnManagement';
+import { CreateReturnModal } from '../../components/pharmacy/returns/CreateReturnModal';
 
-export function ReportsPage() {
-    const [activeTab, setActiveTab] = useState('sales');
+export interface ReportsPageProps {
+    defaultTab?: string;
+}
+
+export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
+    // We can still use activeTab state if we want internal navigation within a report section,
+    // but for the main sections, we'll rely on the prop or map it.
+    // Actually, let's stick to the prop driving the view to match the URL.
+
     const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const { user, facilityId } = useAuth();
@@ -41,7 +62,15 @@ export function ReportsPage() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-black text-healthcare-dark dark:text-white">
-                            Reports & Analytics
+                            {defaultTab === 'sales' && 'Sales & Revenue Analysis'}
+                            {defaultTab === 'returns' && 'Returns Management'}
+                            {defaultTab === 'stock' && 'Inventory Reports'}
+                            {defaultTab === 'performance' && 'Operational Performance'}
+                            {defaultTab === 'procurement' && 'Procurement & Suppliers'}
+                            {defaultTab === 'loyalty' && 'Customer Loyalty'}
+                            {defaultTab === 'tax' && 'Tax & Compliance'}
+                            {defaultTab === 'recall' && 'Batch Traceability'}
+                            {defaultTab === 'kpis' && 'KPI Dashboard'}
                         </h1>
                         <p className="text-slate-500 text-sm mt-1">
                             Detailed insights into pharmacy performance
@@ -76,69 +105,27 @@ export function ReportsPage() {
                     </div>
                 </div>
 
-                {}
-                <div className="flex gap-1 border-b border-slate-200 dark:border-slate-800 pb-px overflow-x-auto scroller-none">
-                    <TabButton
-                        active={activeTab === 'sales'}
-                        onClick={() => setActiveTab('sales')}
-                        label="Sales & Revenue"
-                        icon={<TrendingUp size={16} />}
-                    />
-                    <TabButton
-                        active={activeTab === 'stock'}
-                        onClick={() => setActiveTab('stock')}
-                        label="Inventory"
-                        icon={<ShoppingBag size={16} />}
-                    />
-                    <TabButton
-                        active={activeTab === 'performance'}
-                        onClick={() => setActiveTab('performance')}
-                        label="Ops & Reorder"
-                        icon={<Users size={16} />}
-                    />
-                    <TabButton
-                        active={activeTab === 'procurement'}
-                        onClick={() => setActiveTab('procurement')}
-                        label="Supplier & Procurement"
-                        icon={<ShoppingBag size={16} />}
-                    />
-                    <TabButton
-                        active={activeTab === 'loyalty'}
-                        onClick={() => setActiveTab('loyalty')}
-                        label="Customers"
-                        icon={<Users size={16} />}
-                    />
-                    <TabButton
-                        active={activeTab === 'tax'}
-                        onClick={() => setActiveTab('tax')}
-                        label="Tax & Compliance"
-                        icon={<ShieldCheck size={16} />}
-                    />
-                    <TabButton
-                        active={activeTab === 'recall'}
-                        onClick={() => setActiveTab('recall')}
-                        label="Batch Recall"
-                        icon={<FileText size={16} />}
-                    />
-                </div>
-
                 <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800 min-h-[400px]">
-                    {activeTab === 'sales' && (
+                    {defaultTab === 'kpis' && <OwnerDashboard facilityId={effectiveFacilityId!} />}
+                    {defaultTab === 'sales' && (
                         <SalesReports
                             facilityId={effectiveFacilityId}
                             startDate={startDate}
                             endDate={endDate}
                         />
                     )}
-                    {activeTab === 'stock' && <StockReports facilityId={effectiveFacilityId} />}
-                    {activeTab === 'performance' && (
+                    {defaultTab === 'returns' && (
+                        <ReturnManagement facilityId={effectiveFacilityId!} />
+                    )}
+                    {defaultTab === 'stock' && <StockReports facilityId={effectiveFacilityId} />}
+                    {defaultTab === 'performance' && (
                         <PerformanceReports
                             facilityId={effectiveFacilityId}
                             startDate={startDate}
                             endDate={endDate}
                         />
                     )}
-                    {activeTab === 'procurement' && (
+                    {defaultTab === 'procurement' && (
                         <div className="space-y-6">
                             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
                                 <h2 className="text-xl font-black text-healthcare-dark dark:text-white mb-6">
@@ -148,15 +135,17 @@ export function ReportsPage() {
                             </div>
                         </div>
                     )}
-                    {activeTab === 'loyalty' && <LoyaltyReports facilityId={effectiveFacilityId} />}
-                    {activeTab === 'tax' && (
+                    {defaultTab === 'loyalty' && (
+                        <LoyaltyReports facilityId={effectiveFacilityId} />
+                    )}
+                    {defaultTab === 'tax' && (
                         <TaxReports
                             facilityId={effectiveFacilityId}
                             startDate={startDate}
                             endDate={endDate}
                         />
                     )}
-                    {activeTab === 'recall' && (
+                    {defaultTab === 'recall' && (
                         <BatchRecallReports facilityId={effectiveFacilityId} />
                     )}
                 </div>
@@ -512,7 +501,7 @@ function TabButton({
     );
 }
 
-function BatchRecallReports({ facilityId }: { facilityId?: number }) {
+function BatchRecallReports({ facilityId: _facilityId }: { facilityId?: number }) {
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<import('../../types/pharmacy').BatchTraceabilityReport | null>(
@@ -804,6 +793,18 @@ function SalesReports({
     const [loading, setLoading] = useState(false);
     const [sales, setSales] = useState<any | null>(null);
     const [profit, setProfit] = useState<any | null>(null);
+    const [selectedSale, setSelectedSale] = useState<any | null>(null);
+    const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+
+    const handleOpenReturnModal = async (saleId: number) => {
+        try {
+            const saleData = await pharmacyService.getSale(saleId);
+            setSelectedSale(saleData);
+            setIsReturnModalOpen(true);
+        } catch (err) {
+            console.error('Failed to fetch sale details:', err);
+        }
+    };
 
     useEffect(() => {
         if (!facilityId) return;
@@ -899,6 +900,9 @@ function SalesReports({
                                         <th className="px-6 py-3 font-semibold text-slate-500 text-right">
                                             Total
                                         </th>
+                                        <th className="px-6 py-3 font-semibold text-slate-500 text-right">
+                                            Actions
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -937,6 +941,14 @@ function SalesReports({
                                                         maximumFractionDigits: 2,
                                                     })}
                                                 </td>
+                                                <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                    <button
+                                                        onClick={() => handleOpenReturnModal(t.id)}
+                                                        className="px-3 py-1 bg-healthcare-primary/10 text-healthcare-primary rounded-lg text-xs font-black hover:bg-healthcare-primary hover:text-white transition-all flex items-center gap-1 ml-auto"
+                                                    >
+                                                        <RotateCcw size={12} /> Return
+                                                    </button>
+                                                </td>
                                             </tr>
                                         ))
                                     ) : (
@@ -953,6 +965,21 @@ function SalesReports({
                             </table>
                         </div>
                     </div>
+
+                    {isReturnModalOpen && selectedSale && (
+                        <CreateReturnModal
+                            sale={selectedSale}
+                            onClose={() => setIsReturnModalOpen(false)}
+                            onSuccess={() => {
+                                // Refresh sales report after return initiation
+                                const params = { start_date: startDate, end_date: endDate };
+                                if (facilityId)
+                                    pharmacyService
+                                        .getSalesReport(facilityId, params)
+                                        .then(setSales);
+                            }}
+                        />
+                    )}
                 </>
             )}
         </div>

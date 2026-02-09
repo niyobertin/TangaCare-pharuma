@@ -203,10 +203,17 @@ export interface ProcurementOrder {
 export interface Alert {
     id: number;
     facility_id: number;
-    type: 'low_stock' | 'expiry' | 'system';
+    type: 'low_stock' | 'expiry' | 'system' | 'expiry_soon' | 'expired';
     message: string;
-    status: 'active' | 'acknowledged';
+    title: string;
+    status: 'active' | 'acknowledged' | 'resolved';
     created_at: string;
+    medicine_id?: number;
+    batch_id?: number;
+    current_value?: number;
+    threshold_value?: number;
+    medicine?: Medicine;
+    batch?: Batch;
 }
 
 export interface Transaction {
@@ -246,7 +253,9 @@ export interface SaleItem {
     id: number;
     sale_id: number;
     medicine_id: number;
+    medicine?: Medicine;
     batch_id: number;
+    batch?: Batch;
     quantity: number;
     unit_price: number;
     total_price: number;
@@ -478,4 +487,185 @@ export interface PhysicalCount {
     items?: PhysicalCountItem[];
     counted_by?: import('./auth').User;
     approved_by?: import('./auth').User;
+}
+// Returns System Types
+export type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'completed';
+export type RefundMethod = 'cash' | 'mobile_money' | 'card' | 'credit_note';
+export type ReturnReason = 'customer_request' | 'damaged' | 'expired' | 'wrong_item';
+export type ItemCondition = 'resellable' | 'damaged' | 'expired';
+
+export interface CustomerReturnItem {
+    id: number;
+    return_id: number;
+    sale_item_id: number;
+    medicine_id: number;
+    medicine?: Medicine;
+    batch_id: number;
+    batch?: Batch;
+    quantity_returned: number;
+    reason: ReturnReason;
+    condition: ItemCondition;
+    refund_amount: number;
+    restore_to_stock: boolean;
+}
+
+export interface CustomerReturn {
+    id: number;
+    return_number: string;
+    sale_id: number;
+    sale?: Sale;
+    facility_id: number;
+    processed_by_id: number;
+    processedBy?: User;
+    approved_by_id?: number | null;
+    approvedBy?: User | null;
+    total_refund_amount: number;
+    refund_method: RefundMethod;
+    status: ReturnStatus;
+    notes?: string;
+    credit_note_id?: number | null;
+    approved_at?: string | null;
+    created_at: string;
+    items?: CustomerReturnItem[];
+}
+
+// Detailed Sales Report Types
+export interface DailySalesReport {
+    facility_id: number;
+    date: string;
+    summary: {
+        total_sales: number;
+        total_transactions: number;
+        average_sale_value: number;
+        total_vat: number;
+        total_items_sold: number;
+    };
+    sales: any[];
+    payment_methods: Record<string, { amount: number; count: number }>;
+    hourly_breakdown: Array<{ hour: number; amount: number; count: number }>;
+}
+
+export interface MonthlySalesReport {
+    facility_id: number;
+    year: number;
+    month: number;
+    summary: {
+        total_sales: number;
+        total_transactions: number;
+        total_profit: number;
+        profit_margin: number;
+        total_vat: number;
+    };
+    daily_breakdown: Array<{ date: string; amount: number; count: number }>;
+    top_medicines: Array<{
+        medicine_id: number;
+        medicine_name: string;
+        quantity: number;
+        revenue: number;
+    }>;
+}
+
+export interface SalesByMedicineReport {
+    facility_id: number;
+    period: { start: string; end: string };
+    medicines: Array<{
+        medicine_id: number;
+        medicine_name: string;
+        quantity_sold: number;
+        revenue: number;
+        cost: number;
+        profit: number;
+        profit_margin: number;
+        transaction_count: number;
+    }>;
+}
+
+// KPI Types
+export interface FinancialKPIs {
+    facility_id: number;
+    period: { start: string; end: string };
+    total_revenue: number;
+    total_cost: number;
+    gross_profit: number;
+    gross_profit_margin: number;
+    net_profit: number;
+    net_profit_margin: number;
+    average_transaction_value: number;
+    total_transactions: number;
+    revenue_per_day: number;
+}
+
+export interface InventoryKPIs {
+    facility_id: number;
+    total_inventory_value: number;
+    total_items: number;
+    low_stock_items: number;
+    out_of_stock_items: number;
+    expiring_soon_items: number;
+    expired_items: number;
+    inventory_turnover_ratio: number;
+    days_inventory_outstanding: number;
+    stock_health_score: number;
+}
+
+export interface OperationalKPIs {
+    facility_id: number;
+    period: { start: string; end: string };
+    total_sales_volume: number;
+    return_rate: number;
+    average_items_per_sale: number;
+    top_selling_medicine: {
+        medicine_id: number;
+        medicine_name: string;
+        quantity_sold: number;
+        revenue: number;
+    } | null;
+    sales_growth_rate: number;
+    customer_count: number;
+    repeat_customer_rate: number;
+}
+
+export interface ComprehensiveKPIs {
+    financial: FinancialKPIs;
+    inventory: InventoryKPIs;
+    operational: OperationalKPIs;
+}
+
+export interface PaymentBreakdown {
+    payment_method: string;
+    total_amount: number;
+    transaction_count: number;
+    percentage: number;
+}
+
+export interface ExpiryRiskBuckets {
+    under_30_days: { count: number; value: number };
+    under_60_days: { count: number; value: number };
+    under_90_days: { count: number; value: number };
+}
+
+export interface TopRevenueMedicine {
+    medicine_id: number;
+    medicine_name: string;
+    revenue: number;
+    quantity: number;
+    profit: number;
+}
+
+export interface CategorySummary {
+    category_id: number;
+    category_name: string;
+    quantity_sold: number;
+    revenue: number;
+    profit: number;
+}
+
+export interface DashboardSummary {
+    today: ComprehensiveKPIs;
+    month: ComprehensiveKPIs;
+    top_medicines: TopRevenueMedicine[];
+    categories: CategorySummary[];
+    payments: PaymentBreakdown[];
+    expiry_risk: ExpiryRiskBuckets;
+    sales_trend?: Array<{ date: string; sales: number }>;
 }

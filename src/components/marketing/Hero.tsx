@@ -1,7 +1,7 @@
-import { Link } from "@tanstack/react-router";
-import { Button } from "../ui/Button";
-import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { Link } from '@tanstack/react-router';
+import { Button } from '../ui/Button';
+import { motion } from 'framer-motion';
+import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export function Hero() {
     return (
@@ -32,22 +32,33 @@ export function Hero() {
 
                         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-6xl mb-8 leading-[1.15]">
                             Smart Inventory for <br className="hidden lg:block" />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-teal-400">Professional Healthcare</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-teal-400">
+                                Professional Healthcare
+                            </span>
                         </h1>
 
                         <p className="text-xl text-slate-600 dark:text-zinc-400 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                            TangaCare empowers pharmacies and hospitals with AI-driven tracking, automated reordering, and multi-location control to eliminate waste and maximize efficiency.
+                            TangaCare empowers pharmacies and hospitals with AI-driven tracking,
+                            automated reordering, and multi-location control to eliminate waste and
+                            maximize efficiency.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start">
                             <Link to="/auth/register">
-                                <Button size="lg" className="h-14 px-10 rounded-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg shadow-xl shadow-teal-600/25 transition-all hover:scale-105 active:scale-95 group">
+                                <Button
+                                    size="lg"
+                                    className="h-14 px-10 rounded-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg shadow-xl shadow-teal-600/25 transition-all hover:scale-105 active:scale-95 group"
+                                >
                                     Start Your Free Trial
                                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                                 </Button>
                             </Link>
                             <a href="#contact">
-                                <Button size="lg" variant="outline" className="h-14 px-10 rounded-full font-bold text-lg border-2 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm">
+                                <Button
+                                    size="lg"
+                                    variant="outline"
+                                    className="h-14 px-10 rounded-full font-bold text-lg border-2 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm"
+                                >
                                     Book a Demo
                                 </Button>
                             </a>
@@ -69,7 +80,7 @@ export function Hero() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
                         animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
                         className="flex-1 relative w-full max-w-xl"
                     >
                         <div className="relative group">
@@ -90,30 +101,45 @@ export function Hero() {
                             {/* Float Card 1: Live Status */}
                             <motion.div
                                 animate={{ y: [0, -8, 0] }}
-                                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+                                transition={{ repeat: Infinity, duration: 5, ease: 'easeInOut' }}
                                 className="absolute -top-10 -right-6 lg:-right-10 bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-2xl border border-slate-100 dark:border-zinc-700 flex items-center gap-3 ring-1 ring-slate-900/5"
                             >
                                 <div className="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 transition-colors">
                                     <CheckCircle2 className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <p className="text-xs font-bold text-slate-900 dark:text-white">System Healthy</p>
-                                    <p className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium">24 Nodes active across regions</p>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-white">
+                                        System Healthy
+                                    </p>
+                                    <p className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium">
+                                        24 Nodes active across regions
+                                    </p>
                                 </div>
                             </motion.div>
 
                             {/* Float Card 2: Low Stock */}
                             <motion.div
                                 animate={{ y: [0, 8, 0] }}
-                                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 1 }}
+                                transition={{
+                                    repeat: Infinity,
+                                    duration: 4,
+                                    ease: 'easeInOut',
+                                    delay: 1,
+                                }}
                                 className="absolute -bottom-10 -left-6 lg:-left-10 bg-white dark:bg-zinc-800 p-4 rounded-xl shadow-2xl border border-slate-100 dark:border-zinc-700 flex items-center gap-4 ring-1 ring-slate-900/5"
                             >
                                 <div className="h-12 w-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center text-red-600 transition-colors">
-                                    <span className="font-bold text-xs uppercase tracking-tight">Low</span>
+                                    <span className="font-bold text-xs uppercase tracking-tight">
+                                        Low
+                                    </span>
                                 </div>
                                 <div className="text-left">
-                                    <p className="text-xs font-bold text-slate-900 dark:text-white">Stock Alert</p>
-                                    <p className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium">Aspirin 75mg: 4 units left</p>
+                                    <p className="text-xs font-bold text-slate-900 dark:text-white">
+                                        Stock Alert
+                                    </p>
+                                    <p className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium">
+                                        Aspirin 75mg: 4 units left
+                                    </p>
                                 </div>
                             </motion.div>
                         </div>
@@ -127,11 +153,13 @@ export function Hero() {
                 transition={{ repeat: Infinity, duration: 2 }}
                 className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 cursor-pointer opacity-30 hover:opacity-100 transition-all"
             >
-                <span className="text-[10px] font-black tracking-widest uppercase text-slate-500 select-none">Scroll</span>
+                <span className="text-[10px] font-black tracking-widest uppercase text-slate-500 select-none">
+                    Scroll
+                </span>
                 <div className="w-1 h-8 rounded-full bg-slate-200 dark:bg-zinc-800 overflow-hidden relative">
                     <motion.div
                         animate={{ y: [-32, 32] }}
-                        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                        transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
                         className="absolute inset-0 bg-teal-600"
                     />
                 </div>

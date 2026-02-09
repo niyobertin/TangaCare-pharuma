@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { Link } from '@tanstack/react-router';
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 
 export function Footer() {
     return (
@@ -10,18 +10,27 @@ export function Footer() {
                     <div className="space-y-6">
                         <Link to="/" className="flex items-center gap-3 group">
                             <div className="w-10 h-10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
-                                <img src="/logo.png" alt="TangaCare" className="w-full h-full object-contain" />
+                                <img
+                                    src="/logo.png"
+                                    alt="TangaCare"
+                                    className="w-full h-full object-contain"
+                                />
                             </div>
                             <span className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">
                                 TangaCare
                             </span>
                         </Link>
                         <p className="text-slate-500 dark:text-zinc-400 text-sm leading-relaxed font-medium max-w-xs">
-                            Revolutionizing healthcare inventory management with AI-driven tracking and multi-location control.
+                            Revolutionizing healthcare inventory management with AI-driven tracking
+                            and multi-location control.
                         </p>
                         <div className="flex gap-4">
                             {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                                <a key={i} href="#" className="w-10 h-10 rounded-full bg-slate-50 dark:bg-zinc-900 flex items-center justify-center text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all">
+                                <a
+                                    key={i}
+                                    href="#"
+                                    className="w-10 h-10 rounded-full bg-slate-50 dark:bg-zinc-900 flex items-center justify-center text-slate-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all"
+                                >
                                     <Icon size={18} />
                                 </a>
                             ))}
@@ -32,9 +41,12 @@ export function Footer() {
                     <div>
                         <h4 className="text-slate-900 dark:text-white font-bold mb-6">Product</h4>
                         <ul className="space-y-4">
-                            {["Features", "How It Works", "Pricing", "FAQ"].map((item) => (
+                            {['Features', 'How It Works', 'Pricing', 'FAQ'].map((item) => (
                                 <li key={item}>
-                                    <a href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-slate-500 dark:text-zinc-400 text-sm font-bold hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+                                    <a
+                                        href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                                        className="text-slate-500 dark:text-zinc-400 text-sm font-bold hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                                    >
                                         {item}
                                     </a>
                                 </li>
@@ -46,19 +58,26 @@ export function Footer() {
                     <div>
                         <h4 className="text-slate-900 dark:text-white font-bold mb-6">Support</h4>
                         <ul className="space-y-4">
-                            {["Contact", "Privacy Policy", "Terms of Service", "Documentation"].map((item) => (
-                                <li key={item}>
-                                    <a href={item === "Contact" ? "#contact" : "#"} className="text-slate-500 dark:text-zinc-400 text-sm font-bold hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
-                                        {item}
-                                    </a>
-                                </li>
-                            ))}
+                            {['Contact', 'Privacy Policy', 'Terms of Service', 'Documentation'].map(
+                                (item) => (
+                                    <li key={item}>
+                                        <a
+                                            href={item === 'Contact' ? '#contact' : '#'}
+                                            className="text-slate-500 dark:text-zinc-400 text-sm font-bold hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                                        >
+                                            {item}
+                                        </a>
+                                    </li>
+                                ),
+                            )}
                         </ul>
                     </div>
 
                     {/* Contact Info */}
                     <div>
-                        <h4 className="text-slate-900 dark:text-white font-bold mb-6">Contact Us</h4>
+                        <h4 className="text-slate-900 dark:text-white font-bold mb-6">
+                            Contact Us
+                        </h4>
                         <ul className="space-y-4">
                             <li className="flex items-start gap-3 text-sm font-medium text-slate-500 dark:text-zinc-400">
                                 <Mail size={18} className="text-teal-600 flex-shrink-0" />
@@ -70,7 +89,11 @@ export function Footer() {
                             </li>
                             <li className="flex items-start gap-3 text-sm font-medium text-slate-500 dark:text-zinc-400">
                                 <MapPin size={18} className="text-teal-600 flex-shrink-0" />
-                                <span>123 Health Ave, Suite 100<br />San Francisco, CA 94103</span>
+                                <span>
+                                    123 Health Ave, Suite 100
+                                    <br />
+                                    San Francisco, CA 94103
+                                </span>
                             </li>
                         </ul>
                     </div>
@@ -81,9 +104,15 @@ export function Footer() {
                         © {new Date().getFullYear()} TangaCare Inc. All rights reserved.
                     </p>
                     <div className="flex gap-8 text-xs font-bold text-slate-400 dark:text-zinc-600 uppercase tracking-widest">
-                        <a href="#" className="hover:text-teal-600 transition-colors">Twitter</a>
-                        <a href="#" className="hover:text-teal-600 transition-colors">LinkedIn</a>
-                        <a href="#" className="hover:text-teal-600 transition-colors">GitHub</a>
+                        <a href="#" className="hover:text-teal-600 transition-colors">
+                            Twitter
+                        </a>
+                        <a href="#" className="hover:text-teal-600 transition-colors">
+                            LinkedIn
+                        </a>
+                        <a href="#" className="hover:text-teal-600 transition-colors">
+                            GitHub
+                        </a>
                     </div>
                 </div>
             </div>

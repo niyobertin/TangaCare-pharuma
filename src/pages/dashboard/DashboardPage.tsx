@@ -26,11 +26,7 @@ import {
     type InventoryData,
     type TrendData,
 } from '../../components/dashboard/DashboardCharts';
-import {
-    StatCardSkeleton,
-    ChartSkeleton,
-    TableSkeleton,
-} from '../../components/dashboard/DashboardSkeletons';
+import { StatCardSkeleton, ChartSkeleton } from '../../components/dashboard/DashboardSkeletons';
 import { AdvancedKPICards } from '../../components/pharmacy/AdvancedKPICards';
 import { CriticalMedicinesPanel } from '../../components/pharmacy/CriticalMedicinesPanel';
 import { ExpiryHeatMap } from '../../components/pharmacy/ExpiryHeatMap';
@@ -80,7 +76,7 @@ export function DashboardPage() {
                     pharmacyService.getInventoryStatus(),
                     pharmacyService.getConsumptionTrends(30),
                     pharmacyService.getExpiryRisk(90),
-                    pharmacyService.getAlerts({ status: 'active' }),
+                    pharmacyService.getAlerts({ status: 'active', facility_id: facilityId }),
                     pharmacyService.getRecentSales(),
                 ]);
 

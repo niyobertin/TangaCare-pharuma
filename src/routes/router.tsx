@@ -252,6 +252,15 @@ const alertsRoute = createRoute({
             <AlertsPage />
         </RequirePermission>
     ),
+    validateSearch: (search: Record<string, unknown>) => {
+        return z
+            .object({
+                search: z.string().optional(),
+                type: z.enum(['all', 'low_stock', 'expiry']).optional(),
+                status: z.enum(['active', 'resolved']).optional(),
+            })
+            .parse(search);
+    },
 });
 
 const prescriptionsRoute = createRoute({
@@ -278,9 +287,63 @@ const analyticsRoute = createRoute({
     path: 'analytics',
     component: () => (
         <RequirePermission permission={PERMISSIONS.REPORTS_READ}>
-            <ReportsPage />
+            <Outlet />
         </RequirePermission>
     ),
+});
+
+const analyticsIndexRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: '/',
+    component: () => <Navigate to="/app/analytics/sales" />,
+});
+
+const analyticsSalesRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'sales',
+    component: () => <ReportsPage defaultTab="sales" />,
+});
+
+const analyticsReturnsRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'returns',
+    component: () => <ReportsPage defaultTab="returns" />,
+});
+
+const analyticsInventoryRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'inventory',
+    component: () => <ReportsPage defaultTab="stock" />,
+});
+
+const analyticsPerformanceRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'performance',
+    component: () => <ReportsPage defaultTab="performance" />,
+});
+
+const analyticsProcurementRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'procurement',
+    component: () => <ReportsPage defaultTab="procurement" />,
+});
+
+const analyticsLoyaltyRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'loyalty',
+    component: () => <ReportsPage defaultTab="loyalty" />,
+});
+
+const analyticsTaxRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'tax',
+    component: () => <ReportsPage defaultTab="tax" />,
+});
+
+const analyticsRecallRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'recall',
+    component: () => <ReportsPage defaultTab="recall" />,
 });
 const employeeRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -393,7 +456,17 @@ const appRouteTree = appLayoutRoute.addChildren([
     stocktakingRoute,
     prescriptionsRoute,
     patientsRoute,
-    analyticsRoute,
+    analyticsRoute.addChildren([
+        analyticsIndexRoute,
+        analyticsSalesRoute,
+        analyticsReturnsRoute,
+        analyticsInventoryRoute,
+        analyticsPerformanceRoute,
+        analyticsProcurementRoute,
+        analyticsLoyaltyRoute,
+        analyticsTaxRoute,
+        analyticsRecallRoute,
+    ]),
     employeeRoute,
     settingsRoute,
     alertsRoute,
