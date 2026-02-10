@@ -1,0 +1,23 @@
+src/components/alerts/AlertPanel.tsx(44,23): error TS2345: Argument of type 'Alert[]' is not assignable to parameter of type 'SetStateAction<Alert[]>'.
+  Type 'import("/Users/nbertin/Desktop/LOOKUP/TANGACAREPROJECT/TangaCare-pharuma/src/types/pharmacy").Alert[]' is not assignable to type 'Alert[]'.
+    Property 'alert_type' is missing in type 'import("/Users/nbertin/Desktop/LOOKUP/TANGACAREPROJECT/TangaCare-pharuma/src/types/pharmacy").Alert' but required in type 'Alert'.
+src/components/alerts/AlertPanel.tsx(161,29): error TS2322: Type '"/pharmacy/alerts"' is not assignable to type '"/auth/login" | "/auth/register" | "/auth/forgot-password" | "/auth/verify-otp" | "/auth/reset-password" | "/" | "/login" | "/app" | "/app/inventory" | "/app/dispensing" | ... 37 more ... | ".."'.
+src/components/dashboard/DashboardOwner.tsx(45,59): error TS2554: Expected 1 arguments, but got 0.
+src/components/dashboard/DashboardOwner.tsx(46,41): error TS2339: Property 'suggestions' does not exist on type 'ReorderSuggestion[]'.
+src/components/pharmacy/reports/ReorderSuggestions.tsx(32,48): error TS2554: Expected 1 arguments, but got 0.
+src/components/pharmacy/reports/ReorderSuggestions.tsx(33,33): error TS2339: Property 'suggestions' does not exist on type 'ReorderSuggestion[]'.
+src/pages/dashboard/BatchRecallPage.tsx(12,5): error TS6133: 'FileText' is declared but its value is never read.
+src/pages/dashboard/BatchRecallPage.tsx(14,5): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/pages/dashboard/BatchRecallPage.tsx(15,5): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/dashboard/ReorderDashboardPage.tsx(8,5): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/dashboard/ReorderDashboardPage.tsx(15,5): error TS6133: 'Calendar' is declared but its value is never read.
+src/pages/dashboard/ReorderDashboardPage.tsx(18,1): error TS6133: 'TableSkeleton' is declared but its value is never read.
+src/pages/dashboard/ReorderDashboardPage.tsx(19,1): error TS6133: 'format' is declared but its value is never read.
+src/pages/dashboard/VarianceTrackingPage.tsx(13,5): error TS6133: 'Filter' is declared but its value is never read.
+src/pages/dashboard/VarianceTrackingPage.tsx(27,18): error TS6133: 'setPage' is declared but its value is never read.
+src/pages/dashboard/VarianceTrackingPage.tsx(28,12): error TS6133: 'total' is declared but its value is never read.
+src/pages/procurement/ProcurementPage.tsx(565,42): error TS2339: Property 'totalValue' does not exist on type '{ total: number; page: number; limit: number; totalPages: number; }'.
+src/types/pharmacy.ts(677,13): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.
+src/types/pharmacy.ts(684,13): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.
+src/types/pharmacy.ts(720,13): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.
+src/types/pharmacy.ts(726,13): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.

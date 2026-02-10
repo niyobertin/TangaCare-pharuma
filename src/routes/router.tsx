@@ -101,6 +101,9 @@ import { UsersPage } from '../pages/dashboard/UsersPage';
 import { ViewOrderPage } from '../pages/procurement/ViewOrderPage';
 import { PatientsPage } from '../pages/dashboard/PatientsPage';
 import { PhysicalCountPage } from '../pages/dashboard/PhysicalCountPage';
+import { VarianceTrackingPage } from '../pages/dashboard/VarianceTrackingPage';
+import { BatchRecallPage } from '../pages/dashboard/BatchRecallPage';
+import { ReorderDashboardPage } from '../pages/dashboard/ReorderDashboardPage';
 
 const indexRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -243,6 +246,33 @@ const stocktakingRoute = createRoute({
         </RequirePermission>
     ),
 });
+const variancesRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'variances',
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+            <VarianceTrackingPage />
+        </RequirePermission>
+    ),
+});
+const recallsRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'recalls',
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+            <BatchRecallPage />
+        </RequirePermission>
+    ),
+});
+const reorderRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'reorder-dashboard',
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.PROCUREMENT_READ}>
+            <ReorderDashboardPage />
+        </RequirePermission>
+    ),
+});
 
 const alertsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -344,6 +374,24 @@ const analyticsRecallRoute = createRoute({
     getParentRoute: () => analyticsRoute,
     path: 'recall',
     component: () => <ReportsPage defaultTab="recall" />,
+});
+
+const analyticsProfitRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'profit',
+    component: () => <ReportsPage defaultTab="profit" />,
+});
+
+const analyticsLowStockRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'low-stock',
+    component: () => <ReportsPage defaultTab="low-stock" />,
+});
+
+const analyticsMovementRoute = createRoute({
+    getParentRoute: () => analyticsRoute,
+    path: 'movement',
+    component: () => <ReportsPage defaultTab="movement" />,
 });
 const employeeRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
@@ -454,6 +502,9 @@ const appRouteTree = appLayoutRoute.addChildren([
     pricingRoute,
     stockRegisterRoute,
     stocktakingRoute,
+    variancesRoute,
+    recallsRoute,
+    reorderRoute,
     prescriptionsRoute,
     patientsRoute,
     analyticsRoute.addChildren([
@@ -466,6 +517,9 @@ const appRouteTree = appLayoutRoute.addChildren([
         analyticsLoyaltyRoute,
         analyticsTaxRoute,
         analyticsRecallRoute,
+        analyticsProfitRoute,
+        analyticsLowStockRoute,
+        analyticsMovementRoute,
     ]),
     employeeRoute,
     settingsRoute,

@@ -28,6 +28,13 @@ import type {
     InventoryKPIs,
     OperationalKPIs,
     DashboardSummary,
+    RecallStatus,
+    RecallReason,
+    BatchRecall,
+    VarianceStatus,
+    VarianceType,
+    StockVariance,
+    ReorderSuggestion,
 } from '../types/pharmacy';
 
 const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
@@ -112,7 +119,9 @@ export const pharmacyService = {
         facilityId: number,
         params?: { start_date?: string; end_date?: string },
     ): Promise<any> {
-        const response = await api.get<any>(`/pharmacy/reports/sales/${facilityId}`, { params });
+        const response = await api.get<any>(`/pharmacy/reports/sales-summary/${facilityId}`, {
+            params,
+        });
         return (response.data as any).data ?? response.data;
     },
 
@@ -240,6 +249,47 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
+    async getPurchaseReport(
+        facilityId: number,
+        params?: { start_date?: string; end_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/purchase/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async downloadReport(
+        type: string,
+        format: 'excel' | 'pdf',
+        params?: { start_date?: string; end_date?: string; days?: number },
+    ): Promise<void> {
+        const response = await api.get(`/pharmacy/reports/export/${type}/${format}`, {
+            params,
+            responseType: 'blob',
+        });
+
+        const blob = new Blob([response.data], {
+            type:
+                format === 'excel'
+                    ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    : 'application/pdf',
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        const timestamp = new Date().toISOString().split('T')[0];
+        const fileName = `${type}_report_${timestamp}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    },
+
     async createSale(payload: CreateSaleDto): Promise<Sale> {
         const response = await api.post<any>('/pharmacy/sales', payload);
         return (response.data as any).data ?? response.data;
@@ -259,6 +309,11 @@ export const pharmacyService = {
 
     async createMedicine(data: CreateMedicineDto): Promise<Medicine> {
         const response = await api.post<{ data: Medicine }>('/pharmacy/medicines', data);
+        return response.data.data;
+    },
+
+    async updateMedicine(id: number, data: Partial<Medicine>): Promise<Medicine> {
+        const response = await api.put<{ data: Medicine }>(`/pharmacy/medicines/${id}`, data);
         return response.data.data;
     },
 
@@ -582,9 +637,25 @@ export const pharmacyService = {
     async getAlerts(params?: {
         facility_id?: number;
         status?: string;
+        limit?: number;
     }): Promise<PaginatedResponse<Alert>> {
         const response = await api.get<any>('/pharmacy/alerts', { params });
         return normalizePaginatedResponse<Alert>(response.data);
+    },
+
+    async getAlertSummary(): Promise<any> {
+        const response = await api.get<any>('/pharmacy/alerts/summary');
+        return response.data;
+    },
+
+    async acknowledgeAlert(alertId: number): Promise<any> {
+        const response = await api.post<any>(`/pharmacy/alerts/${alertId}/acknowledge`);
+        return response.data;
+    },
+
+    async generateAlerts(): Promise<any> {
+        const response = await api.post<any>('/pharmacy/alerts/generate');
+        return response.data;
     },
 
     async dispenseMedicine(data: {
@@ -722,10 +793,14 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async getReorderSuggestions(): Promise<{
-        suggestions: import('../types/pharmacy').ReorderSuggestion[];
-    }> {
-        const response = await api.get<any>('/pharmacy/analytics/reorder-suggestions');
+    async getReorderSuggestions(facilityId: number): Promise<ReorderSuggestion[]> {
+        const response = await api.get<any>(`/pharmacy/analytics/reorder-suggestions/${facilityId}`);
+        const data = (response.data as any).data ?? response.data;
+        return Array.isArray(data) ? data : data.suggestions || [];
+    },
+
+    async createDraftPOsFromSuggestions(facilityId: number): Promise<{ count: number }> {
+        const response = await api.post<any>(`/pharmacy/procurement/auto-draft-pos`, { facility_id: facilityId });
         return (response.data as any).data ?? response.data;
     },
 
@@ -958,6 +1033,66 @@ export const pharmacyService = {
 
     async getDashboardSummary(facilityId: number): Promise<DashboardSummary> {
         const response = await api.get<any>(`/pharmacy/kpis/summary/${facilityId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    // Recall Methods
+    async getRecalls(params?: {
+        facility_id?: number;
+        status?: RecallStatus;
+        page?: number;
+        limit?: number;
+    }): Promise<PaginatedResponse<BatchRecall>> {
+        const response = await api.get<any>('/pharmacy/recalls', { params });
+        return normalizePaginatedResponse<BatchRecall>(response.data);
+    },
+
+    async initiateRecall(data: {
+        batch_id: number;
+        reason: RecallReason;
+        description: string;
+    }): Promise<BatchRecall> {
+        const response = await api.post<any>('/pharmacy/recalls', data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getRecall(id: number): Promise<BatchRecall> {
+        const response = await api.get<any>(`/pharmacy/recalls/${id}`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async downloadRecallNotice(id: number): Promise<void> {
+        const response = await api.get(`/pharmacy/recalls/${id}/notice`, {
+            responseType: 'blob',
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `Recall_Notice_${id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    },
+
+    // Stock Variance Methods
+    async getVariances(params?: {
+        facility_id?: number;
+        status?: VarianceStatus;
+        type?: VarianceType;
+        page?: number;
+        limit?: number;
+    }): Promise<PaginatedResponse<StockVariance>> {
+        const response = await api.get<any>('/pharmacy/variances', { params });
+        return normalizePaginatedResponse<StockVariance>(response.data);
+    },
+
+    async approveVariance(id: number): Promise<StockVariance> {
+        const response = await api.post<any>(`/pharmacy/variances/${id}/approve`);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async rejectVariance(id: number, reason: string): Promise<StockVariance> {
+        const response = await api.post<any>(`/pharmacy/variances/${id}/reject`, { reason });
         return (response.data as any).data ?? response.data;
     },
 };

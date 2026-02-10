@@ -20,6 +20,9 @@ import {
     Building2,
     ChevronDown,
     FileText,
+    Activity,
+    AlertTriangle,
+    ArrowRightLeft,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -31,6 +34,8 @@ import { NotificationBell } from '../ui/NotificationBell'; // Correct path
 import { FacilityEmptyState } from '../facility/FacilityEmptyState';
 import { CreateFacilityModal } from '../facility/CreateFacilityModal';
 import { SetupPharmacyModal } from '../facility/SetupPharmacyModal';
+import { AlertBadge } from '../alerts/AlertBadge';
+import { AlertPanel } from '../alerts/AlertPanel';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -203,14 +208,16 @@ const NAV_ITEMS: NavItem[] = [
         ],
         allowedPermissions: ['reports:read'],
         children: [
-            { to: '/app/analytics/sales', label: 'Sales & Revenue', icon: TrendingUp },
-            { to: '/app/analytics/returns', label: 'Returns', icon: LogOut },
-            { to: '/app/analytics/inventory', label: 'Inventory', icon: ShoppingCart },
-            { to: '/app/analytics/performance', label: 'Ops & Reorder', icon: Users },
-            { to: '/app/analytics/procurement', label: 'Supplier & Procurement', icon: Factory },
-            { to: '/app/analytics/loyalty', label: 'Customers', icon: Users },
+            { to: '/app/analytics/sales', label: 'Sales Report', icon: TrendingUp },
+            { to: '/app/analytics/profit', label: 'Profit Report', icon: Activity },
+            { to: '/app/analytics/inventory', label: 'Stock Report', icon: ShoppingCart },
+            { to: '/app/analytics/low-stock', label: 'Low Stock & Reorder', icon: Package },
+            { to: '/app/analytics/recall', label: 'Expiry Report', icon: AlertTriangle },
+            { to: '/app/analytics/movement', label: 'Item Movement', icon: ArrowRightLeft },
             { to: '/app/analytics/tax', label: 'Tax & Compliance', icon: FileText },
-            { to: '/app/analytics/recall', label: 'Batch Recall', icon: Search },
+            { to: '/app/analytics/loyalty', label: 'Customer Report', icon: Users },
+            { to: '/app/analytics/procurement', label: 'Purchase Report', icon: Factory },
+            { to: '/app/analytics/performance', label: 'Staff Performance', icon: Users },
         ],
     },
     {
@@ -360,6 +367,7 @@ export function MainLayout() {
     const { isDark, toggleTheme } = useTheme();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showSetupModal, setShowSetupModal] = useState(false);
+    const [showAlertPanel, setShowAlertPanel] = useState(false);
 
     // Filter logic for navigation items...
     const filteredNavItems = NAV_ITEMS.filter((item) => {
@@ -551,8 +559,8 @@ export function MainLayout() {
                                             {facilityId == null && isSuperAdminUser
                                                 ? 'All Facilities (System)'
                                                 : facilities.length > 0
-                                                  ? switcherLabel
-                                                  : (currentOrg?.name ?? 'Select context')}
+                                                    ? switcherLabel
+                                                    : (currentOrg?.name ?? 'Select context')}
                                         </span>
                                         <ChevronDown
                                             size={14}
@@ -628,6 +636,11 @@ export function MainLayout() {
                             {/* Replaced static bell with smart component */}
                             <NotificationBell />
 
+                            {/* Alert Badge with Panel */}
+                            <div onClick={() => setShowAlertPanel(!showAlertPanel)}>
+                                <AlertBadge />
+                            </div>
+
                             <button
                                 onClick={toggleTheme}
                                 className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
@@ -690,6 +703,9 @@ export function MainLayout() {
                     </div>
                 </div>
             </main>
+
+            {/* Alert Panel */}
+            <AlertPanel isOpen={showAlertPanel} onClose={() => setShowAlertPanel(false)} />
         </div>
     );
 }
