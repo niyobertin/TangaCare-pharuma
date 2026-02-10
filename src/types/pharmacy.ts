@@ -7,6 +7,7 @@ export interface PaginatedResponse<T> {
         page: number;
         limit: number;
         totalPages: number;
+        totalValue?: number;
     };
 }
 
@@ -671,4 +672,89 @@ export interface DashboardSummary {
     payments: PaymentBreakdown[];
     expiry_risk: ExpiryRiskBuckets;
     sales_trend?: Array<{ date: string; sales: number }>;
+}
+
+// Batch Recall Types
+export const RecallStatus = {
+    INITIATED: 'initiated',
+    IN_PROGRESS: 'in_progress',
+    COMPLETED: 'completed',
+    CANCELLED: 'cancelled',
+} as const;
+export type RecallStatus = (typeof RecallStatus)[keyof typeof RecallStatus];
+
+export const RecallReason = {
+    QUALITY_ISSUE: 'quality_issue',
+    CONTAMINATION: 'contamination',
+    REGULATORY: 'regulatory',
+    EXPIRY: 'expiry',
+    COUNTERFEIT: 'counterfeit',
+    OTHER: 'other',
+} as const;
+export type RecallReason = (typeof RecallReason)[keyof typeof RecallReason];
+
+export interface BatchRecall {
+    id: number;
+    facility_id: number;
+    batch_id: number;
+    batch?: Batch;
+    medicine_id: number;
+    medicine?: Medicine;
+    recall_number: string;
+    reason: RecallReason;
+    description: string;
+    status: RecallStatus;
+    affected_sales_count: number;
+    affected_quantity: number;
+    recovered_quantity: number;
+    remaining_stock: number;
+    action_taken?: string;
+    notes?: string;
+    initiated_by_id?: number;
+    initiated_by?: User;
+    completed_by_id?: number;
+    completed_by?: User;
+    initiated_at: string;
+    completed_at?: string;
+    created_at: string;
+}
+
+// Stock Variance Types
+export const VarianceStatus = {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+} as const;
+export type VarianceStatus = (typeof VarianceStatus)[keyof typeof VarianceStatus];
+
+export const VarianceType = {
+    PHYSICAL_COUNT: 'physical_count',
+    CYCLE_COUNT: 'cycle_count',
+    ANNUAL_COUNT: 'annual_count',
+} as const;
+export type VarianceType = (typeof VarianceType)[keyof typeof VarianceType];
+
+export interface StockVariance {
+    id: number;
+    facility_id: number;
+    medicine_id: number;
+    medicine?: Medicine;
+    batch_id?: number;
+    batch?: Batch;
+    system_quantity: number;
+    physical_quantity: number;
+    variance_quantity: number;
+    unit_cost?: number;
+    variance_value?: number;
+    variance_type: VarianceType;
+    status: VarianceStatus;
+    reason?: string;
+    notes?: string;
+    counted_by_id?: number;
+    counted_by?: User;
+    approved_by_id?: number;
+    approved_by?: User;
+    approved_at?: string;
+    counted_at?: string;
+    created_at: string;
 }

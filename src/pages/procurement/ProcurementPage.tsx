@@ -368,27 +368,27 @@ const SuppliersTab = () => {
                                             <div className="flex items-center justify-end gap-2">
                                                 {user?.role?.toString()?.toLowerCase() !==
                                                     'auditor' && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => {
-                                                                setSelectedSupplier(supplier);
-                                                                setIsModalOpen(true);
-                                                            }}
-                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-all"
-                                                        >
-                                                            <Edit size={16} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => {
-                                                                setSupplierToDelete(supplier.id);
-                                                                setIsConfirmOpen(true);
-                                                            }}
-                                                            className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-all"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </>
-                                                )}
+                                                        <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedSupplier(supplier);
+                                                                    setIsModalOpen(true);
+                                                                }}
+                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-all"
+                                                            >
+                                                                <Edit size={16} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSupplierToDelete(supplier.id);
+                                                                    setIsConfirmOpen(true);
+                                                                }}
+                                                                className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-all"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
                                             </div>
                                         </td>
                                     </tr>
@@ -407,7 +407,7 @@ const SuppliersTab = () => {
                 </div>
             </div>
 
-            {}
+            { }
             <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
                 <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
                     Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalItems)} of{' '}
@@ -526,6 +526,7 @@ export function ProcurementPage() {
     const [activeTab, setActiveTab] = useState<'orders' | 'suppliers'>('orders');
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
+    const [totalValue, setTotalValue] = useState(0);
     const [limit] = useState(10);
     const role = (user?.role || '')
         .toString()
@@ -561,6 +562,7 @@ export function ProcurementPage() {
             setOrders(response.data);
             setTotalPages(response.meta?.totalPages || 1);
             setTotalItems(response.meta?.total || 0);
+            setTotalValue(response.meta?.totalValue || 0);
         } catch (error) {
             console.error('Failed to fetch procurement orders:', error);
         } finally {
@@ -701,7 +703,7 @@ export function ProcurementPage() {
             label: 'Total Value',
             value:
                 'RWF ' +
-                (orders.reduce((acc, o) => acc + o.total_amount, 0) / 1000000).toFixed(1) +
+                (totalValue / 1000000).toFixed(1) +
                 'M',
             icon: ShoppingCart,
             color: 'text-teal-500',
@@ -732,7 +734,7 @@ export function ProcurementPage() {
             requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                {}
+                { }
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
                         <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
@@ -812,7 +814,7 @@ export function ProcurementPage() {
 
                 {activeTab === 'orders' ? (
                     <>
-                        {}
+                        { }
                         {loading ? (
                             <StatsSkeleton />
                         ) : (
@@ -844,7 +846,7 @@ export function ProcurementPage() {
                             </div>
                         )}
 
-                        {}
+                        { }
                         <div className="space-y-4">
                             <div className="flex flex-col lg:flex-row gap-4 items-center bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
                                 <div className="relative flex-1 w-full lg:min-w-[400px]">
@@ -930,7 +932,7 @@ export function ProcurementPage() {
                             </div>
                         </div>
 
-                        {}
+                        { }
                         <div className="glass-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
@@ -1008,53 +1010,53 @@ export function ProcurementPage() {
                                                                     'RECEIVED'
                                                                     ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                                                     : [
-                                                                            'ORDERED',
-                                                                            'APPROVED',
-                                                                        ].includes(
-                                                                            order.status.toUpperCase(),
-                                                                        )
-                                                                      ? 'bg-teal-50 text-teal-600 border border-teal-100'
-                                                                      : order.status.toUpperCase() ===
-                                                                          'PENDING'
-                                                                        ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                                        : [
+                                                                        'ORDERED',
+                                                                        'APPROVED',
+                                                                    ].includes(
+                                                                        order.status.toUpperCase(),
+                                                                    )
+                                                                        ? 'bg-teal-50 text-teal-600 border border-teal-100'
+                                                                        : order.status.toUpperCase() ===
+                                                                            'PENDING'
+                                                                            ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                            : [
                                                                                 'PARTIAL',
                                                                                 'PARTIALLY_RECEIVED',
                                                                             ].includes(
                                                                                 order.status.toUpperCase(),
                                                                             )
-                                                                          ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-                                                                          : order.status.toUpperCase() ===
-                                                                              'DRAFT'
-                                                                            ? 'bg-slate-100 text-slate-500 border border-slate-200'
-                                                                            : 'bg-red-50 text-red-600 border border-red-100',
+                                                                                ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                                                                : order.status.toUpperCase() ===
+                                                                                    'DRAFT'
+                                                                                    ? 'bg-slate-100 text-slate-500 border border-slate-200'
+                                                                                    : 'bg-red-50 text-red-600 border border-red-100',
                                                             )}
                                                         >
                                                             {order.status.toUpperCase() ===
-                                                            'RECEIVED' ? (
+                                                                'RECEIVED' ? (
                                                                 <CheckCircle2 size={12} />
                                                             ) : order.status.toUpperCase() ===
-                                                              'PENDING' ? (
+                                                                'PENDING' ? (
                                                                 <Clock size={12} />
                                                             ) : ['ORDERED', 'APPROVED'].includes(
-                                                                  order.status.toUpperCase(),
-                                                              ) ? (
+                                                                order.status.toUpperCase(),
+                                                            ) ? (
                                                                 <CheckCircle2
                                                                     size={12}
                                                                     className="text-teal-500"
                                                                 />
                                                             ) : [
-                                                                  'PARTIAL',
-                                                                  'PARTIALLY_RECEIVED',
-                                                              ].includes(
-                                                                  order.status.toUpperCase(),
-                                                              ) ? (
+                                                                'PARTIAL',
+                                                                'PARTIALLY_RECEIVED',
+                                                            ].includes(
+                                                                order.status.toUpperCase(),
+                                                            ) ? (
                                                                 <Truck
                                                                     size={12}
                                                                     className="text-indigo-500"
                                                                 />
                                                             ) : order.status.toUpperCase() ===
-                                                              'DRAFT' ? (
+                                                                'DRAFT' ? (
                                                                 <FileText size={12} />
                                                             ) : (
                                                                 <XCircle size={12} />
@@ -1067,77 +1069,77 @@ export function ProcurementPage() {
                                                             {user?.role
                                                                 ?.toString()
                                                                 ?.toLowerCase() !== 'auditor' && (
-                                                                <>
-                                                                    {order.status.toUpperCase() ===
-                                                                        'DRAFT' && (
-                                                                        <button
-                                                                            onClick={() =>
-                                                                                handleAction(
-                                                                                    order.id,
-                                                                                    'submit',
-                                                                                )
-                                                                            }
-                                                                            className="px-3 py-1 bg-teal-500 text-white rounded-lg text-[10px] font-black hover:bg-teal-600 transition-colors shadow-sm"
-                                                                        >
-                                                                            Submit
-                                                                        </button>
-                                                                    )}
-                                                                    {order.status.toUpperCase() ===
-                                                                        'PENDING' &&
-                                                                        isFacilityAdmin && (
-                                                                            <button
-                                                                                onClick={() =>
-                                                                                    handleAction(
-                                                                                        order.id,
-                                                                                        'approve',
-                                                                                    )
-                                                                                }
-                                                                                className="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[10px] font-black hover:bg-emerald-600 transition-colors shadow-sm"
-                                                                            >
-                                                                                Approve
-                                                                            </button>
-                                                                        )}
-                                                                    {[
-                                                                        'APPROVED',
-                                                                        'PARTIAL',
-                                                                        'PARTIALLY_RECEIVED',
-                                                                        'ORDERED',
-                                                                    ].includes(
-                                                                        order.status.toUpperCase(),
-                                                                    ) && (
-                                                                        <button
-                                                                            onClick={() =>
-                                                                                handleReceiveClick(
-                                                                                    order,
-                                                                                )
-                                                                            }
-                                                                            className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black hover:bg-amber-600 transition-colors shadow-sm"
-                                                                        >
-                                                                            Receive
-                                                                        </button>
-                                                                    )}
-                                                                    {[
-                                                                        'DRAFT',
-                                                                        'PENDING',
-                                                                        'APPROVED',
-                                                                    ].includes(
-                                                                        order.status.toUpperCase(),
-                                                                    ) && (
-                                                                        <button
-                                                                            onClick={() =>
-                                                                                handleAction(
-                                                                                    order.id,
-                                                                                    'cancel',
-                                                                                )
-                                                                            }
-                                                                            className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
-                                                                            title="Cancel PO"
-                                                                        >
-                                                                            <XCircle size={16} />
-                                                                        </button>
-                                                                    )}
-                                                                </>
-                                                            )}
+                                                                    <>
+                                                                        {order.status.toUpperCase() ===
+                                                                            'DRAFT' && (
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        handleAction(
+                                                                                            order.id,
+                                                                                            'submit',
+                                                                                        )
+                                                                                    }
+                                                                                    className="px-3 py-1 bg-teal-500 text-white rounded-lg text-[10px] font-black hover:bg-teal-600 transition-colors shadow-sm"
+                                                                                >
+                                                                                    Submit
+                                                                                </button>
+                                                                            )}
+                                                                        {order.status.toUpperCase() ===
+                                                                            'PENDING' &&
+                                                                            isFacilityAdmin && (
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        handleAction(
+                                                                                            order.id,
+                                                                                            'approve',
+                                                                                        )
+                                                                                    }
+                                                                                    className="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[10px] font-black hover:bg-emerald-600 transition-colors shadow-sm"
+                                                                                >
+                                                                                    Approve
+                                                                                </button>
+                                                                            )}
+                                                                        {[
+                                                                            'APPROVED',
+                                                                            'PARTIAL',
+                                                                            'PARTIALLY_RECEIVED',
+                                                                            'ORDERED',
+                                                                        ].includes(
+                                                                            order.status.toUpperCase(),
+                                                                        ) && (
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        handleReceiveClick(
+                                                                                            order,
+                                                                                        )
+                                                                                    }
+                                                                                    className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black hover:bg-amber-600 transition-colors shadow-sm"
+                                                                                >
+                                                                                    Receive
+                                                                                </button>
+                                                                            )}
+                                                                        {[
+                                                                            'DRAFT',
+                                                                            'PENDING',
+                                                                            'APPROVED',
+                                                                        ].includes(
+                                                                            order.status.toUpperCase(),
+                                                                        ) && (
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        handleAction(
+                                                                                            order.id,
+                                                                                            'cancel',
+                                                                                        )
+                                                                                    }
+                                                                                    className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
+                                                                                    title="Cancel PO"
+                                                                                >
+                                                                                    <XCircle size={16} />
+                                                                                </button>
+                                                                            )}
+                                                                    </>
+                                                                )}
                                                             <button
                                                                 onClick={() =>
                                                                     pharmacyService.exportProcurementOrder(

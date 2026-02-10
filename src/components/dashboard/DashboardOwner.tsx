@@ -42,8 +42,8 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                 setSummary(data);
 
                 // Fetch real-time low stock suggestions
-                const reorderData = await pharmacyService.getReorderSuggestions();
-                setLowStock(reorderData.suggestions.slice(0, 5));
+                const reorderData = await pharmacyService.getReorderSuggestions(facilityId);
+                setLowStock(reorderData.slice(0, 5));
 
                 // Fetch real-time expiry alerts
                 const alertsData = await pharmacyService.getAlerts({
@@ -384,8 +384,8 @@ const KPICard: React.FC<KPICardProps> = ({
                             status === 'healthy'
                                 ? 'bg-emerald-100 text-emerald-600'
                                 : status === 'warning'
-                                  ? 'bg-amber-100 text-amber-600'
-                                  : 'bg-rose-100 text-rose-600',
+                                    ? 'bg-amber-100 text-amber-600'
+                                    : 'bg-rose-100 text-rose-600',
                         )}
                     >
                         {status}
