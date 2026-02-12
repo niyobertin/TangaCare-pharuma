@@ -421,7 +421,7 @@ export function MainLayout() {
     const needsOnboarding =
         !organizationId &&
         !currentOrg &&
-        ['owner', 'superadmin'].includes(normalizedRole);
+        ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
 
     // Logic for unassigned admin
     // User belongs to org but has no facility assigned/created yet
