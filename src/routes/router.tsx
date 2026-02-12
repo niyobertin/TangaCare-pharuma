@@ -431,6 +431,14 @@ const registerRoute = createRoute({
     getParentRoute: () => authLayoutRoute,
     path: 'register',
     component: RegisterPage,
+    validateSearch: (search: Record<string, unknown>) => {
+        return z
+            .object({
+                role: z.string().optional(),
+                inviteCode: z.string().optional(),
+            })
+            .parse(search);
+    },
 });
 
 const forgotPasswordRoute = createRoute({

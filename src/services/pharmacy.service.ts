@@ -794,13 +794,17 @@ export const pharmacyService = {
     },
 
     async getReorderSuggestions(facilityId: number): Promise<ReorderSuggestion[]> {
-        const response = await api.get<any>(`/pharmacy/analytics/reorder-suggestions/${facilityId}`);
+        const response = await api.get<any>(
+            `/pharmacy/analytics/reorder-suggestions/${facilityId}`,
+        );
         const data = (response.data as any).data ?? response.data;
         return Array.isArray(data) ? data : data.suggestions || [];
     },
 
     async createDraftPOsFromSuggestions(facilityId: number): Promise<{ count: number }> {
-        const response = await api.post<any>(`/pharmacy/procurement/auto-draft-pos`, { facility_id: facilityId });
+        const response = await api.post<any>(`/pharmacy/procurement/auto-draft-pos`, {
+            facility_id: facilityId,
+        });
         return (response.data as any).data ?? response.data;
     },
 

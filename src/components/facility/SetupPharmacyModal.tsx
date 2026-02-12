@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Building2, ChevronRight, MapPin } from 'lucide-react';
+import { Building2, ChevronRight, MapPin, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { authService } from '../../services/auth.service';
@@ -40,11 +40,12 @@ const step2Schema = yup.object({
 
 interface SetupPharmacyModalProps {
     onSuccess: () => void;
+    onClose?: () => void;
 }
 
 type Step = 1 | 2;
 
-export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
+export function SetupPharmacyModal({ onSuccess, onClose }: SetupPharmacyModalProps) {
     const { refreshProfile, setOrganization, setFacility } = useAuth();
     const [step, setStep] = useState<Step>(1);
     const [createdOrganization, setCreatedOrganization] = useState<{
@@ -140,6 +141,14 @@ export function SetupPharmacyModal({ onSuccess }: SetupPharmacyModalProps) {
                                     : `Add a branch for ${createdOrganization?.name ?? 'your organization'}.`}
                             </p>
                         </div>
+                        {onClose && (
+                            <button
+                                onClick={onClose}
+                                className="ml-auto p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        )}
                     </div>
                     <div className="flex gap-2 mt-3">
                         <span

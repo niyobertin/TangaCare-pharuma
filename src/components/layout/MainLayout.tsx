@@ -31,12 +31,11 @@ import { isSuperAdmin } from '../../types/auth';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useTheme } from '../../context/ThemeContext';
-import { NotificationBell } from '../ui/NotificationBell'; // Correct path
+import { NotificationBell } from '../ui/NotificationBell';
 import { FacilityEmptyState } from '../facility/FacilityEmptyState';
 import { CreateFacilityModal } from '../facility/CreateFacilityModal';
 import { SetupPharmacyModal } from '../facility/SetupPharmacyModal';
-import { AlertBadge } from '../alerts/AlertBadge';
-import { AlertPanel } from '../alerts/AlertPanel';
+import { JoinOrganizationModal } from '../facility/JoinOrganizationModal';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -359,8 +358,9 @@ export function MainLayout() {
         currentOrg,
         setOrganization,
         refreshProfile,
-        facilityId,
         organizationId,
+        facilityId,
+        hasOrganization,
     } = useAuth();
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -368,9 +368,8 @@ export function MainLayout() {
     const { isDark, toggleTheme } = useTheme();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showSetupModal, setShowSetupModal] = useState(false);
-    const [showAlertPanel, setShowAlertPanel] = useState(false);
+    const [showJoinModal, setShowJoinModal] = useState(false);
 
-    // Filter logic for navigation items...
     const filteredNavItems = NAV_ITEMS.filter((item) => {
         if (
             item.allowedPermissions &&
@@ -386,7 +385,6 @@ export function MainLayout() {
                     role.toUpperCase() === userRole ||
                     role.toUpperCase().replace('_', ' ') === userRole.replace('_', ' '),
             );
-            // Also checking for standard normalization just in case
             if (!hasRole) return false;
         }
 
@@ -400,41 +398,26 @@ export function MainLayout() {
 
     const isSuperAdminUser = isSuperAdmin(user?.role);
 
-    // Logic to determine if we show facility switcher
-    // Show switcher if user has access to multiple facilities OR organizations
-    // OR if they are a super admin (who can see everything)
     const showSwitcher = organizations.length > 0 || facilities.length > 0 || isSuperAdminUser;
 
-    // Logic to determine the label of the switcher
     const switcherLabel =
         currentFacility?.name ??
         facilities[0]?.name ??
         (user as any)?.facility?.name ??
         'Select Facility';
 
-    // Normalize role for more robust comparison
     const normalizedRole = (user?.role || '').toLowerCase().replace(/[\s_]+/g, '');
 
-    // Logic to check if user needs to run onboarding
-    // If user has NO organization AND is an admin/owner type role
-    // they should be prompted to create one.
     const needsOnboarding =
-        organizations.length === 0 &&
-        !user?.organization_id &&
-        !user?.facility_id &&
-        !user?.facility &&
-        ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
+        !hasOrganization && ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
 
-    // Logic for unassigned admin
-    // User belongs to org but has no facility assigned/created yet
     const isUnassignedAdmin =
-        (organizationId || organizations.length > 0 || user?.organization_id) &&
+        hasOrganization &&
         facilities.length === 0 &&
         !user?.facility_id &&
         !user?.facility &&
         ['owner', 'facilityadmin'].includes(normalizedRole);
 
-    // Redirect to facilities if onboarding or setup is needed
     React.useEffect(() => {
         const path = window.location.pathname;
         if ((needsOnboarding || isUnassignedAdmin) && path !== '/app/facilities') {
@@ -442,14 +425,10 @@ export function MainLayout() {
         }
     }, [needsOnboarding, isUnassignedAdmin, navigate]);
 
-    // Determine if we should show "All Facilities" option
-    // Only for Owners/Super Admins who want an aggregate view
     const showAllFacilitiesOption = ['OWNER', 'SUPER_ADMIN', 'SUPER ADMIN'].includes(
         user?.role || '',
     );
 
-    // If a user only has access to exactly one facility and one org,
-    // we might just show the static name instead of a dropdown, unless they create more.
     const showFacilityNameOnly =
         !isSuperAdminUser && facilities.length <= 1 && organizations.length <= 1;
 
@@ -457,7 +436,6 @@ export function MainLayout() {
 
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-            {/* Sidebar */}
             <aside
                 className={cn(
                     'bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 ease-in-out shadow-lg z-20 m-3 rounded-2xl h-[calc(100vh-24px)]',
@@ -531,7 +509,6 @@ export function MainLayout() {
                 </div>
             </aside>
 
-            {/* Main content */}
             <main className="flex-1 flex flex-col overflow-hidden relative p-3 pl-0">
                 <header className="glass-header rounded-xl mb-3 px-5 py-3 flex items-center justify-between shadow-sm">
                     <div className="flex items-center gap-5 flex-1">
@@ -589,8 +566,8 @@ export function MainLayout() {
                                             {facilityId == null && isSuperAdminUser
                                                 ? 'All Facilities (System)'
                                                 : facilities.length > 0
-                                                    ? switcherLabel
-                                                    : (currentOrg?.name ?? 'Select context')}
+                                                  ? switcherLabel
+                                                  : (currentOrg?.name ?? 'Select context')}
                                         </span>
                                         <ChevronDown
                                             size={14}
@@ -663,13 +640,7 @@ export function MainLayout() {
                             )
                         )}
                         <div className="flex items-center gap-1.5 mr-1">
-                            {/* Replaced static bell with smart component */}
                             <NotificationBell />
-
-                            {/* Alert Badge with Panel */}
-                            <div onClick={() => setShowAlertPanel(!showAlertPanel)}>
-                                <AlertBadge />
-                            </div>
 
                             <button
                                 onClick={toggleTheme}
@@ -705,6 +676,7 @@ export function MainLayout() {
                             <>
                                 <FacilityEmptyState
                                     onCreateClick={() => setShowSetupModal(true)}
+                                    onJoinClick={() => setShowJoinModal(true)}
                                     noOrganization
                                 />
                                 {showSetupModal && (
@@ -713,19 +685,29 @@ export function MainLayout() {
                                             setShowSetupModal(false);
                                             refreshProfile();
                                         }}
+                                        onClose={() => setShowSetupModal(false)}
                                     />
                                 )}
+                                <JoinOrganizationModal
+                                    isOpen={showJoinModal}
+                                    onClose={() => setShowJoinModal(false)}
+                                />
                             </>
                         ) : isUnassignedAdmin ? (
                             <>
                                 <FacilityEmptyState
                                     onCreateClick={() => setShowCreateModal(true)}
+                                    onJoinClick={() => setShowJoinModal(true)}
                                 />
                                 {showCreateModal && (
                                     <CreateFacilityModal
                                         onClose={() => setShowCreateModal(false)}
                                     />
                                 )}
+                                <JoinOrganizationModal
+                                    isOpen={showJoinModal}
+                                    onClose={() => setShowJoinModal(false)}
+                                />
                             </>
                         ) : (
                             <Outlet />
@@ -733,9 +715,6 @@ export function MainLayout() {
                     </div>
                 </div>
             </main>
-
-            {/* Alert Panel */}
-            <AlertPanel isOpen={showAlertPanel} onClose={() => setShowAlertPanel(false)} />
         </div>
     );
 }

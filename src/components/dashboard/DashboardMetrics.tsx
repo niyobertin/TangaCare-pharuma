@@ -91,7 +91,9 @@ export function DashboardMetrics({ facilityId }: DashboardMetricsProps) {
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Inventory Alerts</h2>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Inventory Alerts
+                </h2>
                 <Link
                     to="/app/alerts"
                     className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
@@ -112,7 +114,9 @@ export function DashboardMetrics({ facilityId }: DashboardMetricsProps) {
                                 <metric.icon className={`h-6 w-6 ${metric.color}`} />
                             </div>
                             {metric.value > 0 && (
-                                <span className={`text-xs font-bold ${metric.color} flex items-center gap-1`}>
+                                <span
+                                    className={`text-xs font-bold ${metric.color} flex items-center gap-1`}
+                                >
                                     <TrendingDown className="h-3 w-3" />
                                     Action Needed
                                 </span>

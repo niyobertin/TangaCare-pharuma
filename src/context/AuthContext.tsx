@@ -29,6 +29,8 @@ interface AuthContextType {
     refreshProfile: () => Promise<void>;
 
     can: (permission: string) => boolean;
+    isOwner: boolean;
+    hasOrganization: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -243,6 +245,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 logout,
                 refreshProfile,
                 can,
+                isOwner:
+                    user?.role?.toString().toUpperCase() === 'OWNER' ||
+                    (user as any)?.user_role?.toString().toUpperCase() === 'OWNER',
+                hasOrganization: (user?.organizations?.length ?? 0) > 0 || !!user?.organization_id,
             }}
         >
             {children}

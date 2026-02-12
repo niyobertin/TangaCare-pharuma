@@ -384,8 +384,8 @@ const KPICard: React.FC<KPICardProps> = ({
                             status === 'healthy'
                                 ? 'bg-emerald-100 text-emerald-600'
                                 : status === 'warning'
-                                    ? 'bg-amber-100 text-amber-600'
-                                    : 'bg-rose-100 text-rose-600',
+                                  ? 'bg-amber-100 text-amber-600'
+                                  : 'bg-rose-100 text-rose-600',
                         )}
                     >
                         {status}

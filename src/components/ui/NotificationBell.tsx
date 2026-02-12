@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Check, Trash2 } from 'lucide-react';
+import { Bell, Check, Trash2, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
+import { Link } from '@tanstack/react-router';
+import { pharmacyService } from '../../services/pharmacy.service';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -18,13 +20,26 @@ export const NotificationBell: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [alertCount, setAlertCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+
+    const fetchAlertSummary = async () => {
+        try {
+            const response = await pharmacyService.getAlertSummary();
+            setAlertCount(response.data.total);
+        } catch (error) {
+            console.error('Failed to fetch alert summary:', error);
+        }
+    };
 
     // Initial sync
     useEffect(() => {
         if (socket && isConnected) {
             socket.emit('notification:sync');
         }
+        fetchAlertSummary();
+        const interval = setInterval(fetchAlertSummary, 2 * 60 * 1000); // 2 mins
+        return () => clearInterval(interval);
     }, [socket, isConnected]);
 
     // Real-time listeners
@@ -91,9 +106,14 @@ export const NotificationBell: React.FC = () => {
                 className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 transition-colors relative"
             >
                 <Bell size={18} />
-                {unreadCount > 0 && (
-                    <span className="absolute top-0 right-0 w-4 h-4 text-[10px] font-bold flex items-center justify-center bg-red-500 text-white rounded-full border border-white dark:border-slate-900 shadow-sm z-10">
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                {unreadCount + alertCount > 0 && (
+                    <span
+                        className={clsx(
+                            'absolute top-0 right-0 w-4 h-4 text-[10px] font-bold flex items-center justify-center text-white rounded-full border border-white dark:border-slate-900 shadow-sm z-10',
+                            alertCount > 0 ? 'bg-red-500 animate-pulse' : 'bg-teal-500',
+                        )}
+                    >
+                        {unreadCount + alertCount > 9 ? '9+' : unreadCount + alertCount}
                     </span>
                 )}
             </button>
@@ -106,15 +126,38 @@ export const NotificationBell: React.FC = () => {
                             <h3 className="font-bold text-sm text-healthcare-dark">
                                 Notifications
                             </h3>
-                            {unreadCount > 0 && (
-                                <button
-                                    onClick={() => markAllRead()}
-                                    className="text-xs text-healthcare-primary hover:underline font-medium"
-                                >
-                                    Mark all as read
-                                </button>
-                            )}
+                            <div className="flex items-center gap-3">
+                                {unreadCount > 0 && (
+                                    <button
+                                        onClick={() => markAllRead()}
+                                        className="text-xs text-healthcare-primary hover:underline font-medium"
+                                    >
+                                        Mark all as read
+                                    </button>
+                                )}
+                            </div>
                         </div>
+
+                        {alertCount > 0 && (
+                            <Link
+                                to="/app/alerts"
+                                onClick={() => setIsOpen(false)}
+                                className="px-3 py-2 bg-red-50 dark:bg-red-900/10 border-b border-red-100 dark:border-red-900/20 flex items-center justify-between group"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 bg-red-500/20 rounded-full flex items-center justify-center text-red-500">
+                                        <AlertTriangle size={14} />
+                                    </div>
+                                    <span className="text-xs font-black text-red-600 dark:text-red-400">
+                                        {alertCount} Unresolved Alerts
+                                    </span>
+                                </div>
+                                <ArrowRight
+                                    size={14}
+                                    className="text-red-400 group-hover:translate-x-1 transition-transform"
+                                />
+                            </Link>
+                        )}
 
                         <div className="overflow-y-auto flex-1 custom-scrollbar">
                             {isLoading ? (

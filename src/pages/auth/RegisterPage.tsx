@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from '@tanstack/react-router';
+import { useSearch, Navigate, useNavigate } from '@tanstack/react-router';
 import { UserRole } from '../../types/auth';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -16,6 +16,7 @@ type RegisterForm = yup.InferType<typeof registerSchema>;
 export function RegisterPage() {
     const { register: registerUser, isAuthenticated } = useAuth();
     const navigate = useNavigate();
+    const searchParams = useSearch({ from: '/auth/register' }) as any;
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -33,10 +34,12 @@ export function RegisterPage() {
         setLoading(true);
         try {
             const { phone_number, ...rest } = data;
+            const role = searchParams.role || UserRole.FACILITY_ADMIN;
             await registerUser({
                 ...rest,
                 phone_number: phone_number || undefined,
-                role: UserRole.FACILITY_ADMIN,
+                role: role,
+                ...(searchParams.inviteCode ? { invite_code: searchParams.inviteCode } : {}),
             });
             toast.success('Registration successful! Please verify your email.');
             navigate({

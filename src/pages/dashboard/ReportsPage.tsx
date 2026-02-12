@@ -147,23 +147,23 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         {['sales', 'profit', 'tax', 'performance', 'staff', 'purchase'].includes(
                             defaultTab,
                         ) && (
-                                <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
-                                    <Calendar size={14} className="text-slate-400" />
-                                    <input
-                                        type="date"
-                                        value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                        className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
-                                    />
-                                    <span className="text-slate-300 px-1">—</span>
-                                    <input
-                                        type="date"
-                                        value={endDate}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                        className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
-                                    />
-                                </div>
-                            )}
+                            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
+                                <Calendar size={14} className="text-slate-400" />
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
+                                />
+                                <span className="text-slate-300 px-1">—</span>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
+                                />
+                            </div>
+                        )}
                         <div className="flex gap-2">
                             <button
                                 onClick={() => handleExport('excel')}
@@ -740,8 +740,8 @@ function SummaryCard({ title, value, trend, icon, color = 'teal' }: any) {
                         color === 'teal'
                             ? 'bg-teal-50 text-teal-600'
                             : color === 'amber'
-                                ? 'bg-amber-50 text-amber-600'
-                                : 'bg-rose-50 text-rose-600',
+                              ? 'bg-amber-50 text-amber-600'
+                              : 'bg-rose-50 text-rose-600',
                     )}
                 >
                     {icon}

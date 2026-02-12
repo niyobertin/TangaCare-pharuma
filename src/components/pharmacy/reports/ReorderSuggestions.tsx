@@ -198,12 +198,13 @@ export function ReorderSuggestions() {
                                             </td>
                                             <td className="px-6 py-5 text-right whitespace-nowrap">
                                                 <div
-                                                    className={`inline-flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-full border ${isCritical
+                                                    className={`inline-flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-full border ${
+                                                        isCritical
                                                             ? 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:border-rose-900/30 shadow-sm shadow-rose-100/50'
                                                             : isWarning
-                                                                ? 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:border-amber-900/30 shadow-sm shadow-amber-100/50'
-                                                                : 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:border-blue-900/30 shadow-sm shadow-blue-100/50'
-                                                        }`}
+                                                              ? 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:border-amber-900/30 shadow-sm shadow-amber-100/50'
+                                                              : 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:border-blue-900/30 shadow-sm shadow-blue-100/50'
+                                                    }`}
                                                 >
                                                     {isCritical && (
                                                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
@@ -214,10 +215,11 @@ export function ReorderSuggestions() {
                                             <td className="px-6 py-5 text-right whitespace-nowrap">
                                                 <button
                                                     onClick={() => handleOrder(item)}
-                                                    className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${isCritical
+                                                    className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
+                                                        isCritical
                                                             ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-200 dark:shadow-rose-900/20'
                                                             : 'bg-healthcare-primary text-white hover:bg-teal-700 shadow-lg shadow-teal-200 dark:shadow-teal-900/20'
-                                                        }`}
+                                                    }`}
                                                 >
                                                     Order Now
                                                 </button>
