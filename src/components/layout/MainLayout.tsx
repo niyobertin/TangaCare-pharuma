@@ -419,14 +419,13 @@ export function MainLayout() {
     // If user has NO organization AND is an admin/owner type role
     // they should be prompted to create one.
     const needsOnboarding =
-        !organizationId &&
-        !currentOrg &&
+        organizations.length === 0 &&
         ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
 
     // Logic for unassigned admin
     // User belongs to org but has no facility assigned/created yet
     const isUnassignedAdmin =
-        organizationId &&
+        (organizationId || organizations.length > 0) &&
         facilities.length === 0 &&
         ['owner', 'facilityadmin'].includes(normalizedRole);
 
