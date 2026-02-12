@@ -77,8 +77,8 @@ export function Navbar() {
                         <>
                             <Link to="/app">
                                 <Button
-                                    variant="ghost"
-                                    className="font-bold text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-full px-6 transition-all"
+                                    variant="outline"
+                                    className="font-bold border-teal-600/50 text-teal-600 hover:bg-teal-50 dark:border-teal-400/30 dark:text-teal-400 dark:hover:bg-teal-900/20 rounded-full px-6 transition-all shadow-sm"
                                 >
                                     Go to Dashboard
                                 </Button>

@@ -23,6 +23,7 @@ import {
     Activity,
     AlertTriangle,
     ArrowRightLeft,
+    ArrowLeft,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -411,20 +412,23 @@ export function MainLayout() {
         (user as any)?.facility?.name ??
         'Select Facility';
 
+    // Normalize role for more robust comparison
+    const normalizedRole = (user?.role || '').toLowerCase().replace(/[\s_]+/g, '');
+
     // Logic to check if user needs to run onboarding
     // If user has NO organization AND is an admin/owner type role
     // they should be prompted to create one.
     const needsOnboarding =
         !organizationId &&
         !currentOrg &&
-        ['OWNER', 'SUPER_ADMIN', 'SUPER ADMIN'].includes(user?.role || '');
+        ['owner', 'superadmin'].includes(normalizedRole);
 
     // Logic for unassigned admin
     // User belongs to org but has no facility assigned/created yet
     const isUnassignedAdmin =
         organizationId &&
         facilities.length === 0 &&
-        ['OWNER', 'FACILITY_ADMIN', 'FACILITY ADMIN'].includes(user?.role || '');
+        ['owner', 'facilityadmin'].includes(normalizedRole);
 
     // Redirect to facilities if onboarding or setup is needed
     React.useEffect(() => {
@@ -480,6 +484,20 @@ export function MainLayout() {
                 </div>
 
                 <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+                    <Link
+                        to="/"
+                        className={cn(
+                            'flex items-center gap-3 px-4 py-2.5 w-full text-left text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/20 rounded-xl transition-all group font-bold text-sm mb-4 border border-teal-100 dark:border-teal-900/30 shadow-sm',
+                            isCollapsed && 'justify-center px-0',
+                        )}
+                    >
+                        <ArrowLeft
+                            size={18}
+                            className="group-hover:-translate-x-1 transition-transform"
+                        />
+                        {!isCollapsed && <span>Back to Website</span>}
+                    </Link>
+
                     {filteredNavItems.map((item) => (
                         <SidebarLink
                             key={item.to}
