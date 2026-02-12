@@ -426,6 +426,14 @@ export function MainLayout() {
         facilities.length === 0 &&
         ['OWNER', 'FACILITY_ADMIN', 'FACILITY ADMIN'].includes(user?.role || '');
 
+    // Redirect to facilities if onboarding or setup is needed
+    React.useEffect(() => {
+        const path = window.location.pathname;
+        if ((needsOnboarding || isUnassignedAdmin) && path !== '/app/facilities') {
+            navigate({ to: '/app/facilities', replace: true });
+        }
+    }, [needsOnboarding, isUnassignedAdmin, navigate]);
+
     // Determine if we should show "All Facilities" option
     // Only for Owners/Super Admins who want an aggregate view
     const showAllFacilitiesOption = ['OWNER', 'SUPER_ADMIN', 'SUPER ADMIN'].includes(
