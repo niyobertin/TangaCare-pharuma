@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../ui/Button';
 import { Menu, X, Moon, Sun } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -31,6 +32,8 @@ export function Navbar() {
         { name: 'FAQ', href: '#faq' },
         { name: 'Contact', href: '#contact' },
     ];
+
+    const { user, logout } = useAuth();
 
     return (
         <header
@@ -70,19 +73,41 @@ export function Navbar() {
 
                 {/* Desktop Actions */}
                 <div className="hidden md:flex items-center gap-4">
-                    <Link to="/auth/login">
-                        <Button
-                            variant="ghost"
-                            className="font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full px-6 transition-all"
-                        >
-                            Log in
-                        </Button>
-                    </Link>
-                    <Link to="/auth/register">
-                        <Button className="shadow-xl shadow-teal-600/20 bg-teal-600 hover:bg-teal-700 text-white rounded-full px-8 font-bold h-11 transition-all hover:scale-105 active:scale-95">
-                            Get Started
-                        </Button>
-                    </Link>
+                    {user ? (
+                        <>
+                            <Link to="/app">
+                                <Button
+                                    variant="ghost"
+                                    className="font-bold text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-full px-6 transition-all"
+                                >
+                                    Go to Dashboard
+                                </Button>
+                            </Link>
+                            <Button
+                                onClick={() => logout()}
+                                variant="outline"
+                                className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20 rounded-full px-6 font-bold transition-all"
+                            >
+                                Logout
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/auth/login">
+                                <Button
+                                    variant="ghost"
+                                    className="font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full px-6 transition-all"
+                                >
+                                    Log in
+                                </Button>
+                            </Link>
+                            <Link to="/auth/register">
+                                <Button className="shadow-xl shadow-teal-600/20 bg-teal-600 hover:bg-teal-700 text-white rounded-full px-8 font-bold h-11 transition-all hover:scale-105 active:scale-95">
+                                    Get Started
+                                </Button>
+                            </Link>
+                        </>
+                    )}
                     <div className="h-6 w-px bg-slate-200 dark:border-zinc-800 mx-2"></div>
                     <button
                         onClick={toggleTheme}
@@ -122,27 +147,53 @@ export function Navbar() {
                                 ))}
                             </nav>
                             <div className="mt-auto space-y-4 mb-10">
-                                <Link
-                                    to="/auth/login"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="block w-full"
-                                >
-                                    <Button
-                                        variant="outline"
-                                        className="w-full h-14 rounded-2xl text-lg font-bold"
-                                    >
-                                        Log in
-                                    </Button>
-                                </Link>
-                                <Link
-                                    to="/auth/register"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="block w-full"
-                                >
-                                    <Button className="w-full h-14 rounded-2xl text-lg font-bold bg-teal-600 hover:bg-teal-700 shadow-xl shadow-teal-600/20">
-                                        Get Started
-                                    </Button>
-                                </Link>
+                                {user ? (
+                                    <>
+                                        <Link
+                                            to="/app"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="block w-full"
+                                        >
+                                            <Button className="w-full h-14 rounded-2xl text-lg font-bold bg-teal-600 hover:bg-teal-700 shadow-xl shadow-teal-600/20">
+                                                Go to Dashboard
+                                            </Button>
+                                        </Link>
+                                        <Button
+                                            onClick={() => {
+                                                logout();
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            variant="outline"
+                                            className="w-full h-14 rounded-2xl text-lg font-bold border-red-200 text-red-600 dark:border-red-900/30 dark:text-red-400"
+                                        >
+                                            Logout
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Link
+                                            to="/auth/login"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="block w-full"
+                                        >
+                                            <Button
+                                                variant="outline"
+                                                className="w-full h-14 rounded-2xl text-lg font-bold"
+                                            >
+                                                Log in
+                                            </Button>
+                                        </Link>
+                                        <Link
+                                            to="/auth/register"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className="block w-full"
+                                        >
+                                            <Button className="w-full h-14 rounded-2xl text-lg font-bold bg-teal-600 hover:bg-teal-700 shadow-xl shadow-teal-600/20">
+                                                Get Started
+                                            </Button>
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </motion.div>
                     )}
