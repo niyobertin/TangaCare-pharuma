@@ -420,13 +420,18 @@ export function MainLayout() {
     // they should be prompted to create one.
     const needsOnboarding =
         organizations.length === 0 &&
+        !user?.organization_id &&
+        !user?.facility_id &&
+        !user?.facility &&
         ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
 
     // Logic for unassigned admin
     // User belongs to org but has no facility assigned/created yet
     const isUnassignedAdmin =
-        (organizationId || organizations.length > 0) &&
+        (organizationId || organizations.length > 0 || user?.organization_id) &&
         facilities.length === 0 &&
+        !user?.facility_id &&
+        !user?.facility &&
         ['owner', 'facilityadmin'].includes(normalizedRole);
 
     // Redirect to facilities if onboarding or setup is needed
