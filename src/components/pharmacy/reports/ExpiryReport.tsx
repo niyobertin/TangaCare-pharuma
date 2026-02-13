@@ -10,7 +10,7 @@ import {
     RotateCcw,
 } from 'lucide-react';
 import { pharmacyService } from '../../../services/pharmacy.service';
-import { TableSkeleton } from '../../shared/Skeleton';
+import { SkeletonTable } from '../../ui/SkeletonTable';
 import { cn } from '../../../lib/utils';
 
 interface ExpiryItem {
@@ -134,7 +134,14 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                     </div>
                     <div className="h-10 w-64 bg-slate-200 animate-pulse rounded-xl"></div>
                 </div>
-                <TableSkeleton rows={10} columns={4} />
+                <SkeletonTable
+                    rows={10}
+                    columns={5}
+                    headers={['Medicine & Batch', 'Expiry Status', 'Available Stock', 'Risk Level']}
+                    columnAligns={['left', 'left', 'right', 'right', 'right']}
+                    actions
+                    className="border-none shadow-none"
+                />
             </div>
         );
 
@@ -325,7 +332,7 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                     </div>
 
                     {traceLoading ? (
-                        <TableSkeleton rows={3} columns={4} />
+                        <SkeletonTable rows={3} columns={4} headers={null} className="border-none shadow-none" />
                     ) : (
                         traceResult && (
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-top-2 duration-500">
@@ -410,8 +417,8 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                                                             isCritical
                                                                 ? 'text-rose-600'
                                                                 : isWarning
-                                                                  ? 'text-amber-600'
-                                                                  : 'text-healthcare-primary',
+                                                                    ? 'text-amber-600'
+                                                                    : 'text-healthcare-primary',
                                                         )}
                                                     >
                                                         {new Date(
@@ -443,15 +450,15 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                                                             isCritical
                                                                 ? 'bg-rose-50 text-rose-600 border-rose-100'
                                                                 : isWarning
-                                                                  ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                                                  : 'bg-teal-50 text-healthcare-primary border-teal-100',
+                                                                    ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                                                    : 'bg-teal-50 text-healthcare-primary border-teal-100',
                                                         )}
                                                     >
                                                         {isCritical
                                                             ? 'Critical'
                                                             : isWarning
-                                                              ? 'Warning'
-                                                              : 'Low Risk'}
+                                                                ? 'Warning'
+                                                                : 'Low Risk'}
                                                     </span>
                                                 </div>
                                             </td>

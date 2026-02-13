@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { pharmacyService } from '../../../services/pharmacy.service';
-import { TableSkeleton } from '../../shared/Skeleton';
+import { SkeletonTable } from '../../ui/SkeletonTable';
 import { AlertCircle, RefreshCcw, CheckCircle, Activity, Package } from 'lucide-react';
 import { CreatePurchaseOrderModal } from '../../inventory/CreatePurchaseOrderModal';
 
@@ -121,7 +121,14 @@ export function ReorderSuggestions() {
             )}
 
             {loading ? (
-                <TableSkeleton rows={5} columns={6} />
+                <SkeletonTable
+                    rows={5}
+                    columns={5}
+                    headers={['Medicine & ID', 'Stock Status', 'Daily Run-rate', 'Depletion Timeline']}
+                    columnAligns={['left', 'right', 'right', 'right', 'right']}
+                    actions
+                    className="border-none shadow-none"
+                />
             ) : suggestions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-16 bg-slate-50/50 dark:bg-slate-900/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 text-center animate-in zoom-in-95 duration-700">
                     <div className="bg-emerald-50 dark:bg-emerald-900/20 p-5 rounded-full mb-6">
@@ -198,13 +205,12 @@ export function ReorderSuggestions() {
                                             </td>
                                             <td className="px-6 py-5 text-right whitespace-nowrap">
                                                 <div
-                                                    className={`inline-flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-full border ${
-                                                        isCritical
+                                                    className={`inline-flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-full border ${isCritical
                                                             ? 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:border-rose-900/30 shadow-sm shadow-rose-100/50'
                                                             : isWarning
-                                                              ? 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:border-amber-900/30 shadow-sm shadow-amber-100/50'
-                                                              : 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:border-blue-900/30 shadow-sm shadow-blue-100/50'
-                                                    }`}
+                                                                ? 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:border-amber-900/30 shadow-sm shadow-amber-100/50'
+                                                                : 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:border-blue-900/30 shadow-sm shadow-blue-100/50'
+                                                        }`}
                                                 >
                                                     {isCritical && (
                                                         <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
@@ -215,11 +221,10 @@ export function ReorderSuggestions() {
                                             <td className="px-6 py-5 text-right whitespace-nowrap">
                                                 <button
                                                     onClick={() => handleOrder(item)}
-                                                    className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
-                                                        isCritical
+                                                    className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${isCritical
                                                             ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-200 dark:shadow-rose-900/20'
                                                             : 'bg-healthcare-primary text-white hover:bg-teal-700 shadow-lg shadow-teal-200 dark:shadow-teal-900/20'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     Order Now
                                                 </button>

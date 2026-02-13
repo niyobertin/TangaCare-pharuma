@@ -14,7 +14,7 @@ import {
     ArrowDownRight,
     Loader2,
 } from 'lucide-react';
-import { TableSkeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 
 export function VarianceTrackingPage() {
     const { user, facilityId } = useAuth();
@@ -77,7 +77,7 @@ export function VarianceTrackingPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN', 'PHARMACIST', 'STORE_MANAGER']}
+            allowedRoles={['ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN', 'PHARMACIST', 'STORE_MANAGER', 'OWNER']}
             requireFacility
         >
             <div className="p-6 space-y-6 animate-in fade-in duration-500">
@@ -119,7 +119,14 @@ export function VarianceTrackingPage() {
                 </div>
 
                 {loading && variances.length === 0 ? (
-                    <TableSkeleton rows={8} columns={6} />
+                    <SkeletonTable
+                        rows={8}
+                        columns={7}
+                        headers={['Date', 'Medicine', 'Batch', 'System vs Physical', 'Variance', 'Status']}
+                        columnAligns={['left', 'left', 'left', 'right', 'right', 'left', 'right']}
+                        actions
+                        className="border-none shadow-none"
+                    />
                 ) : (
                     <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden overflow-x-auto">
                         <table className="w-full text-left text-sm whitespace-nowrap">
@@ -184,13 +191,12 @@ export function VarianceTrackingPage() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div
-                                                    className={`inline-flex items-center gap-1 font-black ${
-                                                        v.variance_quantity > 0
-                                                            ? 'text-emerald-500'
-                                                            : v.variance_quantity < 0
-                                                              ? 'text-rose-500'
-                                                              : 'text-slate-400'
-                                                    }`}
+                                                    className={`inline-flex items-center gap-1 font-black ${v.variance_quantity > 0
+                                                        ? 'text-emerald-500'
+                                                        : v.variance_quantity < 0
+                                                            ? 'text-rose-500'
+                                                            : 'text-slate-400'
+                                                        }`}
                                                 >
                                                     {v.variance_quantity > 0 ? (
                                                         <ArrowUpRight size={14} />
@@ -258,7 +264,7 @@ export function VarianceTrackingPage() {
                     </div>
                 )}
             </div>
-        </ProtectedRoute>
+        </ProtectedRoute >
     );
 }
 

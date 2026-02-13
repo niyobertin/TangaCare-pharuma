@@ -39,8 +39,11 @@ const AppLayoutComponent = () => {
     return <MainLayout />;
 };
 
+import { AuthLayout } from '../components/layout/AuthLayout';
+import { PublicPurchaseOrder } from '../pages/public/PublicPurchaseOrder';
+
 const AuthLayoutComponent = () => {
-    return <Outlet />;
+    return <AuthLayout />;
 };
 
 const rootRoute = createRootRoute({
@@ -550,11 +553,28 @@ const authRouteTree = authLayoutRoute.addChildren([
     setPasswordRoute,
 ]);
 
+const publicRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/public',
+    component: () => <Outlet />,
+});
+
+const publicPORoute = createRoute({
+    getParentRoute: () => publicRoute,
+    path: 'po/$token',
+    component: PublicPurchaseOrder,
+});
+
+const publicRouteTree = publicRoute.addChildren([
+    publicPORoute,
+]);
+
 const routeTree = rootRoute.addChildren([
     rootIndexRoute,
     loginFallbackRoute,
     appRouteTree,
     authRouteTree,
+    publicRouteTree,
 ]);
 
 export const router = createRouter({

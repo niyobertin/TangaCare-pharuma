@@ -24,6 +24,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     const role = (user?.role ?? '').toString().toUpperCase().replace(/\s+/g, ' ');
     const isFacilityAdmin = role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN';
     const isSuperAdminUser = isSuperAdmin(user?.role);
+    const isOwner = role === 'OWNER';
 
     if (isLoading) {
         return (
@@ -86,6 +87,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         requiredPermissions &&
         requiredPermissions.length > 0 &&
         !isSuperAdminUser &&
+        !isOwner &&
         !requiredPermissions.some((p) => can(p))
     ) {
         return (
@@ -126,6 +128,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         allowedRoles &&
         allowedRoles.length > 0 &&
         user &&
+        !isOwner &&
         !allowedRoles.some((role) => {
             const r1 = String(role)
                 .toUpperCase()

@@ -16,7 +16,7 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import type { Medicine, Batch } from '../../types/pharmacy';
 import { useAuth } from '../../context/AuthContext';
 import { useDebounce } from '../../hooks/useDebounce';
-import { TableSkeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { CreatePatientModal } from '../../components/patients/CreatePatientModal';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -180,7 +180,16 @@ export function DispensingPage() {
                         : item,
                 );
             }
-            return [...prev, { ...med, quantity: 1, selectedBatch: bestBatch }];
+            const safeSellingPrice = Math.max(Number(med.selling_price || 0), Number(bestBatch.unit_cost || 0));
+            return [
+                ...prev,
+                {
+                    ...med,
+                    selling_price: safeSellingPrice,
+                    quantity: 1,
+                    selectedBatch: bestBatch,
+                },
+            ];
         });
         toast.success(`Added ${med.name} (Batch: ${bestBatch.batch_number})`);
     };
@@ -266,7 +275,14 @@ export function DispensingPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['admin', 'pharmacist', 'super_admin', 'facility_admin', 'auditor']}
+            allowedRoles={[
+                'admin',
+                'pharmacist',
+                'super_admin',
+                'facility_admin',
+                'auditor',
+                'owner',
+            ]}
             requireFacility
         >
             <div className="flex h-full flex-col lg:flex-row p-5 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-700 overflow-hidden">
@@ -300,8 +316,17 @@ export function DispensingPage() {
                         className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2"
                     >
                         {loading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <TableSkeleton rows={6} columns={1} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {Array.from({ length: 8 }).map((_, i) => (
+                                    <SkeletonTable
+                                        key={i}
+                                        rows={2}
+                                        columns={1}
+                                        headers={null}
+                                        animate
+                                        className="border-none shadow-none"
+                                    />
+                                ))}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -317,7 +342,7 @@ export function DispensingPage() {
                                             'group p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl text-left transition-all hover:border-healthcare-primary/30 hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden',
                                             ((med.stock_quantity || 0) === 0 ||
                                                 user?.role?.toString() === 'auditor') &&
-                                                'opacity-50 cursor-not-allowed grayscale',
+                                            'opacity-50 cursor-not-allowed grayscale',
                                         )}
                                     >
                                         <div className="flex flex-col gap-3">
@@ -445,7 +470,7 @@ export function DispensingPage() {
                                 </div>
                             )}
                         {(selectedPatient && !selectedPatient.is_walk_in) ||
-                        user?.role?.toString()?.toLowerCase() === 'auditor' ? (
+                            user?.role?.toString()?.toLowerCase() === 'auditor' ? (
                             <div className="flex justify-between items-center bg-white dark:bg-slate-800 px-2 py-1.5 rounded-lg border dark:border-slate-700 text-sm">
                                 <div>
                                     <div className="font-bold text-healthcare-dark dark:text-white">
@@ -525,8 +550,8 @@ export function DispensingPage() {
                                                 EXP:{' '}
                                                 {item.selectedBatch?.expiry_date
                                                     ? new Date(
-                                                          item.selectedBatch.expiry_date,
-                                                      ).toLocaleDateString()
+                                                        item.selectedBatch.expiry_date,
+                                                    ).toLocaleDateString()
                                                     : 'N/A'}
                                             </span>
                                         </div>

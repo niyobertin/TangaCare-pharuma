@@ -6,7 +6,7 @@ import type { BatchRecall, Batch } from '../../types/pharmacy';
 import { RecallStatus, RecallReason } from '../../types/pharmacy';
 import { format } from 'date-fns';
 import { LifeBuoy, Plus, Search, AlertCircle, Download, Eye, ChevronRight } from 'lucide-react';
-import { TableSkeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 
 export function BatchRecallPage() {
     const { user, facilityId } = useAuth();
@@ -54,7 +54,15 @@ export function BatchRecallPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN', 'PHARMACIST', 'STORE_MANAGER']}
+            allowedRoles={[
+                'super_admin',
+                'facility_admin',
+                'store_manager',
+                'pharmacist',
+                'auditor',
+                'admin',
+                'owner',
+            ]}
             requireFacility
         >
             <div className="p-6 space-y-6 animate-in fade-in duration-500">
@@ -77,7 +85,14 @@ export function BatchRecallPage() {
                 </div>
 
                 {loading ? (
-                    <TableSkeleton rows={5} columns={6} />
+                    <SkeletonTable
+                        rows={5}
+                        columns={7}
+                        headers={['Recall #', 'Medicine & Batch', 'Reason', 'Affected Sales', 'Recovery Status', 'Status']}
+                        columnAligns={['left', 'left', 'left', 'left', 'left', 'left', 'right']}
+                        actions
+                        className="border-none shadow-none"
+                    />
                 ) : (
                     <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden overflow-x-auto">
                         <table className="w-full text-left text-sm whitespace-nowrap">

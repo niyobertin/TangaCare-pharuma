@@ -5,6 +5,7 @@ import { Link } from '@tanstack/react-router';
 import { pharmacyService } from '../../services/pharmacy.service';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
+import { useNavigate } from '@tanstack/react-router';
 
 interface Notification {
     id: number;
@@ -13,6 +14,10 @@ interface Notification {
     is_read: boolean;
     type: string;
     created_at: string;
+    data?: {
+        order_id?: number;
+        action?: string;
+    };
 }
 
 export const NotificationBell: React.FC = () => {
@@ -22,6 +27,26 @@ export const NotificationBell: React.FC = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [alertCount, setAlertCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
+
+    const handleNotificationClick = async (notification: Notification) => {
+        try {
+            if (!notification.is_read) {
+                markAsRead(notification.id); // Use the existing markAsRead function
+            }
+
+            // Navigate based on notification data
+            if (notification.data && notification.data.order_id) {
+                setIsOpen(false); // Close popover
+                navigate({
+                    to: '/app/procurement/orders/$orderId',
+                    params: { orderId: String(notification.data.order_id) }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to mark notification as read:', error);
+        }
+    };
 
     const fetchAlertSummary = async () => {
         try {
@@ -174,8 +199,9 @@ export const NotificationBell: React.FC = () => {
                                     {notifications.map((n) => (
                                         <div
                                             key={n.id}
+                                            onClick={() => handleNotificationClick(n)}
                                             className={clsx(
-                                                'p-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex gap-3 text-left group',
+                                                'p-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex gap-3 text-left group cursor-pointer',
                                                 !n.is_read && 'bg-teal-50/30 dark:bg-teal-900/10',
                                             )}
                                         >

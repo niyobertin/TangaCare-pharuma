@@ -29,7 +29,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     const [nearExpiry, setNearExpiry] = useState<Alert[]>([]);
 
     // Filters
-    const [dateRange, setDateRange] = useState<'today' | '7days' | '30days' | 'custom'>('today');
+    const [dateRange, setDateRange] = useState<'today' | '7days' | '30days' | 'custom'>('7days');
     const [startDate, setStartDate] = useState<string>(format(startOfToday(), 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState<string>(format(endOfToday(), 'yyyy-MM-dd'));
 
@@ -384,8 +384,8 @@ const KPICard: React.FC<KPICardProps> = ({
                             status === 'healthy'
                                 ? 'bg-emerald-100 text-emerald-600'
                                 : status === 'warning'
-                                  ? 'bg-amber-100 text-amber-600'
-                                  : 'bg-rose-100 text-rose-600',
+                                    ? 'bg-amber-100 text-amber-600'
+                                    : 'bg-rose-100 text-rose-600',
                         )}
                     >
                         {status}

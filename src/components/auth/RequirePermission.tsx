@@ -29,8 +29,8 @@ export const RequirePermission: React.FC<RequirePermissionProps> = ({
         return <Navigate to="/auth/login" />;
     }
 
-    // Super Admins bypass all permission checks
-    if (isSuperAdmin(user.role)) {
+    // Super Admins and Owners bypass all permission checks
+    if (isSuperAdmin(user.role) || user.role?.toString().toUpperCase() === 'OWNER') {
         return <>{children}</>;
     }
 

@@ -35,6 +35,8 @@ import type {
     VarianceType,
     StockVariance,
     ReorderSuggestion,
+    StorageLocation,
+    CreateStorageLocationDto,
 } from '../types/pharmacy';
 
 const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
@@ -517,6 +519,28 @@ export const pharmacyService = {
         await api.delete(`/pharmacy/departments/${id}`);
     },
 
+    async getStorageLocations(params?: {
+        facility_id?: number;
+    }): Promise<StorageLocation[]> {
+        const response = await api.get<any>('/pharmacy/storage-locations', { params });
+        const data = (response.data as any).data ?? response.data;
+        return Array.isArray(data) ? data : [];
+    },
+
+    async createStorageLocation(data: CreateStorageLocationDto): Promise<StorageLocation> {
+        const response = await api.post<any>('/pharmacy/storage-locations', data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async updateStorageLocation(id: number, data: Partial<StorageLocation>): Promise<StorageLocation> {
+        const response = await api.put<any>(`/pharmacy/storage-locations/${id}`, data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async deleteStorageLocation(id: number): Promise<void> {
+        await api.delete(`/pharmacy/storage-locations/${id}`);
+    },
+
     async getBatches(params?: { medicine_id?: number; facility_id?: number }): Promise<Batch[]> {
         const response = await api.get<{ data: Batch[] }>('/pharmacy/batches', { params });
         return response.data.data;
@@ -678,6 +702,8 @@ export const pharmacyService = {
         batch_id: number;
         source_department_id: number | null;
         target_department_id: number;
+        source_location_id?: number | null;
+        target_location_id?: number | null;
         quantity: number;
         notes?: string;
     }): Promise<any> {
@@ -1097,6 +1123,43 @@ export const pharmacyService = {
 
     async rejectVariance(id: number, reason: string): Promise<StockVariance> {
         const response = await api.post<any>(`/pharmacy/variances/${id}/reject`, { reason });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async manualStockEntry(data: {
+        facility_id: number;
+        medicine_id: number;
+        batches: Array<{
+            batch_number: string;
+            expiry_date: string;
+            manufacturing_date?: string;
+            quantity: number;
+            unit_cost?: number;
+        }>;
+        storage_location_id?: number | null;
+    }): Promise<any> {
+        const response = await api.post('/pharmacy/stock/add-batches', data);
+        return response.data;
+    },
+
+    async downloadStockTemplate(facilityId?: number): Promise<Blob> {
+        const response = await api.get('/pharmacy/stock/template/download', {
+            params: { facility_id: facilityId },
+            responseType: 'blob',
+        });
+        return response.data;
+    },
+
+    async importStockBatches(
+        file: File,
+        facilityId: number,
+    ): Promise<{ imported: number; errors: string[] }> {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('facility_id', facilityId.toString());
+        const response = await api.post<any>('/pharmacy/stock/import', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
         return (response.data as any).data ?? response.data;
     },
 };

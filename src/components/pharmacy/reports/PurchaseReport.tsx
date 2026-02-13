@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { pharmacyService } from '../../../services/pharmacy.service';
-import { TableSkeleton } from '../../shared/Skeleton';
+import { SkeletonTable } from '../../ui/SkeletonTable';
 import { ShoppingCart, TrendingUp, Users, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
@@ -36,7 +36,8 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
         }
     };
 
-    if (loading) return <TableSkeleton rows={5} columns={5} />;
+    if (loading)
+        return <SkeletonTable rows={5} columns={5} headers={null} className="border-none shadow-none" />;
     if (!reportData) return null;
 
     const COLORS = ['#0d9488', '#2563eb', '#7c3aed', '#db2777', '#ea580c', '#eab308'];
@@ -259,13 +260,12 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                                     </td>
                                     <td className="px-6 py-4">
                                         <span
-                                            className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                                po.status === 'received'
+                                            className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${po.status === 'received'
                                                     ? 'bg-emerald-50 text-emerald-600'
                                                     : po.status === 'pending'
-                                                      ? 'bg-amber-50 text-amber-600'
-                                                      : 'bg-slate-100 text-slate-600'
-                                            }`}
+                                                        ? 'bg-amber-50 text-amber-600'
+                                                        : 'bg-slate-100 text-slate-600'
+                                                }`}
                                         >
                                             {po.status}
                                         </span>

@@ -151,11 +151,41 @@ export interface Stock {
     id: number;
     facility_id: number;
     department_id?: number | null;
+    storage_location_id?: number | null;
     medicine_id: number;
     quantity: number;
     min_threshold: number;
     medicine?: Medicine;
     department?: Department;
+    location?: StorageLocation;
+}
+
+export const TemperatureType = {
+    ROOM_TEMP: 'ROOM_TEMP',
+    COLD: 'COLD',
+    FROZEN: 'FROZEN',
+} as const;
+
+export type TemperatureType = (typeof TemperatureType)[keyof typeof TemperatureType];
+
+export interface StorageLocation {
+    id: number;
+    facility_id: number;
+    name: string;
+    code: string;
+    area?: string;
+    temperature_type: TemperatureType;
+    is_active: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface CreateStorageLocationDto {
+    name: string;
+    code: string;
+    area?: string;
+    temperature_type?: TemperatureType;
+    is_active?: boolean;
 }
 
 export interface Supplier {
@@ -202,6 +232,18 @@ export interface ProcurementOrder {
     facility?: Facility;
     created_by?: User;
     items?: ProcurementOrderItem[];
+    activities?: PurchaseOrderActivity[];
+}
+
+export interface PurchaseOrderActivity {
+    id: number;
+    purchase_order_id: number;
+    action: string;
+    description: string;
+    actor_type: 'facility' | 'supplier' | 'system';
+    actor_id?: number | null;
+    meta_data?: any;
+    created_at: string;
 }
 
 export interface Alert {

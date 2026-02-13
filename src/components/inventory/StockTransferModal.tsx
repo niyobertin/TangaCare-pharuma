@@ -4,7 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { pharmacyService } from '../../services/pharmacy.service';
-import type { Medicine, Batch, Department } from '../../types/pharmacy';
+import type { Medicine, Batch, Department, StorageLocation } from '../../types/pharmacy';
 import { X, ArrowRightLeft, Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -18,6 +18,8 @@ interface StockTransferModalProps {
 const transferSchema = yup.object({
     batch_id: yup.number().required('Select a batch'),
     target_department_id: yup.number().required('Select destination department'),
+    source_location_id: yup.number().optional().nullable(),
+    target_location_id: yup.number().optional().nullable(),
     quantity: yup.number().min(1, 'Quantity must be at least 1').required('Required'),
     notes: yup.string(),
 });
@@ -28,9 +30,10 @@ export function StockTransferModal({
     onClose,
     onSuccess,
 }: StockTransferModalProps) {
-    const {} = useAuth();
+    const { } = useAuth();
     const [batches, setBatches] = useState<Batch[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
+    const [storageLocations, setStorageLocations] = useState<StorageLocation[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [loadingData, setLoadingData] = useState(true);
 
@@ -43,6 +46,8 @@ export function StockTransferModal({
         resolver: yupResolver(transferSchema),
         defaultValues: {
             quantity: 1,
+            source_location_id: undefined,
+            target_location_id: undefined,
         },
     });
 
@@ -53,9 +58,10 @@ export function StockTransferModal({
         const loadData = async () => {
             setLoadingData(true);
             try {
-                const [batchesData, departmentsData] = await Promise.all([
+                const [batchesData, departmentsData, locationsData] = await Promise.all([
                     pharmacyService.getBatches({ medicine_id: medicine.id }),
                     pharmacyService.getDepartments({ facility_id: facilityId }),
+                    pharmacyService.getStorageLocations({ facility_id: facilityId }),
                 ]);
 
                 const activeBatches = (batchesData || []).filter(
@@ -64,6 +70,7 @@ export function StockTransferModal({
 
                 setBatches(activeBatches);
                 setDepartments(departmentsData || []);
+                setStorageLocations((locationsData || []).filter((l) => l.is_active));
             } catch (error) {
                 console.error('Failed to load transfer data:', error);
                 toast.error('Failed to load batches or departments');
@@ -92,6 +99,8 @@ export function StockTransferModal({
                 batch_id: data.batch_id,
                 source_department_id: null,
                 target_department_id: data.target_department_id,
+                source_location_id: data.source_location_id,
+                target_location_id: data.target_location_id,
                 quantity: data.quantity,
                 notes: data.notes,
             });
@@ -109,7 +118,7 @@ export function StockTransferModal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-                {}
+                { }
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
@@ -138,7 +147,7 @@ export function StockTransferModal({
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                            {}
+                            { }
                             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm">
                                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
                                     From
@@ -148,7 +157,7 @@ export function StockTransferModal({
                                 </div>
                             </div>
 
-                            {}
+                            { }
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Select Batch
@@ -172,7 +181,25 @@ export function StockTransferModal({
                                 )}
                             </div>
 
-                            {}
+                            { }
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
+                                    Source Location (Optional)
+                                </label>
+                                <select
+                                    {...register('source_location_id')}
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                >
+                                    <option value="">Default Location...</option>
+                                    {storageLocations.map((loc) => (
+                                        <option key={loc.id} value={loc.id}>
+                                            {loc.name} ({loc.code})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            { }
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Destination Department
@@ -195,7 +222,25 @@ export function StockTransferModal({
                                 )}
                             </div>
 
-                            {}
+                            { }
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
+                                    Destination Location (Optional)
+                                </label>
+                                <select
+                                    {...register('target_location_id')}
+                                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                >
+                                    <option value="">Default Location...</option>
+                                    {storageLocations.map((loc) => (
+                                        <option key={loc.id} value={loc.id}>
+                                            {loc.name} ({loc.code})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            { }
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Quantity to Transfer
@@ -218,7 +263,7 @@ export function StockTransferModal({
                                 )}
                             </div>
 
-                            {}
+                            { }
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Notes (Optional)

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { ProcurementOrder } from '../../types/pharmacy';
+import { useSocket } from '../../context/SocketContext';
 import toast from 'react-hot-toast';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -23,24 +24,43 @@ function cn(...inputs: ClassValue[]) {
 export function ViewOrderPage() {
     const { orderId } = useParams({ from: '/app/procurement/orders/$orderId' });
     const navigate = useNavigate();
+    const { socket } = useSocket();
     const [order, setOrder] = useState<ProcurementOrder | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const fetchOrder = async () => {
+        try {
+            const data = await pharmacyService.getProcurementOrder(Number(orderId));
+            setOrder(data);
+        } catch (error) {
+            console.error('Failed to fetch order details', error);
+            toast.error('Failed to load order details');
+            navigate({ to: '/app/procurement/orders' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchOrder = async () => {
-            try {
-                const data = await pharmacyService.getProcurementOrder(Number(orderId));
-                setOrder(data);
-            } catch (error) {
-                console.error('Failed to fetch order details', error);
-                toast.error('Failed to load order details');
-                navigate({ to: '/app/procurement/orders' });
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchOrder();
     }, [orderId, navigate]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        const handlePOUpdate = (data: { orderId: number; action: string }) => {
+            if (data.orderId === Number(orderId)) {
+                toast.success(`Order updated: ${data.action}`);
+                fetchOrder();
+            }
+        };
+
+        socket.on('po_updated', handlePOUpdate);
+
+        return () => {
+            socket.off('po_updated', handlePOUpdate);
+        };
+    }, [socket, orderId]);
 
     const handlePrint = () => {
         window.print();
@@ -74,7 +94,7 @@ export function ViewOrderPage() {
             </Link>
 
             <div className="w-full bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden flex flex-col border border-slate-100 dark:border-slate-800 print:shadow-none print:rounded-none">
-                {}
+                { }
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 print:hidden">
                     <h2 className="text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                         <FileText size={20} className="text-healthcare-primary" />
@@ -100,9 +120,9 @@ export function ViewOrderPage() {
                     </div>
                 </div>
 
-                {}
+                { }
                 <div className="flex-1 p-8 md:p-12 print:p-0">
-                    {}
+                    { }
                     <div className="flex justify-between items-start mb-16">
                         <div>
                             <div className="flex items-center gap-3 mb-8">
@@ -162,16 +182,16 @@ export function ViewOrderPage() {
                                             order.status.toUpperCase() === 'RECEIVED'
                                                 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                                 : ['APPROVED', 'ORDERED'].includes(
+                                                    order.status.toUpperCase(),
+                                                )
+                                                    ? 'bg-teal-50 text-teal-600 border border-teal-100'
+                                                    : ['PARTIAL', 'PARTIALLY_RECEIVED'].includes(
                                                         order.status.toUpperCase(),
                                                     )
-                                                  ? 'bg-teal-50 text-teal-600 border border-teal-100'
-                                                  : ['PARTIAL', 'PARTIALLY_RECEIVED'].includes(
-                                                          order.status.toUpperCase(),
-                                                      )
-                                                    ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-                                                    : order.status.toUpperCase() === 'PENDING'
-                                                      ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                      : 'bg-slate-100 text-slate-500 border border-slate-200',
+                                                        ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                                        : order.status.toUpperCase() === 'PENDING'
+                                                            ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                            : 'bg-slate-100 text-slate-500 border border-slate-200',
                                         )}
                                     >
                                         {(order.status || '').replace(/_/g, ' ')}
@@ -280,7 +300,7 @@ export function ViewOrderPage() {
                         </div>
                     </div>
 
-                    {}
+                    { }
                     <div className="mb-16">
                         <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 border-b pb-2">
                             Requested Items
@@ -353,7 +373,43 @@ export function ViewOrderPage() {
                         </div>
                     )}
 
-                    {}
+                    {/* Activity History */}
+                    {order.activities && order.activities.length > 0 && (
+                        <div className="mb-16">
+                            <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 border-b pb-2">
+                                Activity History
+                            </h4>
+                            <div className="space-y-4">
+                                {order.activities.map((activity) => (
+                                    <div key={activity.id} className="flex gap-4 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-gray-100 dark:border-slate-800">
+                                        <div className="flex-shrink-0 mt-1">
+                                            <div className={`w-2 h-2 rounded-full ${activity.action.includes('rejected') || activity.action.includes('cancelled') ? 'bg-red-500' :
+                                                    activity.action.includes('confirmed') || activity.action.includes('approved') ? 'bg-teal-500' :
+                                                        activity.action.includes('clarification') ? 'bg-yellow-500' :
+                                                            'bg-gray-400'
+                                                }`}></div>
+                                        </div>
+                                        <div className="flex-grow">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <span className="font-medium text-healthcare-dark dark:text-white capitalize">
+                                                    {activity.action.replace(/_/g, ' ')}
+                                                </span>
+                                                <span className="text-sm text-slate-500">
+                                                    {new Date(activity.created_at).toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <p className="text-slate-600 dark:text-slate-400 text-sm whitespace-pre-wrap font-medium">{activity.description}</p>
+                                            <p className="text-xs text-slate-400 mt-2 capitalize">
+                                                By: <span className="font-semibold text-slate-500 dark:text-slate-300">{activity.actor_type}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    { }
                     <div className="grid grid-cols-2 gap-32 pt-16 mt-16 border-t border-slate-100 dark:border-slate-800">
                         <div className="text-center">
                             <div className="h-24 border-b border-dashed border-slate-200 dark:border-slate-700 mb-4 flex items-center justify-center">
@@ -384,7 +440,7 @@ export function ViewOrderPage() {
                     </div>
                 </div>
 
-                {}
+                { }
                 <div className="p-8 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 text-center print:hidden">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                         Generated via TangaCare Pharmacy ERP Management System

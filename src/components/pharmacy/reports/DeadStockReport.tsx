@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { pharmacyService } from '../../../services/pharmacy.service';
-import { TableSkeleton } from '../../shared/Skeleton';
+import { SkeletonTable } from '../../ui/SkeletonTable';
 import { PackageX, Archive, DollarSign } from 'lucide-react';
 
 export function DeadStockReport() {
@@ -60,16 +60,22 @@ export function DeadStockReport() {
                             {loading
                                 ? '...'
                                 : new Intl.NumberFormat('sw-TZ', {
-                                      style: 'currency',
-                                      currency: 'TZS',
-                                  }).format(totalValue)}
+                                    style: 'currency',
+                                    currency: 'TZS',
+                                }).format(totalValue)}
                         </div>
                     </div>
                 </div>
             </div>
 
             {loading ? (
-                <TableSkeleton rows={5} columns={5} />
+                <SkeletonTable
+                    rows={5}
+                    columns={5}
+                    headers={['Medicine', 'Last Dispensed', 'Current Qty', 'Stock Value', 'Status']}
+                    columnAligns={['left', 'right', 'right', 'right', 'center']}
+                    className="border-none shadow-none"
+                />
             ) : items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 text-center">
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-full mb-4">

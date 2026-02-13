@@ -13,7 +13,7 @@ import {
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Alert } from '../../types/pharmacy';
-import { TableSkeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../../context/AuthContext';
@@ -200,8 +200,8 @@ export function AlertsPage() {
             filterType === 'all'
                 ? true
                 : filterType === 'low_stock'
-                  ? alert.type === 'low_stock'
-                  : (alert.type || '').includes('expiry') || alert.type === 'expired';
+                    ? alert.type === 'low_stock'
+                    : (alert.type || '').includes('expiry') || alert.type === 'expired';
 
         // Additional status check (though currently backend only returns active)
         const matchesStatus = alert.status === statusFilter;
@@ -225,6 +225,7 @@ export function AlertsPage() {
                 'Auditor',
                 'AUDITOR',
                 'ADMIN',
+                'OWNER',
             ]}
             requireFacility
         >
@@ -330,9 +331,13 @@ export function AlertsPage() {
 
                 <div className="grid grid-cols-1 gap-4">
                     {loading ? (
-                        <div className="space-y-4">
-                            <TableSkeleton rows={4} columns={1} />
-                        </div>
+                        <SkeletonTable
+                            rows={4}
+                            columns={1}
+                            headers={null}
+                            animate
+                            className="border-none shadow-none"
+                        />
                     ) : filteredAlerts.length > 0 ? (
                         filteredAlerts.map((alert) => (
                             <div
@@ -342,8 +347,8 @@ export function AlertsPage() {
                                     alert.type === 'low_stock'
                                         ? 'border-l-amber-500 border-y-slate-100 border-r-slate-100'
                                         : alert.type === 'expired'
-                                          ? 'border-l-rose-600 border-y-slate-100 border-r-slate-100'
-                                          : 'border-l-rose-400 border-y-slate-100 border-r-slate-100',
+                                            ? 'border-l-rose-600 border-y-slate-100 border-r-slate-100'
+                                            : 'border-l-rose-400 border-y-slate-100 border-r-slate-100',
                                 )}
                             >
                                 <div
@@ -353,12 +358,12 @@ export function AlertsPage() {
                                             alert.type === 'expired'
                                             ? 'bg-rose-50 text-rose-500'
                                             : alert.type === 'low_stock'
-                                              ? 'bg-amber-50 text-amber-500'
-                                              : 'bg-blue-50 text-blue-500',
+                                                ? 'bg-amber-50 text-amber-500'
+                                                : 'bg-blue-50 text-blue-500',
                                     )}
                                 >
                                     {(alert.type || '').includes('expiry') ||
-                                    alert.type === 'expired' ? (
+                                        alert.type === 'expired' ? (
                                         <AlertTriangle size={24} />
                                     ) : alert.type === 'low_stock' ? (
                                         <Database size={24} />

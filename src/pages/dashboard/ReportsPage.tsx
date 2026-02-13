@@ -10,7 +10,7 @@ import {
     RotateCcw,
 } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
-import { TableSkeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { useAuth } from '../../context/AuthContext';
 import { PerformanceChart } from '../../components/pharmacy/PerformanceChart';
@@ -147,23 +147,23 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         {['sales', 'profit', 'tax', 'performance', 'staff', 'purchase'].includes(
                             defaultTab,
                         ) && (
-                            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
-                                <Calendar size={14} className="text-slate-400" />
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
-                                />
-                                <span className="text-slate-300 px-1">—</span>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
-                                />
-                            </div>
-                        )}
+                                <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
+                                    <Calendar size={14} className="text-slate-400" />
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
+                                    />
+                                    <span className="text-slate-300 px-1">—</span>
+                                    <input
+                                        type="date"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
+                                    />
+                                </div>
+                            )}
                         <div className="flex gap-2">
                             <button
                                 onClick={() => handleExport('excel')}
@@ -274,7 +274,8 @@ function ProfitReportView({
         load();
     }, [facilityId, startDate, endDate]);
 
-    if (loading) return <TableSkeleton rows={5} columns={1} />;
+    if (loading)
+        return <SkeletonTable rows={5} columns={1} headers={null} className="border-none shadow-none" />;
 
     return (
         <div className="space-y-6">
@@ -336,7 +337,8 @@ function PerformanceReports({
         load();
     }, [facilityId, startDate, endDate]);
 
-    if (loading) return <TableSkeleton rows={5} columns={1} />;
+    if (loading)
+        return <SkeletonTable rows={5} columns={1} headers={null} className="border-none shadow-none" />;
 
     return (
         <div className="space-y-6">
@@ -403,7 +405,8 @@ function LoyaltyReports({ facilityId }: { facilityId?: number }) {
         load();
     }, [facilityId]);
 
-    if (loading) return <TableSkeleton rows={5} columns={1} />;
+    if (loading)
+        return <SkeletonTable rows={5} columns={1} headers={null} className="border-none shadow-none" />;
 
     return (
         <div className="space-y-6">
@@ -500,7 +503,8 @@ function TaxReports({
         load();
     }, [facilityId, startDate, endDate]);
 
-    if (loading) return <TableSkeleton rows={5} columns={1} />;
+    if (loading)
+        return <SkeletonTable rows={5} columns={1} headers={null} className="border-none shadow-none" />;
 
     return (
         <div className="space-y-8">
@@ -545,7 +549,17 @@ function SalesReports({
         load();
     }, [facilityId, startDate, endDate]);
 
-    if (loading) return <TableSkeleton rows={5} columns={5} />;
+    if (loading)
+        return (
+            <SkeletonTable
+                rows={5}
+                columns={6}
+                headers={['Date', 'Receipt #', 'Medicine', 'Qty', 'Total']}
+                columnAligns={['left', 'left', 'left', 'right', 'right', 'right']}
+                actions
+                className="border-none shadow-none"
+            />
+        );
 
     return (
         <div className="space-y-6">
@@ -629,7 +643,8 @@ function StockReports({ facilityId }: { facilityId?: number }) {
         load();
     }, [facilityId]);
 
-    if (loading) return <TableSkeleton rows={3} columns={3} />;
+    if (loading)
+        return <SkeletonTable rows={3} columns={3} headers={null} className="border-none shadow-none" />;
 
     return (
         <div className="space-y-6">
@@ -740,8 +755,8 @@ function SummaryCard({ title, value, trend, icon, color = 'teal' }: any) {
                         color === 'teal'
                             ? 'bg-teal-50 text-teal-600'
                             : color === 'amber'
-                              ? 'bg-amber-50 text-amber-600'
-                              : 'bg-rose-50 text-rose-600',
+                                ? 'bg-amber-50 text-amber-600'
+                                : 'bg-rose-50 text-rose-600',
                     )}
                 >
                     {icon}

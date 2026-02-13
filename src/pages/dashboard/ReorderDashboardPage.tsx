@@ -62,7 +62,7 @@ export function ReorderDashboardPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN', 'PHARMACIST', 'STORE_MANAGER']}
+            allowedRoles={['ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN', 'PHARMACIST', 'STORE_MANAGER', 'OWNER']}
             requireFacility
         >
             <div className="p-6 space-y-6 animate-in fade-in duration-500">
@@ -202,13 +202,12 @@ export function ReorderDashboardPage() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span
-                                                        className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                                                            s.urgency === 'high'
+                                                        className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${s.urgency === 'high'
                                                                 ? 'bg-rose-50 text-rose-600 border border-rose-100'
                                                                 : s.urgency === 'medium'
-                                                                  ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                                  : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                        }`}
+                                                                    ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                    : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                            }`}
                                                     >
                                                         {s.urgency}
                                                     </span>

@@ -411,9 +411,9 @@ export function FacilityManagementPage() {
     ];
 
     return (
-        <ProtectedRoute allowedRoles={['super_admin', 'auditor']}>
+        <ProtectedRoute allowedRoles={['super_admin', 'auditor', 'owner']}>
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                {}
+                { }
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
                         <h2 className="text-2xl font-black text-healthcare-dark tracking-tight">
@@ -433,7 +433,7 @@ export function FacilityManagementPage() {
                     )}
                 </div>
 
-                {}
+                { }
                 {loading ? (
                     <StatsSkeleton />
                 ) : (
@@ -465,7 +465,7 @@ export function FacilityManagementPage() {
                     </div>
                 )}
 
-                {}
+                { }
                 <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
                     <div className="flex items-center gap-3">
                         <span className="text-[11px] font-bold text-slate-400 tracking-tight">
@@ -526,7 +526,7 @@ export function FacilityManagementPage() {
                     </div>
                 </div>
 
-                {}
+                { }
                 <div className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
                     <div className="min-w-[1000px]">
                         <table className="w-full text-left border-collapse">
@@ -597,8 +597,8 @@ export function FacilityManagementPage() {
                                                                 type.includes('hospital')
                                                                     ? 'bg-teal-500'
                                                                     : type.includes('clinic')
-                                                                      ? 'bg-indigo-500'
-                                                                      : 'bg-amber-500',
+                                                                        ? 'bg-indigo-500'
+                                                                        : 'bg-amber-500',
                                                             )}
                                                         >
                                                             {type.includes('hospital') ? (
@@ -646,7 +646,7 @@ export function FacilityManagementPage() {
                                                             <span className="text-xs lg:text-sm font-bold text-healthcare-dark">
                                                                 {f.facility_admin
                                                                     ? `${f.facility_admin.first_name || ''} ${f.facility_admin.last_name || ''}`.trim() ||
-                                                                      'Admin'
+                                                                    'Admin'
                                                                     : f.admin_name || 'No Admin'}
                                                             </span>
                                                             {f.facility_admin && (
@@ -699,48 +699,48 @@ export function FacilityManagementPage() {
                                                 <td className="px-6 py-4 text-right">
                                                     {user?.role?.toString()?.toLowerCase() !==
                                                         'auditor' && (
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            <button
-                                                                onClick={() =>
-                                                                    navigate({
-                                                                        to: '/app/facility/$facilityId/settings',
-                                                                        params: {
-                                                                            facilityId: String(
-                                                                                f.id,
-                                                                            ),
-                                                                        },
-                                                                    })
-                                                                }
-                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors tooltip"
-                                                                title="Assign Admin"
-                                                            >
-                                                                <UserPlus size={16} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() =>
-                                                                    navigate({
-                                                                        to: '/app/facility/$facilityId/settings',
-                                                                        params: {
-                                                                            facilityId: String(
-                                                                                f.id,
-                                                                            ),
-                                                                        },
-                                                                    })
-                                                                }
-                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors tooltip"
-                                                                title="Edit Facility"
-                                                            >
-                                                                <Edit2 size={16} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDelete(f.id)}
-                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-500 transition-colors tooltip"
-                                                                title="Delete Facility"
-                                                            >
-                                                                <Trash2 size={16} />
-                                                            </button>
-                                                        </div>
-                                                    )}
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <button
+                                                                    onClick={() =>
+                                                                        navigate({
+                                                                            to: '/app/facility/$facilityId/settings',
+                                                                            params: {
+                                                                                facilityId: String(
+                                                                                    f.id,
+                                                                                ),
+                                                                            },
+                                                                        })
+                                                                    }
+                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors tooltip"
+                                                                    title="Assign Admin"
+                                                                >
+                                                                    <UserPlus size={16} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        navigate({
+                                                                            to: '/app/facility/$facilityId/settings',
+                                                                            params: {
+                                                                                facilityId: String(
+                                                                                    f.id,
+                                                                                ),
+                                                                            },
+                                                                        })
+                                                                    }
+                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors tooltip"
+                                                                    title="Edit Facility"
+                                                                >
+                                                                    <Edit2 size={16} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDelete(f.id)}
+                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-500 transition-colors tooltip"
+                                                                    title="Delete Facility"
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                 </td>
                                             </tr>
                                         );
@@ -762,7 +762,7 @@ export function FacilityManagementPage() {
                     </div>
                 </div>
 
-                {}
+                { }
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-900 p-4 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm">
                     <div className="text-[11px] font-bold text-slate-400 tracking-tight whitespace-nowrap">
                         Showing{' '}
@@ -842,7 +842,7 @@ export function FacilityManagementPage() {
                     </div>
                 </div>
 
-                {}
+                { }
                 <FacilityModal
                     isOpen={isCreateOpen}
                     onClose={() => setIsCreateOpen(false)}
