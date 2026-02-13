@@ -82,7 +82,7 @@ export function CreatePurchaseOrderModal({
 
                     // Handle initial item if present
                     if (initialItem) {
-                        const med = fetchedMedicines.find((m) => m.id === initialItem.medicine_id);
+
                         reset({
                             supplier_id: 0,
                             items: [
@@ -90,7 +90,7 @@ export function CreatePurchaseOrderModal({
                                     medicine_id: initialItem.medicine_id,
                                     medicine_name: initialItem.medicine_name,
                                     quantity: initialItem.quantity,
-                                    unit_price: med?.cost_price || 0,
+                                    unit_price: 0,
                                 },
                             ],
                         });
@@ -117,7 +117,7 @@ export function CreatePurchaseOrderModal({
             medicine_id: med.id,
             medicine_name: med.name,
             quantity: 1,
-            unit_price: med.cost_price || 0,
+            unit_price: 0,
         });
     };
 
@@ -154,7 +154,7 @@ export function CreatePurchaseOrderModal({
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-teal-900/20 backdrop-blur-md animate-in fade-in duration-300">
             <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-teal-500/10 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
-                {}
+                { }
                 <div className="bg-teal-500/5 p-6 flex justify-between items-center border-b border-teal-500/10">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20">
@@ -178,7 +178,7 @@ export function CreatePurchaseOrderModal({
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {}
+                    { }
                     <div className="space-y-6">
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
@@ -186,11 +186,10 @@ export function CreatePurchaseOrderModal({
                             </label>
                             <select
                                 {...register('supplier_id')}
-                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 rounded-2xl outline-none transition-all font-bold text-sm ${
-                                    errors.supplier_id
-                                        ? 'border-red-500 focus:ring-red-500/10'
-                                        : 'border-transparent focus:border-teal-500/20 focus:bg-white dark:focus:bg-slate-800'
-                                }`}
+                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 rounded-2xl outline-none transition-all font-bold text-sm ${errors.supplier_id
+                                    ? 'border-red-500 focus:ring-red-500/10'
+                                    : 'border-transparent focus:border-teal-500/20 focus:bg-white dark:focus:bg-slate-800'
+                                    }`}
                             >
                                 <option value="0">Select a supplier...</option>
                                 {suppliers.map((s) => (
@@ -247,17 +246,16 @@ export function CreatePurchaseOrderModal({
                         </div>
                     </div>
 
-                    {}
+                    { }
                     <div className="flex flex-col h-full space-y-4">
                         <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
                             Order items ({fields.length})
                         </label>
                         <div
-                            className={`flex-1 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border overflow-y-auto p-4 space-y-3 ${
-                                errors.items
-                                    ? 'border-red-500'
-                                    : 'border-slate-100 dark:border-slate-800'
-                            }`}
+                            className={`flex-1 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border overflow-y-auto p-4 space-y-3 ${errors.items
+                                ? 'border-red-500'
+                                : 'border-slate-100 dark:border-slate-800'
+                                }`}
                         >
                             {fields.length === 0 ? (
                                 <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-2">
@@ -290,11 +288,10 @@ export function CreatePurchaseOrderModal({
                                                     type="number"
                                                     min="1"
                                                     {...register(`items.${index}.quantity`)}
-                                                    className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${
-                                                        errors.items?.[index]?.quantity
-                                                            ? 'border-red-500'
-                                                            : 'focus:border-teal-500 font-bold'
-                                                    }`}
+                                                    className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.quantity
+                                                        ? 'border-red-500'
+                                                        : 'focus:border-teal-500 font-bold'
+                                                        }`}
                                                 />
                                             </div>
                                             <div className="space-y-1">
@@ -305,11 +302,10 @@ export function CreatePurchaseOrderModal({
                                                     type="number"
                                                     min="0"
                                                     {...register(`items.${index}.unit_price`)}
-                                                    className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${
-                                                        errors.items?.[index]?.unit_price
-                                                            ? 'border-red-500'
-                                                            : 'focus:border-teal-500 font-bold'
-                                                    }`}
+                                                    className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.unit_price
+                                                        ? 'border-red-500'
+                                                        : 'focus:border-teal-500 font-bold'
+                                                        }`}
                                                 />
                                             </div>
                                         </div>
@@ -323,7 +319,7 @@ export function CreatePurchaseOrderModal({
                             </p>
                         )}
 
-                        {}
+                        { }
                         <div className="bg-teal-500/5 p-4 rounded-2xl border border-teal-500/10 space-y-4">
                             <div className="flex justify-between items-center">
                                 <span className="text-[10px] font-black uppercase text-teal-600 tracking-widest">

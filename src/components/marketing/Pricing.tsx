@@ -5,7 +5,7 @@ import { Link } from '@tanstack/react-router';
 const plans = [
     {
         name: 'Starter',
-        price: '29',
+        price: '35,000',
         description: 'Perfect for small clinics and independent pharmacies.',
         features: [
             'Up to 1,000 items',
@@ -17,7 +17,7 @@ const plans = [
     },
     {
         name: 'Pro',
-        price: '79',
+        price: '75,000',
         description: 'For growing pharmacies needing advanced analytics.',
         highlight: true,
         features: [
@@ -27,6 +27,19 @@ const plans = [
             'Up to 5 User Accounts',
             'Priority Support',
             'Multi-location ready',
+        ],
+    },
+    {
+        name: 'Business',
+        price: '100,000',
+        description: 'For established pharmacies with multiple locations.',
+        features: [
+            'Everything in Pro',
+            'Advanced Multi-location',
+            'Up to 15 User Accounts',
+            'Custom Reports',
+            'API Access',
+            'Dedicated Support',
         ],
     },
     {
@@ -59,15 +72,14 @@ export function Pricing() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {plans.map((plan) => (
                         <div
                             key={plan.name}
-                            className={`rounded-3xl p-8 border ${
-                                plan.highlight
-                                    ? 'border-teal-600 bg-teal-50/50 dark:bg-teal-900/10 shadow-xl relative'
-                                    : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
-                            } flex flex-col transition-all duration-300 hover:-translate-y-2`}
+                            className={`rounded-3xl p-8 border ${plan.highlight
+                                ? 'border-teal-600 bg-teal-50/50 dark:bg-teal-900/10 shadow-xl relative'
+                                : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
+                                } flex flex-col transition-all duration-300 hover:-translate-y-2`}
                         >
                             {plan.highlight && (
                                 <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-teal-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-teal-600/30">
@@ -78,11 +90,11 @@ export function Pricing() {
                                 {plan.name}
                             </h3>
                             <div className="mt-6 flex items-baseline">
-                                <span className="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                                    {plan.price === 'Custom' ? 'Custom' : `$${plan.price}`}
+                                <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
+                                    {plan.price === 'Custom' ? 'Custom' : `RWF ${plan.price}`}
                                 </span>
                                 {plan.price !== 'Custom' && (
-                                    <span className="ml-2 text-sm font-semibold text-slate-500">
+                                    <span className="ml-2 text-xs font-semibold text-slate-500 whitespace-nowrap">
                                         /month
                                     </span>
                                 )}
@@ -110,11 +122,10 @@ export function Pricing() {
                                     hash={plan.price === 'Custom' ? 'contact' : undefined}
                                 >
                                     <Button
-                                        className={`w-full h-12 rounded-xl font-bold transition-all ${
-                                            plan.highlight
-                                                ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20'
-                                                : 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700'
-                                        }`}
+                                        className={`w-full h-12 rounded-xl font-bold transition-all ${plan.highlight
+                                            ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20'
+                                            : 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700'
+                                            }`}
                                     >
                                         {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
                                     </Button>

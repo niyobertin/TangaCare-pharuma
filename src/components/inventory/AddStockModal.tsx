@@ -40,7 +40,7 @@ const batchSchema = yup.object({
             return !!val && new Date(val) > new Date();
         }),
     manufacturing_date: yup.string().optional(),
-    unit_cost: yup.number().min(0).optional(),
+    unit_cost: yup.number().min(0, 'Cannot be negative').required('Required'),
 });
 
 const addStockSchema = yup.object({
@@ -180,7 +180,7 @@ export function AddStockModal({ isOpen, onClose, onSuccess }: AddStockModalProps
                 storage_location_id: data.storage_location_id,
                 batches: data.batches.map((b: any) => ({
                     ...b,
-                    unit_cost: b.unit_cost || selectedMedicine?.cost_price || 0,
+                    unit_cost: b.unit_cost || 0,
                 })),
             });
             toast.success('Stock added successfully');

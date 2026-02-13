@@ -47,7 +47,6 @@ export interface Medicine {
     strength: string;
     dosage_form: string;
     unit: string;
-    cost_price: number;
     selling_price: number;
     markup_percent?: number;
     category_id?: number;
@@ -59,6 +58,11 @@ export interface Medicine {
     allow_partial_sales?: boolean;
     units_per_package?: number;
     base_unit?: string;
+}
+
+export interface CartItem extends Medicine {
+    quantity: number;
+    selectedBatch?: Batch;
 }
 
 export interface Organization {
@@ -279,7 +283,6 @@ export interface CreateMedicineDto {
     strength: string;
     dosage_form: string;
     unit: string;
-    cost_price: number;
     selling_price: number;
 }
 

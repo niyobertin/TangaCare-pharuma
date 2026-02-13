@@ -304,6 +304,8 @@ export const pharmacyService = {
         facility_id?: number;
         start_date?: string;
         end_date?: string;
+        sort_by?: string;
+        min_stock?: number;
     }): Promise<PaginatedResponse<Medicine>> {
         const response = await api.get<any>('/pharmacy/medicines', { params });
         return normalizePaginatedResponse<Medicine>(response.data);

@@ -21,7 +21,6 @@ const medicineSchema = yup.object({
     dosage_form: yup.string().required('Dosage form is required'),
     unit: yup.string().required('Unit is required'),
     category_id: yup.number().optional(),
-    cost_price: yup.number().min(0, 'Cannot be negative').required('Required'),
     selling_price: yup.number().min(0, 'Cannot be negative').required('Required'),
     is_controlled_drug: yup.boolean().default(false),
     allow_partial_sales: yup.boolean().default(false),
@@ -52,7 +51,6 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
         defaultValues: medicine || {
             is_controlled_drug: false,
             allow_partial_sales: false,
-            cost_price: 0,
             selling_price: 0,
         },
     });
@@ -223,7 +221,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                             <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 Pricing & Packaging
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                         Package Unit *
@@ -239,17 +237,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                         </p>
                                     )}
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
-                                        Cost Price (per Unit) *
-                                    </label>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        {...register('cost_price')}
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                                    />
-                                </div>
+
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                         Selling Price (per Unit) *

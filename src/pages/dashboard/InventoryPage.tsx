@@ -110,9 +110,7 @@ const MedicineImportPreviewModal = ({
                                     <th className="px-4 py-3 text-[10px] font-black uppercase text-slate-500 tracking-wider">
                                         Form
                                     </th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase text-slate-500 tracking-wider text-right">
-                                        Price (Cost)
-                                    </th>
+
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -146,9 +144,7 @@ const MedicineImportPreviewModal = ({
                                         <td className="px-4 py-3 text-xs font-bold text-slate-500 capitalize">
                                             {item.dosage_form}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-black text-slate-900 dark:text-white text-right">
-                                            ${item.cost_price?.toFixed(2)}
-                                        </td>
+
                                     </tr>
                                 ))}
                             </tbody>

@@ -34,13 +34,9 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     const [endDate, setEndDate] = useState<string>(format(endOfToday(), 'yyyy-MM-dd'));
 
     useEffect(() => {
-        const loadDashboard = async () => {
-            setLoading(true);
+        const loadInitialData = async () => {
+            if (!facilityId) return;
             try {
-                // Fetch summary (default today)
-                const data = await pharmacyService.getDashboardSummary(facilityId);
-                setSummary(data);
-
                 // Fetch real-time low stock suggestions
                 const reorderData = await pharmacyService.getReorderSuggestions(facilityId);
                 setLowStock(reorderData.slice(0, 5));
@@ -56,19 +52,18 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         .slice(0, 5),
                 );
             } catch (error) {
-                console.error('Failed to load dashboard data:', error);
-            } finally {
-                setLoading(false);
+                console.error('Failed to load initial dashboard data:', error);
             }
         };
 
-        if (facilityId) loadDashboard();
+        loadInitialData();
     }, [facilityId]);
 
     // Handle data refresh when date range changes
     useEffect(() => {
-        const updateKPIs = async () => {
+        const updateDashboardData = async () => {
             if (!facilityId) return;
+
             let start = format(startOfToday(), 'yyyy-MM-dd');
             let end = format(endOfToday(), 'yyyy-MM-dd');
 
@@ -81,23 +76,29 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                 end = endDate;
             }
 
+            setLoading(true);
             try {
-                const kpis = await pharmacyService.getComprehensiveKPIs(facilityId, {
-                    start_date: start,
-                    end_date: end,
+                // Fetch both KPIs for chosen period and a global summary for trends/categories
+                const [kpis, summaryData] = await Promise.all([
+                    pharmacyService.getComprehensiveKPIs(facilityId, {
+                        start_date: start,
+                        end_date: end,
+                    }),
+                    pharmacyService.getDashboardSummary(facilityId),
+                ]);
+
+                setSummary({
+                    ...summaryData,
+                    today: kpis, // Uses the selected period data for the KPI cards
                 });
-                if (summary) {
-                    setSummary({
-                        ...summary,
-                        today: kpis, // Mapping as requested for period selection
-                    });
-                }
             } catch (error) {
-                console.error('Error updating KPIs:', error);
+                console.error('Error updating dashboard data:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
-        if (dateRange !== 'today') updateKPIs();
+        updateDashboardData();
     }, [dateRange, startDate, endDate, facilityId]);
 
     const kpis = summary?.today;
@@ -177,7 +178,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         />
                         <KPICard
                             title="Total Profit"
-                            value={kpis?.financial.gross_profit || 0}
+                            value={kpis?.financial.net_profit || 0}
                             isCurrency
                             icon={<TrendingUp size={16} />}
                             color="bg-blue-500"
