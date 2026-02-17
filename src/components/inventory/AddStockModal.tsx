@@ -45,7 +45,7 @@ const batchSchema = yup.object({
 
 const addStockSchema = yup.object({
     medicine_id: yup.number().positive('Select a medicine').required('Required'),
-    storage_location_id: yup.number().nullable().optional(),
+    storage_location_id: yup.number().required('Storage Location is required'),
     batches: yup.array().of(batchSchema).min(1, 'Add at least one batch').required(),
 });
 
@@ -330,19 +330,27 @@ export function AddStockModal({ isOpen, onClose, onSuccess }: AddStockModalProps
                         {/* Storage Location Selection */}
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
-                                2. Storage Location (Optional)
+                                2. Storage Location
                             </label>
                             <select
                                 {...register('storage_location_id')}
-                                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-healthcare-primary/20 focus:bg-white dark:focus:bg-slate-800 rounded-xl text-sm font-bold outline-none transition-all"
+                                className={cn(
+                                    "w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-2 rounded-xl text-sm font-bold outline-none transition-all",
+                                    errors.storage_location_id ? "border-red-200 focus:border-red-300" : "border-transparent focus:border-healthcare-primary/20 focus:bg-white"
+                                )}
                             >
-                                <option value="">Default Location / Not Specified</option>
+                                <option value="">Select Storage Location...</option>
                                 {storageLocations.map((loc) => (
                                     <option key={loc.id} value={loc.id}>
                                         {loc.name} ({loc.code})
                                     </option>
                                 ))}
                             </select>
+                            {errors.storage_location_id && (
+                                <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">
+                                    {errors.storage_location_id.message}
+                                </p>
+                            )}
                         </div>
                     </div>
 

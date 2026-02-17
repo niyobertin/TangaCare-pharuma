@@ -184,6 +184,9 @@ export interface StorageLocation {
     area?: string;
     temperature_type: TemperatureType;
     is_active: boolean;
+    parent_id?: number | null;
+    parent?: StorageLocation;
+    children?: StorageLocation[];
     created_at?: string;
     updated_at?: string;
 }
@@ -194,6 +197,7 @@ export interface CreateStorageLocationDto {
     area?: string;
     temperature_type?: TemperatureType;
     is_active?: boolean;
+    parent_id?: number | null;
 }
 
 export interface Supplier {

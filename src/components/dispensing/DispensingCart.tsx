@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingCart, MapPin } from 'lucide-react';
 import type { CartItem } from '../../types/pharmacy';
 
 interface DispensingCartProps {
@@ -53,6 +53,15 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                                 RWF {(item.selling_price * item.quantity).toLocaleString()}
                             </p>
                         </div>
+
+                        {item.selectedBatch?.id && (
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700 w-fit">
+                                <MapPin size={10} className="text-slate-400" />
+                                <span className="text-[10px] font-bold text-slate-500 uppercase">
+                                    Pick from: {(item.selectedBatch as any).location?.name || 'Main Shelf'}
+                                </span>
+                            </div>
+                        )}
 
                         <div className="flex items-center justify-between mt-2">
                             <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-lg p-1">

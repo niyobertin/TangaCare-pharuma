@@ -33,7 +33,8 @@ export function StorageLocationManager({ facilityId }: { facilityId: number }) {
         code: '',
         area: '',
         temperature_type: TemperatureType.ROOM_TEMP,
-        is_active: true
+        is_active: true,
+        parent_id: null
     });
 
     const fetchLocations = async () => {
@@ -60,7 +61,8 @@ export function StorageLocationManager({ facilityId }: { facilityId: number }) {
             code: location.code,
             area: location.area || '',
             temperature_type: location.temperature_type,
-            is_active: location.is_active
+            is_active: location.is_active,
+            parent_id: location.parent_id
         });
         setIsModalOpen(true);
     };
@@ -99,7 +101,8 @@ export function StorageLocationManager({ facilityId }: { facilityId: number }) {
                 code: '',
                 area: '',
                 temperature_type: TemperatureType.ROOM_TEMP,
-                is_active: true
+                is_active: true,
+                parent_id: null
             });
             fetchLocations();
         } catch (error: any) {
@@ -131,7 +134,8 @@ export function StorageLocationManager({ facilityId }: { facilityId: number }) {
                             code: '',
                             area: '',
                             temperature_type: TemperatureType.ROOM_TEMP,
-                            is_active: true
+                            is_active: true,
+                            parent_id: null
                         });
                         setIsModalOpen(true);
                     }}
@@ -141,24 +145,26 @@ export function StorageLocationManager({ facilityId }: { facilityId: number }) {
                 </button>
             </div>
 
-            <div className="relative group max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-healthcare-primary transition-colors" size={18} />
-                <input
-                    type="text"
-                    placeholder="Search locations..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-healthcare-primary focus:bg-white transition-all shadow-inner"
-                />
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative group flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-healthcare-primary transition-colors" size={18} />
+                    <input
+                        type="text"
+                        placeholder="Search locations..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-healthcare-primary focus:bg-white transition-all shadow-inner"
+                    />
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-4">
                 {loading ? (
-                    <div className="col-span-full flex justify-center py-20">
+                    <div className="flex justify-center py-20">
                         <Loader2 className="animate-spin text-healthcare-primary" size={40} />
                     </div>
                 ) : filteredLocations.length === 0 ? (
-                    <div className="col-span-full py-20 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center">
+                    <div className="py-20 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center">
                         <Layout className="text-slate-300 mb-4" size={48} />
                         <p className="text-slate-500 font-bold">No storage locations found</p>
                         <button
@@ -168,56 +174,67 @@ export function StorageLocationManager({ facilityId }: { facilityId: number }) {
                             Create your first location
                         </button>
                     </div>
-                ) : (
-                    filteredLocations.map((loc) => (
-                        <div key={loc.id} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border-2 border-slate-100 dark:border-slate-800 shadow-sm hover:border-healthcare-primary/30 transition-all group relative">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className={cn(
-                                        "w-10 h-10 rounded-xl flex items-center justify-center",
-                                        loc.temperature_type === TemperatureType.COLD ? "bg-blue-50 text-blue-500" :
-                                            loc.temperature_type === TemperatureType.FROZEN ? "bg-indigo-50 text-indigo-500" :
-                                                "bg-orange-50 text-orange-500"
+                ) : (() => {
+                    // Hierarchical view logic
+                    const rootLocations = filteredLocations.filter(loc => !loc.parent_id);
+                    const renderLocation = (loc: StorageLocation, depth: number = 0) => {
+                        const children = locations.filter(c => c.parent_id === loc.id);
+                        return (
+                            <div key={loc.id} style={{ marginLeft: `${depth * 24}px` }} className="bg-white dark:bg-slate-900 p-5 rounded-2xl border-2 border-slate-100 dark:border-slate-800 shadow-sm hover:border-healthcare-primary/30 transition-all group relative">
+                                <div className="flex justify-between items-start">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-xl flex items-center justify-center",
+                                            loc.temperature_type === TemperatureType.COLD ? "bg-blue-50 text-blue-500" :
+                                                loc.temperature_type === TemperatureType.FROZEN ? "bg-indigo-50 text-indigo-500" :
+                                                    "bg-orange-50 text-orange-500"
+                                        )}>
+                                            <Layout size={20} />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-black text-slate-800 dark:text-white leading-tight">{loc.name}</h4>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{loc.code}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => handleEdit(loc)} className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 hover:text-healthcare-primary rounded-lg transition-colors">
+                                            <Edit2 size={14} />
+                                        </button>
+                                        <button onClick={() => handleDelete(loc.id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-slate-800 text-slate-400 hover:text-red-500 rounded-lg transition-colors">
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2 mt-4">
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                        <MapPin size={12} />
+                                        <span>Area: {loc.area || 'N/A'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                        <Thermometer size={12} />
+                                        <span className="capitalize">{loc.temperature_type.toLowerCase().replace('_', ' ')}</span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
+                                    <span className={cn(
+                                        "px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider",
+                                        loc.is_active ? "bg-teal-50 text-teal-600" : "bg-red-50 text-red-600"
                                     )}>
-                                        <Layout size={20} />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-black text-slate-800 dark:text-white leading-tight">{loc.name}</h4>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{loc.code}</p>
-                                    </div>
+                                        {loc.is_active ? 'Active' : 'Inactive'}
+                                    </span>
                                 </div>
-                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => handleEdit(loc)} className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 hover:text-healthcare-primary rounded-lg transition-colors">
-                                        <Edit2 size={14} />
-                                    </button>
-                                    <button onClick={() => handleDelete(loc.id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-slate-800 text-slate-400 hover:text-red-500 rounded-lg transition-colors">
-                                        <Trash2 size={14} />
-                                    </button>
-                                </div>
+                                {children.map(child => renderLocation(child, depth + 1))}
                             </div>
-
-                            <div className="space-y-2 mt-4">
-                                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
-                                    <MapPin size={12} />
-                                    <span>Area: {loc.area || 'N/A'}</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
-                                    <Thermometer size={12} />
-                                    <span className="capitalize">{loc.temperature_type.toLowerCase().replace('_', ' ')}</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
-                                <span className={cn(
-                                    "px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider",
-                                    loc.is_active ? "bg-teal-50 text-teal-600" : "bg-red-50 text-red-600"
-                                )}>
-                                    {loc.is_active ? 'Active' : 'Inactive'}
-                                </span>
-                            </div>
+                        );
+                    };
+                    return (
+                        <div className="grid grid-cols-1 gap-4">
+                            {rootLocations.map(loc => renderLocation(loc))}
                         </div>
-                    ))
-                )}
+                    );
+                })()}
             </div>
 
             {/* Create/Edit Modal */}
@@ -268,6 +285,22 @@ export function StorageLocationManager({ facilityId }: { facilityId: number }) {
                                         className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-healthcare-primary/20 focus:bg-white dark:focus:bg-slate-800 rounded-xl text-sm font-bold outline-none transition-all"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Parent Location (Optional)</label>
+                                <select
+                                    value={formData.parent_id || ''}
+                                    onChange={(e) => setFormData({ ...formData, parent_id: e.target.value ? parseInt(e.target.value) : null })}
+                                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-healthcare-primary/20 focus:bg-white dark:focus:bg-slate-800 rounded-xl text-sm font-bold outline-none transition-all"
+                                >
+                                    <option value="">None (Root Location)</option>
+                                    {locations
+                                        .filter(loc => loc.id !== editingLocation?.id) // Avoid self-reference
+                                        .map(loc => (
+                                            <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
+                                        ))}
+                                </select>
                             </div>
 
                             <div className="space-y-1">

@@ -614,6 +614,9 @@ export function InventoryPage() {
                                         Expiry Date
                                     </th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
+                                        Location
+                                    </th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
                                         Date Added
                                     </th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
@@ -714,6 +717,11 @@ export function InventoryPage() {
                                                             med.expiry_date,
                                                         ).toLocaleDateString()
                                                         : 'N/A'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                <span className="text-xs font-bold text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">
+                                                    {(med as any).storage_location?.name || (med as any).location?.name || 'N/A'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center whitespace-nowrap">
