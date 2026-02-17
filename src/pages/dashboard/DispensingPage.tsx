@@ -47,6 +47,9 @@ export function DispensingPage() {
     const [processing, setProcessing] = useState(false);
     const [showCreatePatient, setShowCreatePatient] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [prescriptionId, setPrescriptionId] = useState('');
+
+    const hasControlledDrug = cart.some((item) => item.is_controlled_drug);
 
     useEffect(() => {
         setPage(1);
@@ -183,7 +186,42 @@ export function DispensingPage() {
                 },
             ];
         });
-        toast.success(`Added ${med.name} (Batch: ${bestBatch.batch_number})`);
+
+        // FEFO Prompt & Expiry Warning
+        const expiryDate = new Date(bestBatch.expiry_date);
+        const daysToExpiry = Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        const locationName = (bestBatch as any).location?.name || 'Main Shelf';
+
+        if (daysToExpiry <= 30) {
+            toast(() => (
+                <div className="flex flex-col gap-1">
+                    <span className="font-bold text-orange-600">⚠️ Batch Expiring Soon!</span>
+                    <span className="text-xs">Batch {bestBatch!.batch_number} expires in {daysToExpiry} days.</span>
+                </div>
+            ), { duration: 5000, icon: '⚠️' });
+        }
+
+        toast.custom((t) => (
+            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white dark:bg-slate-800 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
+                <div className="flex-1 w-0 p-4">
+                    <div className="flex items-start">
+                        <div className="flex-shrink-0 pt-0.5">
+                            <CheckCircle2 className="h-10 w-10 text-green-500" />
+                        </div>
+                        <div className="ml-3 flex-1">
+                            <p className="text-sm font-medium text-slate-900 dark:text-white">
+                                Added {med.name}
+                            </p>
+                            <p className="mt-1 text-sm text-slate-500">
+                                Batch: <span className="font-bold">{bestBatch!.batch_number}</span><br />
+                                Exp: {expiryDate.toLocaleDateString()}<br />
+                                Location: <span className="font-bold">{locationName}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        ), { duration: 3000 });
     };
 
     const updateQuantity = (id: number, batchId: number, delta: number) => {
@@ -244,6 +282,7 @@ export function DispensingPage() {
                         unit_price: i.selling_price,
                     })),
                 payments: payments,
+                ...(hasControlledDrug && prescriptionId ? { prescription_id: parseInt(prescriptionId) || undefined } : {}),
             });
 
             setShowSuccess(true);
@@ -255,6 +294,7 @@ export function DispensingPage() {
                 setCart([]);
                 setSearchQuery('');
                 setPatientQuery('');
+                setPrescriptionId('');
                 setSelectedPatient(WALK_IN_PATIENT);
                 fetchMedicines();
             }, 3000);
@@ -506,6 +546,9 @@ export function DispensingPage() {
                             total={total}
                             onCheckout={handleCheckout}
                             isProcessing={processing}
+                            prescriptionId={prescriptionId}
+                            setPrescriptionId={setPrescriptionId}
+                            prescriptionRequired={hasControlledDrug}
                         />
                     </div>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Medicine } from '../../types/pharmacy';
-import { Calendar, Package, AlertTriangle, AlertCircle, MapPin } from 'lucide-react';
+import { Calendar, AlertTriangle, AlertCircle, MapPin } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useMedicineStock } from '../../hooks/useMedicineStock';
 

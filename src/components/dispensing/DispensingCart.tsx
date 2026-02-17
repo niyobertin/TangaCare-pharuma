@@ -11,6 +11,9 @@ interface DispensingCartProps {
     total: number;
     onCheckout: () => void;
     isProcessing: boolean;
+    prescriptionId?: string;
+    setPrescriptionId?: (id: string) => void;
+    prescriptionRequired?: boolean;
 }
 
 export const DispensingCart: React.FC<DispensingCartProps> = ({
@@ -22,6 +25,9 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
     total,
     onCheckout,
     isProcessing,
+    prescriptionId,
+    setPrescriptionId,
+    prescriptionRequired,
 }) => {
     if (cart.length === 0) {
         return (
@@ -55,11 +61,16 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                         </div>
 
                         {item.selectedBatch?.id && (
-                            <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700 w-fit">
-                                <MapPin size={10} className="text-slate-400" />
-                                <span className="text-[10px] font-bold text-slate-500 uppercase">
-                                    Pick from: {(item.selectedBatch as any).location?.name || 'Main Shelf'}
+                            <div className="flex flex-wrap gap-2">
+                                <span className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700 w-fit text-[10px] font-bold text-slate-500 uppercase">
+                                    <MapPin size={10} className="text-slate-400" />
+                                    {(item.selectedBatch as any).location?.name || 'Main Shelf'}
                                 </span>
+                                {item.is_controlled_drug && (
+                                    <span className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-100 dark:border-orange-800 w-fit text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase">
+                                        ⚠ Controlled Drug
+                                    </span>
+                                )}
                             </div>
                         )}
 
@@ -95,27 +106,51 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                 ))}
             </div>
 
-            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-2">
-                <div className="flex justify-between text-xs text-slate-500 font-bold uppercase tracking-tight">
-                    <span>Subtotal</span>
-                    <span>RWF {subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-xs text-slate-500 font-bold uppercase tracking-tight">
-                    <span>Tax ({(tax / subtotal * 100).toFixed(0)}%)</span>
-                    <span>RWF {tax.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span>Total</span>
-                    <span>RWF {total.toLocaleString()}</span>
+            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-4">
+                {prescriptionRequired && setPrescriptionId && (
+                    <div className="space-y-1 animate-in slide-in-from-bottom-2 fade-in">
+                        <label className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase">
+                            Prescription ID Required *
+                        </label>
+                        <input
+                            type="text"
+                            value={prescriptionId}
+                            onChange={(e) => setPrescriptionId(e.target.value)}
+                            placeholder="Enter RX Number..."
+                            className="w-full px-3 py-2 text-sm rounded-lg border-2 border-orange-100 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                        />
+                    </div>
+                )}
+
+                <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-slate-500 font-bold uppercase tracking-tight">
+                        <span>Subtotal</span>
+                        <span>RWF {subtotal.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-500 font-bold uppercase tracking-tight">
+                        <span>Tax ({subtotal > 0 ? (tax / subtotal * 100).toFixed(0) : 18}%)</span>
+                        <span>RWF {tax.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <span>Total</span>
+                        <span>RWF {total.toLocaleString()}</span>
+                    </div>
                 </div>
 
-                <button
-                    onClick={onCheckout}
-                    disabled={isProcessing}
-                    className="w-full py-3 mt-4 bg-healthcare-primary text-white rounded-xl font-bold shadow-lg shadow-healthcare-primary/20 hover:shadow-healthcare-primary/40 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:hover:translate-y-0"
-                >
-                    {isProcessing ? 'Processing...' : 'Complete Sale'}
-                </button>
+                <div className="pt-2">
+                    <button
+                        onClick={onCheckout}
+                        disabled={isProcessing || (prescriptionRequired && !prescriptionId)}
+                        className="w-full py-3 bg-healthcare-primary hover:bg-healthcare-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg shadow-healthcare-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                    >
+                        {isProcessing ? 'Processing...' : 'Proceed to Payment'}
+                    </button>
+                    {prescriptionRequired && !prescriptionId && (
+                        <p className="text-[10px] text-center text-orange-500 font-bold mt-2">
+                            Enter Prescription ID to checkout
+                        </p>
+                    )}
+                </div>
             </div>
         </div>
     );

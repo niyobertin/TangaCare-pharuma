@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, CreditCard, Banknote, Smartphone, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { X, Plus, CreditCard, Banknote, Smartphone, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import type { SalePaymentMethod } from '../../types/pharmacy';
 
@@ -28,7 +28,6 @@ export function PaymentModal({ totalAmount, onClose, onConfirm, isProcessing }: 
     const [payments, setPayments] = useState<Payment[]>([
         { id: '1', method: 'cash', amount: totalAmount },
     ]);
-    const [reference, setReference] = useState<string>('');
 
     const totalPaid = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
     const balance = totalAmount - totalPaid;

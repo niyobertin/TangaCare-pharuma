@@ -533,15 +533,7 @@ export function ProcurementPage() {
     const [totalItems, setTotalItems] = useState(0);
     const [totalValue, setTotalValue] = useState(0);
     const [limit] = useState(10);
-    const role = (user?.role || '')
-        .toString()
-        .toUpperCase()
-        .replace(/[\s_]+/g, ' ');
-    const isFacilityAdmin =
-        role === 'FACILITY ADMIN' ||
-        role === 'FACILITY_ADMIN' ||
-        role === 'OWNER' ||
-        role === 'SUPER ADMIN';
+
 
     const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<ProcurementOrder | null>(null);

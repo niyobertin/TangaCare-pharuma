@@ -341,6 +341,7 @@ export interface Sale {
 
 export interface CreateSaleDto {
     patient_id?: number;
+    prescription_id?: number;
     dispense_type?: 'otc' | 'prescription' | 'internal' | 'transfer';
     vat_rate?: number;
     items: Array<{
