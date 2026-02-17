@@ -344,20 +344,21 @@ export function AlertsPage() {
                                 key={alert.id}
                                 className={cn(
                                     'glass-card p-5 rounded-2xl border-l-4 flex flex-col md:flex-row gap-4 md:items-center transition-all hover:shadow-md group bg-white dark:bg-slate-900',
-                                    alert.type === 'low_stock'
-                                        ? 'border-l-amber-500 border-y-slate-100 border-r-slate-100'
-                                        : alert.type === 'expired'
-                                            ? 'border-l-rose-600 border-y-slate-100 border-r-slate-100'
-                                            : 'border-l-rose-400 border-y-slate-100 border-r-slate-100',
+                                    alert.severity === 'out_of_stock'
+                                        ? 'border-l-rose-700 border-y-slate-100 border-r-slate-100'
+                                        : alert.severity === 'critical'
+                                            ? 'border-l-rose-500 border-y-slate-100 border-r-slate-100'
+                                            : alert.severity === 'warning'
+                                                ? 'border-l-amber-500 border-y-slate-100 border-r-slate-100'
+                                                : 'border-l-blue-400 border-y-slate-100 border-r-slate-100',
                                 )}
                             >
                                 <div
                                     className={cn(
                                         'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm',
-                                        (alert.type || '').includes('expiry') ||
-                                            alert.type === 'expired'
+                                        alert.severity === 'out_of_stock' || alert.severity === 'critical'
                                             ? 'bg-rose-50 text-rose-500'
-                                            : alert.type === 'low_stock'
+                                            : alert.severity === 'warning'
                                                 ? 'bg-amber-50 text-amber-500'
                                                 : 'bg-blue-50 text-blue-500',
                                     )}

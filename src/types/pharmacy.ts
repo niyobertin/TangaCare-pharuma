@@ -270,6 +270,8 @@ export interface Alert {
     batch_id?: number;
     current_value?: number;
     threshold_value?: number;
+    severity: 'info' | 'warning' | 'critical' | 'out_of_stock';
+    last_notified_at?: string;
     medicine?: Medicine;
     batch?: Batch;
 }
