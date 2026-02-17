@@ -16,10 +16,9 @@ import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { CreatePatientModal } from '../../components/patients/CreatePatientModal';
 import { MedicineCard } from '../../components/dispensing/MedicineCard';
 import { DispensingCart } from '../../components/dispensing/DispensingCart';
+import { PaymentModal } from '../../components/dispensing/PaymentModal';
 import type { CartItem } from '../../types/pharmacy';
 import { toast } from 'react-hot-toast';
-
-
 
 const WALK_IN_PATIENT = {
     id: null,
@@ -47,6 +46,7 @@ export function DispensingPage() {
     const [showSuccess, setShowSuccess] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [showCreatePatient, setShowCreatePatient] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     useEffect(() => {
         setPage(1);
@@ -214,7 +214,7 @@ export function DispensingPage() {
     const tax = subtotal * 0.18;
     const total = subtotal + tax;
 
-    const handleCheckout = async () => {
+    const handleCheckout = () => {
         if (!user?.facility_id) {
             toast.error('No facility selected for your account');
             return;
@@ -225,6 +225,10 @@ export function DispensingPage() {
         }
         if (cart.length === 0) return;
 
+        setShowPaymentModal(true);
+    };
+
+    const handlePaymentConfirm = async (payments: any[]) => {
         setProcessing(true);
         try {
             await pharmacyService.createSale({
@@ -239,16 +243,13 @@ export function DispensingPage() {
                         quantity: i.quantity,
                         unit_price: i.selling_price,
                     })),
-                payments: [
-                    {
-                        method: 'cash',
-                        amount: total,
-                    },
-                ],
+                payments: payments,
             });
 
             setShowSuccess(true);
             toast.success('Dispensing completed successfully');
+            setShowPaymentModal(false);
+
             setTimeout(() => {
                 setShowSuccess(false);
                 setCart([]);
@@ -530,6 +531,15 @@ export function DispensingPage() {
                         setSelectedPatient(patient);
                         setShowCreatePatient(false);
                     }}
+                />
+            )}
+
+            {showPaymentModal && (
+                <PaymentModal
+                    totalAmount={total}
+                    onClose={() => setShowPaymentModal(false)}
+                    onConfirm={handlePaymentConfirm}
+                    isProcessing={processing}
                 />
             )}
         </ProtectedRoute>

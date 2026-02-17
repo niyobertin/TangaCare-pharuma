@@ -1,0 +1,202 @@
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Trash2, CreditCard, Banknote, Smartphone, CheckCircle2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import type { SalePaymentMethod } from '../../types/pharmacy';
+
+interface Payment {
+    id: string;
+    method: SalePaymentMethod;
+    amount: number;
+    reference?: string;
+}
+
+interface PaymentModalProps {
+    totalAmount: number;
+    onClose: () => void;
+    onConfirm: (payments: { method: SalePaymentMethod; amount: number; reference?: string }[]) => void;
+    isProcessing?: boolean;
+}
+
+const PAYMENT_METHODS: { id: SalePaymentMethod; label: string; icon: any }[] = [
+    { id: 'cash', label: 'Cash', icon: Banknote },
+    { id: 'mobile_money', label: 'Mobile Money', icon: Smartphone },
+    { id: 'card', label: 'Card', icon: CreditCard },
+    { id: 'bank', label: 'Bank Transfer', icon: Banknote },
+];
+
+export function PaymentModal({ totalAmount, onClose, onConfirm, isProcessing }: PaymentModalProps) {
+    const [payments, setPayments] = useState<Payment[]>([
+        { id: '1', method: 'cash', amount: totalAmount },
+    ]);
+    const [reference, setReference] = useState<string>('');
+
+    const totalPaid = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const balance = totalAmount - totalPaid;
+
+    const addPayment = () => {
+        if (balance <= 0) return;
+        const newPayment: Payment = {
+            id: Math.random().toString(36).substr(2, 9),
+            method: 'cash',
+            amount: balance > 0 ? balance : 0,
+        };
+        setPayments([...payments, newPayment]);
+    };
+
+    const removePayment = (id: string) => {
+        setPayments(payments.filter((p) => p.id !== id));
+    };
+
+    const updatePayment = (id: string, field: keyof Payment, value: any) => {
+        setPayments(
+            payments.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+        );
+    };
+
+    const handleConfirm = () => {
+        if (Math.abs(balance) > 0.01) {
+            toast.error('Payment amount must match total');
+            return;
+        }
+        onConfirm(payments.map(({ method, amount, reference }) => ({ method, amount, reference })));
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
+                {/* Header */}
+                <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                    <div>
+                        <h3 className="font-black text-lg text-healthcare-dark dark:text-white">
+                            Process Payment
+                        </h3>
+                        <p className="text-xs text-slate-500 font-bold">
+                            Total Due: <span className="text-healthcare-primary text-sm">{totalAmount.toLocaleString()} RWF</span>
+                        </p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        disabled={isProcessing}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-red-500"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-4 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+                    <div className="space-y-3">
+                        {payments.map((payment, index) => (
+                            <div
+                                key={payment.id}
+                                className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-100 dark:border-slate-800 relative group animate-in slide-in-from-left-2 duration-300"
+                                style={{ animationDelay: `${index * 50}ms` }}
+                            >
+                                <div className="flex gap-3 mb-3">
+                                    <div className="flex-1 space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                            Method
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                value={payment.method}
+                                                onChange={(e) => updatePayment(payment.id, 'method', e.target.value)}
+                                                className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none appearance-none font-bold text-healthcare-dark dark:text-white"
+                                            >
+                                                {PAYMENT_METHODS.map((m) => (
+                                                    <option key={m.id} value={m.id}>
+                                                        {m.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                                {(() => {
+                                                    const Icon = PAYMENT_METHODS.find(m => m.id === payment.method)?.icon || Banknote;
+                                                    return <Icon size={14} />;
+                                                })()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="w-1/3 space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                            Amount
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={payment.amount}
+                                            onChange={(e) => updatePayment(payment.id, 'amount', Number(e.target.value))}
+                                            className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none font-bold text-right text-healthcare-dark dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+
+                                {(payment.method === 'mobile_money' || payment.method === 'card' || payment.method === 'bank') && (
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                            Reference / Transaction ID
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Enter reference number..."
+                                            value={payment.reference || ''}
+                                            onChange={(e) => updatePayment(payment.id, 'reference', e.target.value)}
+                                            className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none text-healthcare-dark dark:text-white"
+                                        />
+                                    </div>
+                                )}
+
+                                {payments.length > 1 && (
+                                    <button
+                                        onClick={() => removePayment(payment.id)}
+                                        className="absolute -right-2 -top-2 bg-red-100 dark:bg-red-900/50 text-red-500 rounded-full p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+                                    >
+                                        <X size={14} strokeWidth={3} />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {balance > 0 && (
+                        <button
+                            onClick={addPayment}
+                            className="w-full py-2 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-center gap-2 text-slate-500 hover:text-healthcare-primary hover:border-healthcare-primary/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all text-sm font-bold"
+                        >
+                            <Plus size={16} />
+                            Add Payment Method
+                        </button>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 space-y-4">
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-slate-500 font-bold">Paid</span>
+                        <span className="font-black text-healthcare-dark dark:text-white">{totalPaid.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-slate-500 font-bold">Balance</span>
+                        <span className={`font-black ${balance === 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                            {balance.toLocaleString()}
+                        </span>
+                    </div>
+
+                    <button
+                        onClick={handleConfirm}
+                        disabled={Math.abs(balance) > 0.01 || isProcessing}
+                        className="w-full py-3 bg-healthcare-primary text-white rounded-xl font-bold hover:bg-healthcare-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-healthcare-primary/20 flex items-center justify-center gap-2"
+                    >
+                        {isProcessing ? (
+                            'Processing...'
+                        ) : (
+                            <>
+                                <CheckCircle2 size={18} />
+                                Complete Sale
+                            </>
+                        )}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
