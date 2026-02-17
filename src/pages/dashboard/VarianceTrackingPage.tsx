@@ -118,12 +118,27 @@ export function VarianceTrackingPage() {
                     </div>
                 </div>
 
-                {loading && variances.length === 0 ? (
+                {loading ? (
                     <SkeletonTable
                         rows={8}
                         columns={7}
-                        headers={['Date', 'Medicine', 'Batch', 'System vs Physical', 'Variance', 'Status']}
-                        columnAligns={['left', 'left', 'left', 'right', 'right', 'left', 'right']}
+                        headers={[
+                            'Date',
+                            'Medicine',
+                            'Batch',
+                            'System vs Physical',
+                            'Variance',
+                            'Status',
+                        ]}
+                        columnAligns={[
+                            'left',
+                            'left',
+                            'left',
+                            'right',
+                            'right',
+                            'left',
+                            'right',
+                        ]}
                         actions
                         className="border-none shadow-none"
                     />

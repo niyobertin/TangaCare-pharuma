@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import { CreateFacilityModal } from '../../components/facility/CreateFacilityModal';
 import { useAuth } from '../../context/AuthContext';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 
 export function FacilitiesPage() {
     const { user } = useAuth();
@@ -66,11 +67,60 @@ export function FacilitiesPage() {
         loadFacilities();
     };
 
+    const showOrgColumn = ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER'].includes(role || '');
+
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-full">
-                <div className="w-8 h-8 border-4 border-healthcare-primary/20 border-t-healthcare-primary rounded-full animate-spin" />
-            </div>
+            <ProtectedRoute
+                allowedRoles={[
+                    'SUPER_ADMIN',
+                    'SUPER ADMIN',
+                    'OWNER',
+                    'FACILITY_ADMIN',
+                    'FACILITY ADMIN',
+                    'ADMIN',
+                    'AUDITOR',
+                ]}
+                requireFacility
+            >
+                <div className="h-full flex flex-col bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="flex-shrink-0 flex items-center justify-between p-6 pb-4">
+                        <div className="space-y-2">
+                            <div className="h-8 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+                            <div className="h-4 w-64 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+                        </div>
+                    </div>
+                    <div className="flex-1 px-6">
+                        <SkeletonTable
+                            rows={8}
+                            columns={showOrgColumn ? 9 : 8}
+                            headers={[
+                                '#',
+                                'ID',
+                                ...(showOrgColumn ? ['Organization'] : []),
+                                'Name',
+                                'Type',
+                                'Address',
+                                'Email',
+                                'Phone',
+                            ]}
+                            columnAligns={[
+                                'left',
+                                'left',
+                                ...(showOrgColumn ? ['left'] : []),
+                                'left',
+                                'left',
+                                'left',
+                                'left',
+                                'left',
+                                'right',
+                            ] as ("left" | "center" | "right")[]}
+                            actions
+                            className="bg-white dark:bg-slate-800 rounded-xl shadow-sm"
+                        />
+                    </div>
+                </div>
+            </ProtectedRoute>
         );
     }
 
@@ -122,8 +172,8 @@ export function FacilitiesPage() {
                             <button
                                 onClick={() => setViewMode('grid')}
                                 className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                                        ? 'bg-healthcare-primary text-white'
-                                        : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                    ? 'bg-healthcare-primary text-white'
+                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
                                     }`}
                             >
                                 <Grid size={18} />
@@ -131,8 +181,8 @@ export function FacilitiesPage() {
                             <button
                                 onClick={() => setViewMode('table')}
                                 className={`p-2 rounded-md transition-all ${viewMode === 'table'
-                                        ? 'bg-healthcare-primary text-white'
-                                        : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                    ? 'bg-healthcare-primary text-white'
+                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
                                     }`}
                             >
                                 <List size={18} />

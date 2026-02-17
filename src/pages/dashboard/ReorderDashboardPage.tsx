@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import type { ReorderSuggestion } from '../../types/pharmacy';
 import {
     ShoppingCart,
@@ -138,9 +139,20 @@ export function ReorderDashboardPage() {
                     </div>
 
                     {loading ? (
-                        <div className="p-12 flex justify-center">
-                            <Loader2 className="animate-spin text-healthcare-primary" size={32} />
-                        </div>
+                        <SkeletonTable
+                            rows={8}
+                            columns={6}
+                            headers={[
+                                'Medicine',
+                                'Current Stock',
+                                'Target Level',
+                                'Order Suggestion',
+                                'Urgency',
+                            ]}
+                            columnAligns={['left', 'right', 'right', 'right', 'left', 'right']}
+                            actions
+                            className="border-none shadow-none"
+                        />
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
@@ -203,10 +215,10 @@ export function ReorderDashboardPage() {
                                                 <td className="px-6 py-4">
                                                     <span
                                                         className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${s.urgency === 'high'
-                                                                ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                                                                : s.urgency === 'medium'
-                                                                    ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                                    : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                            ? 'bg-rose-50 text-rose-600 border border-rose-100'
+                                                            : s.urgency === 'medium'
+                                                                ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                                             }`}
                                                     >
                                                         {s.urgency}

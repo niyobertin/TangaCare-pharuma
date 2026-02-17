@@ -245,16 +245,20 @@ export function InventoryPage() {
     };
 
     useEffect(() => {
-        fetchStats();
-    }, []);
+        if (facilityId) {
+            fetchStats();
+        }
+    }, [facilityId]);
 
     useEffect(() => {
         setPage(1);
     }, [debouncedSearch, selectedCategory, limit, startDate, endDate]);
 
     useEffect(() => {
-        fetchMedicines();
-    }, [page, debouncedSearch, selectedCategory, limit, startDate, endDate]);
+        if (facilityId) {
+            fetchMedicines();
+        }
+    }, [page, debouncedSearch, selectedCategory, limit, startDate, endDate, facilityId]);
 
     const handleImportFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -725,18 +729,22 @@ export function InventoryPage() {
                                                 <span
                                                     className={cn(
                                                         'px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider',
-                                                        (med.stock_quantity || 0) === 0
-                                                            ? 'bg-red-50 text-red-600 border-red-100'
-                                                            : (med.stock_quantity || 0) <= 20
-                                                                ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                                                : 'bg-teal-50 text-teal-600 border-teal-100',
+                                                        med.expiry_date && new Date(med.expiry_date) < new Date()
+                                                            ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                                            : (med.stock_quantity || 0) === 0
+                                                                ? 'bg-red-50 text-red-600 border-red-100'
+                                                                : (med.stock_quantity || 0) <= 20
+                                                                    ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                                                    : 'bg-teal-50 text-teal-600 border-teal-100',
                                                     )}
                                                 >
-                                                    {(med.stock_quantity || 0) === 0
-                                                        ? 'Out of Stock'
-                                                        : (med.stock_quantity || 0) <= 20
-                                                            ? 'Low Stock'
-                                                            : 'In Stock'}
+                                                    {med.expiry_date && new Date(med.expiry_date) < new Date()
+                                                        ? 'Expired'
+                                                        : (med.stock_quantity || 0) === 0
+                                                            ? 'Out of Stock'
+                                                            : (med.stock_quantity || 0) <= 20
+                                                                ? 'Low Stock'
+                                                                : 'In Stock'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
@@ -828,11 +836,15 @@ export function InventoryPage() {
                         onClose={() => setSelectedMedForTransfer(null)}
                         medicine={selectedMedForTransfer}
                         onSuccess={() => {
-                            fetchMedicines();
+                            if (facilityId) {
+                                fetchMedicines();
+                                fetchStats();
+                            }
                             setSelectedMedForTransfer(null);
                         }}
                     />
                 )}
+
 
                 { }
                 <MedicineImportPreviewModal

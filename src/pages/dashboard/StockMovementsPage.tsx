@@ -11,6 +11,7 @@ import {
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 
 const MOVEMENT_LABELS: Record<string, string> = {
     dispense: 'Dispense',
@@ -127,9 +128,13 @@ export function StockMovementsPage() {
                 )}
 
                 {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="w-10 h-10 border-2 border-healthcare-primary border-t-transparent rounded-full animate-spin" />
-                    </div>
+                    <SkeletonTable
+                        rows={10}
+                        columns={6}
+                        headers={['Date', 'Type', 'Reference', 'User', 'Description', 'Qty Δ']}
+                        columnAligns={['left', 'left', 'left', 'left', 'left', 'right']}
+                        className="border-none shadow-none"
+                    />
                 ) : (
                     <>
                         <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">

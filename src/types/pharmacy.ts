@@ -90,6 +90,8 @@ export interface Facility {
     controlled_drug_rules_enabled?: boolean;
     min_stock_threshold_percentage?: number;
     expiry_alert_days?: number;
+    expiry_critical_days?: number;
+    expiry_warning_days?: number;
     default_markup_percent?: number;
     status?: string | 'Active' | 'Inactive';
     is_active?: boolean;
@@ -135,6 +137,8 @@ export interface CreateFacilityDto {
     controlled_drug_rules_enabled?: boolean;
     min_stock_threshold_percentage?: number;
     expiry_alert_days?: number;
+    expiry_critical_days?: number;
+    expiry_warning_days?: number;
     status?: string;
     is_active?: boolean;
 }

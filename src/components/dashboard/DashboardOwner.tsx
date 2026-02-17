@@ -14,6 +14,7 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import type { DashboardSummary, ReorderSuggestion, Alert } from '../../types/pharmacy';
 import { ConsumptionTrendChart, ExpiryRiskChart, InventoryStatusChart } from './DashboardCharts';
 import { ChartSkeleton, StatCardSkeleton } from './DashboardSkeletons';
+import { SkeletonTable } from '../ui/SkeletonTable';
 import { cn } from '../../lib/utils';
 import { format, subDays, startOfToday, endOfToday } from 'date-fns';
 
@@ -315,6 +316,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         meta: `${i.reorder_point} needed`,
                         action: 'order',
                     }))}
+                    loading={loading}
                     onAction={(id) =>
                         navigate({ to: '/app/procurement', search: { medicineId: id } })
                     }
@@ -331,6 +333,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         meta: formatRelativeDate(a.created_at),
                         action: 'view',
                     }))}
+                    loading={loading}
                     onAction={(id) =>
                         navigate({ to: '/app/inventory', search: { medicineId: id } })
                     }
@@ -431,11 +434,19 @@ interface ActionTableProps {
         meta: string;
         action: 'order' | 'view';
     }>;
+    loading?: boolean;
     onAction: (id: number) => void;
     onView: () => void;
 }
 
-const ActionTable: React.FC<ActionTableProps> = ({ title, subtitle, data, onAction, onView }) => {
+const ActionTable: React.FC<ActionTableProps> = ({
+    title,
+    subtitle,
+    data,
+    loading,
+    onAction,
+    onView,
+}) => {
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
@@ -456,7 +467,16 @@ const ActionTable: React.FC<ActionTableProps> = ({ title, subtitle, data, onActi
             </div>
 
             <div className="flex-1">
-                {data.length > 0 ? (
+                {loading ? (
+                    <div className="p-0">
+                        <SkeletonTable
+                            rows={5}
+                            columns={2}
+                            headers={null}
+                            className="border-none shadow-none"
+                        />
+                    </div>
+                ) : data.length > 0 ? (
                     <div className="divide-y divide-slate-50 dark:divide-slate-800">
                         {data.map((item) => (
                             <div

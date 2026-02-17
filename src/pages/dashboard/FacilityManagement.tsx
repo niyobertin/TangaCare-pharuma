@@ -23,6 +23,7 @@ import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Facility, CreateFacilityDto } from '../../types/pharmacy';
 import { StatsSkeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'react-hot-toast';
@@ -529,236 +530,254 @@ export function FacilityManagementPage() {
                 { }
                 <div className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
                     <div className="min-w-[1000px]">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-50 dark:bg-slate-800/50">
-                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center w-16">
-                                        ID
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
-                                        Facility Details
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
-                                        Contact Info
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-400 tracking-tight">
-                                        Admin
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center">
-                                        Type
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-right">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan={7} className="px-6 py-8 text-center">
-                                            <div className="flex justify-center py-8">
-                                                <div className="w-8 h-8 border-4 border-healthcare-primary/20 border-t-healthcare-primary rounded-full animate-spin" />
-                                            </div>
-                                        </td>
+                        {loading ? (
+                            <SkeletonTable
+                                rows={10}
+                                columns={7}
+                                headers={[
+                                    'ID',
+                                    'Facility Details',
+                                    'Contact Info',
+                                    'Admin',
+                                    'Type',
+                                    'Status',
+                                ]}
+                                columnAligns={[
+                                    'center',
+                                    'left',
+                                    'left',
+                                    'left',
+                                    'center',
+                                    'left',
+                                    'right',
+                                ]}
+                                actions
+                                className="border-none shadow-none"
+                            />
+                        ) : (
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 dark:bg-slate-800/50">
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center w-16">
+                                            ID
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
+                                            Facility Details
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
+                                            Contact Info
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] lg:text-xs font-bold text-slate-400 tracking-tight">
+                                            Admin
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center">
+                                            Type
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
+                                            Status
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-right">
+                                            Actions
+                                        </th>
                                     </tr>
-                                ) : safeFacilities.length > 0 ? (
-                                    safeFacilities.map((f) => {
-                                        const type = f.type?.toLowerCase() || 'pharmacy';
-                                        const isActive =
-                                            f.status === 'Active' || (f as any).is_active === true;
-                                        return (
-                                            <tr
-                                                key={f.id}
-                                                className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
-                                            >
-                                                <td className="px-6 py-4 text-center">
-                                                    <button
-                                                        onClick={() =>
-                                                            navigate({
-                                                                to: '/app/facility/$facilityId/settings',
-                                                                params: {
-                                                                    facilityId: String(f.id),
-                                                                },
-                                                            })
-                                                        }
-                                                        className="text-xs lg:text-sm font-bold text-healthcare-primary hover:underline"
-                                                    >
-                                                        #{f.id}
-                                                    </button>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-4">
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    {safeFacilities.length > 0 ? (
+                                        safeFacilities.map((f) => {
+                                            const type = f.type?.toLowerCase() || 'pharmacy';
+                                            const isActive =
+                                                f.status === 'Active' || (f as any).is_active === true;
+                                            return (
+                                                <tr
+                                                    key={f.id}
+                                                    className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                                >
+                                                    <td className="px-6 py-4 text-center">
+                                                        <button
+                                                            onClick={() =>
+                                                                navigate({
+                                                                    to: '/app/facility/$facilityId/settings',
+                                                                    params: {
+                                                                        facilityId: String(f.id),
+                                                                    },
+                                                                })
+                                                            }
+                                                            className="text-xs lg:text-sm font-bold text-healthcare-primary hover:underline"
+                                                        >
+                                                            #{f.id}
+                                                        </button>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <div
+                                                                className={cn(
+                                                                    'w-10 h-10 rounded-xl flex items-center justify-center text-white',
+                                                                    type.includes('hospital')
+                                                                        ? 'bg-teal-500'
+                                                                        : type.includes('clinic')
+                                                                            ? 'bg-indigo-500'
+                                                                            : 'bg-amber-500',
+                                                                )}
+                                                            >
+                                                                {type.includes('hospital') ? (
+                                                                    <Hotel size={20} />
+                                                                ) : type.includes('clinic') ? (
+                                                                    <Stethoscope size={20} />
+                                                                ) : (
+                                                                    <Store size={20} />
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-black text-healthcare-dark text-sm lg:text-base leading-tight">
+                                                                    {f.name}
+                                                                </p>
+                                                                <div className="flex items-center gap-1 mt-1 text-slate-400">
+                                                                    <MapPin size={10} />
+                                                                    <p className="text-[10px] lg:text-xs font-bold uppercase whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px] lg:max-w-[200px]">
+                                                                        {f.address}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 whitespace-nowrap">
+                                                            <p className="text-xs lg:text-sm font-bold text-healthcare-dark">
+                                                                {f.email}
+                                                            </p>
+                                                            <span className="hidden lg:inline text-slate-300">
+                                                                •
+                                                            </span>
+                                                            <p className="text-[10px] lg:text-xs font-bold text-slate-400">
+                                                                {f.phone}
+                                                            </p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400">
+                                                                {f.facility_admin?.first_name
+                                                                    ? f.facility_admin.first_name[0]
+                                                                    : (f.admin_name || 'No')[0]}
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs lg:text-sm font-bold text-healthcare-dark">
+                                                                    {f.facility_admin
+                                                                        ? `${f.facility_admin.first_name || ''} ${f.facility_admin.last_name || ''}`.trim() ||
+                                                                        'Admin'
+                                                                        : f.admin_name || 'No Admin'}
+                                                                </span>
+                                                                {f.facility_admin && (
+                                                                    <span className="text-[10px] text-slate-400">
+                                                                        {f.facility_admin.email}
+                                                                    </span>
+                                                                )}
+                                                                {!f.facility_admin && !f.admin_name && (
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            navigate({
+                                                                                to: '/app/facility/$facilityId/settings',
+                                                                                params: {
+                                                                                    facilityId: String(
+                                                                                        f.id,
+                                                                                    ),
+                                                                                },
+                                                                            })
+                                                                        }
+                                                                        className="text-[10px] text-healthcare-primary hover:underline text-left mt-0.5"
+                                                                    >
+                                                                        Assign
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span className="text-[10px] font-black bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-slate-500 uppercase tracking-widest">
+                                                            {(type || '').replace('_', ' ')}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
                                                         <div
                                                             className={cn(
-                                                                'w-10 h-10 rounded-xl flex items-center justify-center text-white',
-                                                                type.includes('hospital')
-                                                                    ? 'bg-teal-500'
-                                                                    : type.includes('clinic')
-                                                                        ? 'bg-indigo-500'
-                                                                        : 'bg-amber-500',
+                                                                'w-fit px-3 py-1 rounded-lg text-[10px] lg:text-xs font-semibold flex items-center gap-1.5',
+                                                                isActive
+                                                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                                    : 'bg-red-50 text-red-600 border border-red-100',
                                                             )}
                                                         >
-                                                            {type.includes('hospital') ? (
-                                                                <Hotel size={20} />
-                                                            ) : type.includes('clinic') ? (
-                                                                <Stethoscope size={20} />
+                                                            {isActive ? (
+                                                                <CheckCircle2 size={12} />
                                                             ) : (
-                                                                <Store size={20} />
+                                                                <XCircle size={12} />
                                                             )}
+                                                            {isActive ? 'Active' : 'Inactive'}
                                                         </div>
-                                                        <div>
-                                                            <p className="font-black text-healthcare-dark text-sm lg:text-base leading-tight">
-                                                                {f.name}
-                                                            </p>
-                                                            <div className="flex items-center gap-1 mt-1 text-slate-400">
-                                                                <MapPin size={10} />
-                                                                <p className="text-[10px] lg:text-xs font-bold uppercase whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px] lg:max-w-[200px]">
-                                                                    {f.address}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex flex-col lg:flex-row lg:items-center gap-1 lg:gap-2 whitespace-nowrap">
-                                                        <p className="text-xs lg:text-sm font-bold text-healthcare-dark">
-                                                            {f.email}
-                                                        </p>
-                                                        <span className="hidden lg:inline text-slate-300">
-                                                            •
-                                                        </span>
-                                                        <p className="text-[10px] lg:text-xs font-bold text-slate-400">
-                                                            {f.phone}
-                                                        </p>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-400">
-                                                            {f.facility_admin?.first_name
-                                                                ? f.facility_admin.first_name[0]
-                                                                : (f.admin_name || 'No')[0]}
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-xs lg:text-sm font-bold text-healthcare-dark">
-                                                                {f.facility_admin
-                                                                    ? `${f.facility_admin.first_name || ''} ${f.facility_admin.last_name || ''}`.trim() ||
-                                                                    'Admin'
-                                                                    : f.admin_name || 'No Admin'}
-                                                            </span>
-                                                            {f.facility_admin && (
-                                                                <span className="text-[10px] text-slate-400">
-                                                                    {f.facility_admin.email}
-                                                                </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        {user?.role?.toString()?.toLowerCase() !==
+                                                            'auditor' && (
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            navigate({
+                                                                                to: '/app/facility/$facilityId/settings',
+                                                                                params: {
+                                                                                    facilityId: String(
+                                                                                        f.id,
+                                                                                    ),
+                                                                                },
+                                                                            })
+                                                                        }
+                                                                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors tooltip"
+                                                                        title="Assign Admin"
+                                                                    >
+                                                                        <UserPlus size={16} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            navigate({
+                                                                                to: '/app/facility/$facilityId/settings',
+                                                                                params: {
+                                                                                    facilityId: String(
+                                                                                        f.id,
+                                                                                    ),
+                                                                                },
+                                                                            })
+                                                                        }
+                                                                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors tooltip"
+                                                                        title="Edit Facility"
+                                                                    >
+                                                                        <Edit2 size={16} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDelete(f.id)}
+                                                                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-500 transition-colors tooltip"
+                                                                        title="Delete Facility"
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </div>
                                                             )}
-                                                            {!f.facility_admin && !f.admin_name && (
-                                                                <button
-                                                                    onClick={() =>
-                                                                        navigate({
-                                                                            to: '/app/facility/$facilityId/settings',
-                                                                            params: {
-                                                                                facilityId: String(
-                                                                                    f.id,
-                                                                                ),
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                    className="text-[10px] text-healthcare-primary hover:underline text-left mt-0.5"
-                                                                >
-                                                                    Assign
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className="text-[10px] font-black bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-slate-500 uppercase tracking-widest">
-                                                        {(type || '').replace('_', ' ')}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={7} className="px-6 py-10 text-center">
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <AlertCircle size={32} className="text-slate-300" />
+                                                    <span className="text-slate-500 font-bold italic">
+                                                        No facilities found
                                                     </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div
-                                                        className={cn(
-                                                            'w-fit px-3 py-1 rounded-lg text-[10px] lg:text-xs font-semibold flex items-center gap-1.5',
-                                                            isActive
-                                                                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                                : 'bg-red-50 text-red-600 border border-red-100',
-                                                        )}
-                                                    >
-                                                        {isActive ? (
-                                                            <CheckCircle2 size={12} />
-                                                        ) : (
-                                                            <XCircle size={12} />
-                                                        )}
-                                                        {isActive ? 'Active' : 'Inactive'}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    {user?.role?.toString()?.toLowerCase() !==
-                                                        'auditor' && (
-                                                            <div className="flex items-center justify-end gap-2">
-                                                                <button
-                                                                    onClick={() =>
-                                                                        navigate({
-                                                                            to: '/app/facility/$facilityId/settings',
-                                                                            params: {
-                                                                                facilityId: String(
-                                                                                    f.id,
-                                                                                ),
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors tooltip"
-                                                                    title="Assign Admin"
-                                                                >
-                                                                    <UserPlus size={16} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() =>
-                                                                        navigate({
-                                                                            to: '/app/facility/$facilityId/settings',
-                                                                            params: {
-                                                                                facilityId: String(
-                                                                                    f.id,
-                                                                                ),
-                                                                            },
-                                                                        })
-                                                                    }
-                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors tooltip"
-                                                                    title="Edit Facility"
-                                                                >
-                                                                    <Edit2 size={16} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleDelete(f.id)}
-                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-500 transition-colors tooltip"
-                                                                    title="Delete Facility"
-                                                                >
-                                                                    <Trash2 size={16} />
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                ) : (
-                                    <tr>
-                                        <td colSpan={7} className="px-6 py-10 text-center">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <AlertCircle size={32} className="text-slate-300" />
-                                                <span className="text-slate-500 font-bold italic">
-                                                    No facilities found
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 </div>
 

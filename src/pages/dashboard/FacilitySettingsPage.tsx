@@ -20,6 +20,7 @@ import type { User } from '../../types/auth';
 import { toast } from 'react-hot-toast';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -45,6 +46,8 @@ export function FacilitySettingsPage() {
         controlled_drug_rules_enabled: true,
         min_stock_threshold_percentage: 20,
         expiry_alert_days: 90,
+        expiry_critical_days: 30,
+        expiry_warning_days: 60,
     });
 
     const [adminQuery, setAdminQuery] = useState('');
@@ -86,6 +89,8 @@ export function FacilitySettingsPage() {
                 controlled_drug_rules_enabled: data.controlled_drug_rules_enabled ?? true,
                 min_stock_threshold_percentage: data.min_stock_threshold_percentage ?? 20,
                 expiry_alert_days: data.expiry_alert_days ?? 90,
+                expiry_critical_days: data.expiry_critical_days ?? 30,
+                expiry_warning_days: data.expiry_warning_days ?? 60,
             });
         } catch (error) {
             console.error(error);
@@ -179,8 +184,39 @@ export function FacilitySettingsPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="w-8 h-8 border-4 border-healthcare-primary/20 border-t-healthcare-primary rounded-full animate-spin" />
+            <div className="p-6 max-w-5xl xl:max-w-6xl mx-auto space-y-6">
+                <div className="flex items-center gap-4 mb-8">
+                    <Skeleton className="h-10 w-10 rounded-xl" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-48" />
+                        <Skeleton className="h-3 w-32" />
+                    </div>
+                </div>
+
+                <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 mb-6">
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-24" />
+                </div>
+
+                <div className="max-w-4xl">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 space-y-8">
+                        <div className="space-y-6">
+                            <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
+                                <Skeleton className="h-6 w-32" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {Array.from({ length: 6 }).map((_, i) => (
+                                    <div key={i} className="space-y-2">
+                                        <Skeleton className="h-3 w-20" />
+                                        <Skeleton className="h-10 w-full rounded-xl" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -529,6 +565,38 @@ export function FacilitySettingsPage() {
                                                     setFormData((p) => ({
                                                         ...p,
                                                         expiry_alert_days: Number(e.target.value),
+                                                    }))
+                                                }
+                                                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold text-healthcare-dark"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase text-slate-400">
+                                                Expiry Warning (Days)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={formData.expiry_warning_days}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({
+                                                        ...p,
+                                                        expiry_warning_days: Number(e.target.value),
+                                                    }))
+                                                }
+                                                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold text-healthcare-dark"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase text-slate-400">
+                                                Expiry Critical (Days)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={formData.expiry_critical_days}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({
+                                                        ...p,
+                                                        expiry_critical_days: Number(e.target.value),
                                                     }))
                                                 }
                                                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold text-healthcare-dark"

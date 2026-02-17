@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { DashboardOwner } from '../../components/dashboard/DashboardOwner';
 
 export function DashboardPage() {
-    const { user, facilityId } = useAuth();
+    const { user, facilityId, organizationId } = useAuth();
 
     const ownerRoles = [
         'OWNER',
@@ -39,7 +39,21 @@ export function DashboardPage() {
             ]}
         >
             {isOwnerView ? (
-                <DashboardOwner facilityId={facilityId!} />
+                facilityId && organizationId ? (
+                    <DashboardOwner facilityId={facilityId} />
+                ) : (
+                    <div className="p-10 flex flex-col items-center justify-center min-h-[60vh] text-center">
+                        <div className="w-20 h-20 bg-healthcare-primary/10 rounded-full flex items-center justify-center mb-6">
+                            <span className="text-4xl text-healthcare-primary font-black">!</span>
+                        </div>
+                        <h2 className="text-2xl font-black text-healthcare-dark dark:text-white uppercase tracking-tight">
+                            No Facility Selected
+                        </h2>
+                        <p className="text-slate-500 max-w-sm mt-2 font-bold uppercase text-xs tracking-widest">
+                            Please select or create a facility to view dashboard analytics.
+                        </p>
+                    </div>
+                )
             ) : (
                 <div className="p-10 flex flex-col items-center justify-center min-h-[60vh] text-center">
                     <div className="w-20 h-20 bg-healthcare-primary/10 rounded-full flex items-center justify-center mb-6">
