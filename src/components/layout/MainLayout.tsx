@@ -20,10 +20,10 @@ import {
     Building2,
     ChevronDown,
     FileText,
-    Activity,
     AlertTriangle,
     ArrowRightLeft,
     ArrowLeft,
+    ShieldCheck,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -192,6 +192,19 @@ const NAV_ITEMS: NavItem[] = [
         ],
     },
     {
+        to: '/app/insurance',
+        icon: ShieldCheck,
+        label: 'Insurance',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'OWNER',
+            'ADMIN',
+            'PHARMACIST',
+            'AUDITOR',
+        ],
+    },
+    {
         to: '/app/analytics',
         icon: FileText,
         label: 'Reports',
@@ -209,7 +222,6 @@ const NAV_ITEMS: NavItem[] = [
         allowedPermissions: ['reports:read'],
         children: [
             { to: '/app/analytics/sales', label: 'Sales Report', icon: TrendingUp },
-            { to: '/app/analytics/profit', label: 'Profit Report', icon: Activity },
             { to: '/app/analytics/inventory', label: 'Stock Report', icon: ShoppingCart },
             { to: '/app/analytics/low-stock', label: 'Low Stock & Reorder', icon: Package },
             { to: '/app/analytics/recall', label: 'Expiry Report', icon: AlertTriangle },
@@ -733,7 +745,7 @@ export function MainLayout() {
                                 />
                             </>
                         ) : (
-                            <Outlet />
+                            <Outlet key={facilityId ?? 'all'} />
                         )}
                     </div>
                 </div>

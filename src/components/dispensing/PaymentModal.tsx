@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { X, Plus, CreditCard, Banknote, Smartphone, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Plus, CreditCard, Banknote, Smartphone, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import type { SalePaymentMethod } from '../../types/pharmacy';
+import type { SalePaymentMethod, InsuranceProvider } from '../../types/pharmacy';
+import { pharmacyService } from '../../services/pharmacy.service';
 
 interface Payment {
     id: string;
@@ -12,22 +13,72 @@ interface Payment {
 
 interface PaymentModalProps {
     totalAmount: number;
+    hasControlledDrugs?: boolean;
     onClose: () => void;
-    onConfirm: (payments: { method: SalePaymentMethod; amount: number; reference?: string }[]) => void;
+    onConfirm: (
+        payments: { method: SalePaymentMethod; amount: number; reference?: string }[],
+        patientIdType?: string,
+        patientIdNumber?: string,
+        insuranceProviderId?: number,
+        patientInsuranceNumber?: string
+    ) => void;
     isProcessing?: boolean;
 }
 
 const PAYMENT_METHODS: { id: SalePaymentMethod; label: string; icon: any }[] = [
     { id: 'cash', label: 'Cash', icon: Banknote },
     { id: 'mobile_money', label: 'Mobile Money', icon: Smartphone },
+    { id: 'insurance', label: 'Insurance', icon: ShieldCheck },
     { id: 'card', label: 'Card', icon: CreditCard },
     { id: 'bank', label: 'Bank Transfer', icon: Banknote },
 ];
 
-export function PaymentModal({ totalAmount, onClose, onConfirm, isProcessing }: PaymentModalProps) {
+export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfirm, isProcessing }: PaymentModalProps) {
     const [payments, setPayments] = useState<Payment[]>([
         { id: '1', method: 'cash', amount: totalAmount },
     ]);
+    const [patientIdType, setPatientIdType] = useState('National ID');
+    const [patientIdNumber, setPatientIdNumber] = useState('');
+    const [insuranceProviders, setInsuranceProviders] = useState<InsuranceProvider[]>([]);
+    const [selectedInsuranceProviderId, setSelectedInsuranceProviderId] = useState<number | undefined>();
+    const [patientInsuranceNumber, setPatientInsuranceNumber] = useState('');
+
+    useEffect(() => {
+        const fetchProviders = async () => {
+            try {
+                const providers = await pharmacyService.getInsuranceProviders();
+                setInsuranceProviders(providers);
+            } catch (error) {
+                console.error('Failed to fetch insurance providers:', error);
+            }
+        };
+        fetchProviders();
+    }, []);
+
+    // Handle insurance calculation logic
+    useEffect(() => {
+        const insurancePayment = payments.find(p => p.method === 'insurance');
+        if (insurancePayment && selectedInsuranceProviderId) {
+            const provider = insuranceProviders.find(p => p.id === selectedInsuranceProviderId);
+            if (provider) {
+                const coveragePercent = Number(provider.coverage_percentage);
+                let CalculatedInsuranceAmount = (totalAmount * coveragePercent) / 100;
+
+                if (provider.max_coverage_limit && CalculatedInsuranceAmount > Number(provider.max_coverage_limit)) {
+                    CalculatedInsuranceAmount = Number(provider.max_coverage_limit);
+                }
+
+                const roundedInsurance = Math.round(CalculatedInsuranceAmount);
+                const copayAmount = totalAmount - roundedInsurance;
+
+                // Update payments: Ensure we have insurance and co-pay (cash)
+                setPayments([
+                    { id: insurancePayment.id, method: 'insurance', amount: roundedInsurance },
+                    { id: 'copay-' + Math.random().toString(36).substr(2, 4), method: 'cash', amount: copayAmount }
+                ]);
+            }
+        }
+    }, [selectedInsuranceProviderId, totalAmount, insuranceProviders.length]);
 
     const totalPaid = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
     const balance = totalAmount - totalPaid;
@@ -57,7 +108,24 @@ export function PaymentModal({ totalAmount, onClose, onConfirm, isProcessing }: 
             toast.error('Payment amount must match total');
             return;
         }
-        onConfirm(payments.map(({ method, amount, reference }) => ({ method, amount, reference })));
+        if (hasControlledDrugs && !patientIdNumber) {
+            toast.error('Patient ID Number is required for controlled drugs');
+            return;
+        }
+
+        const hasInsurance = payments.some(p => p.method === 'insurance');
+        if (hasInsurance && !selectedInsuranceProviderId) {
+            toast.error('Insurance provider is required');
+            return;
+        }
+
+        onConfirm(
+            payments.map(({ method, amount, reference }) => ({ method, amount, reference })),
+            hasControlledDrugs ? patientIdType : undefined,
+            hasControlledDrugs ? patientIdNumber : undefined,
+            hasInsurance ? selectedInsuranceProviderId : undefined,
+            hasInsurance ? patientInsuranceNumber : undefined
+        );
     };
 
     return (
@@ -123,8 +191,9 @@ export function PaymentModal({ totalAmount, onClose, onConfirm, isProcessing }: 
                                         <input
                                             type="number"
                                             value={payment.amount}
+                                            disabled={payment.method === 'insurance'}
                                             onChange={(e) => updatePayment(payment.id, 'amount', Number(e.target.value))}
-                                            className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none font-bold text-right text-healthcare-dark dark:text-white"
+                                            className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none font-bold text-right text-healthcare-dark dark:text-white disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-slate-900"
                                         />
                                     </div>
                                 </div>
@@ -141,6 +210,40 @@ export function PaymentModal({ totalAmount, onClose, onConfirm, isProcessing }: 
                                             onChange={(e) => updatePayment(payment.id, 'reference', e.target.value)}
                                             className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none text-healthcare-dark dark:text-white"
                                         />
+                                    </div>
+                                )}
+
+                                {payment.method === 'insurance' && (
+                                    <div className="space-y-3 mt-2 pt-2 border-t border-slate-100 dark:border-slate-700 border-dashed">
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                                Insurance Provider
+                                            </label>
+                                            <select
+                                                value={selectedInsuranceProviderId}
+                                                onChange={(e) => setSelectedInsuranceProviderId(Number(e.target.value))}
+                                                className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none font-bold text-healthcare-dark dark:text-white"
+                                            >
+                                                <option value="">Select Provider...</option>
+                                                {insuranceProviders.map((provider) => (
+                                                    <option key={provider.id} value={provider.id}>
+                                                        {provider.name} ({provider.type})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                                Insurance / Policy Number
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="Enter insurance number..."
+                                                value={patientInsuranceNumber}
+                                                onChange={(e) => setPatientInsuranceNumber(e.target.value)}
+                                                className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none text-healthcare-dark dark:text-white"
+                                            />
+                                        </div>
                                     </div>
                                 )}
 
@@ -164,6 +267,46 @@ export function PaymentModal({ totalAmount, onClose, onConfirm, isProcessing }: 
                             <Plus size={16} />
                             Add Payment Method
                         </button>
+                    )}
+
+                    {hasControlledDrugs && (
+                        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                            <div className="flex items-center gap-2 mb-1">
+                                <AlertCircle size={14} className="text-red-500" />
+                                <span className="text-[10px] font-black text-red-500 uppercase tracking-wider">
+                                    Controlled Substance - Passenger ID Required
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                        ID Type
+                                    </label>
+                                    <select
+                                        value={patientIdType}
+                                        onChange={(e) => setPatientIdType(e.target.value)}
+                                        className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none font-bold text-healthcare-dark dark:text-white"
+                                    >
+                                        <option value="National ID">National ID</option>
+                                        <option value="Passport">Passport</option>
+                                        <option value="Health Card">Health Card</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                        ID Number
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter ID number..."
+                                        value={patientIdNumber}
+                                        onChange={(e) => setPatientIdNumber(e.target.value)}
+                                        className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none font-bold text-healthcare-dark dark:text-white"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
 

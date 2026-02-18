@@ -183,7 +183,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             isCurrency
                             icon={<TrendingUp size={16} />}
                             color="bg-blue-500"
-                            onClick={() => navigate({ to: '/app/analytics/profit' })}
+                            onClick={() => navigate({ to: '/app/analytics/sales' })}
                         />
                         <KPICard
                             title="Low Stock"

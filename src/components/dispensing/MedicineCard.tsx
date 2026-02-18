@@ -41,7 +41,19 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onAddToCar
                         <h3 className="font-bold text-slate-800 dark:text-white line-clamp-1" title={medicine.name}>
                             {medicine.name}
                         </h3>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mt-0.5">
+                        <div className="flex gap-1 mt-0.5">
+                            {medicine.is_controlled_drug && (
+                                <span className="px-1.5 py-0.5 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded text-[9px] font-black uppercase ring-1 ring-red-200 dark:ring-red-900/50">
+                                    Controlled
+                                </span>
+                            )}
+                            {medicine.drug_schedule && medicine.drug_schedule !== 'unclassified' && (
+                                <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded text-[9px] font-black uppercase ring-1 ring-blue-200 dark:ring-blue-900/50">
+                                    {medicine.drug_schedule.replace(/_/g, ' ')}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mt-1">
                             {medicine.strength} • {medicine.dosage_form}
                         </p>
                         <div className="mt-1 flex items-center gap-1.5">

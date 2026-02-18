@@ -52,6 +52,7 @@ export interface Medicine {
     category_id?: number;
     category?: MedicineCategory;
     is_controlled_drug: boolean;
+    drug_schedule?: 'unclassified' | 'prescription_only' | 'controlled_substance_sch_ii' | 'controlled_substance_sch_iii' | 'controlled_substance_sch_iv' | 'pharmacist_only';
     stock_quantity?: number;
     expiry_date?: string;
     created_at?: string;
@@ -297,7 +298,7 @@ export interface CreateMedicineDto {
 }
 
 export type SaleStatus = 'paid' | 'partially_paid' | 'unpaid' | 'voided';
-export type SalePaymentMethod = 'cash' | 'mobile_money' | 'bank' | 'card';
+export type SalePaymentMethod = 'cash' | 'mobile_money' | 'bank' | 'card' | 'insurance';
 
 export interface SalePayment {
     id: number;
@@ -355,6 +356,10 @@ export interface CreateSaleDto {
         amount: number;
         reference?: string;
     }>;
+    patient_id_type?: string;
+    patient_id_number?: string;
+    insurance_provider_id?: number;
+    patient_insurance_number?: string;
 }
 
 // Advanced Analytics Types
@@ -812,5 +817,36 @@ export interface StockVariance {
     approved_by?: User;
     approved_at?: string;
     counted_at?: string;
+    created_at: string;
+}
+
+export interface InsuranceProvider {
+    id: number;
+    name: string;
+    type: 'PUBLIC' | 'PRIVATE';
+    coverage_percentage: number;
+    max_coverage_limit?: number;
+    is_active: boolean;
+    created_at: string;
+}
+
+export type InsuranceClaimStatus = 'pending' | 'submitted' | 'approved' | 'partially_approved' | 'rejected' | 'paid';
+
+export interface InsuranceClaim {
+    id: number;
+    sale_id: number;
+    sale?: Sale;
+    provider_id: number;
+    provider?: InsuranceProvider;
+    patient_insurance_number?: string;
+    total_amount: number;
+    applied_coverage_percentage: number;
+    expected_amount: number;
+    copay_amount: number;
+    actual_received_amount: number;
+    status: InsuranceClaimStatus;
+    notes?: string;
+    submitted_at?: string;
+    processed_at?: string;
     created_at: string;
 }

@@ -37,6 +37,8 @@ import type {
     ReorderSuggestion,
     StorageLocation,
     CreateStorageLocationDto,
+    InsuranceProvider,
+    InsuranceClaim,
 } from '../types/pharmacy';
 
 const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
@@ -1162,6 +1164,40 @@ export const pharmacyService = {
         const response = await api.post<any>('/pharmacy/stock/import', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
+        return (response.data as any).data ?? response.data;
+    },
+
+    // Insurance Management Methods
+    async getInsuranceProviders(): Promise<InsuranceProvider[]> {
+        const response = await api.get<any>('/pharmacy/insurance/providers');
+        const data = (response.data as any).data ?? response.data;
+        return Array.isArray(data) ? data : [];
+    },
+
+    async createInsuranceProvider(data: Partial<InsuranceProvider>): Promise<InsuranceProvider> {
+        const response = await api.post<any>('/pharmacy/insurance/providers', data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async updateInsuranceProvider(id: number, data: Partial<InsuranceProvider>): Promise<InsuranceProvider> {
+        const response = await api.put<any>(`/pharmacy/insurance/providers/${id}`, data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getInsuranceClaims(params?: {
+        status?: string;
+        provider_id?: number;
+        facility_id?: number;
+        start_date?: string;
+        end_date?: string;
+    }): Promise<InsuranceClaim[]> {
+        const response = await api.get<any>('/pharmacy/insurance/claims', { params });
+        const data = (response.data as any).data ?? response.data;
+        return Array.isArray(data) ? data : [];
+    },
+
+    async updateInsuranceClaim(id: number, data: any): Promise<InsuranceClaim> {
+        const response = await api.put<any>(`/pharmacy/insurance/claims/${id}`, data);
         return (response.data as any).data ?? response.data;
     },
 };

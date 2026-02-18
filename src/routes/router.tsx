@@ -12,6 +12,7 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { InventoryPage } from '../pages/dashboard/InventoryPage';
 import { DispensingPage } from '../pages/dashboard/DispensingPage';
+import { InsurancePage } from '../pages/dashboard/InsurancePage';
 
 import { BatchStockPage } from '../pages/dashboard/BatchStockPage';
 import { AuditLogsPage } from '../pages/dashboard/AuditLogsPage';
@@ -315,6 +316,17 @@ const patientsRoute = createRoute({
         </RequirePermission>
     ),
 });
+
+const insuranceRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'insurance',
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
+            <InsurancePage />
+        </RequirePermission>
+    ),
+});
+
 const analyticsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'analytics',
@@ -382,7 +394,7 @@ const analyticsRecallRoute = createRoute({
 const analyticsProfitRoute = createRoute({
     getParentRoute: () => analyticsRoute,
     path: 'profit',
-    component: () => <ReportsPage defaultTab="profit" />,
+    component: () => <Navigate to="/app/analytics/sales" />,
 });
 
 const analyticsLowStockRoute = createRoute({
@@ -497,6 +509,7 @@ const appRouteTree = appLayoutRoute.addChildren([
     indexRoute,
     inventoryRoute,
     dispensingRoute,
+    insuranceRoute,
     organizationsRoute,
     facilitiesRoute,
     usersRoute,

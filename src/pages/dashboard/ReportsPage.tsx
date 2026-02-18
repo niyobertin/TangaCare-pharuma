@@ -35,9 +35,10 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
     const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const { user, facilityId } = useAuth();
     const effectiveFacilityId = facilityId ?? user?.facility_id;
+    const resolvedTab = defaultTab === 'profit' ? 'sales' : defaultTab;
 
     const reportTitle = useMemo(() => {
-        switch (defaultTab) {
+        switch (resolvedTab) {
             case 'sales':
                 return 'Sales Report';
             case 'stock':
@@ -48,8 +49,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             case 'expiry':
             case 'recall':
                 return 'Expiry Report';
-            case 'profit':
-                return 'Profit Report';
             case 'stock-movement':
             case 'movement':
                 return 'Item Movement Report';
@@ -69,12 +68,12 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             default:
                 return 'Reports';
         }
-    }, [defaultTab]);
+    }, [resolvedTab]);
 
     const [days, setDays] = useState(30);
 
     const handleExport = async (format: 'excel' | 'pdf') => {
-        let type = defaultTab;
+        let type = resolvedTab;
         // Map tab names to backend report types
         if (type === 'reorder') type = 'low-stock';
         if (type === 'recall' || type === 'expiry') type = 'expiry';
@@ -84,7 +83,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             facilityId: effectiveFacilityId,
         };
 
-        if (['sales', 'profit', 'tax', 'performance', 'staff', 'purchase'].includes(type)) {
+        if (['sales', 'tax', 'performance', 'staff', 'purchase'].includes(type)) {
             params.start_date = startDate;
             params.end_date = endDate;
         }
@@ -128,7 +127,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         </p>
                     </div>
                     <div className="flex gap-4 flex-wrap items-center">
-                        {(defaultTab === 'expiry' || defaultTab === 'recall') && (
+                        {(resolvedTab === 'expiry' || resolvedTab === 'recall') && (
                             <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
                                 <span className="text-[10px] font-black text-slate-400 uppercase">
                                     Days:
@@ -144,8 +143,8 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                                 </select>
                             </div>
                         )}
-                        {['sales', 'profit', 'tax', 'performance', 'staff', 'purchase'].includes(
-                            defaultTab,
+                        {['sales', 'tax', 'performance', 'staff', 'purchase'].includes(
+                            resolvedTab,
                         ) && (
                                 <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
                                     <Calendar size={14} className="text-slate-400" />
@@ -183,30 +182,23 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
 
                 <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 min-h-[400px]">
                     {defaultTab === 'kpis' && <DashboardOwner facilityId={effectiveFacilityId!} />}
-                    {defaultTab === 'sales' && (
+                    {resolvedTab === 'sales' && (
                         <SalesReports
                             facilityId={effectiveFacilityId}
                             startDate={startDate}
                             endDate={endDate}
                         />
                     )}
-                    {defaultTab === 'stock' && <StockReports facilityId={effectiveFacilityId} />}
-                    {(defaultTab === 'low-stock' || defaultTab === 'reorder') && (
+                    {resolvedTab === 'stock' && <StockReports facilityId={effectiveFacilityId} />}
+                    {(resolvedTab === 'low-stock' || resolvedTab === 'reorder') && (
                         <div className="w-full">
                             <ReorderSuggestions />
                         </div>
                     )}
-                    {(defaultTab === 'expiry' || defaultTab === 'recall') && (
+                    {(resolvedTab === 'expiry' || resolvedTab === 'recall') && (
                         <ExpiryReport facilityId={effectiveFacilityId} />
                     )}
-                    {defaultTab === 'profit' && (
-                        <ProfitReportView
-                            facilityId={effectiveFacilityId!}
-                            startDate={startDate}
-                            endDate={endDate}
-                        />
-                    )}
-                    {(defaultTab === 'stock-movement' || defaultTab === 'movement') && (
+                    {(resolvedTab === 'stock-movement' || resolvedTab === 'movement') && (
                         <div className="space-y-6">
                             <h2 className="text-xl font-black text-healthcare-dark dark:text-white mb-6 uppercase">
                                 Dead Stock Analysis
@@ -214,24 +206,24 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                             <DeadStockReport />
                         </div>
                     )}
-                    {defaultTab === 'tax' && (
+                    {resolvedTab === 'tax' && (
                         <TaxReports
                             facilityId={effectiveFacilityId}
                             startDate={startDate}
                             endDate={endDate}
                         />
                     )}
-                    {(defaultTab === 'customer' || defaultTab === 'loyalty') && (
+                    {(resolvedTab === 'customer' || resolvedTab === 'loyalty') && (
                         <LoyaltyReports facilityId={effectiveFacilityId} />
                     )}
-                    {(defaultTab === 'purchase' || defaultTab === 'procurement') && (
+                    {(resolvedTab === 'purchase' || resolvedTab === 'procurement') && (
                         <PurchaseReport
                             facilityId={effectiveFacilityId}
                             startDate={startDate}
                             endDate={endDate}
                         />
                     )}
-                    {(defaultTab === 'staff' || defaultTab === 'performance') && (
+                    {(resolvedTab === 'staff' || resolvedTab === 'performance') && (
                         <PerformanceReports
                             facilityId={effectiveFacilityId}
                             startDate={startDate}
@@ -241,66 +233,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                 </div>
             </div>
         </ProtectedRoute>
-    );
-}
-
-// --- Simplified Report Sub-Components ---
-
-function ProfitReportView({
-    facilityId,
-    startDate,
-    endDate,
-}: {
-    facilityId: number;
-    startDate: string;
-    endDate: string;
-}) {
-    const [loading, setLoading] = useState(false);
-    const [data, setData] = useState<any>(null);
-
-    useEffect(() => {
-        const load = async () => {
-            setLoading(true);
-            try {
-                const res = await pharmacyService.getProfitReport(facilityId, {
-                    start_date: startDate,
-                    end_date: endDate,
-                });
-                setData(res);
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
-    }, [facilityId, startDate, endDate]);
-
-    if (loading)
-        return <SkeletonTable rows={5} columns={1} headers={null} className="border-none shadow-none" />;
-
-    return (
-        <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <SummaryCard
-                    title="Gross profit"
-                    value={`RWF ${Number(data?.profit || 0).toLocaleString()}`}
-                    trend="—"
-                    icon={<TrendingUp size={20} />}
-                />
-                <SummaryCard
-                    title="Profit Margin"
-                    value={`${(Number(data?.profit_margin || 0) * 100).toFixed(1)}%`}
-                    trend="—"
-                    icon={<Activity size={20} />}
-                />
-                <SummaryCard
-                    title="Total Revenue"
-                    value={`RWF ${Number(data?.revenue || 0).toLocaleString()}`}
-                    trend="—"
-                    icon={<DollarSign size={20} />}
-                />
-            </div>
-            {/* Additional profit table could go here */}
-        </div>
     );
 }
 
@@ -529,6 +461,7 @@ function SalesReports({
 }) {
     const [loading, setLoading] = useState(false);
     const [sales, setSales] = useState<any | null>(null);
+    const [profit, setProfit] = useState<any | null>(null);
     const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
     const [selectedSale, setSelectedSale] = useState<any>(null);
 
@@ -537,11 +470,28 @@ function SalesReports({
         const load = async () => {
             setLoading(true);
             try {
-                const res = await pharmacyService.getSalesReport(facilityId, {
-                    start_date: startDate,
-                    end_date: endDate,
-                });
-                setSales(res);
+                const [salesResult, profitResult] = await Promise.allSettled([
+                    pharmacyService.getSalesReport(facilityId, {
+                        start_date: startDate,
+                        end_date: endDate,
+                    }),
+                    pharmacyService.getProfitReport(facilityId, {
+                        start_date: startDate,
+                        end_date: endDate,
+                    }),
+                ]);
+
+                if (salesResult.status === 'fulfilled') {
+                    setSales(salesResult.value);
+                } else {
+                    throw salesResult.reason;
+                }
+
+                if (profitResult.status === 'fulfilled') {
+                    setProfit(profitResult.value);
+                } else {
+                    setProfit(null);
+                }
             } finally {
                 setLoading(false);
             }
@@ -563,6 +513,26 @@ function SalesReports({
 
     return (
         <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <SummaryCard
+                    title="Gross profit"
+                    value={`RWF ${Number(profit?.profit || 0).toLocaleString()}`}
+                    trend="—"
+                    icon={<TrendingUp size={20} />}
+                />
+                <SummaryCard
+                    title="Profit Margin"
+                    value={`${(Number(profit?.profit_margin || 0) * 100).toFixed(1)}%`}
+                    trend="—"
+                    icon={<Activity size={20} />}
+                />
+                <SummaryCard
+                    title="Total Revenue"
+                    value={`RWF ${Number(profit?.revenue || 0).toLocaleString()}`}
+                    trend="—"
+                    icon={<DollarSign size={20} />}
+                />
+            </div>
             <div className="overflow-x-auto bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-800/50">

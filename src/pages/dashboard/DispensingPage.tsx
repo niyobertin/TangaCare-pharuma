@@ -266,7 +266,13 @@ export function DispensingPage() {
         setShowPaymentModal(true);
     };
 
-    const handlePaymentConfirm = async (payments: any[]) => {
+    const handlePaymentConfirm = async (
+        payments: any[],
+        patientIdType?: string,
+        patientIdNumber?: string,
+        insuranceProviderId?: number,
+        patientInsuranceNumber?: string
+    ) => {
         setProcessing(true);
         try {
             await pharmacyService.createSale({
@@ -282,7 +288,13 @@ export function DispensingPage() {
                         unit_price: i.selling_price,
                     })),
                 payments: payments,
-                ...(hasControlledDrug && prescriptionId ? { prescription_id: parseInt(prescriptionId) || undefined } : {}),
+                patient_id_type: patientIdType,
+                patient_id_number: patientIdNumber,
+                insurance_provider_id: insuranceProviderId,
+                patient_insurance_number: patientInsuranceNumber,
+                ...(hasControlledDrug && prescriptionId
+                    ? { prescription_id: parseInt(prescriptionId) || undefined }
+                    : {}),
             });
 
             setShowSuccess(true);
@@ -580,6 +592,7 @@ export function DispensingPage() {
             {showPaymentModal && (
                 <PaymentModal
                     totalAmount={total}
+                    hasControlledDrugs={hasControlledDrug}
                     onClose={() => setShowPaymentModal(false)}
                     onConfirm={handlePaymentConfirm}
                     isProcessing={processing}
