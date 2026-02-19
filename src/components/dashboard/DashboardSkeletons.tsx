@@ -1,4 +1,5 @@
 import { Skeleton } from '../ui/Skeleton';
+import { SkeletonTable } from '../ui/SkeletonTable';
 
 export function StatCardSkeleton() {
     return (
@@ -24,23 +25,5 @@ export function ChartSkeleton() {
 }
 
 export function TableSkeleton() {
-    return (
-        <div className="glass-card rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md p-6">
-            <div className="flex justify-between mb-6">
-                <Skeleton className="h-6 w-1/4" />
-                <Skeleton className="h-6 w-32" />
-            </div>
-            <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                    <div key={i} className="flex gap-4">
-                        <Skeleton className="h-8 w-1/6" />
-                        <Skeleton className="h-8 w-1/4" />
-                        <Skeleton className="h-8 w-1/6" />
-                        <Skeleton className="h-8 w-1/6" />
-                        <Skeleton className="h-8 w-1/4" />
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
+    return <SkeletonTable rows={5} columns={5} />;
 }

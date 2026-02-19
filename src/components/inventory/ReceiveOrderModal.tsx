@@ -15,9 +15,26 @@ interface ReceiveOrderModalProps {
 export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: ReceiveOrderModalProps) {
     const [loading, setLoading] = useState(false);
     const [receivedItems, setReceivedItems] = useState<any[]>([]);
+    const [locations, setLocations] = useState<any[]>([]);
+    const [locationsLoading, setLocationsLoading] = useState(false);
+    const [globalLocationId, setGlobalLocationId] = useState<number | null>(null);
+
+    const fetchLocations = async () => {
+        if (!order?.facility_id) return;
+        setLocationsLoading(true);
+        try {
+            const data = await pharmacyService.getStorageLocations({ facility_id: order.facility_id });
+            setLocations(data.filter((l: any) => l.is_active));
+        } catch (error) {
+            console.error('Failed to fetch locations:', error);
+        } finally {
+            setLocationsLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (isOpen && order) {
+            fetchLocations();
             setReceivedItems(
                 order.items?.map((item) => ({
                     id: item.id,
@@ -27,10 +44,16 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     batch_number: '',
                     expiry_date: '',
                     manufacturing_date: '',
+                    location_id: globalLocationId,
                 })) || [],
             );
         }
     }, [isOpen, order]);
+
+    const applyGlobalLocation = (locationId: number | null) => {
+        setGlobalLocationId(locationId);
+        setReceivedItems(prev => prev.map(item => ({ ...item, location_id: locationId })));
+    };
 
     if (!isOpen || !order) return null;
 
@@ -56,6 +79,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
 
         const itemSchema = yup.object().shape({
             quantity_received: yup.number(),
+            location_id: yup.number().required('Storage Location is required'),
             batch_number: yup.string().required('Batch Number is required'),
             expiry_date: yup
                 .string()
@@ -109,6 +133,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     batch_number: i.batch_number,
                     expiry_date: i.expiry_date,
                     manufacturing_date: i.manufacturing_date || undefined,
+                    location_id: i.location_id,
                 })),
                 received_date: new Date().toISOString().split('T')[0],
             });
@@ -167,11 +192,26 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     </button>
                 </div>
 
-                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-b border-amber-100 dark:border-amber-800/30 text-xs flex justify-between items-center px-6">
-                    <span className="font-bold flex items-center gap-2">
-                        <CheckCircle2 size={14} />
-                        Only items with a quantity greater than 0 will be received.
-                    </span>
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-b border-amber-100 dark:border-amber-800/30 text-xs flex flex-wrap gap-4 justify-between items-center px-6">
+                    <div className="flex items-center gap-6">
+                        <span className="font-bold flex items-center gap-2">
+                            <CheckCircle2 size={14} />
+                            Only items with a quantity &gt; 0 will be received.
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="font-black uppercase text-[10px] text-slate-500">Apply to all:</span>
+                            <select
+                                value={globalLocationId || ''}
+                                onChange={(e) => applyGlobalLocation(e.target.value ? parseInt(e.target.value) : null)}
+                                className="px-3 py-1 bg-white dark:bg-slate-800 border-2 border-amber-200 rounded-lg text-[10px] font-black outline-none focus:border-amber-500"
+                            >
+                                <option value="">Select Global Location...</option>
+                                {locations.map(loc => (
+                                    <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
                     <button
                         onClick={handleClearAll}
                         className="text-[10px] font-black uppercase bg-white dark:bg-slate-800 px-3 py-1 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors"
@@ -205,7 +245,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                             {receivedItems.map((item, idx) => {
                                 const isReceiving = item.quantity_received > 0;
                                 const isMissingInfo =
-                                    isReceiving && (!item.batch_number || !item.expiry_date);
+                                    isReceiving && (!item.batch_number || !item.expiry_date || !item.location_id);
 
                                 return (
                                     <tr
@@ -239,7 +279,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                 className="w-20 px-2 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                                             />
                                         </td>
-                                        <td className="py-4 px-2">
+                                        <td className="py-4 px-2 space-y-2">
                                             <input
                                                 type="text"
                                                 placeholder="Batch Number"
@@ -251,9 +291,25 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                         e.target.value,
                                                     )
                                                 }
-                                                className={`w-full px-3 py-1.5 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 mb-2 ${isMissingInfo ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
+                                                className={`w-full px-3 py-1.5 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 mb-2 ${isMissingInfo && !item.batch_number ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
                                                 required={item.quantity_received > 0}
                                             />
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                    Storage Location
+                                                </span>
+                                                <select
+                                                    value={item.location_id || ''}
+                                                    onChange={(e) => handleItemChange(idx, 'location_id', e.target.value ? parseInt(e.target.value) : null)}
+                                                    className={`w-full px-3 py-1.5 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo && !item.location_id ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
+                                                    required={item.quantity_received > 0}
+                                                >
+                                                    <option value="">Select Location...</option>
+                                                    {locations.map(loc => (
+                                                        <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         </td>
                                         <td className="py-4 px-2 space-y-2">
                                             <div className="flex flex-col gap-1">
@@ -274,6 +330,11 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                     required={item.quantity_received > 0}
                                                 />
                                             </div>
+                                            {locationsLoading && (
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                    <Loader2 size={16} className="animate-spin text-healthcare-primary" />
+                                                </div>
+                                            )}
                                             <div className="flex flex-col gap-1">
                                                 <span className="text-[9px] font-black text-slate-400 uppercase">
                                                     Mfg Date (Optional)

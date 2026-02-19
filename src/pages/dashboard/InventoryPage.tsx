@@ -17,16 +17,18 @@ import {
     FileText,
     Copy,
     Calendar,
+    PackagePlus,
 } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import type { Medicine } from '../../types/pharmacy';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { useDebounce } from '../../hooks/useDebounce';
-import { TableSkeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../../context/AuthContext';
 import { StockTransferModal } from '../../components/inventory/StockTransferModal';
+import { AddStockModal } from '../../components/inventory/AddStockModal';
 import { toast } from 'react-hot-toast';
 
 function cn(...inputs: ClassValue[]) {
@@ -54,7 +56,7 @@ const MedicineImportPreviewModal = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-                {}
+                { }
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <div>
                         <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
@@ -73,7 +75,7 @@ const MedicineImportPreviewModal = ({
                     </button>
                 </div>
 
-                {}
+                { }
                 <div className="flex-1 overflow-auto p-6">
                     <div className="flex gap-4 mb-6">
                         <div className="flex-1 bg-healthcare-primary/5 rounded-xl p-4 border border-healthcare-primary/10">
@@ -108,9 +110,7 @@ const MedicineImportPreviewModal = ({
                                     <th className="px-4 py-3 text-[10px] font-black uppercase text-slate-500 tracking-wider">
                                         Form
                                     </th>
-                                    <th className="px-4 py-3 text-[10px] font-black uppercase text-slate-500 tracking-wider text-right">
-                                        Price (Cost)
-                                    </th>
+
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -144,9 +144,7 @@ const MedicineImportPreviewModal = ({
                                         <td className="px-4 py-3 text-xs font-bold text-slate-500 capitalize">
                                             {item.dosage_form}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-black text-slate-900 dark:text-white text-right">
-                                            ${item.cost_price?.toFixed(2)}
-                                        </td>
+
                                     </tr>
                                 ))}
                             </tbody>
@@ -154,7 +152,7 @@ const MedicineImportPreviewModal = ({
                     </div>
                 </div>
 
-                {}
+                { }
                 <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-slate-50/50 dark:bg-slate-800/30">
                     <button
                         onClick={onClose}
@@ -212,6 +210,7 @@ export function InventoryPage() {
         lowStock: 0,
         expired: 0,
     });
+    const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
 
     const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -246,16 +245,20 @@ export function InventoryPage() {
     };
 
     useEffect(() => {
-        fetchStats();
-    }, []);
+        if (facilityId) {
+            fetchStats();
+        }
+    }, [facilityId]);
 
     useEffect(() => {
         setPage(1);
     }, [debouncedSearch, selectedCategory, limit, startDate, endDate]);
 
     useEffect(() => {
-        fetchMedicines();
-    }, [page, debouncedSearch, selectedCategory, limit, startDate, endDate]);
+        if (facilityId) {
+            fetchMedicines();
+        }
+    }, [page, debouncedSearch, selectedCategory, limit, startDate, endDate, facilityId]);
 
     const handleImportFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -377,11 +380,12 @@ export function InventoryPage() {
                 'store_manager',
                 'facility_admin',
                 'auditor',
+                'owner',
             ]}
             requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                {}
+                { }
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
@@ -391,57 +395,47 @@ export function InventoryPage() {
                             Manage your full pharmaceutical stock and batches
                         </p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                            Show
-                        </span>
-                        <select
-                            value={limit}
-                            onChange={(e) => setLimit(Number(e.target.value))}
-                            className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-black text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
-                        >
-                            {[10, 25, 50, 100].map((l) => (
-                                <option key={l} value={l}>
-                                    {l} per page
-                                </option>
-                            ))}
-                        </select>
-                        {user?.role?.toString() !== 'auditor' && (
-                            <div className="flex gap-2">
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleImportFileChange}
-                                    className="hidden"
-                                    accept=".xlsx,.xls"
-                                />
-                                <button
-                                    onClick={downloadTemplate}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
-                                >
-                                    <Download size={14} /> Template
-                                </button>
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={loading}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
-                                >
-                                    {loading && !medicines.length ? (
-                                        <Loader2 className="animate-spin" size={14} />
-                                    ) : (
-                                        <Upload size={14} />
-                                    )}
-                                    Import Excel
-                                </button>
-                                <button className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md shadow-teal-500/10">
-                                    <Plus size={16} /> Add Medicine
-                                </button>
-                            </div>
-                        )}
-                    </div>
+                    {user?.role?.toString() !== 'auditor' && (
+                        <div className="flex gap-2">
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleImportFileChange}
+                                className="hidden"
+                                accept=".xlsx,.xls"
+                            />
+                            <button
+                                onClick={downloadTemplate}
+                                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
+                            >
+                                <Download size={14} /> Template
+                            </button>
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={loading}
+                                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm"
+                            >
+                                {loading && !medicines.length ? (
+                                    <Loader2 className="animate-spin" size={14} />
+                                ) : (
+                                    <Upload size={14} />
+                                )}
+                                Import Excel
+                            </button>
+                            <button
+                                onClick={() => setIsAddStockModalOpen(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary/10 text-healthcare-primary border-2 border-healthcare-primary/20 rounded-lg text-sm font-black hover:bg-healthcare-primary hover:text-white transition-all shadow-sm"
+                            >
+                                <PackagePlus size={16} /> Add Stock
+                            </button>
+                            <button className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md shadow-teal-500/10">
+                                <Plus size={16} /> Add Medicine
+                            </button>
+                        </div>
+                    )}
                 </div>
 
-                {}
+                { }
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-healthcare-primary/30 transition-all group">
                         <div className="flex justify-between items-start mb-2">
@@ -512,7 +506,7 @@ export function InventoryPage() {
                     </div>
                 </div>
 
-                {}
+                { }
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col md:flex-row gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border-2 border-slate-200/60 dark:border-slate-800/60 shadow-sm">
                         <div className="flex-1 relative group">
@@ -587,7 +581,7 @@ export function InventoryPage() {
                     )}
                 </div>
 
-                {}
+                { }
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
@@ -620,6 +614,9 @@ export function InventoryPage() {
                                         Expiry Date
                                     </th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
+                                        Location
+                                    </th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
                                         Date Added
                                     </th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
@@ -632,7 +629,14 @@ export function InventoryPage() {
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {loading ? (
-                                    <TableSkeleton columns={9} rows={5} />
+                                    <SkeletonTable
+                                        rows={5}
+                                        columns={9}
+                                        headers={['', 'ID', 'Medicine Details', 'Dosage Form', 'Total Stock', 'Expiry Date', 'Date Added', 'Status']}
+                                        columnAligns={['left', 'left', 'left', 'center', 'right', 'center', 'center', 'center', 'right']}
+                                        actions
+                                        className="border-none shadow-none"
+                                    />
                                 ) : medicines.length === 0 ? (
                                     <tr>
                                         <td colSpan={9} className="px-6 py-20 text-center">
@@ -710,17 +714,22 @@ export function InventoryPage() {
                                                 >
                                                     {med.expiry_date
                                                         ? new Date(
-                                                              med.expiry_date,
-                                                          ).toLocaleDateString()
+                                                            med.expiry_date,
+                                                        ).toLocaleDateString()
                                                         : 'N/A'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                <span className="text-xs font-bold text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">
+                                                    {(med as any).storage_location?.name || (med as any).location?.name || 'N/A'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center whitespace-nowrap">
                                                 <span className="text-xs font-bold text-slate-500">
                                                     {med.created_at
                                                         ? new Date(
-                                                              med.created_at,
-                                                          ).toLocaleDateString()
+                                                            med.created_at,
+                                                        ).toLocaleDateString()
                                                         : 'N/A'}
                                                 </span>
                                             </td>
@@ -728,18 +737,22 @@ export function InventoryPage() {
                                                 <span
                                                     className={cn(
                                                         'px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider',
-                                                        (med.stock_quantity || 0) === 0
-                                                            ? 'bg-red-50 text-red-600 border-red-100'
-                                                            : (med.stock_quantity || 0) <= 20
-                                                              ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                                              : 'bg-teal-50 text-teal-600 border-teal-100',
+                                                        med.expiry_date && new Date(med.expiry_date) < new Date()
+                                                            ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                                            : (med.stock_quantity || 0) === 0
+                                                                ? 'bg-red-50 text-red-600 border-red-100'
+                                                                : (med.stock_quantity || 0) <= 20
+                                                                    ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                                                    : 'bg-teal-50 text-teal-600 border-teal-100',
                                                     )}
                                                 >
-                                                    {(med.stock_quantity || 0) === 0
-                                                        ? 'Out of Stock'
-                                                        : (med.stock_quantity || 0) <= 20
-                                                          ? 'Low Stock'
-                                                          : 'In Stock'}
+                                                    {med.expiry_date && new Date(med.expiry_date) < new Date()
+                                                        ? 'Expired'
+                                                        : (med.stock_quantity || 0) === 0
+                                                            ? 'Out of Stock'
+                                                            : (med.stock_quantity || 0) <= 20
+                                                                ? 'Low Stock'
+                                                                : 'In Stock'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
@@ -767,11 +780,29 @@ export function InventoryPage() {
                         </table>
                     </div>
 
-                    {}
+                    { }
                     <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-between items-center">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                            Showing {medicines.length} of {totalItems} items
-                        </p>
+                        <div className="flex items-center gap-6">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                Showing {medicines.length} of {totalItems} items
+                            </p>
+                            <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-6">
+                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                    Show
+                                </span>
+                                <select
+                                    value={limit}
+                                    onChange={(e) => setLimit(Number(e.target.value))}
+                                    className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1 text-[10px] font-black text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
+                                >
+                                    {[10, 25, 50, 100].map((l) => (
+                                        <option key={l} value={l}>
+                                            {l} items
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setPage(page - 1)}
@@ -813,13 +844,17 @@ export function InventoryPage() {
                         onClose={() => setSelectedMedForTransfer(null)}
                         medicine={selectedMedForTransfer}
                         onSuccess={() => {
-                            fetchMedicines();
+                            if (facilityId) {
+                                fetchMedicines();
+                                fetchStats();
+                            }
                             setSelectedMedForTransfer(null);
                         }}
                     />
                 )}
 
-                {}
+
+                { }
                 <MedicineImportPreviewModal
                     isOpen={isImportModalOpen}
                     onClose={() => {
@@ -830,7 +865,16 @@ export function InventoryPage() {
                     items={previewItems}
                     loading={uploading}
                 />
+
+                <AddStockModal
+                    isOpen={isAddStockModalOpen}
+                    onClose={() => setIsAddStockModalOpen(false)}
+                    onSuccess={() => {
+                        fetchMedicines();
+                        fetchStats();
+                    }}
+                />
             </div>
-        </ProtectedRoute>
+        </ProtectedRoute >
     );
 }

@@ -31,9 +31,10 @@ import { useAuth } from '../../context/AuthContext';
 import { ConfirmModal } from '../../components/shared/ConfirmModal';
 import { SupplierModal } from '../../components/inventory/SupplierModal';
 import type { ProcurementOrder, Supplier } from '../../types/pharmacy';
-import { TableSkeleton, StatsSkeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { CreatePurchaseOrderModal } from '../../components/inventory/CreatePurchaseOrderModal';
 import { ReceiveOrderModal } from '../../components/inventory/ReceiveOrderModal';
+import { StatsSkeleton } from '../../components/shared/Skeleton';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -301,109 +302,113 @@ const SuppliersTab = () => {
 
             <div className="glass-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50 dark:bg-slate-800/50">
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
-                                    ID
-                                </th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
-                                    Company Name
-                                </th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
-                                    TIN (Tax ID)
-                                </th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
-                                    Contact
-                                </th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
-                                    Location
-                                </th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap text-right">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-8">
-                                        <TableSkeleton rows={5} columns={6} />
-                                    </td>
+                    {loading ? (
+                        <SkeletonTable
+                            rows={5}
+                            columns={6}
+                            headers={['ID', 'Company Name', 'TIN (Tax ID)', 'Contact', 'Location', 'Actions']}
+                            columnAligns={['left', 'left', 'left', 'left', 'left', 'right']}
+                            className="border-none shadow-none"
+                        />
+                    ) : (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50 dark:bg-slate-800/50">
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                        ID
+                                    </th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                        Company Name
+                                    </th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                        TIN (Tax ID)
+                                    </th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                        Contact
+                                    </th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                        Location
+                                    </th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap text-right">
+                                        Actions
+                                    </th>
                                 </tr>
-                            ) : safeSuppliers.length > 0 ? (
-                                safeSuppliers.map((supplier) => (
-                                    <tr
-                                        key={supplier.id}
-                                        className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-sm"
-                                    >
-                                        <td className="px-6 py-4 font-bold text-slate-400">
-                                            #{supplier.id.toString().padStart(3, '0')}
-                                        </td>
-                                        <td className="px-6 py-4 font-black text-healthcare-dark dark:text-white">
-                                            {supplier.name}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-[10px] font-black text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                                                {supplier.tax_id || 'N/A'}
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                {safeSuppliers.length > 0 ? (
+                                    safeSuppliers.map((supplier) => (
+                                        <tr
+                                            key={supplier.id}
+                                            className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-sm"
+                                        >
+                                            <td className="px-6 py-4 font-bold text-slate-400">
+                                                #{supplier.id.toString().padStart(3, '0')}
+                                            </td>
+                                            <td className="px-6 py-4 font-black text-healthcare-dark dark:text-white">
+                                                {supplier.name}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="text-[10px] font-black text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                                                    {supplier.tax_id || 'N/A'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 space-y-1">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                                                    <Phone size={12} className="text-teal-500" />
+                                                    {supplier.phone}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                                                    <Mail size={12} />
+                                                    {supplier.email}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                                                    <MapPin size={12} className="text-teal-500" />
+                                                    {supplier.address}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {user?.role?.toString()?.toLowerCase() !==
+                                                        'auditor' && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedSupplier(supplier);
+                                                                        setIsModalOpen(true);
+                                                                    }}
+                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-all"
+                                                                >
+                                                                    <Edit size={16} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSupplierToDelete(supplier.id);
+                                                                        setIsConfirmOpen(true);
+                                                                    }}
+                                                                    className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-all"
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={6} className="px-6 py-10 text-center">
+                                            <span className="text-slate-400 font-bold italic">
+                                                No suppliers found
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 space-y-1">
-                                            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
-                                                <Phone size={12} className="text-teal-500" />
-                                                {supplier.phone}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-                                                <Mail size={12} />
-                                                {supplier.email}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                                                <MapPin size={12} className="text-teal-500" />
-                                                {supplier.address}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                {user?.role?.toString()?.toLowerCase() !==
-                                                    'auditor' && (
-                                                        <>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setSelectedSupplier(supplier);
-                                                                    setIsModalOpen(true);
-                                                                }}
-                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-all"
-                                                            >
-                                                                <Edit size={16} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => {
-                                                                    setSupplierToDelete(supplier.id);
-                                                                    setIsConfirmOpen(true);
-                                                                }}
-                                                                className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-all"
-                                                            >
-                                                                <Trash2 size={16} />
-                                                            </button>
-                                                        </>
-                                                    )}
-                                            </div>
-                                        </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-10 text-center">
-                                        <span className="text-slate-400 font-bold italic">
-                                            No suppliers found
-                                        </span>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                )}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             </div>
 
@@ -528,11 +533,7 @@ export function ProcurementPage() {
     const [totalItems, setTotalItems] = useState(0);
     const [totalValue, setTotalValue] = useState(0);
     const [limit] = useState(10);
-    const role = (user?.role || '')
-        .toString()
-        .toUpperCase()
-        .replace(/[\s_]+/g, ' ');
-    const isFacilityAdmin = role === 'FACILITY ADMIN' || role === 'FACILITY_ADMIN';
+
 
     const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<ProcurementOrder | null>(null);
@@ -701,10 +702,7 @@ export function ProcurementPage() {
         },
         {
             label: 'Total Value',
-            value:
-                'RWF ' +
-                (totalValue / 1000000).toFixed(1) +
-                'M',
+            value: 'RWF ' + (totalValue / 1000000).toFixed(1) + 'M',
             icon: ShoppingCart,
             color: 'text-teal-500',
             bg: 'bg-teal-50 dark:bg-teal-900/20',
@@ -935,254 +933,244 @@ export function ProcurementPage() {
                         { }
                         <div className="glass-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-slate-50 dark:bg-slate-800/50">
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                Order ID
-                                            </th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                Supplier
-                                            </th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                Amount
-                                            </th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                Status
-                                            </th>
-                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {loading ? (
-                                            <tr>
-                                                <td colSpan={5} className="px-6 py-8">
-                                                    <TableSkeleton rows={5} columns={5} />
-                                                </td>
+                                {loading ? (
+                                    <SkeletonTable
+                                        rows={5}
+                                        columns={5}
+                                        headers={['Order ID', 'Supplier', 'Amount', 'Status', 'Actions']}
+                                        columnAligns={['left', 'left', 'left', 'left', 'right']}
+                                        className="border-none shadow-none"
+                                    />
+                                ) : (
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 dark:bg-slate-800/50">
+                                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                    Order ID
+                                                </th>
+                                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                    Supplier
+                                                </th>
+                                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                    Amount
+                                                </th>
+                                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                    Status
+                                                </th>
+                                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
+                                                    Actions
+                                                </th>
                                             </tr>
-                                        ) : orders.length > 0 ? (
-                                            orders.map((order) => (
-                                                <tr
-                                                    key={order.id}
-                                                    className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
-                                                >
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
-                                                                PO-
-                                                                {order.id
-                                                                    .toString()
-                                                                    .padStart(4, '0')}
-                                                            </span>
-                                                            <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                                                                Date:{' '}
-                                                                {new Date(
-                                                                    order.order_date,
-                                                                ).toLocaleDateString()}{' '}
-                                                                • {order.items_count} Items
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-slate-800 text-healthcare-primary border border-teal-100 dark:border-slate-700">
-                                                                <Truck size={14} />
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                            {orders.length > 0 ? (
+                                                orders.map((order) => (
+                                                    <tr
+                                                        key={order.id}
+                                                        className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                                    >
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex flex-col">
+                                                                <span className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
+                                                                    PO-
+                                                                    {order.id
+                                                                        .toString()
+                                                                        .padStart(4, '0')}
+                                                                </span>
+                                                                <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">
+                                                                    Date:{' '}
+                                                                    {new Date(
+                                                                        order.order_date,
+                                                                    ).toLocaleDateString()}{' '}
+                                                                    • {order.items_count} Items
+                                                                </span>
                                                             </div>
-                                                            <span className="text-xs font-bold text-healthcare-dark dark:text-white">
-                                                                {order.supplier?.name ||
-                                                                    'Unknown Supplier'}
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-slate-800 text-healthcare-primary border border-teal-100 dark:border-slate-700">
+                                                                    <Truck size={14} />
+                                                                </div>
+                                                                <span className="text-xs font-bold text-healthcare-dark dark:text-white">
+                                                                    {order.supplier?.name ||
+                                                                        'Unknown Supplier'}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className="text-sm font-black text-healthcare-dark dark:text-white">
+                                                                RWF{' '}
+                                                                {order.total_amount.toLocaleString()}
                                                             </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <span className="text-sm font-black text-healthcare-dark dark:text-white">
-                                                            RWF{' '}
-                                                            {order.total_amount.toLocaleString()}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div
-                                                            className={cn(
-                                                                'w-fit px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5',
-                                                                order.status.toUpperCase() ===
-                                                                    'RECEIVED'
-                                                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                                    : [
-                                                                        'ORDERED',
-                                                                        'APPROVED',
-                                                                    ].includes(
-                                                                        order.status.toUpperCase(),
-                                                                    )
-                                                                        ? 'bg-teal-50 text-teal-600 border border-teal-100'
-                                                                        : order.status.toUpperCase() ===
-                                                                            'PENDING'
-                                                                            ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                                            : [
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div
+                                                                className={cn(
+                                                                    'w-fit px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5',
+                                                                    order.status.toUpperCase() ===
+                                                                        'RECEIVED'
+                                                                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                                        : [
+                                                                            'ORDERED',
+                                                                            'APPROVED',
+                                                                        ].includes(
+                                                                            order.status.toUpperCase(),
+                                                                        )
+                                                                            ? 'bg-teal-50 text-teal-600 border border-teal-100'
+                                                                            : order.status.toUpperCase() ===
+                                                                                'PENDING'
+                                                                                ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                                : [
+                                                                                    'PARTIAL',
+                                                                                    'PARTIALLY_RECEIVED',
+                                                                                ].includes(
+                                                                                    order.status.toUpperCase(),
+                                                                                )
+                                                                                    ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                                                                    : order.status.toUpperCase() ===
+                                                                                        'DRAFT'
+                                                                                        ? 'bg-slate-100 text-slate-500 border border-slate-200'
+                                                                                        : 'bg-red-50 text-red-600 border border-red-100',
+                                                                )}
+                                                            >
+                                                                {order.status.toUpperCase() ===
+                                                                    'RECEIVED' ? (
+                                                                    <CheckCircle2 size={12} />
+                                                                ) : order.status.toUpperCase() ===
+                                                                    'PENDING' ? (
+                                                                    <Clock size={12} />
+                                                                ) : ['ORDERED', 'APPROVED'].includes(
+                                                                    order.status.toUpperCase(),
+                                                                ) ? (
+                                                                    <CheckCircle2
+                                                                        size={12}
+                                                                        className="text-teal-500"
+                                                                    />
+                                                                ) : [
+                                                                    'PARTIAL',
+                                                                    'PARTIALLY_RECEIVED',
+                                                                ].includes(
+                                                                    order.status.toUpperCase(),
+                                                                ) ? (
+                                                                    <Truck
+                                                                        size={12}
+                                                                        className="text-indigo-500"
+                                                                    />
+                                                                ) : order.status.toUpperCase() ===
+                                                                    'DRAFT' ? (
+                                                                    <FileText size={12} />
+                                                                ) : (
+                                                                    <XCircle size={12} />
+                                                                )}
+                                                                {order.status.replace(/_/g, ' ')}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                {user?.role
+                                                                    ?.toString()
+                                                                    ?.toLowerCase() !== 'auditor' && (
+                                                                        <>
+                                                                            {order.status.toUpperCase() ===
+                                                                                'DRAFT' && (
+                                                                                    <button
+                                                                                        onClick={() =>
+                                                                                            handleAction(
+                                                                                                order.id,
+                                                                                                'submit',
+                                                                                            )
+                                                                                        }
+                                                                                        className="px-3 py-1 bg-teal-500 text-white rounded-lg text-[10px] font-black hover:bg-teal-600 transition-colors shadow-sm"
+                                                                                    >
+                                                                                        Submit
+                                                                                    </button>
+                                                                                )}
+                                                                            {/* Internal approval removed as per new flow. Only supplier approves. */}
+                                                                            {[
+                                                                                'APPROVED',
                                                                                 'PARTIAL',
                                                                                 'PARTIALLY_RECEIVED',
+                                                                                'ORDERED',
                                                                             ].includes(
                                                                                 order.status.toUpperCase(),
-                                                                            )
-                                                                                ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-                                                                                : order.status.toUpperCase() ===
-                                                                                    'DRAFT'
-                                                                                    ? 'bg-slate-100 text-slate-500 border border-slate-200'
-                                                                                    : 'bg-red-50 text-red-600 border border-red-100',
-                                                            )}
-                                                        >
-                                                            {order.status.toUpperCase() ===
-                                                                'RECEIVED' ? (
-                                                                <CheckCircle2 size={12} />
-                                                            ) : order.status.toUpperCase() ===
-                                                                'PENDING' ? (
-                                                                <Clock size={12} />
-                                                            ) : ['ORDERED', 'APPROVED'].includes(
-                                                                order.status.toUpperCase(),
-                                                            ) ? (
-                                                                <CheckCircle2
-                                                                    size={12}
-                                                                    className="text-teal-500"
-                                                                />
-                                                            ) : [
-                                                                'PARTIAL',
-                                                                'PARTIALLY_RECEIVED',
-                                                            ].includes(
-                                                                order.status.toUpperCase(),
-                                                            ) ? (
-                                                                <Truck
-                                                                    size={12}
-                                                                    className="text-indigo-500"
-                                                                />
-                                                            ) : order.status.toUpperCase() ===
-                                                                'DRAFT' ? (
-                                                                <FileText size={12} />
-                                                            ) : (
-                                                                <XCircle size={12} />
-                                                            )}
-                                                            {order.status.replace(/_/g, ' ')}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            {user?.role
-                                                                ?.toString()
-                                                                ?.toLowerCase() !== 'auditor' && (
-                                                                    <>
-                                                                        {order.status.toUpperCase() ===
-                                                                            'DRAFT' && (
-                                                                                <button
-                                                                                    onClick={() =>
-                                                                                        handleAction(
-                                                                                            order.id,
-                                                                                            'submit',
-                                                                                        )
-                                                                                    }
-                                                                                    className="px-3 py-1 bg-teal-500 text-white rounded-lg text-[10px] font-black hover:bg-teal-600 transition-colors shadow-sm"
-                                                                                >
-                                                                                    Submit
-                                                                                </button>
-                                                                            )}
-                                                                        {order.status.toUpperCase() ===
-                                                                            'PENDING' &&
-                                                                            isFacilityAdmin && (
-                                                                                <button
-                                                                                    onClick={() =>
-                                                                                        handleAction(
-                                                                                            order.id,
-                                                                                            'approve',
-                                                                                        )
-                                                                                    }
-                                                                                    className="px-3 py-1 bg-emerald-500 text-white rounded-lg text-[10px] font-black hover:bg-emerald-600 transition-colors shadow-sm"
-                                                                                >
-                                                                                    Approve
-                                                                                </button>
-                                                                            )}
-                                                                        {[
-                                                                            'APPROVED',
-                                                                            'PARTIAL',
-                                                                            'PARTIALLY_RECEIVED',
-                                                                            'ORDERED',
-                                                                        ].includes(
-                                                                            order.status.toUpperCase(),
-                                                                        ) && (
-                                                                                <button
-                                                                                    onClick={() =>
-                                                                                        handleReceiveClick(
-                                                                                            order,
-                                                                                        )
-                                                                                    }
-                                                                                    className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black hover:bg-amber-600 transition-colors shadow-sm"
-                                                                                >
-                                                                                    Receive
-                                                                                </button>
-                                                                            )}
-                                                                        {[
-                                                                            'DRAFT',
-                                                                            'PENDING',
-                                                                            'APPROVED',
-                                                                        ].includes(
-                                                                            order.status.toUpperCase(),
-                                                                        ) && (
-                                                                                <button
-                                                                                    onClick={() =>
-                                                                                        handleAction(
-                                                                                            order.id,
-                                                                                            'cancel',
-                                                                                        )
-                                                                                    }
-                                                                                    className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
-                                                                                    title="Cancel PO"
-                                                                                >
-                                                                                    <XCircle size={16} />
-                                                                                </button>
-                                                                            )}
-                                                                    </>
-                                                                )}
-                                                            <button
-                                                                onClick={() =>
-                                                                    pharmacyService.exportProcurementOrder(
-                                                                        order.id,
-                                                                    )
-                                                                }
-                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
-                                                                title="Export PO to Excel"
-                                                            >
-                                                                <Download size={16} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() =>
-                                                                    navigate({
-                                                                        to: `/app/procurement/orders/${order.id}`,
-                                                                    })
-                                                                }
-                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
-                                                                title="View Details"
-                                                            >
-                                                                <ArrowUpRight size={16} />
-                                                            </button>
+                                                                            ) && (
+                                                                                    <button
+                                                                                        onClick={() =>
+                                                                                            handleReceiveClick(
+                                                                                                order,
+                                                                                            )
+                                                                                        }
+                                                                                        className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black hover:bg-amber-600 transition-colors shadow-sm"
+                                                                                    >
+                                                                                        Receive
+                                                                                    </button>
+                                                                                )}
+                                                                            {[
+                                                                                'DRAFT',
+                                                                                'PENDING',
+                                                                                'APPROVED',
+                                                                            ].includes(
+                                                                                order.status.toUpperCase(),
+                                                                            ) && (
+                                                                                    <button
+                                                                                        onClick={() =>
+                                                                                            handleAction(
+                                                                                                order.id,
+                                                                                                'cancel',
+                                                                                            )
+                                                                                        }
+                                                                                        className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
+                                                                                        title="Cancel PO"
+                                                                                    >
+                                                                                        <XCircle size={16} />
+                                                                                    </button>
+                                                                                )}
+                                                                        </>
+                                                                    )}
+                                                                <button
+                                                                    onClick={() =>
+                                                                        pharmacyService.exportProcurementOrder(
+                                                                            order.id,
+                                                                        )
+                                                                    }
+                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
+                                                                    title="Export PO to Excel"
+                                                                >
+                                                                    <Download size={16} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        navigate({
+                                                                            to: `/app/procurement/orders/${order.id}`,
+                                                                        })
+                                                                    }
+                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
+                                                                    title="View Details"
+                                                                >
+                                                                    <ArrowUpRight size={16} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={5} className="px-6 py-10 text-center">
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <AlertCircle
+                                                                size={32}
+                                                                className="text-slate-300"
+                                                            />
+                                                            <span className="text-slate-500 font-bold italic">
+                                                                No procurement orders found
+                                                            </span>
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={5} className="px-6 py-10 text-center">
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        <AlertCircle
-                                                            size={32}
-                                                            className="text-slate-300"
-                                                        />
-                                                        <span className="text-slate-500 font-bold italic">
-                                                            No procurement orders found
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                )}
                             </div>
                         </div>
 

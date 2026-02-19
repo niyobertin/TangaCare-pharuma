@@ -14,6 +14,7 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import type { DashboardSummary, ReorderSuggestion, Alert } from '../../types/pharmacy';
 import { ConsumptionTrendChart, ExpiryRiskChart, InventoryStatusChart } from './DashboardCharts';
 import { ChartSkeleton, StatCardSkeleton } from './DashboardSkeletons';
+import { SkeletonTable } from '../ui/SkeletonTable';
 import { cn } from '../../lib/utils';
 import { format, subDays, startOfToday, endOfToday } from 'date-fns';
 
@@ -29,18 +30,14 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     const [nearExpiry, setNearExpiry] = useState<Alert[]>([]);
 
     // Filters
-    const [dateRange, setDateRange] = useState<'today' | '7days' | '30days' | 'custom'>('today');
+    const [dateRange, setDateRange] = useState<'today' | '7days' | '30days' | 'custom'>('7days');
     const [startDate, setStartDate] = useState<string>(format(startOfToday(), 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState<string>(format(endOfToday(), 'yyyy-MM-dd'));
 
     useEffect(() => {
-        const loadDashboard = async () => {
-            setLoading(true);
+        const loadInitialData = async () => {
+            if (!facilityId) return;
             try {
-                // Fetch summary (default today)
-                const data = await pharmacyService.getDashboardSummary(facilityId);
-                setSummary(data);
-
                 // Fetch real-time low stock suggestions
                 const reorderData = await pharmacyService.getReorderSuggestions(facilityId);
                 setLowStock(reorderData.slice(0, 5));
@@ -56,19 +53,18 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         .slice(0, 5),
                 );
             } catch (error) {
-                console.error('Failed to load dashboard data:', error);
-            } finally {
-                setLoading(false);
+                console.error('Failed to load initial dashboard data:', error);
             }
         };
 
-        if (facilityId) loadDashboard();
+        loadInitialData();
     }, [facilityId]);
 
     // Handle data refresh when date range changes
     useEffect(() => {
-        const updateKPIs = async () => {
+        const updateDashboardData = async () => {
             if (!facilityId) return;
+
             let start = format(startOfToday(), 'yyyy-MM-dd');
             let end = format(endOfToday(), 'yyyy-MM-dd');
 
@@ -81,23 +77,29 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                 end = endDate;
             }
 
+            setLoading(true);
             try {
-                const kpis = await pharmacyService.getComprehensiveKPIs(facilityId, {
-                    start_date: start,
-                    end_date: end,
+                // Fetch both KPIs for chosen period and a global summary for trends/categories
+                const [kpis, summaryData] = await Promise.all([
+                    pharmacyService.getComprehensiveKPIs(facilityId, {
+                        start_date: start,
+                        end_date: end,
+                    }),
+                    pharmacyService.getDashboardSummary(facilityId),
+                ]);
+
+                setSummary({
+                    ...summaryData,
+                    today: kpis, // Uses the selected period data for the KPI cards
                 });
-                if (summary) {
-                    setSummary({
-                        ...summary,
-                        today: kpis, // Mapping as requested for period selection
-                    });
-                }
             } catch (error) {
-                console.error('Error updating KPIs:', error);
+                console.error('Error updating dashboard data:', error);
+            } finally {
+                setLoading(false);
             }
         };
 
-        if (dateRange !== 'today') updateKPIs();
+        updateDashboardData();
     }, [dateRange, startDate, endDate, facilityId]);
 
     const kpis = summary?.today;
@@ -177,11 +179,11 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         />
                         <KPICard
                             title="Total Profit"
-                            value={kpis?.financial.gross_profit || 0}
+                            value={kpis?.financial.net_profit || 0}
                             isCurrency
                             icon={<TrendingUp size={16} />}
                             color="bg-blue-500"
-                            onClick={() => navigate({ to: '/app/analytics/profit' })}
+                            onClick={() => navigate({ to: '/app/analytics/sales' })}
                         />
                         <KPICard
                             title="Low Stock"
@@ -314,6 +316,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         meta: `${i.reorder_point} needed`,
                         action: 'order',
                     }))}
+                    loading={loading}
                     onAction={(id) =>
                         navigate({ to: '/app/procurement', search: { medicineId: id } })
                     }
@@ -330,6 +333,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         meta: formatRelativeDate(a.created_at),
                         action: 'view',
                     }))}
+                    loading={loading}
                     onAction={(id) =>
                         navigate({ to: '/app/inventory', search: { medicineId: id } })
                     }
@@ -430,11 +434,19 @@ interface ActionTableProps {
         meta: string;
         action: 'order' | 'view';
     }>;
+    loading?: boolean;
     onAction: (id: number) => void;
     onView: () => void;
 }
 
-const ActionTable: React.FC<ActionTableProps> = ({ title, subtitle, data, onAction, onView }) => {
+const ActionTable: React.FC<ActionTableProps> = ({
+    title,
+    subtitle,
+    data,
+    loading,
+    onAction,
+    onView,
+}) => {
     return (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
@@ -455,7 +467,16 @@ const ActionTable: React.FC<ActionTableProps> = ({ title, subtitle, data, onActi
             </div>
 
             <div className="flex-1">
-                {data.length > 0 ? (
+                {loading ? (
+                    <div className="p-0">
+                        <SkeletonTable
+                            rows={5}
+                            columns={2}
+                            headers={null}
+                            className="border-none shadow-none"
+                        />
+                    </div>
+                ) : data.length > 0 ? (
                     <div className="divide-y divide-slate-50 dark:divide-slate-800">
                         {data.map((item) => (
                             <div

@@ -2,11 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
     Search,
     ShoppingCart,
-    Plus,
-    Minus,
     Trash2,
-    Receipt,
-    Pill,
     CheckCircle2,
     User,
     ChevronDown,
@@ -16,20 +12,13 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import type { Medicine, Batch } from '../../types/pharmacy';
 import { useAuth } from '../../context/AuthContext';
 import { useDebounce } from '../../hooks/useDebounce';
-import { TableSkeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { CreatePatientModal } from '../../components/patients/CreatePatientModal';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { MedicineCard } from '../../components/dispensing/MedicineCard';
+import { DispensingCart } from '../../components/dispensing/DispensingCart';
+import { PaymentModal } from '../../components/dispensing/PaymentModal';
+import type { CartItem } from '../../types/pharmacy';
 import { toast } from 'react-hot-toast';
-
-function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs));
-}
-
-interface CartItem extends Medicine {
-    quantity: number;
-    selectedBatch?: Batch;
-}
 
 const WALK_IN_PATIENT = {
     id: null,
@@ -57,6 +46,11 @@ export function DispensingPage() {
     const [showSuccess, setShowSuccess] = useState(false);
     const [processing, setProcessing] = useState(false);
     const [showCreatePatient, setShowCreatePatient] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [prescriptionId, setPrescriptionId] = useState('');
+    const [lastSaleId, setLastSaleId] = useState<number | null>(null);
+
+    const hasControlledDrug = cart.some((item) => item.is_controlled_drug);
 
     useEffect(() => {
         setPage(1);
@@ -72,6 +66,8 @@ export function DispensingPage() {
                 limit: 20,
                 search: debouncedSearch,
                 ...(user?.facility_id ? { facility_id: user.facility_id } : {}),
+                sort_by: 'expiry_date',
+                min_stock: 1,
             });
 
             setMedicines((prev) => {
@@ -180,9 +176,53 @@ export function DispensingPage() {
                         : item,
                 );
             }
-            return [...prev, { ...med, quantity: 1, selectedBatch: bestBatch }];
+            const safeSellingPrice = Math.max(Number(med.selling_price || 0), Number(bestBatch.unit_cost || 0));
+            return [
+                ...prev,
+                {
+                    ...med,
+                    selling_price: safeSellingPrice,
+                    quantity: 1,
+                    selectedBatch: bestBatch,
+                },
+            ];
         });
-        toast.success(`Added ${med.name} (Batch: ${bestBatch.batch_number})`);
+
+        // FEFO Prompt & Expiry Warning
+        const expiryDate = new Date(bestBatch.expiry_date);
+        const daysToExpiry = Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        const locationName = (bestBatch as any).location?.name || 'Main Shelf';
+
+        if (daysToExpiry <= 30) {
+            toast(() => (
+                <div className="flex flex-col gap-1">
+                    <span className="font-bold text-orange-600">⚠️ Batch Expiring Soon!</span>
+                    <span className="text-xs">Batch {bestBatch!.batch_number} expires in {daysToExpiry} days.</span>
+                </div>
+            ), { duration: 5000, icon: '⚠️' });
+        }
+
+        toast.custom((t) => (
+            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white dark:bg-slate-800 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
+                <div className="flex-1 w-0 p-4">
+                    <div className="flex items-start">
+                        <div className="flex-shrink-0 pt-0.5">
+                            <CheckCircle2 className="h-10 w-10 text-green-500" />
+                        </div>
+                        <div className="ml-3 flex-1">
+                            <p className="text-sm font-medium text-slate-900 dark:text-white">
+                                Added {med.name}
+                            </p>
+                            <p className="mt-1 text-sm text-slate-500">
+                                Batch: <span className="font-bold">{bestBatch!.batch_number}</span><br />
+                                Exp: {expiryDate.toLocaleDateString()}<br />
+                                Location: <span className="font-bold">{locationName}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        ), { duration: 3000 });
     };
 
     const updateQuantity = (id: number, batchId: number, delta: number) => {
@@ -213,7 +253,7 @@ export function DispensingPage() {
     const tax = subtotal * 0.18;
     const total = subtotal + tax;
 
-    const handleCheckout = async () => {
+    const handleCheckout = () => {
         if (!user?.facility_id) {
             toast.error('No facility selected for your account');
             return;
@@ -224,9 +264,19 @@ export function DispensingPage() {
         }
         if (cart.length === 0) return;
 
+        setShowPaymentModal(true);
+    };
+
+    const handlePaymentConfirm = async (
+        payments: any[],
+        patientIdType?: string,
+        patientIdNumber?: string,
+        insuranceProviderId?: number,
+        patientInsuranceNumber?: string
+    ) => {
         setProcessing(true);
         try {
-            await pharmacyService.createSale({
+            const response = await pharmacyService.createSale({
                 patient_id: selectedPatient.id,
                 dispense_type: 'otc',
                 vat_rate: 0.18,
@@ -238,24 +288,31 @@ export function DispensingPage() {
                         quantity: i.quantity,
                         unit_price: i.selling_price,
                     })),
-                payments: [
-                    {
-                        method: 'cash',
-                        amount: total,
-                    },
-                ],
+                payments: payments,
+                patient_id_type: patientIdType,
+                patient_id_number: patientIdNumber,
+                insurance_provider_id: insuranceProviderId,
+                patient_insurance_number: patientInsuranceNumber,
+                ...(hasControlledDrug && prescriptionId
+                    ? { prescription_id: parseInt(prescriptionId) || undefined }
+                    : {}),
             });
 
+            setLastSaleId(response.id);
             setShowSuccess(true);
             toast.success('Dispensing completed successfully');
+            setShowPaymentModal(false);
+
             setTimeout(() => {
                 setShowSuccess(false);
                 setCart([]);
                 setSearchQuery('');
                 setPatientQuery('');
+                setPrescriptionId('');
                 setSelectedPatient(WALK_IN_PATIENT);
+                setLastSaleId(null);
                 fetchMedicines();
-            }, 3000);
+            }, 5000);
         } catch (error) {
             console.error('Checkout failed:', error);
             toast.error('Checkout failed. Please try again.');
@@ -266,13 +323,21 @@ export function DispensingPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['admin', 'pharmacist', 'super_admin', 'facility_admin', 'auditor']}
+            allowedRoles={[
+                'admin',
+                'pharmacist',
+                'super_admin',
+                'facility_admin',
+                'auditor',
+                'owner',
+            ]}
             requireFacility
         >
-            <div className="flex h-full flex-col lg:flex-row p-5 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-700 overflow-hidden">
+            <div className="flex h-full flex-row p-5 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-700 overflow-hidden">
+                {/* LEFT SIDE - Medicine Search and Cards */}
                 <div className="flex-1 flex flex-col gap-6 overflow-hidden min-h-0">
                     <div className="space-y-1">
-                        <h2 className="text-xl font-black text-healthcare-dark tracking-tight">
+                        <h2 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
                             Dispense Medicine
                         </h2>
                         <p className="text-slate-500 font-bold text-xs uppercase tracking-wider">
@@ -300,67 +365,35 @@ export function DispensingPage() {
                         className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2"
                     >
                         {loading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <TableSkeleton rows={6} columns={1} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                                {Array.from({ length: 8 }).map((_, i) => (
+                                    <SkeletonTable
+                                        key={i}
+                                        rows={2}
+                                        columns={1}
+                                        headers={null}
+                                        animate
+                                        className="border-none shadow-none"
+                                    />
+                                ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
                                 {medicines.map((med) => (
-                                    <button
+                                    <MedicineCard
                                         key={med.id}
-                                        onClick={() => addToCart(med)}
-                                        disabled={
-                                            (med.stock_quantity || 0) === 0 ||
-                                            user?.role?.toString() === 'auditor'
-                                        }
-                                        className={cn(
-                                            'group p-4 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl text-left transition-all hover:border-healthcare-primary/30 hover:shadow-lg hover:-translate-y-0.5 relative overflow-hidden',
-                                            ((med.stock_quantity || 0) === 0 ||
-                                                user?.role?.toString() === 'auditor') &&
-                                                'opacity-50 cursor-not-allowed grayscale',
-                                        )}
-                                    >
-                                        <div className="flex flex-col gap-3">
-                                            <div className="flex justify-between items-start">
-                                                <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-slate-800 flex items-center justify-center text-healthcare-primary border border-teal-100 dark:border-slate-700 group-hover:bg-healthcare-primary group-hover:text-white transition-colors">
-                                                    <Pill size={20} />
-                                                </div>
-                                                <span
-                                                    className={cn(
-                                                        'text-[10px] font-black uppercase px-2 py-1 rounded-md',
-                                                        (med.stock_quantity || 0) <= 20
-                                                            ? 'bg-rose-50 text-rose-600'
-                                                            : 'bg-teal-50 text-healthcare-primary',
-                                                    )}
-                                                >
-                                                    {med.stock_quantity || 0} Left
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <h4 className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
-                                                    {med.name}
-                                                </h4>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-tight">
-                                                    {med.code} • {med.strength}
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center justify-between mt-1 pt-3 border-t border-slate-50 dark:border-slate-800">
-                                                <span className="text-sm font-black text-healthcare-dark dark:text-white">
-                                                    RWF {med.selling_price.toLocaleString()}
-                                                </span>
-                                                <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-400 group-hover:text-healthcare-primary transition-colors">
-                                                    <Plus size={16} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </button>
+                                        medicine={med}
+                                        onAddToCart={addToCart}
+                                    />
                                 ))}
                             </div>
                         )}
                     </div>
                 </div>
 
-                <div className="w-full lg:w-[400px] flex flex-col gap-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative min-h-[500px]">
+                {/* RIGHT SIDE - Cart and Patient Details */}
+                <div className="w-full lg:w-[450px] flex flex-col gap-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative min-h-0">
+                    {/* Patient Details Section */}
                     <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 space-y-2">
                         <div className="flex items-center justify-between text-healthcare-dark dark:text-white font-black text-sm">
                             <div className="flex items-center gap-2">
@@ -445,7 +478,7 @@ export function DispensingPage() {
                                 </div>
                             )}
                         {(selectedPatient && !selectedPatient.is_walk_in) ||
-                        user?.role?.toString()?.toLowerCase() === 'auditor' ? (
+                            user?.role?.toString()?.toLowerCase() === 'auditor' ? (
                             <div className="flex justify-between items-center bg-white dark:bg-slate-800 px-2 py-1.5 rounded-lg border dark:border-slate-700 text-sm">
                                 <div>
                                     <div className="font-bold text-healthcare-dark dark:text-white">
@@ -492,7 +525,8 @@ export function DispensingPage() {
                         ) : null}
                     </div>
 
-                    <div className="flex items-center justify-between mb-2">
+                    {/* Cart Header */}
+                    <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-healthcare-primary/10 flex items-center justify-center text-healthcare-primary border border-healthcare-primary/20">
                                 <ShoppingCart size={18} />
@@ -506,137 +540,56 @@ export function DispensingPage() {
                         </span>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar -mx-2 px-2 space-y-4">
-                        {cart.length > 0 ? (
-                            cart.map((item) => (
-                                <div
-                                    key={`${item.id}-${item.selectedBatch?.id}`}
-                                    className="flex gap-4 p-3 bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800 group animate-in slide-in-from-right-2 duration-300"
-                                >
-                                    <div className="flex-1 flex flex-col justify-center">
-                                        <h5 className="text-xs font-black text-healthcare-dark dark:text-white">
-                                            {item.name}
-                                        </h5>
-                                        <div className="flex gap-2 mt-1">
-                                            <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 rounded text-amber-700 border border-amber-100">
-                                                BATCH: {item.selectedBatch?.batch_number}
-                                            </span>
-                                            <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded text-blue-700 border border-blue-100">
-                                                EXP:{' '}
-                                                {item.selectedBatch?.expiry_date
-                                                    ? new Date(
-                                                          item.selectedBatch.expiry_date,
-                                                      ).toLocaleDateString()
-                                                    : 'N/A'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {user?.role?.toString() !== 'auditor' && (
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
-                                                <button
-                                                    onClick={() =>
-                                                        updateQuantity(
-                                                            item.id,
-                                                            item.selectedBatch!.id,
-                                                            -1,
-                                                        )
-                                                    }
-                                                    className="p-1 px-2 hover:bg-slate-50 transition-colors text-slate-400 hover:text-healthcare-primary"
-                                                >
-                                                    <Minus size={12} />
-                                                </button>
-                                                <span className="text-xs font-black w-6 text-center">
-                                                    {item.quantity}
-                                                </span>
-                                                <button
-                                                    onClick={() =>
-                                                        updateQuantity(
-                                                            item.id,
-                                                            item.selectedBatch!.id,
-                                                            1,
-                                                        )
-                                                    }
-                                                    className="p-1 px-2 hover:bg-slate-50 transition-colors text-slate-400 hover:text-healthcare-primary"
-                                                >
-                                                    <Plus size={12} />
-                                                </button>
-                                            </div>
-                                            <button
-                                                onClick={() =>
-                                                    removeFromCart(item.id, item.selectedBatch!.id)
-                                                }
-                                                className="p-2 text-slate-400 hover:text-red-500 transition-colors"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            ))
-                        ) : (
-                            <div className="h-full flex flex-col items-center justify-center py-20 text-center space-y-4">
-                                <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center text-slate-200">
-                                    <ShoppingCart size={32} />
-                                </div>
-                                <div className="p-2">
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                        Cart is empty
-                                    </p>
-                                </div>
-                            </div>
-                        )}
+                    {/* Cart Items - Scrollable */}
+                    <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+                        <DispensingCart
+                            cart={cart}
+                            updateQuantity={(id, delta) => {
+                                const item = cart.find(i => i.id === id);
+                                if (item && item.selectedBatch) {
+                                    updateQuantity(id, item.selectedBatch.id, delta);
+                                }
+                            }}
+                            removeFromCart={(id) => {
+                                const item = cart.find(i => i.id === id);
+                                if (item && item.selectedBatch) {
+                                    removeFromCart(id, item.selectedBatch.id);
+                                }
+                            }}
+                            subtotal={subtotal}
+                            tax={tax}
+                            total={total}
+                            onCheckout={handleCheckout}
+                            isProcessing={processing}
+                            prescriptionId={prescriptionId}
+                            setPrescriptionId={setPrescriptionId}
+                            prescriptionRequired={hasControlledDrug}
+                        />
                     </div>
 
-                    <div className="mt-auto space-y-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                        <div className="space-y-2 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <div className="flex justify-between text-[11px] font-bold text-slate-500">
-                                <span>Subtotal</span>
-                                <span>RWF {subtotal.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between text-[11px] font-bold text-slate-500">
-                                <span>VAT (18%)</span>
-                                <span>RWF {tax.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between py-2 mt-2 border-t border-slate-200 dark:border-slate-700">
-                                <span className="text-sm font-black text-healthcare-dark dark:text-white">
-                                    Total
-                                </span>
-                                <span className="text-sm font-black text-healthcare-primary">
-                                    RWF {total.toLocaleString()}
-                                </span>
-                            </div>
-                        </div>
-
-                        {user?.role?.toString() !== 'auditor' && (
-                            <button
-                                onClick={handleCheckout}
-                                disabled={cart.length === 0 || processing || !selectedPatient}
-                                className="w-full flex items-center justify-center gap-2 py-4 bg-healthcare-secondary text-white rounded-xl font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-blue-500/20 disabled:opacity-50 disabled:grayscale disabled:scale-100"
-                            >
-                                {processing ? (
-                                    'Processing...'
-                                ) : (
-                                    <>
-                                        <Receipt size={18} /> Complete Sale
-                                    </>
-                                )}
-                            </button>
-                        )}
-                    </div>
-
+                    {/* Success Overlay */}
                     {showSuccess && (
                         <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 z-20 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300 rounded-2xl">
                             <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-500 rounded-full flex items-center justify-center mb-6 animate-bounce">
                                 <CheckCircle2 size={40} />
                             </div>
-                            <h3 className="text-xl font-black text-healthcare-dark tracking-tight">
+                            <h3 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
                                 Sale Completed!
                             </h3>
+                            {lastSaleId && user?.facility_id && (
+                                <button
+                                    onClick={() => pharmacyService.getSaleReceipt(lastSaleId, user.facility_id!)}
+                                    className="mt-6 flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                                >
+                                    <ShoppingCart size={18} /> Print Receipt
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Create Patient Modal */}
             {showCreatePatient && (
                 <CreatePatientModal
                     onClose={() => setShowCreatePatient(false)}
@@ -644,6 +597,16 @@ export function DispensingPage() {
                         setSelectedPatient(patient);
                         setShowCreatePatient(false);
                     }}
+                />
+            )}
+
+            {showPaymentModal && (
+                <PaymentModal
+                    totalAmount={total}
+                    hasControlledDrugs={hasControlledDrug}
+                    onClose={() => setShowPaymentModal(false)}
+                    onConfirm={handlePaymentConfirm}
+                    isProcessing={processing}
                 />
             )}
         </ProtectedRoute>

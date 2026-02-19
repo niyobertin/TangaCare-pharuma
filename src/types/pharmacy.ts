@@ -47,18 +47,23 @@ export interface Medicine {
     strength: string;
     dosage_form: string;
     unit: string;
-    cost_price: number;
     selling_price: number;
     markup_percent?: number;
     category_id?: number;
     category?: MedicineCategory;
     is_controlled_drug: boolean;
+    drug_schedule?: 'unclassified' | 'prescription_only' | 'controlled_substance_sch_ii' | 'controlled_substance_sch_iii' | 'controlled_substance_sch_iv' | 'pharmacist_only';
     stock_quantity?: number;
     expiry_date?: string;
     created_at?: string;
     allow_partial_sales?: boolean;
     units_per_package?: number;
     base_unit?: string;
+}
+
+export interface CartItem extends Medicine {
+    quantity: number;
+    selectedBatch?: Batch;
 }
 
 export interface Organization {
@@ -84,8 +89,11 @@ export interface Facility {
     facility_admin?: import('./auth').User;
     departments_enabled?: boolean;
     controlled_drug_rules_enabled?: boolean;
+    ebm_enabled?: boolean;
     min_stock_threshold_percentage?: number;
     expiry_alert_days?: number;
+    expiry_critical_days?: number;
+    expiry_warning_days?: number;
     default_markup_percent?: number;
     status?: string | 'Active' | 'Inactive';
     is_active?: boolean;
@@ -129,8 +137,11 @@ export interface CreateFacilityDto {
 
     departments_enabled?: boolean;
     controlled_drug_rules_enabled?: boolean;
+    ebm_enabled?: boolean;
     min_stock_threshold_percentage?: number;
     expiry_alert_days?: number;
+    expiry_critical_days?: number;
+    expiry_warning_days?: number;
     status?: string;
     is_active?: boolean;
 }
@@ -151,11 +162,45 @@ export interface Stock {
     id: number;
     facility_id: number;
     department_id?: number | null;
+    storage_location_id?: number | null;
     medicine_id: number;
     quantity: number;
     min_threshold: number;
     medicine?: Medicine;
     department?: Department;
+    location?: StorageLocation;
+}
+
+export const TemperatureType = {
+    ROOM_TEMP: 'ROOM_TEMP',
+    COLD: 'COLD',
+    FROZEN: 'FROZEN',
+} as const;
+
+export type TemperatureType = (typeof TemperatureType)[keyof typeof TemperatureType];
+
+export interface StorageLocation {
+    id: number;
+    facility_id: number;
+    name: string;
+    code: string;
+    area?: string;
+    temperature_type: TemperatureType;
+    is_active: boolean;
+    parent_id?: number | null;
+    parent?: StorageLocation;
+    children?: StorageLocation[];
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface CreateStorageLocationDto {
+    name: string;
+    code: string;
+    area?: string;
+    temperature_type?: TemperatureType;
+    is_active?: boolean;
+    parent_id?: number | null;
 }
 
 export interface Supplier {
@@ -202,6 +247,18 @@ export interface ProcurementOrder {
     facility?: Facility;
     created_by?: User;
     items?: ProcurementOrderItem[];
+    activities?: PurchaseOrderActivity[];
+}
+
+export interface PurchaseOrderActivity {
+    id: number;
+    purchase_order_id: number;
+    action: string;
+    description: string;
+    actor_type: 'facility' | 'supplier' | 'system';
+    actor_id?: number | null;
+    meta_data?: any;
+    created_at: string;
 }
 
 export interface Alert {
@@ -216,6 +273,8 @@ export interface Alert {
     batch_id?: number;
     current_value?: number;
     threshold_value?: number;
+    severity: 'info' | 'warning' | 'critical' | 'out_of_stock';
+    last_notified_at?: string;
     medicine?: Medicine;
     batch?: Batch;
 }
@@ -237,12 +296,11 @@ export interface CreateMedicineDto {
     strength: string;
     dosage_form: string;
     unit: string;
-    cost_price: number;
     selling_price: number;
 }
 
 export type SaleStatus = 'paid' | 'partially_paid' | 'unpaid' | 'voided';
-export type SalePaymentMethod = 'cash' | 'mobile_money' | 'bank' | 'card';
+export type SalePaymentMethod = 'cash' | 'mobile_money' | 'bank' | 'card' | 'insurance';
 
 export interface SalePayment {
     id: number;
@@ -286,6 +344,7 @@ export interface Sale {
 
 export interface CreateSaleDto {
     patient_id?: number;
+    prescription_id?: number;
     dispense_type?: 'otc' | 'prescription' | 'internal' | 'transfer';
     vat_rate?: number;
     items: Array<{
@@ -299,6 +358,10 @@ export interface CreateSaleDto {
         amount: number;
         reference?: string;
     }>;
+    patient_id_type?: string;
+    patient_id_number?: string;
+    insurance_provider_id?: number;
+    patient_insurance_number?: string;
 }
 
 // Advanced Analytics Types
@@ -756,5 +819,36 @@ export interface StockVariance {
     approved_by?: User;
     approved_at?: string;
     counted_at?: string;
+    created_at: string;
+}
+
+export interface InsuranceProvider {
+    id: number;
+    name: string;
+    type: 'PUBLIC' | 'PRIVATE';
+    coverage_percentage: number;
+    max_coverage_limit?: number;
+    is_active: boolean;
+    created_at: string;
+}
+
+export type InsuranceClaimStatus = 'pending' | 'submitted' | 'approved' | 'partially_approved' | 'rejected' | 'paid';
+
+export interface InsuranceClaim {
+    id: number;
+    sale_id: number;
+    sale?: Sale;
+    provider_id: number;
+    provider?: InsuranceProvider;
+    patient_insurance_number?: string;
+    total_amount: number;
+    applied_coverage_percentage: number;
+    expected_amount: number;
+    copay_amount: number;
+    actual_received_amount: number;
+    status: InsuranceClaimStatus;
+    notes?: string;
+    submitted_at?: string;
+    processed_at?: string;
     created_at: string;
 }

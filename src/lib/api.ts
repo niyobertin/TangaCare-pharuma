@@ -20,7 +20,7 @@ api.interceptors.request.use(
                 const parsed = JSON.parse(userData);
                 const role = (parsed?.role ?? '').toString().toUpperCase();
                 isFacilityAdmin = role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN';
-            } catch {}
+            } catch { }
         }
         const organizationId = localStorage.getItem('selected_organization_id');
         const facilityId = localStorage.getItem('selected_facility_id');
@@ -43,7 +43,7 @@ api.interceptors.response.use(
             if (refreshToken) {
                 try {
                     const response = await axios.post(
-                        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/refresh`,
+                        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/refresh-token`,
                         {
                             refreshToken,
                         },

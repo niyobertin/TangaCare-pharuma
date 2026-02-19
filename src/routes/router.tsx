@@ -12,6 +12,7 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { InventoryPage } from '../pages/dashboard/InventoryPage';
 import { DispensingPage } from '../pages/dashboard/DispensingPage';
+import { InsurancePage } from '../pages/dashboard/InsurancePage';
 
 import { BatchStockPage } from '../pages/dashboard/BatchStockPage';
 import { AuditLogsPage } from '../pages/dashboard/AuditLogsPage';
@@ -39,8 +40,11 @@ const AppLayoutComponent = () => {
     return <MainLayout />;
 };
 
+import { AuthLayout } from '../components/layout/AuthLayout';
+import { PublicPurchaseOrder } from '../pages/public/PublicPurchaseOrder';
+
 const AuthLayoutComponent = () => {
-    return <Outlet />;
+    return <AuthLayout />;
 };
 
 const rootRoute = createRootRoute({
@@ -312,6 +316,17 @@ const patientsRoute = createRoute({
         </RequirePermission>
     ),
 });
+
+const insuranceRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'insurance',
+    component: () => (
+        <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
+            <InsurancePage />
+        </RequirePermission>
+    ),
+});
+
 const analyticsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'analytics',
@@ -379,7 +394,7 @@ const analyticsRecallRoute = createRoute({
 const analyticsProfitRoute = createRoute({
     getParentRoute: () => analyticsRoute,
     path: 'profit',
-    component: () => <ReportsPage defaultTab="profit" />,
+    component: () => <Navigate to="/app/analytics/sales" />,
 });
 
 const analyticsLowStockRoute = createRoute({
@@ -431,6 +446,14 @@ const registerRoute = createRoute({
     getParentRoute: () => authLayoutRoute,
     path: 'register',
     component: RegisterPage,
+    validateSearch: (search: Record<string, unknown>) => {
+        return z
+            .object({
+                role: z.string().optional(),
+                inviteCode: z.string().optional(),
+            })
+            .parse(search);
+    },
 });
 
 const forgotPasswordRoute = createRoute({
@@ -486,6 +509,7 @@ const appRouteTree = appLayoutRoute.addChildren([
     indexRoute,
     inventoryRoute,
     dispensingRoute,
+    insuranceRoute,
     organizationsRoute,
     facilitiesRoute,
     usersRoute,
@@ -542,11 +566,28 @@ const authRouteTree = authLayoutRoute.addChildren([
     setPasswordRoute,
 ]);
 
+const publicRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/public',
+    component: () => <Outlet />,
+});
+
+const publicPORoute = createRoute({
+    getParentRoute: () => publicRoute,
+    path: 'po/$token',
+    component: PublicPurchaseOrder,
+});
+
+const publicRouteTree = publicRoute.addChildren([
+    publicPORoute,
+]);
+
 const routeTree = rootRoute.addChildren([
     rootIndexRoute,
     loginFallbackRoute,
     appRouteTree,
     authRouteTree,
+    publicRouteTree,
 ]);
 
 export const router = createRouter({

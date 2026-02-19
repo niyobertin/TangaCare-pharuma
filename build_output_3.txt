@@ -1,5 +1,0 @@
-
-> temp-vite@0.0.0 build
-> tsc -b && vite build
-
-src/pages/dashboard/DashboardPage.tsx(50,33): error TS6133: 'setLoadingTransactions' is declared but its value is never read.

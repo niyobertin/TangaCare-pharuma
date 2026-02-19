@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { pharmacyService } from '../../../services/pharmacy.service';
-import { TableSkeleton } from '../../shared/Skeleton';
+import { SkeletonTable } from '../../ui/SkeletonTable';
 import { Truck } from 'lucide-react';
 
 export function SupplierPerformanceReport() {
@@ -31,7 +31,23 @@ export function SupplierPerformanceReport() {
         }
     };
 
-    if (loading) return <TableSkeleton rows={5} columns={5} />;
+    if (loading)
+        return (
+            <SkeletonTable
+                rows={5}
+                columns={6}
+                headers={[
+                    'Supplier',
+                    'Total Orders',
+                    'Avg Lead Time',
+                    'Fulfillment Rate',
+                    'On-Time Rate',
+                    'Rating',
+                ]}
+                columnAligns={['left', 'center', 'center', 'right', 'right', 'center']}
+                className="border-none shadow-none"
+            />
+        );
 
     return (
         <div className="space-y-6">
@@ -94,13 +110,12 @@ export function SupplierPerformanceReport() {
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <span
-                                        className={`font-bold ${
-                                            item.on_time_delivery_rate > 90
+                                        className={`font-bold ${item.on_time_delivery_rate > 90
                                                 ? 'text-emerald-600'
                                                 : item.on_time_delivery_rate > 75
-                                                  ? 'text-amber-600'
-                                                  : 'text-rose-600'
-                                        }`}
+                                                    ? 'text-amber-600'
+                                                    : 'text-rose-600'
+                                            }`}
                                     >
                                         {item.on_time_delivery_rate}%
                                     </span>

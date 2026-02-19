@@ -19,6 +19,7 @@ const configSchema = yup.object({
     expiry_alert_days: yup.number().min(1).required('Required'),
     departments_enabled: yup.boolean(),
     controlled_drug_rules_enabled: yup.boolean(),
+    ebm_enabled: yup.boolean(),
 });
 
 export function FacilityConfigurationModal({
@@ -51,6 +52,7 @@ export function FacilityConfigurationModal({
             expiry_alert_days: facility.expiry_alert_days || 90,
             departments_enabled: facility.departments_enabled || false,
             controlled_drug_rules_enabled: facility.controlled_drug_rules_enabled || false,
+            ebm_enabled: facility.ebm_enabled || false,
         },
     });
 
@@ -129,7 +131,7 @@ export function FacilityConfigurationModal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <div className="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-                {}
+                { }
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start shrink-0">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark">Manage Facility</h2>
@@ -148,15 +150,14 @@ export function FacilityConfigurationModal({
                     </button>
                 </div>
 
-                {}
+                { }
                 <div className="flex border-b border-slate-100 dark:border-slate-800 px-6 shrink-0">
                     <button
                         onClick={() => setActiveTab('config')}
-                        className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${
-                            activeTab === 'config'
-                                ? 'border-healthcare-primary text-healthcare-primary'
-                                : 'border-transparent text-slate-500 hover:text-slate-700'
-                        }`}
+                        className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'config'
+                            ? 'border-healthcare-primary text-healthcare-primary'
+                            : 'border-transparent text-slate-500 hover:text-slate-700'
+                            }`}
                     >
                         <div className="flex items-center gap-2">
                             <Settings size={16} /> Configuration
@@ -165,11 +166,10 @@ export function FacilityConfigurationModal({
                     {isHospital && (
                         <button
                             onClick={() => setActiveTab('departments')}
-                            className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${
-                                activeTab === 'departments'
-                                    ? 'border-healthcare-primary text-healthcare-primary'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                            }`}
+                            className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'departments'
+                                ? 'border-healthcare-primary text-healthcare-primary'
+                                : 'border-transparent text-slate-500 hover:text-slate-700'
+                                }`}
                         >
                             <div className="flex items-center gap-2">
                                 <Building2 size={16} /> Departments
@@ -178,7 +178,7 @@ export function FacilityConfigurationModal({
                     )}
                 </div>
 
-                {}
+                { }
                 <div className="p-6 overflow-y-auto">
                     {activeTab === 'config' ? (
                         <form
@@ -258,6 +258,22 @@ export function FacilityConfigurationModal({
                                             </span>
                                         </div>
                                     </label>
+
+                                    <label className="flex items-center gap-3 p-3 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors border-blue-100 bg-blue-50/30">
+                                        <input
+                                            type="checkbox"
+                                            {...register('ebm_enabled')}
+                                            className="w-4 h-4 text-healthcare-primary rounded"
+                                        />
+                                        <div>
+                                            <span className="block text-sm font-bold text-slate-700">
+                                                Active RRA EBM Integration
+                                            </span>
+                                            <span className="text-xs text-slate-500">
+                                                Automatically submit sales to RRA EBM system
+                                            </span>
+                                        </div>
+                                    </label>
                                 </div>
                             </div>
 
@@ -278,7 +294,7 @@ export function FacilityConfigurationModal({
                         </form>
                     ) : (
                         <div className="space-y-6">
-                            {}
+                            { }
                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                                 <h3 className="text-sm font-bold text-slate-700 mb-3">
                                     Add New Department
@@ -312,7 +328,7 @@ export function FacilityConfigurationModal({
                                 </div>
                             </div>
 
-                            {}
+                            { }
                             <div>
                                 <table className="w-full text-left text-sm">
                                     <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs">

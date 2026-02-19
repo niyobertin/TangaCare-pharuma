@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { pharmacyService } from '../../../services/pharmacy.service';
-import { TableSkeleton } from '../../shared/Skeleton';
+import { SkeletonTable } from '../../ui/SkeletonTable';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export function ABCAnalysisReport() {
@@ -31,7 +31,8 @@ export function ABCAnalysisReport() {
         }
     };
 
-    if (loading) return <TableSkeleton rows={5} columns={2} />;
+    if (loading)
+        return <SkeletonTable rows={5} columns={2} headers={null} className="border-none shadow-none" />;
     if (!data) return null;
 
     const summary = data.summary;

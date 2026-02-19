@@ -24,6 +24,7 @@ import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import type { User, Organization } from '../../types/auth';
 import toast from 'react-hot-toast';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 
 const ROLE_LABELS: Record<string, string> = {
     facility_admin: 'Facility Admin',
@@ -167,19 +168,19 @@ export function UsersPage() {
                             <option value="">All facilities</option>
                             {user?.role?.toUpperCase().includes('SUPER')
                                 ? Object.entries(groupedFacilities).map(([orgName, facs]) => (
-                                      <optgroup key={orgName} label={orgName}>
-                                          {facs.map((f) => (
-                                              <option key={f.id} value={f.id}>
-                                                  {f.name}
-                                              </option>
-                                          ))}
-                                      </optgroup>
-                                  ))
+                                    <optgroup key={orgName} label={orgName}>
+                                        {facs.map((f) => (
+                                            <option key={f.id} value={f.id}>
+                                                {f.name}
+                                            </option>
+                                        ))}
+                                    </optgroup>
+                                ))
                                 : facilities.map((f) => (
-                                      <option key={f.id} value={f.id}>
-                                          {f.name ?? `Facility ${f.id}`}
-                                      </option>
-                                  ))}
+                                    <option key={f.id} value={f.id}>
+                                        {f.name ?? `Facility ${f.id}`}
+                                    </option>
+                                ))}
                         </select>
                     )}
                     <select
@@ -212,9 +213,14 @@ export function UsersPage() {
                 </div>
 
                 {isLoading ? (
-                    <div className="flex items-center justify-center flex-1">
-                        <div className="w-8 h-8 border-4 border-healthcare-primary/20 border-t-healthcare-primary rounded-full animate-spin" />
-                    </div>
+                    <SkeletonTable
+                        rows={10}
+                        columns={7}
+                        headers={['ID', 'Joined Date', 'Name', 'Email', 'Role', 'Facility', 'Status']}
+                        columnAligns={['left', 'left', 'left', 'left', 'left', 'left', 'left', 'right']}
+                        actions
+                        className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700"
+                    />
                 ) : users.length === 0 ? (
                     <div className="flex-1 flex items-center justify-center">
                         <div className="text-center text-slate-500">
@@ -262,13 +268,13 @@ export function UsersPage() {
                                             );
                                             const joinedDate = u.created_at
                                                 ? new Date(u.created_at).toLocaleDateString(
-                                                      'en-US',
-                                                      {
-                                                          year: 'numeric',
-                                                          month: 'short',
-                                                          day: 'numeric',
-                                                      },
-                                                  )
+                                                    'en-US',
+                                                    {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                    },
+                                                )
                                                 : '—';
                                             return (
                                                 <tr

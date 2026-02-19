@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import { pharmacyService } from '../../../services/pharmacy.service';
-import { TableSkeleton } from '../../shared/Skeleton';
-import {
-    ShoppingCart,
-    TrendingUp,
-    Users,
-    Package,
-} from 'lucide-react';
+import { SkeletonTable } from '../../ui/SkeletonTable';
+import { ShoppingCart, TrendingUp, Users, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
@@ -41,7 +36,8 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
         }
     };
 
-    if (loading) return <TableSkeleton rows={5} columns={5} />;
+    if (loading)
+        return <SkeletonTable rows={5} columns={5} headers={null} className="border-none shadow-none" />;
     if (!reportData) return null;
 
     const COLORS = ['#0d9488', '#2563eb', '#7c3aed', '#db2777', '#ea580c', '#eab308'];
@@ -143,7 +139,10 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                                     dataKey="value"
                                 >
                                     {supplierChartData.map((_entry: any, index: number) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={COLORS[index % COLORS.length]}
+                                        />
                                     ))}
                                 </Pie>
                                 <Tooltip
@@ -170,14 +169,23 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                         <table className="w-full">
                             <thead>
                                 <tr className="text-left border-b border-slate-50 dark:border-slate-800">
-                                    <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Medicine</th>
-                                    <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Qty Ordered</th>
-                                    <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Total Amount</th>
+                                    <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        Medicine
+                                    </th>
+                                    <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">
+                                        Qty Ordered
+                                    </th>
+                                    <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                        Total Amount
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                                 {reportData.by_item.slice(0, 5).map((item: any) => (
-                                    <tr key={item.medicine_id} className="group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                    <tr
+                                        key={item.medicine_id}
+                                        className="group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
+                                    >
                                         <td className="py-4">
                                             <p className="text-sm font-black text-slate-700 dark:text-white group-hover:text-teal-600 transition-colors uppercase">
                                                 {item.medicine_name}
@@ -212,16 +220,29 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                     <table className="w-full">
                         <thead>
                             <tr className="text-left bg-slate-50/50 dark:bg-slate-800/50">
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Order #</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Supplier</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Amount</th>
+                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    Order #
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    Supplier
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    Date
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    Status
+                                </th>
+                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                    Amount
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                             {reportData.orders.slice(0, 10).map((po: any) => (
-                                <tr key={po.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                <tr
+                                    key={po.id}
+                                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                >
                                     <td className="px-6 py-4">
                                         <span className="text-sm font-black text-teal-600 uppercase tracking-tight">
                                             {po.order_number}
@@ -238,10 +259,14 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                                         </p>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${po.status === 'received' ? 'bg-emerald-50 text-emerald-600' :
-                                            po.status === 'pending' ? 'bg-amber-50 text-amber-600' :
-                                                'bg-slate-100 text-slate-600'
-                                            }`}>
+                                        <span
+                                            className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${po.status === 'received'
+                                                    ? 'bg-emerald-50 text-emerald-600'
+                                                    : po.status === 'pending'
+                                                        ? 'bg-amber-50 text-amber-600'
+                                                        : 'bg-slate-100 text-slate-600'
+                                                }`}
+                                        >
                                             {po.status}
                                         </span>
                                     </td>

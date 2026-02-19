@@ -20,10 +20,10 @@ import {
     Building2,
     ChevronDown,
     FileText,
-    Activity,
     AlertTriangle,
     ArrowRightLeft,
     ArrowLeft,
+    ShieldCheck,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -31,12 +31,11 @@ import { isSuperAdmin } from '../../types/auth';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useTheme } from '../../context/ThemeContext';
-import { NotificationBell } from '../ui/NotificationBell'; // Correct path
+import { NotificationBell } from '../ui/NotificationBell';
 import { FacilityEmptyState } from '../facility/FacilityEmptyState';
 import { CreateFacilityModal } from '../facility/CreateFacilityModal';
 import { SetupPharmacyModal } from '../facility/SetupPharmacyModal';
-import { AlertBadge } from '../alerts/AlertBadge';
-import { AlertPanel } from '../alerts/AlertPanel';
+import { JoinOrganizationModal } from '../facility/JoinOrganizationModal';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -193,6 +192,19 @@ const NAV_ITEMS: NavItem[] = [
         ],
     },
     {
+        to: '/app/insurance',
+        icon: ShieldCheck,
+        label: 'Insurance',
+        allowedRoles: [
+            'SUPER_ADMIN',
+            'FACILITY_ADMIN',
+            'OWNER',
+            'ADMIN',
+            'PHARMACIST',
+            'AUDITOR',
+        ],
+    },
+    {
         to: '/app/analytics',
         icon: FileText,
         label: 'Reports',
@@ -210,7 +222,6 @@ const NAV_ITEMS: NavItem[] = [
         allowedPermissions: ['reports:read'],
         children: [
             { to: '/app/analytics/sales', label: 'Sales Report', icon: TrendingUp },
-            { to: '/app/analytics/profit', label: 'Profit Report', icon: Activity },
             { to: '/app/analytics/inventory', label: 'Stock Report', icon: ShoppingCart },
             { to: '/app/analytics/low-stock', label: 'Low Stock & Reorder', icon: Package },
             { to: '/app/analytics/recall', label: 'Expiry Report', icon: AlertTriangle },
@@ -359,8 +370,9 @@ export function MainLayout() {
         currentOrg,
         setOrganization,
         refreshProfile,
-        facilityId,
         organizationId,
+        facilityId,
+        hasOrganization,
     } = useAuth();
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -368,9 +380,9 @@ export function MainLayout() {
     const { isDark, toggleTheme } = useTheme();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showSetupModal, setShowSetupModal] = useState(false);
-    const [showAlertPanel, setShowAlertPanel] = useState(false);
+    const [showJoinModal, setShowJoinModal] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Filter logic for navigation items...
     const filteredNavItems = NAV_ITEMS.filter((item) => {
         if (
             item.allowedPermissions &&
@@ -386,7 +398,6 @@ export function MainLayout() {
                     role.toUpperCase() === userRole ||
                     role.toUpperCase().replace('_', ' ') === userRole.replace('_', ' '),
             );
-            // Also checking for standard normalization just in case
             if (!hasRole) return false;
         }
 
@@ -400,41 +411,26 @@ export function MainLayout() {
 
     const isSuperAdminUser = isSuperAdmin(user?.role);
 
-    // Logic to determine if we show facility switcher
-    // Show switcher if user has access to multiple facilities OR organizations
-    // OR if they are a super admin (who can see everything)
     const showSwitcher = organizations.length > 0 || facilities.length > 0 || isSuperAdminUser;
 
-    // Logic to determine the label of the switcher
     const switcherLabel =
         currentFacility?.name ??
         facilities[0]?.name ??
         (user as any)?.facility?.name ??
         'Select Facility';
 
-    // Normalize role for more robust comparison
     const normalizedRole = (user?.role || '').toLowerCase().replace(/[\s_]+/g, '');
 
-    // Logic to check if user needs to run onboarding
-    // If user has NO organization AND is an admin/owner type role
-    // they should be prompted to create one.
     const needsOnboarding =
-        organizations.length === 0 &&
-        !user?.organization_id &&
-        !user?.facility_id &&
-        !user?.facility &&
-        ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
+        !hasOrganization && ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
 
-    // Logic for unassigned admin
-    // User belongs to org but has no facility assigned/created yet
     const isUnassignedAdmin =
-        (organizationId || organizations.length > 0 || user?.organization_id) &&
+        hasOrganization &&
         facilities.length === 0 &&
         !user?.facility_id &&
         !user?.facility &&
         ['owner', 'facilityadmin'].includes(normalizedRole);
 
-    // Redirect to facilities if onboarding or setup is needed
     React.useEffect(() => {
         const path = window.location.pathname;
         if ((needsOnboarding || isUnassignedAdmin) && path !== '/app/facilities') {
@@ -442,26 +438,29 @@ export function MainLayout() {
         }
     }, [needsOnboarding, isUnassignedAdmin, navigate]);
 
-    // Determine if we should show "All Facilities" option
-    // Only for Owners/Super Admins who want an aggregate view
     const showAllFacilitiesOption = ['OWNER', 'SUPER_ADMIN', 'SUPER ADMIN'].includes(
         user?.role || '',
     );
 
-    // If a user only has access to exactly one facility and one org,
-    // we might just show the static name instead of a dropdown, unless they create more.
     const showFacilityNameOnly =
         !isSuperAdminUser && facilities.length <= 1 && organizations.length <= 1;
 
-    // Logic to determine if we show facility switcher
-
     return (
-        <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-            {/* Sidebar */}
+        <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 overflow-hidden">
+            {/* Backdrop for mobile */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-300"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
             <aside
                 className={cn(
-                    'bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 ease-in-out shadow-lg z-20 m-3 rounded-2xl h-[calc(100vh-24px)]',
-                    isCollapsed ? 'w-20' : 'w-72',
+                    'bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 ease-in-out shadow-lg z-40 lg:z-20 m-3 rounded-2xl h-[calc(100vh-24px)]',
+                    'lg:static fixed top-0 bottom-0 left-0',
+                    isCollapsed ? 'lg:w-20' : 'lg:w-72',
+                    isMobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0',
                 )}
             >
                 <div className="h-20 flex items-center px-6 border-b border-slate-50 dark:border-slate-800/50">
@@ -474,7 +473,7 @@ export function MainLayout() {
                                 className="h-10 w-10 relative z-10 rounded-xl shadow-sm transform group-hover:scale-105 transition-transform duration-300 object-cover bg-white"
                             />
                         </div>
-                        {!isCollapsed && (
+                        {(!isCollapsed || isMobileMenuOpen) && (
                             <div className="flex flex-col">
                                 <span className="font-black text-xl tracking-tight text-healthcare-dark dark:text-white font-display">
                                     Tanga<span className="text-healthcare-primary">Care</span>
@@ -492,14 +491,14 @@ export function MainLayout() {
                         to="/"
                         className={cn(
                             'flex items-center gap-3 px-4 py-2.5 w-full text-left text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/20 rounded-xl transition-all group font-bold text-sm mb-4 border border-teal-100 dark:border-teal-900/30 shadow-sm',
-                            isCollapsed && 'justify-center px-0',
+                            isCollapsed && !isMobileMenuOpen && 'lg:justify-center lg:px-0',
                         )}
                     >
                         <ArrowLeft
                             size={18}
                             className="group-hover:-translate-x-1 transition-transform"
                         />
-                        {!isCollapsed && <span>Back to Website</span>}
+                        {(!isCollapsed || isMobileMenuOpen) && <span>Back to Website</span>}
                     </Link>
 
                     {filteredNavItems.map((item) => (
@@ -508,7 +507,7 @@ export function MainLayout() {
                             to={item.to}
                             icon={<item.icon size={18} />}
                             label={item.label}
-                            isCollapsed={isCollapsed}
+                            isCollapsed={isCollapsed && !isMobileMenuOpen}
                             children={item.children}
                         />
                     ))}
@@ -519,30 +518,40 @@ export function MainLayout() {
                         onClick={handleLogout}
                         className={cn(
                             'flex items-center gap-3 px-4 py-2.5 w-full text-left text-healthcare-danger hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-all group font-bold text-sm',
-                            isCollapsed && 'justify-center px-0',
+                            isCollapsed && !isMobileMenuOpen && 'lg:justify-center lg:px-0',
                         )}
                     >
                         <LogOut
                             size={18}
                             className="group-hover:translate-x-0.5 transition-transform"
                         />
-                        {!isCollapsed && <span>Logout</span>}
+                        {(!isCollapsed || isMobileMenuOpen) && <span>Logout</span>}
                     </button>
                 </div>
             </aside>
 
-            {/* Main content */}
-            <main className="flex-1 flex flex-col overflow-hidden relative p-3 pl-0">
-                <header className="glass-header rounded-xl mb-3 px-5 py-3 flex items-center justify-between shadow-sm">
-                    <div className="flex items-center gap-5 flex-1">
+            <main className="flex-1 flex flex-col overflow-hidden relative p-2 md:p-3 lg:pl-0">
+                <header className="glass-header rounded-xl mb-3 px-3 md:px-5 py-3 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-3 md:gap-5 flex-1 min-w-0">
                         <button
-                            onClick={() => setIsCollapsed(!isCollapsed)}
-                            className="p-1.5 hover:bg-teal-50 dark:hover:bg-teal-900 rounded-lg text-healthcare-primary transition-colors border border-teal-50 dark:border-teal-900"
+                            onClick={() => {
+                                if (window.innerWidth < 1024) {
+                                    setIsMobileMenuOpen(!isMobileMenuOpen);
+                                } else {
+                                    setIsCollapsed(!isCollapsed);
+                                }
+                            }}
+                            className="p-1.5 md:p-2 hover:bg-teal-50 dark:hover:bg-teal-900 rounded-lg text-healthcare-primary transition-colors border border-teal-50 dark:border-teal-900 flex-shrink-0"
                         >
-                            {isCollapsed ? <Menu size={18} /> : <ChevronLeft size={18} />}
+                            <span className="lg:block hidden">
+                                {isCollapsed ? <Menu size={18} /> : <ChevronLeft size={18} />}
+                            </span>
+                            <span className="lg:hidden block">
+                                <Menu size={20} />
+                            </span>
                         </button>
 
-                        <div className="relative max-w-sm lg:max-w-md w-full hidden md:block">
+                        <div className="relative max-w-sm lg:max-w-md w-full hidden sm:block">
                             <Search
                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                                 size={16}
@@ -555,132 +564,129 @@ export function MainLayout() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 font-sans">
-                        {showFacilityNameOnly ? (
-                            <div className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 min-w-0 max-w-[180px]">
-                                <span
-                                    className="truncate block text-xs font-bold text-healthcare-dark dark:text-white"
-                                    title={
-                                        currentFacility?.name ??
-                                        facilities[0]?.name ??
-                                        user?.facility?.name ??
-                                        'Facility'
-                                    }
-                                >
-                                    {currentFacility?.name ??
-                                        facilities[0]?.name ??
-                                        (user as any)?.facility?.name ??
-                                        '—'}
-                                </span>
-                            </div>
-                        ) : (
-                            showSwitcher && (
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSwitcherOpen(!switcherOpen)}
-                                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-left min-w-0 max-w-[180px]"
+                    <div className="flex items-center gap-2 md:gap-3 font-sans ml-2">
+                        <div className="hidden xs:flex items-center">
+                            {showFacilityNameOnly ? (
+                                <div className="px-2 md:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 min-w-0 max-w-[120px] md:max-w-[180px]">
+                                    <span
+                                        className="truncate block text-[10px] md:text-xs font-bold text-healthcare-dark dark:text-white"
+                                        title={
+                                            currentFacility?.name ??
+                                            facilities[0]?.name ??
+                                            user?.facility?.name ??
+                                            'Facility'
+                                        }
                                     >
-                                        <Building2
-                                            size={16}
-                                            className="text-healthcare-primary flex-shrink-0"
-                                        />
-                                        <span className="truncate text-xs font-bold text-healthcare-dark dark:text-white">
-                                            {facilityId == null && isSuperAdminUser
-                                                ? 'All Facilities (System)'
-                                                : facilities.length > 0
-                                                    ? switcherLabel
-                                                    : (currentOrg?.name ?? 'Select context')}
-                                        </span>
-                                        <ChevronDown
-                                            size={14}
-                                            className="flex-shrink-0 text-slate-400"
-                                        />
-                                    </button>
-                                    {switcherOpen && (
-                                        <>
-                                            <div
-                                                className="fixed inset-0 z-10"
-                                                onClick={() => setSwitcherOpen(false)}
-                                            />
-                                            <div className="absolute right-0 top-full mt-1 z-20 w-64 py-2 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-                                                {organizations.length > 1 && (
-                                                    <div className="px-3 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                                        Organization
-                                                    </div>
-                                                )}
-                                                {organizations.map((org) => (
-                                                    <button
-                                                        key={org.id}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setOrganization(org.id);
-                                                            setSwitcherOpen(false);
-                                                            refreshProfile();
-                                                        }}
-                                                        className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${organizationId === org.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
-                                                    >
-                                                        {org.name} {org.code && `(${org.code})`}
-                                                    </button>
-                                                ))}
-                                                {facilities.length > 0 && (
-                                                    <div className="px-3 py-1.5 mt-2 text-xs font-bold text-slate-500 uppercase tracking-wider border-t border-slate-200 dark:border-slate-700">
-                                                        Facility
-                                                    </div>
-                                                )}
-                                                {showAllFacilitiesOption && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setFacility(null);
-                                                            setSwitcherOpen(false);
-                                                            refreshProfile();
-                                                        }}
-                                                        className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId == null ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
-                                                    >
-                                                        🌐 All Facilities{' '}
-                                                        {isSuperAdminUser && '(System-Wide)'}
-                                                    </button>
-                                                )}
-                                                {facilities.map((fac) => (
-                                                    <button
-                                                        key={fac.id}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setFacility(fac.id);
-                                                            setSwitcherOpen(false);
-                                                            refreshProfile();
-                                                        }}
-                                                        className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId === fac.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
-                                                    >
-                                                        {fac.name}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </>
-                                    )}
+                                        {currentFacility?.name ??
+                                            facilities[0]?.name ??
+                                            (user as any)?.facility?.name ??
+                                            '—'}
+                                    </span>
                                 </div>
-                            )
-                        )}
-                        <div className="flex items-center gap-1.5 mr-1">
-                            {/* Replaced static bell with smart component */}
-                            <NotificationBell />
+                            ) : (
+                                showSwitcher && (
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSwitcherOpen(!switcherOpen)}
+                                            className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-left min-w-0 max-w-[120px] md:max-w-[180px]"
+                                        >
+                                            <Building2
+                                                size={14}
+                                                className="text-healthcare-primary flex-shrink-0 md:size-4"
+                                            />
+                                            <span className="truncate text-[10px] md:text-xs font-bold text-healthcare-dark dark:text-white">
+                                                {facilityId == null && isSuperAdminUser
+                                                    ? 'All Facilities'
+                                                    : facilities.length > 0
+                                                        ? switcherLabel
+                                                        : (currentOrg?.name ?? 'Context')}
+                                            </span>
+                                            <ChevronDown
+                                                size={12}
+                                                className="flex-shrink-0 text-slate-400 md:size-3.5"
+                                            />
+                                        </button>
+                                        {switcherOpen && (
+                                            <>
+                                                <div
+                                                    className="fixed inset-0 z-10"
+                                                    onClick={() => setSwitcherOpen(false)}
+                                                />
+                                                <div className="absolute right-0 top-full mt-1 z-20 w-64 py-2 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+                                                    {organizations.length > 1 && (
+                                                        <div className="px-3 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                            Organization
+                                                        </div>
+                                                    )}
+                                                    {organizations.map((org) => (
+                                                        <button
+                                                            key={org.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setOrganization(org.id);
+                                                                setSwitcherOpen(false);
+                                                                refreshProfile();
+                                                            }}
+                                                            className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${organizationId === org.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                        >
+                                                            {org.name} {org.code && `(${org.code})`}
+                                                        </button>
+                                                    ))}
+                                                    {facilities.length > 0 && (
+                                                        <div className="px-3 py-1.5 mt-2 text-xs font-bold text-slate-500 uppercase tracking-wider border-t border-slate-200 dark:border-slate-700">
+                                                            Facility
+                                                        </div>
+                                                    )}
+                                                    {showAllFacilitiesOption && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFacility(null);
+                                                                setSwitcherOpen(false);
+                                                                refreshProfile();
+                                                            }}
+                                                            className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId == null ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                        >
+                                                            🌐 All Facilities{' '}
+                                                            {isSuperAdminUser && '(System-Wide)'}
+                                                        </button>
+                                                    )}
+                                                    {facilities.map((fac) => (
+                                                        <button
+                                                            key={fac.id}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFacility(fac.id);
+                                                                setSwitcherOpen(false);
+                                                                refreshProfile();
+                                                            }}
+                                                            className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId === fac.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                        >
+                                                            {fac.name}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                )
+                            )}
+                        </div>
 
-                            {/* Alert Badge with Panel */}
-                            <div onClick={() => setShowAlertPanel(!showAlertPanel)}>
-                                <AlertBadge />
-                            </div>
+                        <div className="flex items-center gap-1 md:gap-1.5">
+                            <NotificationBell />
 
                             <button
                                 onClick={toggleTheme}
-                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
+                                className="p-1.5 md:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
                             >
                                 {isDark ? <Sun size={18} /> : <Moon size={18} />}
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-slate-800">
-                            <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-3 border-l border-slate-200 dark:border-slate-800">
+                            <div className="hidden lg:flex flex-col items-end">
                                 <span className="font-bold text-healthcare-dark dark:text-white text-xs uppercase tracking-tight">
                                     {user
                                         ? `${user.firstName || user.first_name} ${user.lastName || user.last_name}`
@@ -690,7 +696,7 @@ export function MainLayout() {
                                     {user?.role || 'User'}
                                 </span>
                             </div>
-                            <div className="w-8 h-8 rounded-lg bg-healthcare-primary/10 border border-healthcare-primary/20 flex items-center justify-center text-healthcare-primary text-xs font-black shadow-sm uppercase">
+                            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-healthcare-primary/10 border border-healthcare-primary/20 flex items-center justify-center text-healthcare-primary text-xs font-black shadow-sm uppercase flex-shrink-0">
                                 {user
                                     ? `${(user.firstName || user.first_name || '?')[0]}${(user.lastName || user.last_name || '?')[0]}`
                                     : '??'}
@@ -700,11 +706,12 @@ export function MainLayout() {
                 </header>
 
                 <div className="flex-1 overflow-auto rounded-xl">
-                    <div className="max-w-screen-2xl mx-auto h-full">
+                    <div className="max-w-screen-2xl mx-auto h-full px-0.5">
                         {needsOnboarding ? (
                             <>
                                 <FacilityEmptyState
                                     onCreateClick={() => setShowSetupModal(true)}
+                                    onJoinClick={() => setShowJoinModal(true)}
                                     noOrganization
                                 />
                                 {showSetupModal && (
@@ -713,29 +720,36 @@ export function MainLayout() {
                                             setShowSetupModal(false);
                                             refreshProfile();
                                         }}
+                                        onClose={() => setShowSetupModal(false)}
                                     />
                                 )}
+                                <JoinOrganizationModal
+                                    isOpen={showJoinModal}
+                                    onClose={() => setShowJoinModal(false)}
+                                />
                             </>
                         ) : isUnassignedAdmin ? (
                             <>
                                 <FacilityEmptyState
                                     onCreateClick={() => setShowCreateModal(true)}
+                                    onJoinClick={() => setShowJoinModal(true)}
                                 />
                                 {showCreateModal && (
                                     <CreateFacilityModal
                                         onClose={() => setShowCreateModal(false)}
                                     />
                                 )}
+                                <JoinOrganizationModal
+                                    isOpen={showJoinModal}
+                                    onClose={() => setShowJoinModal(false)}
+                                />
                             </>
                         ) : (
-                            <Outlet />
+                            <Outlet key={facilityId ?? 'all'} />
                         )}
                     </div>
                 </div>
             </main>
-
-            {/* Alert Panel */}
-            <AlertPanel isOpen={showAlertPanel} onClose={() => setShowAlertPanel(false)} />
         </div>
     );
 }

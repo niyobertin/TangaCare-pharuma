@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { pharmacyService } from '../../../services/pharmacy.service';
-import { TableSkeleton } from '../../shared/Skeleton';
+import { SkeletonTable } from '../../ui/SkeletonTable';
 import { AlertCircle, RefreshCcw, CheckCircle, Activity, Package } from 'lucide-react';
 import { CreatePurchaseOrderModal } from '../../inventory/CreatePurchaseOrderModal';
 
@@ -121,7 +121,14 @@ export function ReorderSuggestions() {
             )}
 
             {loading ? (
-                <TableSkeleton rows={5} columns={6} />
+                <SkeletonTable
+                    rows={5}
+                    columns={5}
+                    headers={['Medicine & ID', 'Stock Status', 'Daily Run-rate', 'Depletion Timeline']}
+                    columnAligns={['left', 'right', 'right', 'right', 'right']}
+                    actions
+                    className="border-none shadow-none"
+                />
             ) : suggestions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center p-16 bg-slate-50/50 dark:bg-slate-900/50 rounded-[32px] border-2 border-dashed border-slate-200 dark:border-slate-800 text-center animate-in zoom-in-95 duration-700">
                     <div className="bg-emerald-50 dark:bg-emerald-900/20 p-5 rounded-full mb-6">

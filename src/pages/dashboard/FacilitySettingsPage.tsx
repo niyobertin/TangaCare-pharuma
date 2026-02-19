@@ -8,7 +8,9 @@ import {
     Shield,
     User as UserIcon,
     AlertTriangle,
+    Layout,
 } from 'lucide-react';
+import { StorageLocationManager } from '../../components/facility/StorageLocationManager';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { userService } from '../../services/user.service';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
@@ -18,6 +20,7 @@ import type { User } from '../../types/auth';
 import { toast } from 'react-hot-toast';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -27,7 +30,7 @@ export function FacilitySettingsPage() {
     const { facilityId } = useParams({ from: '/app/facility/$facilityId/settings' });
     const navigate = useNavigate();
     const { user, facilityId: contextFacilityId, facilities } = useAuth();
-    const [activeTab, setActiveTab] = useState<'general' | 'config' | 'admin'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'config' | 'storage' | 'admin'>('general');
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [facility, setFacility] = useState<Facility | null>(null);
@@ -43,6 +46,9 @@ export function FacilitySettingsPage() {
         controlled_drug_rules_enabled: true,
         min_stock_threshold_percentage: 20,
         expiry_alert_days: 90,
+        expiry_critical_days: 30,
+        expiry_warning_days: 60,
+        ebm_enabled: false,
     });
 
     const [adminQuery, setAdminQuery] = useState('');
@@ -50,13 +56,15 @@ export function FacilitySettingsPage() {
     const [searchingUsers, setSearchingUsers] = useState(false);
 
     const role = user?.role?.toUpperCase();
-    const isFacilityAdmin = role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN';
+    const isFacilityAdmin =
+        role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN' || role === 'OWNER';
     const assignedFacilityId = contextFacilityId ?? user?.facility_id ?? facilities?.[0]?.id;
 
     useEffect(() => {
         if (!facilityId) return;
         if (
-            isFacilityAdmin &&
+            role !== 'SUPER_ADMIN' &&
+            role !== 'SUPER ADMIN' &&
             assignedFacilityId != null &&
             Number(facilityId) !== assignedFacilityId
         ) {
@@ -82,6 +90,9 @@ export function FacilitySettingsPage() {
                 controlled_drug_rules_enabled: data.controlled_drug_rules_enabled ?? true,
                 min_stock_threshold_percentage: data.min_stock_threshold_percentage ?? 20,
                 expiry_alert_days: data.expiry_alert_days ?? 90,
+                expiry_critical_days: data.expiry_critical_days ?? 30,
+                expiry_warning_days: data.expiry_warning_days ?? 60,
+                ebm_enabled: data.ebm_enabled ?? false,
             });
         } catch (error) {
             console.error(error);
@@ -124,7 +135,7 @@ export function FacilitySettingsPage() {
                     role: 'facility_admin',
                     facility_id: facility.id,
                 });
-            } catch (userErr) {}
+            } catch (userErr) { }
             toast.success('Admin assigned successfully');
             loadFacility(facility.id);
         } catch (error) {
@@ -175,8 +186,39 @@ export function FacilitySettingsPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="w-8 h-8 border-4 border-healthcare-primary/20 border-t-healthcare-primary rounded-full animate-spin" />
+            <div className="p-6 max-w-5xl xl:max-w-6xl mx-auto space-y-6">
+                <div className="flex items-center gap-4 mb-8">
+                    <Skeleton className="h-10 w-10 rounded-xl" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-48" />
+                        <Skeleton className="h-3 w-32" />
+                    </div>
+                </div>
+
+                <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 mb-6">
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-24" />
+                </div>
+
+                <div className="max-w-4xl">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800 space-y-8">
+                        <div className="space-y-6">
+                            <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
+                                <Skeleton className="h-6 w-32" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {Array.from({ length: 6 }).map((_, i) => (
+                                    <div key={i} className="space-y-2">
+                                        <Skeleton className="h-3 w-20" />
+                                        <Skeleton className="h-10 w-full rounded-xl" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -193,7 +235,7 @@ export function FacilitySettingsPage() {
             requireFacility
         >
             <div className="p-6 max-w-5xl xl:max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                {}
+                { }
                 <div className="flex items-center gap-4 mb-8">
                     <button
                         onClick={() => navigate({ to: '/app/facilities' })}
@@ -231,7 +273,7 @@ export function FacilitySettingsPage() {
                     </div>
                 </div>
 
-                {}
+                { }
                 <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto">
                     <button
                         onClick={() => setActiveTab('general')}
@@ -269,11 +311,23 @@ export function FacilitySettingsPage() {
                         <Shield size={16} />
                         Admin Access
                     </button>
+                    <button
+                        onClick={() => setActiveTab('storage')}
+                        className={cn(
+                            'px-4 py-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all whitespace-nowrap',
+                            activeTab === 'storage'
+                                ? 'border-healthcare-primary text-healthcare-primary'
+                                : 'border-transparent text-slate-500 hover:text-healthcare-dark hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-t-lg',
+                        )}
+                    >
+                        <Layout size={16} />
+                        Storage
+                    </button>
                 </div>
 
                 <div className="max-w-4xl">
                     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-                        {}
+                        { }
                         {activeTab === 'general' && (
                             <div className="space-y-8">
                                 <div className="space-y-6">
@@ -393,7 +447,7 @@ export function FacilitySettingsPage() {
                                     </div>
                                 </div>
 
-                                {}
+                                { }
                                 <div className="pt-8 mt-4 border-t border-slate-200 dark:border-slate-800">
                                     <h4 className="flex items-center gap-2 text-red-500 font-bold mb-4">
                                         <AlertTriangle size={18} />
@@ -419,7 +473,7 @@ export function FacilitySettingsPage() {
                             </div>
                         )}
 
-                        {}
+                        { }
                         {activeTab === 'config' && (
                             <div className="space-y-6">
                                 <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
@@ -483,6 +537,31 @@ export function FacilitySettingsPage() {
                                         </label>
                                     </div>
 
+                                    <div className="flex items-center justify-between p-4 bg-blue-50/30 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800">
+                                        <div>
+                                            <h4 className="font-bold text-healthcare-dark text-sm">
+                                                Active RRA EBM Integration
+                                            </h4>
+                                            <p className="text-xs text-slate-500 mt-1">
+                                                Automatically submit sales to RRA EBM system
+                                            </p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.ebm_enabled}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({
+                                                        ...p,
+                                                        ebm_enabled: e.target.checked,
+                                                    }))
+                                                }
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-healthcare-primary"></div>
+                                        </label>
+                                    </div>
+
                                     <div className="grid grid-cols-2 gap-4 mt-4">
                                         <div className="space-y-2">
                                             <label className="text-xs font-black uppercase text-slate-400">
@@ -518,12 +597,44 @@ export function FacilitySettingsPage() {
                                                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold text-healthcare-dark"
                                             />
                                         </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase text-slate-400">
+                                                Expiry Warning (Days)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={formData.expiry_warning_days}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({
+                                                        ...p,
+                                                        expiry_warning_days: Number(e.target.value),
+                                                    }))
+                                                }
+                                                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold text-healthcare-dark"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase text-slate-400">
+                                                Expiry Critical (Days)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={formData.expiry_critical_days}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({
+                                                        ...p,
+                                                        expiry_critical_days: Number(e.target.value),
+                                                    }))
+                                                }
+                                                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold text-healthcare-dark"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {}
+                        { }
                         {activeTab === 'admin' && (
                             <div className="space-y-6">
                                 <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
@@ -546,7 +657,7 @@ export function FacilitySettingsPage() {
                                         <p className="text-base font-black text-healthcare-dark">
                                             {facility?.facility_admin
                                                 ? `${facility.facility_admin.first_name || ''} ${facility.facility_admin.last_name || ''}`.trim() ||
-                                                  'Admin'
+                                                'Admin'
                                                 : facility?.admin_name || 'No Admin Assigned'}
                                         </p>
                                     </div>
@@ -564,7 +675,7 @@ export function FacilitySettingsPage() {
                                         className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold"
                                     />
 
-                                    {}
+                                    { }
                                     {adminQuery && (
                                         <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
                                             {searchingUsers ? (
@@ -604,8 +715,11 @@ export function FacilitySettingsPage() {
                                 </div>
                             </div>
                         )}
+                        {activeTab === 'storage' && (
+                            <StorageLocationManager facilityId={Number(facilityId)} />
+                        )}
 
-                        {}
+                        { }
                         {activeTab !== 'admin' && (
                             <div className="flex justify-end pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
                                 <button

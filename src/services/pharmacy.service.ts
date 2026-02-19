@@ -35,6 +35,10 @@ import type {
     VarianceType,
     StockVariance,
     ReorderSuggestion,
+    StorageLocation,
+    CreateStorageLocationDto,
+    InsuranceProvider,
+    InsuranceClaim,
 } from '../types/pharmacy';
 
 const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
@@ -295,6 +299,23 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
+    async getSaleReceipt(id: number, facilityId: number): Promise<void> {
+        const response = await api.get(`/pharmacy/sales/${id}/receipt`, {
+            params: { facilityId },
+            responseType: 'blob',
+        });
+
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `receipt_${id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    },
+
     async getMedicines(params?: {
         page?: number;
         limit?: number;
@@ -302,6 +323,8 @@ export const pharmacyService = {
         facility_id?: number;
         start_date?: string;
         end_date?: string;
+        sort_by?: string;
+        min_stock?: number;
     }): Promise<PaginatedResponse<Medicine>> {
         const response = await api.get<any>('/pharmacy/medicines', { params });
         return normalizePaginatedResponse<Medicine>(response.data);
@@ -517,6 +540,28 @@ export const pharmacyService = {
         await api.delete(`/pharmacy/departments/${id}`);
     },
 
+    async getStorageLocations(params?: {
+        facility_id?: number;
+    }): Promise<StorageLocation[]> {
+        const response = await api.get<any>('/pharmacy/storage-locations', { params });
+        const data = (response.data as any).data ?? response.data;
+        return Array.isArray(data) ? data : [];
+    },
+
+    async createStorageLocation(data: CreateStorageLocationDto): Promise<StorageLocation> {
+        const response = await api.post<any>('/pharmacy/storage-locations', data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async updateStorageLocation(id: number, data: Partial<StorageLocation>): Promise<StorageLocation> {
+        const response = await api.put<any>(`/pharmacy/storage-locations/${id}`, data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async deleteStorageLocation(id: number): Promise<void> {
+        await api.delete(`/pharmacy/storage-locations/${id}`);
+    },
+
     async getBatches(params?: { medicine_id?: number; facility_id?: number }): Promise<Batch[]> {
         const response = await api.get<{ data: Batch[] }>('/pharmacy/batches', { params });
         return response.data.data;
@@ -678,6 +723,8 @@ export const pharmacyService = {
         batch_id: number;
         source_department_id: number | null;
         target_department_id: number;
+        source_location_id?: number | null;
+        target_location_id?: number | null;
         quantity: number;
         notes?: string;
     }): Promise<any> {
@@ -794,13 +841,17 @@ export const pharmacyService = {
     },
 
     async getReorderSuggestions(facilityId: number): Promise<ReorderSuggestion[]> {
-        const response = await api.get<any>(`/pharmacy/analytics/reorder-suggestions/${facilityId}`);
+        const response = await api.get<any>(
+            `/pharmacy/analytics/reorder-suggestions/${facilityId}`,
+        );
         const data = (response.data as any).data ?? response.data;
         return Array.isArray(data) ? data : data.suggestions || [];
     },
 
     async createDraftPOsFromSuggestions(facilityId: number): Promise<{ count: number }> {
-        const response = await api.post<any>(`/pharmacy/procurement/auto-draft-pos`, { facility_id: facilityId });
+        const response = await api.post<any>(`/pharmacy/procurement/auto-draft-pos`, {
+            facility_id: facilityId,
+        });
         return (response.data as any).data ?? response.data;
     },
 
@@ -1095,4 +1146,113 @@ export const pharmacyService = {
         const response = await api.post<any>(`/pharmacy/variances/${id}/reject`, { reason });
         return (response.data as any).data ?? response.data;
     },
+
+    async manualStockEntry(data: {
+        facility_id: number;
+        medicine_id: number;
+        batches: Array<{
+            batch_number: string;
+            expiry_date: string;
+            manufacturing_date?: string;
+            quantity: number;
+            unit_cost?: number;
+        }>;
+        storage_location_id?: number | null;
+    }): Promise<any> {
+        const response = await api.post('/pharmacy/stock/add-batches', data);
+        return response.data;
+    },
+
+    async downloadStockTemplate(facilityId?: number): Promise<Blob> {
+        const response = await api.get('/pharmacy/stock/template/download', {
+            params: { facility_id: facilityId },
+            responseType: 'blob',
+        });
+        return response.data;
+    },
+
+    async importStockBatches(
+        file: File,
+        facilityId: number,
+    ): Promise<{ imported: number; errors: string[] }> {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('facility_id', facilityId.toString());
+        const response = await api.post<any>('/pharmacy/stock/import', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    // Insurance Management Methods
+    async getInsuranceProviders(): Promise<InsuranceProvider[]> {
+        const response = await api.get<any>('/pharmacy/insurance/providers');
+        const data = (response.data as any).data ?? response.data;
+        return Array.isArray(data) ? data : [];
+    },
+
+    async createInsuranceProvider(data: Partial<InsuranceProvider>): Promise<InsuranceProvider> {
+        const response = await api.post<any>('/pharmacy/insurance/providers', data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async updateInsuranceProvider(id: number, data: Partial<InsuranceProvider>): Promise<InsuranceProvider> {
+        const response = await api.put<any>(`/pharmacy/insurance/providers/${id}`, data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getInsuranceClaims(params?: {
+        status?: string;
+        provider_id?: number;
+        facility_id?: number;
+        start_date?: string;
+        end_date?: string;
+    }): Promise<InsuranceClaim[]> {
+        const response = await api.get<any>('/pharmacy/insurance/claims', { params });
+        const data = (response.data as any).data ?? response.data;
+        return Array.isArray(data) ? data : [];
+    },
+
+    async updateInsuranceClaim(id: number, data: any): Promise<InsuranceClaim> {
+        const response = await api.put<any>(`/pharmacy/insurance/claims/${id}`, data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    // H-1: Download a PDF receipt for a specific sale and trigger browser download
+    async downloadReceipt(saleId: number): Promise<void> {
+        const response = await api.get(`/pharmacy/sales/${saleId}/receipt`, {
+            responseType: 'blob',
+        });
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `receipt_${saleId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    },
+
+    // H-6: Fetch recent sales for a specific patient (for PatientSummaryPanel)
+    async getPatientSales(patientId: number, limit = 3): Promise<Sale[]> {
+        const response = await api.get<any>('/pharmacy/sales', {
+            params: { patient_id: patientId, limit },
+        });
+        const payload = (response.data as any).data ?? response.data;
+        const items = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
+        return items.slice(0, limit) as Sale[];
+    },
+
+    // H-2: Get facility-specific selling price for a medicine (falls back to medicine default)
+    async getFacilityMedicinePrice(medicineId: number): Promise<number | null> {
+        try {
+            const response = await api.get<any>(`/pharmacy/facility-settings/medicine/${medicineId}/price`);
+            const payload = (response.data as any).data ?? response.data;
+            return typeof payload?.selling_price === 'number' ? payload.selling_price : null;
+        } catch {
+            return null; // gracefully fall back to medicine default price
+        }
+    },
 };
+

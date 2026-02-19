@@ -12,7 +12,7 @@ import {
     AlertTriangle,
     ChevronRight,
 } from 'lucide-react';
-import { TableSkeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 
 export function PhysicalCountPage() {
     const { user, facilityId } = useAuth();
@@ -79,7 +79,7 @@ export function PhysicalCountPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN', 'PHARMACIST', 'STORE_MANAGER']}
+            allowedRoles={['ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN', 'PHARMACIST', 'STORE_MANAGER', 'OWNER']}
             requireFacility
         >
             <div className="p-6 space-y-6 animate-in fade-in duration-500">
@@ -108,7 +108,14 @@ export function PhysicalCountPage() {
                 </div>
 
                 {loading && view === 'list' ? (
-                    <TableSkeleton rows={5} columns={4} />
+                    <SkeletonTable
+                        rows={5}
+                        columns={5}
+                        headers={['Date Started', 'Status', 'Initiated By', 'Approved By']}
+                        columnAligns={['left', 'left', 'left', 'left', 'right']}
+                        actions
+                        className="border-none shadow-none"
+                    />
                 ) : (
                     <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
                         <table className="w-full text-left text-sm">

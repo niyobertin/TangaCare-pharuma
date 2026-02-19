@@ -11,7 +11,7 @@ import {
     Hash,
 } from 'lucide-react';
 import { pharmacyService } from '../../../services/pharmacy.service';
-import { TableSkeleton } from '../../shared/Skeleton';
+import { SkeletonTable } from '../../ui/SkeletonTable';
 import { format } from 'date-fns';
 import type { CustomerReturn, ReturnStatus } from '../../../types/pharmacy';
 
@@ -133,7 +133,27 @@ export const ReturnManagement = ({ facilityId }: { facilityId: number }) => {
                             {isLoading ? (
                                 <tr>
                                     <td colSpan={6} className="p-0">
-                                        <TableSkeleton rows={5} columns={6} />
+                                        <SkeletonTable
+                                            rows={5}
+                                            columns={6}
+                                            headers={[
+                                                'Return Info',
+                                                'Sale Reference',
+                                                'Refund Amount',
+                                                'Status',
+                                                'Date',
+                                            ]}
+                                            columnAligns={[
+                                                'left',
+                                                'left',
+                                                'right',
+                                                'center',
+                                                'left',
+                                                'right',
+                                            ]}
+                                            actions
+                                            className="border-none shadow-none"
+                                        />
                                     </td>
                                 </tr>
                             ) : returnsData?.data && returnsData.data.length > 0 ? (

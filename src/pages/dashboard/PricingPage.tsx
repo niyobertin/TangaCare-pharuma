@@ -6,6 +6,47 @@ import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Facility, MedicineCategory } from '../../types/pharmacy';
 
+import { Skeleton } from '../../components/shared/Skeleton';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
+
+function PricingSkeleton() {
+    return (
+        <div className="space-y-8">
+            <section className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                    <Skeleton className="w-5 h-5 rounded-full" />
+                    <Skeleton className="h-6 w-48" />
+                </div>
+                <Skeleton className="h-3 w-1/2" />
+                <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-28 rounded-xl" />
+                    <Skeleton className="h-8 w-20 rounded-xl" />
+                </div>
+            </section>
+
+            <section className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                    <Skeleton className="w-5 h-5 rounded-full" />
+                    <Skeleton className="h-6 w-32" />
+                </div>
+                <Skeleton className="h-3 w-3/4" />
+                <SkeletonTable
+                    rows={5}
+                    columns={4}
+                    headers={['Name', 'Code', 'Default markup %']}
+                    actions
+                    className="border-none shadow-none"
+                />
+            </section>
+
+            <section className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 space-y-4">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-3 w-full max-w-lg" />
+            </section>
+        </div>
+    );
+}
+
 export function PricingPage() {
     const { facilityId, organizationId, user } = useAuth();
     const [facility, setFacility] = useState<Facility | null>(null);
@@ -106,12 +147,10 @@ export function PricingPage() {
                 )}
 
                 {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="w-10 h-10 border-2 border-healthcare-primary border-t-transparent rounded-full animate-spin" />
-                    </div>
+                    <PricingSkeleton />
                 ) : (
                     <>
-                        {}
+                        { }
                         {facility && (
                             <section className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6">
                                 <div className="flex items-center gap-2 mb-4">
@@ -153,7 +192,7 @@ export function PricingPage() {
                             </section>
                         )}
 
-                        {}
+                        { }
                         <section className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6">
                             <div className="flex items-center gap-2 mb-4">
                                 <Package size={20} className="text-healthcare-primary" />
@@ -240,7 +279,7 @@ export function PricingPage() {
                                                                     setEditMarkup(
                                                                         String(
                                                                             cat.default_markup_percent ??
-                                                                                '',
+                                                                            '',
                                                                         ),
                                                                     );
                                                                 }}

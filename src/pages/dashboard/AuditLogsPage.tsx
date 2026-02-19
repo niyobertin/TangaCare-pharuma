@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-    ShieldCheck,
     Clock,
     User,
-    Zap,
-    ShoppingCart,
-    Building2,
-    Database,
     Download,
     Eye,
     Search,
@@ -19,10 +14,12 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import { useSearch } from '@tanstack/react-router';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { SkeletonTable } from '../../components/ui/SkeletonTable';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
+
 
 const ENTITY_TYPE_LABELS: Record<string, string> = {
     facility: 'Facilities',
@@ -95,8 +92,8 @@ export function AuditLogsPage() {
         if (!searchQuery) return true;
         const userLabel = log.user
             ? `${(log.user as any).first_name || ''} ${(log.user as any).last_name || ''}`.trim() ||
-              (log.user as any).email ||
-              ''
+            (log.user as any).email ||
+            ''
             : '';
         const details = log.description || log.entity_name || '';
         return (
@@ -187,115 +184,149 @@ export function AuditLogsPage() {
                 )}
 
                 {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="w-10 h-10 border-2 border-healthcare-primary border-t-transparent rounded-full animate-spin" />
-                    </div>
+                    <SkeletonTable
+                        rows={limit}
+                        columns={6}
+                        headers={['Date', 'User', 'Action', 'Module', 'Details', 'Impact']}
+                    />
                 ) : (
                     <>
-                        <div className="space-y-4">
-                            {filteredLogs.map((log) => {
-                                const userLabel = log.user
-                                    ? `${(log.user as any).first_name || ''} ${(log.user as any).last_name || ''}`.trim() ||
-                                      (log.user as any).email ||
-                                      '—'
-                                    : '—';
-                                const roleLabel = (log.user as any)?.role
-                                    ? String((log.user as any).role || '').replace(/_/g, ' ')
-                                    : '—';
-                                const moduleLabel =
-                                    ENTITY_TYPE_LABELS[log.entity_type] || log.entity_type || '—';
-                                const impact = formatImpact(log.action);
-                                return (
-                                    <div
-                                        key={log.id}
-                                        className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-5 hover:shadow-md transition-all group"
-                                    >
-                                        <div className="flex flex-col md:flex-row gap-4 md:items-center">
-                                            <div
-                                                className={cn(
-                                                    'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0',
-                                                    moduleLabel === 'Facilities'
-                                                        ? 'bg-blue-50 text-blue-500'
-                                                        : moduleLabel === 'Dispensing'
-                                                          ? 'bg-teal-50 text-teal-500'
-                                                          : moduleLabel === 'Stock'
-                                                            ? 'bg-indigo-50 text-indigo-500'
-                                                            : moduleLabel === 'Procurement'
-                                                              ? 'bg-amber-50 text-amber-500'
-                                                              : 'bg-rose-50 text-rose-500',
-                                                )}
-                                            >
-                                                {moduleLabel === 'Facilities' ? (
-                                                    <Building2 size={22} />
-                                                ) : moduleLabel === 'Dispensing' ? (
-                                                    <Zap size={22} />
-                                                ) : moduleLabel === 'Stock' ? (
-                                                    <Database size={22} />
-                                                ) : moduleLabel === 'Procurement' ? (
-                                                    <ShoppingCart size={22} />
-                                                ) : (
-                                                    <ShieldCheck size={22} />
-                                                )}
-                                            </div>
-                                            <div className="flex-1 space-y-1">
-                                                <div className="flex justify-between items-start">
-                                                    <h4 className="font-black text-healthcare-dark text-sm uppercase">
-                                                        {log.action}
-                                                    </h4>
-                                                    <div className="flex items-center gap-1.5 text-slate-400">
-                                                        <Clock size={12} />
-                                                        <span className="text-[10px] font-bold uppercase">
-                                                            {log.created_at
-                                                                ? new Date(
-                                                                      log.created_at,
-                                                                  ).toLocaleString()
-                                                                : '—'}
+                        <div className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-50 dark:bg-slate-800/50">
+                                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                Timestamp
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                User
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                Action / Method
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                Module
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                Details
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">
+                                                Impact
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                                Action
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        {filteredLogs.map((log) => {
+                                            const userLabel = log.user
+                                                ? `${(log.user as any).first_name || ''} ${(log.user as any).last_name || ''}`.trim() ||
+                                                (log.user as any).email ||
+                                                '—'
+                                                : '—';
+                                            const roleLabel = (log.user as any)?.role
+                                                ? String((log.user as any).role || '').replace(/_/g, ' ')
+                                                : '—';
+                                            const moduleLabel =
+                                                ENTITY_TYPE_LABELS[log.entity_type] || log.entity_type || '—';
+                                            const impact = formatImpact(log.action);
+                                            return (
+                                                <tr
+                                                    key={log.id}
+                                                    className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                                >
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center gap-2 text-slate-500">
+                                                            <Clock size={14} className="text-slate-400" />
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs font-bold text-healthcare-dark">
+                                                                    {log.created_at
+                                                                        ? new Date(log.created_at).toLocaleDateString()
+                                                                        : '—'}
+                                                                </span>
+                                                                <span className="text-[10px] font-medium text-slate-400">
+                                                                    {log.created_at
+                                                                        ? new Date(log.created_at).toLocaleTimeString()
+                                                                        : ''}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                                                                <User size={16} />
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs font-black text-healthcare-dark">
+                                                                    {userLabel}
+                                                                </span>
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                                                    {roleLabel}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-xs font-black text-healthcare-primary uppercase">
+                                                            {log.action}
                                                         </span>
-                                                    </div>
-                                                </div>
-                                                <p className="text-xs text-slate-500 font-medium">
-                                                    {log.description ||
-                                                        log.entity_name ||
-                                                        `Entity #${log.entity_id}`}
-                                                </p>
-                                                <div className="flex items-center gap-3 mt-2">
-                                                    <div className="flex items-center gap-1">
-                                                        <User
-                                                            size={10}
-                                                            className="text-healthcare-primary"
-                                                        />
-                                                        <span className="text-[10px] font-black uppercase text-healthcare-primary">
-                                                            {userLabel}
-                                                        </span>
-                                                        <span className="text-[10px] text-slate-300 ml-1">
-                                                            ({roleLabel})
-                                                        </span>
-                                                    </div>
-                                                    <span className="text-slate-200">|</span>
-                                                    <div className="flex items-center gap-1">
-                                                        <div
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2">
+                                                            <div
+                                                                className={cn(
+                                                                    'w-2 h-2 rounded-full',
+                                                                    moduleLabel === 'Facilities'
+                                                                        ? 'bg-blue-500'
+                                                                        : moduleLabel === 'Dispensing'
+                                                                            ? 'bg-teal-500'
+                                                                            : moduleLabel === 'Stock'
+                                                                                ? 'bg-indigo-500'
+                                                                                : moduleLabel === 'Procurement'
+                                                                                    ? 'bg-amber-500'
+                                                                                    : 'bg-rose-500',
+                                                                )}
+                                                            />
+                                                            <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                                                {moduleLabel}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <p className="text-xs text-slate-500 font-medium max-w-xs truncate" title={log.description || log.entity_name}>
+                                                            {log.description ||
+                                                                log.entity_name ||
+                                                                `Entity #${log.entity_id}`}
+                                                        </p>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span
                                                             className={cn(
-                                                                'w-2 h-2 rounded-full',
+                                                                'px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest',
                                                                 impact === 'High'
-                                                                    ? 'bg-rose-500'
+                                                                    ? 'bg-rose-50 text-rose-600'
                                                                     : impact === 'Medium'
-                                                                      ? 'bg-amber-500'
-                                                                      : 'bg-teal-500',
+                                                                        ? 'bg-amber-50 text-amber-600'
+                                                                        : 'bg-teal-50 text-teal-600',
                                                             )}
-                                                        />
-                                                        <span className="text-[10px] font-bold uppercase text-slate-400">
-                                                            {impact} Impact
+                                                        >
+                                                            {impact}
                                                         </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors self-start md:self-center">
-                                                <Eye size={18} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors">
+                                                            <Eye size={18} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                         {total === 0 && !loading && (
                             <div className="text-center py-12 text-slate-500 text-sm">
@@ -304,23 +335,28 @@ export function AuditLogsPage() {
                         )}
                         {totalPages > 1 && (
                             <div className="flex items-center justify-between pt-4">
-                                <span className="text-xs text-slate-500">
-                                    Page {page} of {totalPages} ({total} total)
+                                <span className="text-xs text-slate-500 font-bold">
+                                    Displaying {filteredLogs.length} of {total} entries
                                 </span>
-                                <div className="flex gap-2">
+                                <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                                         disabled={page <= 1}
-                                        className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50"
+                                        className="p-2 rounded-xl border-2 border-slate-100 dark:border-slate-800 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                                     >
-                                        <ChevronLeft size={18} />
+                                        <ChevronLeft size={16} />
                                     </button>
+                                    <div className="flex items-center gap-1 mx-2">
+                                        <span className="text-xs font-black text-healthcare-dark">{page}</span>
+                                        <span className="text-xs text-slate-400">/</span>
+                                        <span className="text-xs font-bold text-slate-500">{totalPages}</span>
+                                    </div>
                                     <button
                                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                         disabled={page >= totalPages}
-                                        className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50"
+                                        className="p-2 rounded-xl border-2 border-slate-100 dark:border-slate-800 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
                                     >
-                                        <ChevronRight size={18} />
+                                        <ChevronRight size={16} />
                                     </button>
                                 </div>
                             </div>
