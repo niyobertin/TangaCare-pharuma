@@ -569,39 +569,76 @@ function SalesReports({
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                        {sales?.transactions?.map((t: any) => (
-                            <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                                <td className="px-6 py-4 text-xs font-bold text-slate-500">
-                                    {new Date(t.date).toLocaleDateString()}
-                                </td>
-                                <td className="px-6 py-4 font-black text-healthcare-primary text-xs tracking-tighter uppercase">
-                                    {t.transaction_number}
-                                </td>
-                                <td className="px-6 py-4 font-black text-healthcare-dark dark:text-white">
-                                    {t.medicine_name}
-                                </td>
-                                <td className="px-6 py-4 text-right text-slate-500">
-                                    {t.quantity}
-                                </td>
-                                <td className="px-6 py-4 text-right font-black text-healthcare-primary">
-                                    RWF {t.total_amount.toLocaleString()}
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <button
-                                        onClick={async () => {
-                                            const details = await pharmacyService.getSale(
-                                                t.sale_id,
-                                            );
-                                            setSelectedSale(details);
-                                            setIsReturnModalOpen(true);
-                                        }}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase hover:bg-rose-100 transition-colors border border-rose-100"
-                                    >
-                                        <RotateCcw size={12} /> Return
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                        {(() => {
+                            const grouped = sales?.transactions?.reduce((acc: any, t: any) => {
+                                if (!acc[t.transaction_number]) {
+                                    acc[t.transaction_number] = {
+                                        ...t,
+                                        medicines: [t.medicine_name],
+                                        total: t.total_amount,
+                                        items: [t],
+                                    };
+                                } else {
+                                    acc[t.transaction_number].medicines.push(t.medicine_name);
+                                    acc[t.transaction_number].total += t.total_amount;
+                                    acc[t.transaction_number].items.push(t);
+                                }
+                                return acc;
+                            }, {});
+
+                            return Object.values(grouped || {}).map((t: any) => (
+                                <tr key={t.transaction_number} className="hover:bg-slate-50 transition-colors">
+                                    <td className="px-6 py-4 text-xs font-bold text-slate-500">
+                                        {new Date(t.date).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-6 py-4 font-black text-healthcare-primary text-xs tracking-tighter uppercase">
+                                        {t.transaction_number}
+                                    </td>
+                                    <td className="px-6 py-4 font-black text-healthcare-dark dark:text-white">
+                                        <div className="flex flex-col">
+                                            <span>{t.medicines[0]}</span>
+                                            {t.medicines.length > 1 && (
+                                                <span className="text-[10px] text-slate-400">
+                                                    + {t.medicines.length - 1} more items
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right text-slate-500">
+                                        {t.items.reduce((sum: number, item: any) => sum + item.quantity, 0)}
+                                    </td>
+                                    <td className="px-6 py-4 text-right font-black text-healthcare-primary">
+                                        RWF {t.total.toLocaleString()}
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex gap-2 justify-end">
+                                            <button
+                                                onClick={async () => {
+                                                    if (facilityId) {
+                                                        await pharmacyService.getSaleReceipt(t.sale_id, facilityId);
+                                                    }
+                                                }}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase hover:bg-blue-100 transition-colors border border-blue-100"
+                                            >
+                                                <Download size={12} /> Receipt
+                                            </button>
+                                            <button
+                                                onClick={async () => {
+                                                    const details = await pharmacyService.getSale(
+                                                        t.sale_id,
+                                                    );
+                                                    setSelectedSale(details);
+                                                    setIsReturnModalOpen(true);
+                                                }}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase hover:bg-rose-100 transition-colors border border-rose-100"
+                                            >
+                                                <RotateCcw size={12} /> Return
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ));
+                        })()}
                     </tbody>
                 </table>
             </div>

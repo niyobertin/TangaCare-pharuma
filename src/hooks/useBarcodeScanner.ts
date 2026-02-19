@@ -1,20 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-/**
- * H-3: Barcode scanner hook.
- *
- * USB HID barcode scanners emit keydown events very rapidly and finish with Enter.
- * This hook accumulates characters typed within 50ms of each other (scanner speed)
- * and fires onScan when Enter is received and the buffer is at least minLength chars.
- *
- * Works with:
- *  - USB HID scanners (most common in Rwanda pharmacies)
- *  - Bluetooth scanners in HID mode
- *
- * Usage:
- *   const ref = useBarcodeScanner((barcode) => handleMedicineLookup(barcode));
- *   <div ref={ref} tabIndex={0}>...</div>  ← or attach to window (pass null)
- */
 export const useBarcodeScanner = (
     onScan: (barcode: string) => void,
     options: { minLength?: number; scanTimeoutMs?: number; enabled?: boolean } = {},

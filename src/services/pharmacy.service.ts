@@ -299,6 +299,23 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
+    async getSaleReceipt(id: number, facilityId: number): Promise<void> {
+        const response = await api.get(`/pharmacy/sales/${id}/receipt`, {
+            params: { facilityId },
+            responseType: 'blob',
+        });
+
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `receipt_${id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    },
+
     async getMedicines(params?: {
         page?: number;
         limit?: number;

@@ -48,6 +48,7 @@ export function FacilitySettingsPage() {
         expiry_alert_days: 90,
         expiry_critical_days: 30,
         expiry_warning_days: 60,
+        ebm_enabled: false,
     });
 
     const [adminQuery, setAdminQuery] = useState('');
@@ -91,6 +92,7 @@ export function FacilitySettingsPage() {
                 expiry_alert_days: data.expiry_alert_days ?? 90,
                 expiry_critical_days: data.expiry_critical_days ?? 30,
                 expiry_warning_days: data.expiry_warning_days ?? 60,
+                ebm_enabled: data.ebm_enabled ?? false,
             });
         } catch (error) {
             console.error(error);
@@ -527,6 +529,31 @@ export function FacilitySettingsPage() {
                                                         ...p,
                                                         controlled_drug_rules_enabled:
                                                             e.target.checked,
+                                                    }))
+                                                }
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-healthcare-primary"></div>
+                                        </label>
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-4 bg-blue-50/30 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800">
+                                        <div>
+                                            <h4 className="font-bold text-healthcare-dark text-sm">
+                                                Active RRA EBM Integration
+                                            </h4>
+                                            <p className="text-xs text-slate-500 mt-1">
+                                                Automatically submit sales to RRA EBM system
+                                            </p>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!formData.ebm_enabled}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({
+                                                        ...p,
+                                                        ebm_enabled: e.target.checked,
                                                     }))
                                                 }
                                                 className="sr-only peer"

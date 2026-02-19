@@ -48,6 +48,7 @@ export function DispensingPage() {
     const [showCreatePatient, setShowCreatePatient] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [prescriptionId, setPrescriptionId] = useState('');
+    const [lastSaleId, setLastSaleId] = useState<number | null>(null);
 
     const hasControlledDrug = cart.some((item) => item.is_controlled_drug);
 
@@ -275,7 +276,7 @@ export function DispensingPage() {
     ) => {
         setProcessing(true);
         try {
-            await pharmacyService.createSale({
+            const response = await pharmacyService.createSale({
                 patient_id: selectedPatient.id,
                 dispense_type: 'otc',
                 vat_rate: 0.18,
@@ -297,6 +298,7 @@ export function DispensingPage() {
                     : {}),
             });
 
+            setLastSaleId(response.id);
             setShowSuccess(true);
             toast.success('Dispensing completed successfully');
             setShowPaymentModal(false);
@@ -308,8 +310,9 @@ export function DispensingPage() {
                 setPatientQuery('');
                 setPrescriptionId('');
                 setSelectedPatient(WALK_IN_PATIENT);
+                setLastSaleId(null);
                 fetchMedicines();
-            }, 3000);
+            }, 5000);
         } catch (error) {
             console.error('Checkout failed:', error);
             toast.error('Checkout failed. Please try again.');
@@ -573,6 +576,14 @@ export function DispensingPage() {
                             <h3 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
                                 Sale Completed!
                             </h3>
+                            {lastSaleId && user?.facility_id && (
+                                <button
+                                    onClick={() => pharmacyService.getSaleReceipt(lastSaleId, user.facility_id!)}
+                                    className="mt-6 flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                                >
+                                    <ShoppingCart size={18} /> Print Receipt
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
