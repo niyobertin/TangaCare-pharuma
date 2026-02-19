@@ -89,6 +89,7 @@ export interface Facility {
     facility_admin?: import('./auth').User;
     departments_enabled?: boolean;
     controlled_drug_rules_enabled?: boolean;
+    ebm_enabled?: boolean;
     min_stock_threshold_percentage?: number;
     expiry_alert_days?: number;
     expiry_critical_days?: number;
@@ -136,6 +137,7 @@ export interface CreateFacilityDto {
 
     departments_enabled?: boolean;
     controlled_drug_rules_enabled?: boolean;
+    ebm_enabled?: boolean;
     min_stock_threshold_percentage?: number;
     expiry_alert_days?: number;
     expiry_critical_days?: number;
