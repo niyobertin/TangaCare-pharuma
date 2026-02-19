@@ -1200,4 +1200,42 @@ export const pharmacyService = {
         const response = await api.put<any>(`/pharmacy/insurance/claims/${id}`, data);
         return (response.data as any).data ?? response.data;
     },
+
+    // H-1: Download a PDF receipt for a specific sale and trigger browser download
+    async downloadReceipt(saleId: number): Promise<void> {
+        const response = await api.get(`/pharmacy/sales/${saleId}/receipt`, {
+            responseType: 'blob',
+        });
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `receipt_${saleId}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    },
+
+    // H-6: Fetch recent sales for a specific patient (for PatientSummaryPanel)
+    async getPatientSales(patientId: number, limit = 3): Promise<Sale[]> {
+        const response = await api.get<any>('/pharmacy/sales', {
+            params: { patient_id: patientId, limit },
+        });
+        const payload = (response.data as any).data ?? response.data;
+        const items = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
+        return items.slice(0, limit) as Sale[];
+    },
+
+    // H-2: Get facility-specific selling price for a medicine (falls back to medicine default)
+    async getFacilityMedicinePrice(medicineId: number): Promise<number | null> {
+        try {
+            const response = await api.get<any>(`/pharmacy/facility-settings/medicine/${medicineId}/price`);
+            const payload = (response.data as any).data ?? response.data;
+            return typeof payload?.selling_price === 'number' ? payload.selling_price : null;
+        } catch {
+            return null; // gracefully fall back to medicine default price
+        }
+    },
 };
+

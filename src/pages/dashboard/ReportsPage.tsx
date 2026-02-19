@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     TrendingUp,
     Calendar,
@@ -35,62 +35,76 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
     const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const { user, facilityId } = useAuth();
     const effectiveFacilityId = facilityId ?? user?.facility_id;
-    const resolvedTab = defaultTab === 'profit' ? 'sales' : defaultTab;
 
-    const reportTitle = useMemo(() => {
-        switch (resolvedTab) {
-            case 'sales':
-                return 'Sales Report';
-            case 'stock':
-                return 'Stock Report';
-            case 'low-stock':
-            case 'reorder':
-                return 'Low Stock & Reorder Report';
-            case 'expiry':
-            case 'recall':
-                return 'Expiry Report';
-            case 'stock-movement':
-            case 'movement':
-                return 'Item Movement Report';
-            case 'tax':
-                return 'Tax Report';
-            case 'customer':
-            case 'loyalty':
-                return 'Customer Report';
-            case 'purchase':
-            case 'procurement':
-                return 'Purchase Report';
-            case 'staff':
-            case 'performance':
-                return 'Staff Performance Report';
-            case 'kpis':
-                return 'Dashboard Overview';
-            default:
-                return 'Reports';
-        }
-    }, [resolvedTab]);
+    // H-9: 5 top-level tabs; activeTab overrides defaultTab from the router
+    const [activeTab, setActiveTab] = useState<string>(
+        defaultTab === 'profit' ? 'sales' : defaultTab,
+    );
+
+    // Map the 5 tabs → the existing sub-section keys
+    const TABS = [
+        {
+            key: 'sales',
+            label: 'Sales',
+            emoji: '📊',
+            subtabs: ['sales'],
+        },
+        {
+            key: 'inventory',
+            label: 'Inventory',
+            emoji: '📦',
+            subtabs: ['stock', 'low-stock', 'reorder', 'expiry', 'recall', 'stock-movement', 'movement'],
+        },
+        {
+            key: 'compliance',
+            label: 'Compliance',
+            emoji: '💊',
+            subtabs: ['kpis'],
+        },
+        {
+            key: 'procurement',
+            label: 'Procurement',
+            emoji: '🏪',
+            subtabs: ['purchase', 'procurement'],
+        },
+        {
+            key: 'performance',
+            label: 'Performance',
+            emoji: '👥',
+            subtabs: ['staff', 'performance', 'customer', 'loyalty', 'tax'],
+        },
+    ] as const;
+
+    // Determine which sub-report to load for the active tab
+    function defaultSubtabFor(tab: string): string {
+        if (tab === 'inventory') return 'stock';
+        if (tab === 'compliance') return 'kpis';
+        if (tab === 'procurement') return 'purchase';
+        if (tab === 'performance') return 'performance';
+        return 'sales'; // 'sales' tab
+    }
+
+    // resolvedTab = the specific sub-section key used by the existing render logic below
+    const resolvedTab = TABS.some((t) => t.key === activeTab)
+        ? defaultSubtabFor(activeTab)
+        : activeTab === 'profit'
+            ? 'sales'
+            : activeTab;
 
     const [days, setDays] = useState(30);
 
     const handleExport = async (format: 'excel' | 'pdf') => {
         let type = resolvedTab;
-        // Map tab names to backend report types
         if (type === 'reorder') type = 'low-stock';
         if (type === 'recall' || type === 'expiry') type = 'expiry';
         if (type === 'movement') type = 'stock-movement';
 
-        const params: any = {
-            facilityId: effectiveFacilityId,
-        };
-
+        const params: any = { facilityId: effectiveFacilityId };
         if (['sales', 'tax', 'performance', 'staff', 'purchase'].includes(type)) {
             params.start_date = startDate;
             params.end_date = endDate;
         }
-
-        if (type === 'expiry') {
-            params.days = days;
-        }
+        if (type === 'expiry') params.days = days;
 
         try {
             await pharmacyService.downloadReport(type, format, params);
@@ -114,71 +128,80 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             ]}
             requireFacility
         >
-            <div className="p-6 space-y-8 animate-in fade-in duration-500">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 className="text-2xl font-black text-healthcare-dark dark:text-white uppercase tracking-tight">
-                            {reportTitle}
-                        </h1>
-                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
-                            {defaultTab === 'kpis'
-                                ? 'Quick insights & summary'
-                                : 'Detailed performance tracking'}
-                        </p>
-                    </div>
-                    <div className="flex gap-4 flex-wrap items-center">
-                        {(resolvedTab === 'expiry' || resolvedTab === 'recall') && (
-                            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
-                                <span className="text-[10px] font-black text-slate-400 uppercase">
-                                    Days:
-                                </span>
-                                <select
-                                    value={days}
-                                    onChange={(e) => setDays(Number(e.target.value))}
-                                    className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
-                                >
-                                    <option value={30}>30 Days</option>
-                                    <option value={60}>60 Days</option>
-                                    <option value={90}>90 Days</option>
-                                </select>
-                            </div>
-                        )}
-                        {['sales', 'tax', 'performance', 'staff', 'purchase'].includes(
-                            resolvedTab,
-                        ) && (
-                                <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm">
-                                    <Calendar size={14} className="text-slate-400" />
-                                    <input
-                                        type="date"
-                                        value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                        className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
-                                    />
-                                    <span className="text-slate-300 px-1">—</span>
-                                    <input
-                                        type="date"
-                                        value={endDate}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                        className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
-                                    />
-                                </div>
-                            )}
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => handleExport('excel')}
-                                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md shadow-emerald-500/20"
-                            >
-                                <Download size={14} /> Excel
-                            </button>
-                            <button
-                                onClick={() => handleExport('pdf')}
-                                className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-md shadow-rose-500/20"
-                            >
-                                <Download size={14} /> PDF
-                            </button>
-                        </div>
+            <div className="p-6 space-y-6 animate-in fade-in duration-500">
+                {/* ── H-9 Tab Bar ───────────────────────────────────────────── */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <h1 className="text-2xl font-black text-healthcare-dark dark:text-white uppercase tracking-tight">
+                        Reports
+                    </h1>
+                    {/* Export buttons stay at the top right */}
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => handleExport('excel')}
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md shadow-emerald-500/20"
+                        >
+                            <Download size={14} /> Excel
+                        </button>
+                        <button
+                            onClick={() => handleExport('pdf')}
+                            className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-md shadow-rose-500/20"
+                        >
+                            <Download size={14} /> PDF
+                        </button>
                     </div>
                 </div>
+
+                {/* Tab pills */}
+                <div className="flex gap-2 flex-wrap border-b border-slate-200 dark:border-slate-700 pb-2">
+                    {TABS.map((tab) => (
+                        <button
+                            key={tab.key}
+                            onClick={() => setActiveTab(tab.key)}
+                            className={cn(
+                                'flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all',
+                                activeTab === tab.key
+                                    ? 'bg-healthcare-primary text-white shadow-md shadow-healthcare-primary/30'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700',
+                            )}
+                        >
+                            <span>{tab.emoji}</span> {tab.label}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Date / day pickers (conditionally shown) */}
+                {(resolvedTab === 'expiry' || resolvedTab === 'recall') && (
+                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm w-fit">
+                        <span className="text-[10px] font-black text-slate-400 uppercase">Days:</span>
+                        <select
+                            value={days}
+                            onChange={(e) => setDays(Number(e.target.value))}
+                            className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
+                        >
+                            <option value={30}>30 Days</option>
+                            <option value={60}>60 Days</option>
+                            <option value={90}>90 Days</option>
+                        </select>
+                    </div>
+                )}
+                {['sales', 'tax', 'performance', 'staff', 'purchase'].includes(resolvedTab) && (
+                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm w-fit">
+                        <Calendar size={14} className="text-slate-400" />
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
+                        />
+                        <span className="text-slate-300 px-1">—</span>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
+                        />
+                    </div>
+                )}
 
                 <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 min-h-[400px]">
                     {defaultTab === 'kpis' && <DashboardOwner facilityId={effectiveFacilityId!} />}

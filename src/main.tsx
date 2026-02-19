@@ -8,19 +8,23 @@ import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
-        <QueryClientProvider client={queryClient}>
-            <ThemeProvider>
-                <AuthProvider>
-                    <SocketProvider>
-                        <Toaster position="top-right" reverseOrder={false} />
-                        <RouterProvider router={router} />
-                    </SocketProvider>
-                </AuthProvider>
-            </ThemeProvider>
-        </QueryClientProvider>
+        {/* H-4: Global error boundary prevents the entire app from going blank on runtime errors */}
+        <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+                <ThemeProvider>
+                    <AuthProvider>
+                        <SocketProvider>
+                            <Toaster position="top-right" reverseOrder={false} />
+                            <RouterProvider router={router} />
+                        </SocketProvider>
+                    </AuthProvider>
+                </ThemeProvider>
+            </QueryClientProvider>
+        </ErrorBoundary>
     </StrictMode>,
 );
