@@ -1213,8 +1213,13 @@ export const pharmacyService = {
         return Array.isArray(data) ? data : [];
     },
 
-    async updateInsuranceClaim(id: number, data: any): Promise<InsuranceClaim> {
+    async updateInsuranceClaim(id: number, data: Partial<InsuranceClaim>): Promise<InsuranceClaim> {
         const response = await api.put<any>(`/pharmacy/insurance/claims/${id}`, data);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async createInsuranceClaim(data: Partial<InsuranceClaim>): Promise<InsuranceClaim> {
+        const response = await api.post<any>('/pharmacy/insurance/claims', data);
         return (response.data as any).data ?? response.data;
     },
 
