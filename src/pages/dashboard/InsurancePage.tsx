@@ -190,6 +190,210 @@ const ProviderModal = ({
     );
 };
 
+const ClaimModal = ({
+    isOpen,
+    onClose,
+    onSubmit,
+    providers,
+    loading,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (data: Partial<InsuranceClaim>) => void;
+    providers: InsuranceProvider[];
+    loading: boolean;
+}) => {
+    const [formData, setFormData] = useState<Partial<InsuranceClaim>>({
+        sale_id: undefined,
+        provider_id: undefined,
+        patient_insurance_number: '',
+        total_amount: 0,
+        applied_coverage_percentage: 0,
+        expected_amount: 0,
+        copay_amount: 0,
+        status: 'pending' as any,
+    });
+
+    useEffect(() => {
+        if (!isOpen) {
+            setFormData({
+                sale_id: undefined,
+                provider_id: undefined,
+                patient_insurance_number: '',
+                total_amount: 0,
+                applied_coverage_percentage: 0,
+                expected_amount: 0,
+                copay_amount: 0,
+                status: 'pending' as any,
+            });
+        }
+    }, [isOpen]);
+
+    const handleProviderChange = (providerId: number) => {
+        const provider = providers.find((p) => p.id === providerId);
+        if (provider) {
+            const percentage = Number(provider.coverage_percentage);
+            const expected = (formData.total_amount || 0) * (percentage / 100);
+            setFormData((prev) => ({
+                ...prev,
+                provider_id: providerId,
+                applied_coverage_percentage: percentage,
+                expected_amount: expected,
+                copay_amount: (formData.total_amount || 0) - expected,
+            }));
+        } else {
+            setFormData((prev) => ({ ...prev, provider_id: providerId }));
+        }
+    };
+
+    const handleTotalAmountChange = (amount: number) => {
+        const expected = amount * ((formData.applied_coverage_percentage || 0) / 100);
+        setFormData((prev) => ({
+            ...prev,
+            total_amount: amount,
+            expected_amount: expected,
+            copay_amount: amount - expected,
+        }));
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-4">
+                <div className="flex justify-between items-center">
+                    <h3 className="text-xl font-black text-healthcare-dark dark:text-white">
+                        Register Insurance Claim
+                    </h3>
+                    <button
+                        onClick={onClose}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400"
+                    >
+                        <XCircle size={20} />
+                    </button>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Sale ID
+                            </label>
+                            <input
+                                type="number"
+                                value={formData.sale_id || ''}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        sale_id: e.target.value ? Number(e.target.value) : undefined,
+                                    }))
+                                }
+                                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 text-slate-900 dark:text-white"
+                                placeholder="Enter Sale ID"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Provider
+                            </label>
+                            <select
+                                value={formData.provider_id || ''}
+                                onChange={(e) => handleProviderChange(Number(e.target.value))}
+                                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 text-slate-900 dark:text-white"
+                            >
+                                <option value="">Select Provider</option>
+                                {providers.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                        {p.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                            Patient Insurance Number
+                        </label>
+                        <input
+                            type="text"
+                            value={formData.patient_insurance_number}
+                            onChange={(e) =>
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    patient_insurance_number: e.target.value,
+                                }))
+                            }
+                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 text-slate-900 dark:text-white"
+                            placeholder="Policy / Card Number"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Total Amount (RWF)
+                            </label>
+                            <input
+                                type="number"
+                                value={formData.total_amount || ''}
+                                onChange={(e) => handleTotalAmountChange(Number(e.target.value))}
+                                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 text-slate-900 dark:text-white font-bold"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Coverage (%)
+                            </label>
+                            <input
+                                type="number"
+                                value={formData.applied_coverage_percentage || ''}
+                                readOnly
+                                className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Expected (RWF)
+                            </label>
+                            <div className="w-full px-4 py-2 bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800 rounded-xl text-healthcare-primary font-black">
+                                {formData.expected_amount?.toLocaleString()}
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
+                                Co-pay (RWF)
+                            </label>
+                            <div className="w-full px-4 py-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-800 rounded-xl text-orange-600 font-black">
+                                {formData.copay_amount?.toLocaleString()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-4">
+                    <button
+                        onClick={onClose}
+                        className="px-5 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => onSubmit(formData)}
+                        disabled={loading || !formData.sale_id || !formData.provider_id}
+                        className="px-5 py-2 text-sm font-bold bg-healthcare-primary text-white rounded-xl hover:bg-teal-700 transition-colors disabled:opacity-50"
+                    >
+                        {loading ? 'Registering...' : 'Register Claim'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export function InsurancePage() {
     const [activeTab, setActiveTab] = useState<'providers' | 'claims'>('providers');
     const [providers, setProviders] = useState<InsuranceProvider[]>([]);
@@ -198,6 +402,7 @@ export function InsurancePage() {
     const [search, setSearch] = useState('');
 
     const [isProviderModalOpen, setIsProviderModalOpen] = useState(false);
+    const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
     const [selectedProvider, setSelectedProvider] = useState<InsuranceProvider | undefined>();
     const [actionLoading, setActionLoading] = useState(false);
 
@@ -209,16 +414,17 @@ export function InsurancePage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            if (activeTab === 'providers') {
-                const data = await pharmacyService.getInsuranceProviders();
-                setProviders(data);
-            } else {
-                const data = await pharmacyService.getInsuranceClaims({
+            // Always fetch providers if we're on providers tab OR if we need them for the claim modal
+            const providerData = await pharmacyService.getInsuranceProviders();
+            setProviders(providerData);
+
+            if (activeTab === 'claims') {
+                const claimData = await pharmacyService.getInsuranceClaims({
                     status: statusFilter || undefined,
                     start_date: startDate || undefined,
                     end_date: endDate || undefined,
                 });
-                setClaims(data);
+                setClaims(claimData);
             }
         } catch (error) {
             console.error('Failed to fetch insurance data:', error);
@@ -264,6 +470,21 @@ export function InsurancePage() {
         }
     };
 
+    const handleClaimSubmit = async (data: Partial<InsuranceClaim>) => {
+        setActionLoading(true);
+        try {
+            await pharmacyService.createInsuranceClaim(data);
+            toast.success('Insurance claim registered successfully');
+            setIsClaimModalOpen(false);
+            fetchData();
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error?.response?.data?.message || 'Failed to register insurance claim');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const filteredProviders = providers.filter(p =>
         p.name.toLowerCase().includes(search.toLowerCase())
     );
@@ -287,7 +508,7 @@ export function InsurancePage() {
                             Providers & Financial Claims Tracking
                         </p>
                     </div>
-                    {activeTab === 'providers' && (
+                    {activeTab === 'providers' ? (
                         <button
                             onClick={() => {
                                 setSelectedProvider(undefined);
@@ -296,6 +517,13 @@ export function InsurancePage() {
                             className="px-5 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] flex items-center gap-2"
                         >
                             <Plus size={16} /> Add Provider
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => setIsClaimModalOpen(true)}
+                            className="px-5 py-2.5 bg-healthcare-secondary text-white rounded-xl font-black text-xs hover:bg-orange-600 transition-all shadow-lg active:scale-[0.98] flex items-center gap-2"
+                        >
+                            <Plus size={16} /> Register Claim
                         </button>
                     )}
                 </div>
@@ -579,6 +807,14 @@ export function InsurancePage() {
                 onClose={() => setIsProviderModalOpen(false)}
                 onSubmit={handleProviderSubmit}
                 initialData={selectedProvider}
+                loading={actionLoading}
+            />
+
+            <ClaimModal
+                isOpen={isClaimModalOpen}
+                onClose={() => setIsClaimModalOpen(false)}
+                onSubmit={handleClaimSubmit}
+                providers={providers}
                 loading={actionLoading}
             />
         </ProtectedRoute>
