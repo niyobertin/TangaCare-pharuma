@@ -421,15 +421,17 @@ export function MainLayout() {
 
     const normalizedRole = (user?.role || '').toLowerCase().replace(/[\s_]+/g, '');
 
-    const needsOnboarding =
-        !hasOrganization && ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
+    const isOwnerOrAdmin = ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
+
+    const needsOnboarding = !hasOrganization && (isOwnerOrAdmin || normalizedRole === 'user');
 
     const isUnassignedAdmin =
         hasOrganization &&
         facilities.length === 0 &&
         !user?.facility_id &&
         !user?.facility &&
-        ['owner', 'facilityadmin'].includes(normalizedRole);
+        isOwnerOrAdmin;
+
 
     React.useEffect(() => {
         const path = window.location.pathname;
@@ -707,7 +709,7 @@ export function MainLayout() {
 
                 <div className="flex-1 overflow-auto rounded-xl">
                     <div className="max-w-screen-2xl mx-auto h-full px-0.5">
-                        {needsOnboarding ? (
+                        {needsOnboarding && !window.location.pathname.includes('/onboarding') ? (
                             <>
                                 <FacilityEmptyState
                                     onCreateClick={() => setShowSetupModal(true)}
@@ -728,7 +730,7 @@ export function MainLayout() {
                                     onClose={() => setShowJoinModal(false)}
                                 />
                             </>
-                        ) : isUnassignedAdmin ? (
+                        ) : isUnassignedAdmin && !window.location.pathname.includes('/onboarding') ? (
                             <>
                                 <FacilityEmptyState
                                     onCreateClick={() => setShowCreateModal(true)}
@@ -747,6 +749,7 @@ export function MainLayout() {
                         ) : (
                             <Outlet key={facilityId ?? 'all'} />
                         )}
+
                     </div>
                 </div>
             </main>

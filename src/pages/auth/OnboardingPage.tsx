@@ -13,9 +13,14 @@ export function OnboardingPage() {
 
     // Form states for organization creation
     const [orgName, setOrgName] = useState('');
-    const [orgCode, setOrgCode] = useState('');
+    const [legalName, setLegalName] = useState('');
+    const [registrationNumber, setRegistrationNumber] = useState('');
+    const [medicalLicense, setMedicalLicense] = useState('');
+    const [city, setCity] = useState('');
+    const [country, setCountry] = useState('');
     const [facilityName, setFacilityName] = useState('');
     const [facilityType, setFacilityType] = useState<'pharmacy_shop' | 'hospital' | 'clinic'>('pharmacy_shop');
+
 
     const handleCreateOrg = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,10 +28,15 @@ export function OnboardingPage() {
         try {
             await pharmacyService.setupOnboarding({
                 organization_name: orgName,
-                organization_code: orgCode || undefined,
+                legal_name: legalName || undefined,
+                registration_number: registrationNumber || undefined,
+                medical_license: medicalLicense || undefined,
+                city: city || undefined,
+                country: country || undefined,
                 facility_name: facilityName,
                 facility_type: facilityType,
             });
+
             toast.success('Organization and first facility created successfully!');
             await refreshProfile();
             navigate({ to: '/app' });
@@ -125,15 +135,52 @@ export function OnboardingPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Business Code</label>
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Legal Name</label>
                                 <input
-                                    value={orgCode}
-                                    onChange={(e) => setOrgCode(e.target.value)}
-                                    placeholder="e.g. HFPH"
+                                    value={legalName}
+                                    onChange={(e) => setLegalName(e.target.value)}
+                                    placeholder="e.g. City General Hospital Ltd"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:border-healthcare-primary outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Registration Number</label>
+                                <input
+                                    value={registrationNumber}
+                                    onChange={(e) => setRegistrationNumber(e.target.value)}
+                                    placeholder="e.g. 123456789"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:border-healthcare-primary outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Medical License</label>
+                                <input
+                                    value={medicalLicense}
+                                    onChange={(e) => setMedicalLicense(e.target.value)}
+                                    placeholder="e.g. MOH-8829-PH"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:border-healthcare-primary outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">City</label>
+                                <input
+                                    value={city}
+                                    onChange={(e) => setCity(e.target.value)}
+                                    placeholder="e.g. Kigali"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:border-healthcare-primary outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Country</label>
+                                <input
+                                    value={country}
+                                    onChange={(e) => setCountry(e.target.value)}
+                                    placeholder="e.g. Rwanda"
                                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:border-healthcare-primary outline-none transition-all"
                                 />
                             </div>
                         </div>
+
 
                         <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-2 mb-4">

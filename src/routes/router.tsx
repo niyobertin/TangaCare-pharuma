@@ -326,6 +326,7 @@ const onboardingRoute = createRoute({
 });
 
 
+
 const insuranceRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'insurance',

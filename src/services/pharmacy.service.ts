@@ -39,6 +39,7 @@ import type {
     CreateStorageLocationDto,
     InsuranceProvider,
     InsuranceClaim,
+    CreateOnboardingSetupDto,
 } from '../types/pharmacy';
 
 const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> => {
@@ -425,21 +426,18 @@ export const pharmacyService = {
 
     async createOnboardingOrganization(data: {
         organization_name: string;
-        organization_code?: string;
+        legal_name?: string;
+        registration_number?: string;
+        medical_license?: string;
+        city?: string;
+        country?: string;
     }): Promise<{ organization: Organization }> {
         const response = await api.post<any>('/pharmacy/onboarding/organization', data);
         return (response.data as any).data ?? response.data;
     },
-
-    async setupOnboarding(data: {
-        organization_name: string;
-        organization_code?: string;
-        facility_name: string;
-        facility_type: 'hospital' | 'clinic' | 'pharmacy_shop';
-        address?: string;
-        phone?: string;
-        email?: string;
-    }): Promise<{ organization: Organization; facility: Facility }> {
+    async setupOnboarding(
+        data: CreateOnboardingSetupDto,
+    ): Promise<{ organization: Organization; facility: Facility }> {
         const response = await api.post<any>('/pharmacy/onboarding/setup', data);
         return (response.data as any).data ?? response.data;
     },

@@ -146,6 +146,20 @@ export interface CreateFacilityDto {
     is_active?: boolean;
 }
 
+export interface CreateOnboardingSetupDto {
+    organization_name: string;
+    legal_name?: string;
+    registration_number?: string;
+    medical_license?: string;
+    city?: string;
+    country?: string;
+    facility_name: string;
+    facility_type: 'hospital' | 'clinic' | 'pharmacy_shop';
+    address?: string;
+    phone?: string;
+    email?: string;
+}
+
 export interface Batch {
     id: number;
     medicine_id: number;
