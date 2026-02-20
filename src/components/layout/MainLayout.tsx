@@ -367,12 +367,12 @@ export function MainLayout() {
         currentFacility,
         setFacility,
         organizations,
-        currentOrg,
         setOrganization,
         refreshProfile,
         organizationId,
         facilityId,
         hasOrganization,
+        isOwner,
     } = useAuth();
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -411,7 +411,7 @@ export function MainLayout() {
 
     const isSuperAdminUser = isSuperAdmin(user?.role);
 
-    const showSwitcher = organizations.length > 0 || facilities.length > 0 || isSuperAdminUser;
+    const showSwitcher = organizations.length > 0 || facilities.length > 0 || isSuperAdminUser || isOwner;
 
     const switcherLabel =
         currentFacility?.name ??
@@ -421,15 +421,17 @@ export function MainLayout() {
 
     const normalizedRole = (user?.role || '').toLowerCase().replace(/[\s_]+/g, '');
 
-    const needsOnboarding =
-        !hasOrganization && ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
+    const isOwnerOrAdmin = ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
+
+    const needsOnboarding = !hasOrganization && (isOwnerOrAdmin || normalizedRole === 'user');
 
     const isUnassignedAdmin =
         hasOrganization &&
         facilities.length === 0 &&
         !user?.facility_id &&
         !user?.facility &&
-        ['owner', 'facilityadmin'].includes(normalizedRole);
+        isOwnerOrAdmin;
+
 
     React.useEffect(() => {
         const path = window.location.pathname;
@@ -443,7 +445,7 @@ export function MainLayout() {
     );
 
     const showFacilityNameOnly =
-        !isSuperAdminUser && facilities.length <= 1 && organizations.length <= 1;
+        !isSuperAdminUser && !isOwner && facilities.length <= 1 && organizations.length <= 1;
 
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 overflow-hidden">
@@ -596,11 +598,9 @@ export function MainLayout() {
                                                 className="text-healthcare-primary flex-shrink-0 md:size-4"
                                             />
                                             <span className="truncate text-[10px] md:text-xs font-bold text-healthcare-dark dark:text-white">
-                                                {facilityId == null && isSuperAdminUser
+                                                {facilityId == null
                                                     ? 'All Facilities'
-                                                    : facilities.length > 0
-                                                        ? switcherLabel
-                                                        : (currentOrg?.name ?? 'Context')}
+                                                    : switcherLabel}
                                             </span>
                                             <ChevronDown
                                                 size={12}
@@ -707,7 +707,7 @@ export function MainLayout() {
 
                 <div className="flex-1 overflow-auto rounded-xl">
                     <div className="max-w-screen-2xl mx-auto h-full px-0.5">
-                        {needsOnboarding ? (
+                        {needsOnboarding && !window.location.pathname.includes('/onboarding') ? (
                             <>
                                 <FacilityEmptyState
                                     onCreateClick={() => setShowSetupModal(true)}
@@ -728,7 +728,7 @@ export function MainLayout() {
                                     onClose={() => setShowJoinModal(false)}
                                 />
                             </>
-                        ) : isUnassignedAdmin ? (
+                        ) : isUnassignedAdmin && !window.location.pathname.includes('/onboarding') ? (
                             <>
                                 <FacilityEmptyState
                                     onCreateClick={() => setShowCreateModal(true)}
@@ -747,6 +747,7 @@ export function MainLayout() {
                         ) : (
                             <Outlet key={facilityId ?? 'all'} />
                         )}
+
                     </div>
                 </div>
             </main>

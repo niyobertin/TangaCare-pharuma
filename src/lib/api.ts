@@ -13,19 +13,11 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-        const userData = localStorage.getItem('user_data');
-        let isFacilityAdmin = false;
-        if (userData) {
-            try {
-                const parsed = JSON.parse(userData);
-                const role = (parsed?.role ?? '').toString().toUpperCase();
-                isFacilityAdmin = role === 'FACILITY_ADMIN' || role === 'FACILITY ADMIN';
-            } catch { }
-        }
         const organizationId = localStorage.getItem('selected_organization_id');
         const facilityId = localStorage.getItem('selected_facility_id');
         if (organizationId) config.headers['x-organization-id'] = organizationId;
-        if (facilityId && !isFacilityAdmin) config.headers['x-tenant-id'] = facilityId;
+        if (facilityId) config.headers['x-facility-id'] = facilityId;
+
         return config;
     },
     (error) => Promise.reject(error),

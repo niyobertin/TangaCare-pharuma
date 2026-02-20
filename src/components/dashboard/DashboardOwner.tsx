@@ -8,8 +8,10 @@ import {
     DollarSign,
     Filter,
     ArrowRight,
+    Building2,
 } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
+import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { DashboardSummary, ReorderSuggestion, Alert } from '../../types/pharmacy';
 import { ConsumptionTrendChart, ExpiryRiskChart, InventoryStatusChart } from './DashboardCharts';
@@ -19,15 +21,18 @@ import { cn } from '../../lib/utils';
 import { format, subDays, startOfToday, endOfToday } from 'date-fns';
 
 interface DashboardOwnerProps {
-    facilityId: number;
+    facilityId: number | null;
 }
 
 export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) => {
     const navigate = useNavigate();
+    const { setFacility, facilities } = useAuth();
     const [loading, setLoading] = useState(true);
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
     const [lowStock, setLowStock] = useState<ReorderSuggestion[]>([]);
     const [nearExpiry, setNearExpiry] = useState<Alert[]>([]);
+
+    const [facilityComparison, setFacilityComparison] = useState<import('../../types/pharmacy').MultiLocationData | null>(null);
 
     // Filters
     const [dateRange, setDateRange] = useState<'today' | '7days' | '30days' | 'custom'>('7days');
@@ -36,15 +41,14 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
 
     useEffect(() => {
         const loadInitialData = async () => {
-            if (!facilityId) return;
             try {
                 // Fetch real-time low stock suggestions
-                const reorderData = await pharmacyService.getReorderSuggestions(facilityId);
+                const reorderData = await pharmacyService.getReorderSuggestions(facilityId as any);
                 setLowStock(reorderData.slice(0, 5));
 
                 // Fetch real-time expiry alerts
                 const alertsData = await pharmacyService.getAlerts({
-                    facility_id: facilityId,
+                    facility_id: facilityId || undefined,
                     status: 'active',
                 });
                 setNearExpiry(
@@ -52,6 +56,14 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         .filter((a) => a.type === 'expiry_soon' || a.type === 'expiry')
                         .slice(0, 5),
                 );
+
+                // Fetch facility comparison if in global view
+                if (facilityId === null) {
+                    const comparison = await pharmacyService.getMultiLocationComparison('revenue');
+                    setFacilityComparison(comparison);
+                } else {
+                    setFacilityComparison(null);
+                }
             } catch (error) {
                 console.error('Failed to load initial dashboard data:', error);
             }
@@ -63,8 +75,6 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     // Handle data refresh when date range changes
     useEffect(() => {
         const updateDashboardData = async () => {
-            if (!facilityId) return;
-
             let start = format(startOfToday(), 'yyyy-MM-dd');
             let end = format(endOfToday(), 'yyyy-MM-dd');
 
@@ -81,11 +91,11 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
             try {
                 // Fetch both KPIs for chosen period and a global summary for trends/categories
                 const [kpis, summaryData] = await Promise.all([
-                    pharmacyService.getComprehensiveKPIs(facilityId, {
+                    pharmacyService.getComprehensiveKPIs(facilityId as any, {
                         start_date: start,
                         end_date: end,
                     }),
-                    pharmacyService.getDashboardSummary(facilityId),
+                    pharmacyService.getDashboardSummary(facilityId as any),
                 ]);
 
                 setSummary({
@@ -303,6 +313,58 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                     )}
                 </div>
             </div>
+
+            {/* SECTION: FACILITY OVERVIEW (Global View Only) */}
+            {facilityId === null && (
+                <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <Building2 size={16} className="text-healthcare-primary" />
+                            Branch Performance
+                        </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {(facilityComparison?.facilities && facilityComparison.facilities.length > 0
+                            ? facilityComparison.facilities
+                            : (facilities || [])
+                        ).map((f: any) => {
+                            const id = f.facility_id || f.id;
+                            const name = f.facility_name || f.name;
+                            const revenue = f.metric_value || 0;
+                            const rank = f.rank || '-';
+
+                            return (
+                                <div
+                                    key={id}
+                                    onClick={() => {
+                                        setFacility(id);
+                                        navigate({ to: '/app' });
+                                    }}
+                                    className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-healthcare-primary transition-all cursor-pointer group"
+                                >
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-xs font-black text-healthcare-dark dark:text-white truncate">
+                                            {name}
+                                        </span>
+                                        <ArrowRight
+                                            size={14}
+                                            className="text-slate-300 group-hover:text-healthcare-primary transition-colors"
+                                        />
+                                    </div>
+                                    <div className="text-lg font-bold text-healthcare-primary">
+                                        {revenue > 0
+                                            ? `RWF ${revenue.toLocaleString()}`
+                                            : 'No recent sales'}
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 font-bold uppercase mt-1">
+                                        {rank !== '-' ? `Rank #${rank}` : 'New Branch'}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* SECTION 3: ACTION TABLES */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

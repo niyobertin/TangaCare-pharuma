@@ -7,6 +7,7 @@ import {
     type Organization,
 } from '../types/auth';
 import { authService } from '../services/auth.service';
+import { pharmacyService } from '../services/pharmacy.service';
 
 const ORG_KEY = 'selected_organization_id';
 const FACILITY_KEY = 'selected_facility_id';
@@ -54,6 +55,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const setOrganization = useCallback((id: number | null) => {
         if (id !== null) localStorage.setItem(ORG_KEY, String(id));
         else localStorage.removeItem(ORG_KEY);
+
+        // When switching organization, clear facility to trigger aggregated view for high-privilege roles
+        localStorage.removeItem(FACILITY_KEY);
+        setFacilityIdState(null);
+
         setOrganizationIdState(id);
     }, []);
 
@@ -61,6 +67,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (id !== null) localStorage.setItem(FACILITY_KEY, String(id));
         else localStorage.removeItem(FACILITY_KEY);
         setFacilityIdState(id);
+    }, []);
+
+    const resolveAndSetDefaultScope = useCallback((profile: any) => {
+        const role = (profile.role || profile.user_role)?.toString().toUpperCase();
+        const isHighLevel = role === 'OWNER' || role === 'ADMIN' || isSuperAdmin(role);
+
+        let fid = localStorage.getItem(FACILITY_KEY);
+        let oid = localStorage.getItem(ORG_KEY);
+
+        // 1. Resolve Facility Default
+        if (!fid) {
+            if (isHighLevel) {
+                // High level roles default to All Facilities (null) for aggregated data
+                fid = null;
+            } else {
+                // Fixed roles default to their primary assigned facility
+                const defaultFac = profile.facility ?? profile.facilities?.[0] ?? null;
+                fid = defaultFac?.id ? String(defaultFac.id) : null;
+            }
+        }
+
+        // 2. Resolve Organization Default
+        if (!oid) {
+            const selectedFacility = profile.facilities?.find((f: any) => String(f.id) === fid);
+            const resolvedOid = selectedFacility?.organization_id ?? profile.organizations?.[0]?.id ?? profile.organization_id ?? null;
+            oid = resolvedOid ? String(resolvedOid) : null;
+        }
+
+        // 3. Persist and Update State
+        if (fid) localStorage.setItem(FACILITY_KEY, fid);
+        else localStorage.removeItem(FACILITY_KEY);
+
+        if (oid) localStorage.setItem(ORG_KEY, oid);
+        else localStorage.removeItem(ORG_KEY);
+
+        setOrganizationIdState(oid ? parseInt(oid, 10) : null);
+        setFacilityIdState(fid ? parseInt(fid, 10) : null);
     }, []);
 
     const checkAuth = async () => {
@@ -81,33 +124,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (token) {
             try {
                 const profile = await authService.getProfile();
-                setUser(profile);
-                localStorage.setItem('user_data', JSON.stringify(profile));
                 if (profile.organizations) setOrganizations(profile.organizations);
-                if (profile.facilities) setFacilities(profile.facilities);
-                let oid = localStorage.getItem(ORG_KEY);
-                let fid = localStorage.getItem(FACILITY_KEY);
 
-                const isOwner = (profile as any).role?.toUpperCase() === 'OWNER';
-                const isSuper = isSuperAdmin((profile as any).role);
-                const multiFacilityOwner = isOwner && (profile.facilities?.length ?? 0) > 1;
-                const defaultFacility =
-                    multiFacilityOwner || isSuper
-                        ? null
-                        : ((profile as any).facility ??
-                          (profile.facilities?.length === 1 ? profile.facilities[0] : null));
-                const defaultOrgId =
-                    defaultFacility?.organization_id ?? profile.organizations?.[0]?.id ?? null;
-                if (!fid && defaultFacility?.id) {
-                    fid = String(defaultFacility.id);
-                    localStorage.setItem(FACILITY_KEY, fid);
+                // Fetch full facility list immediately if we have an organization ID
+                const oid = profile.organization_id || profile.organizations?.[0]?.id;
+                if (oid) {
+                    try {
+                        const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
+                        setFacilities(facsBody.data || []);
+                    } catch (e) {
+                        console.error('Failed to fetch facilities during checkAuth:', e);
+                        if (profile.facilities) setFacilities(profile.facilities);
+                    }
+                } else if (profile.facilities) {
+                    setFacilities(profile.facilities);
                 }
-                if (!oid && defaultOrgId != null) {
-                    oid = String(defaultOrgId);
-                    localStorage.setItem(ORG_KEY, oid);
-                }
-                if (oid) setOrganizationIdState(parseInt(oid, 10));
-                if (fid) setFacilityIdState(parseInt(fid, 10));
+
+                // Set these immediately before resolving scope to ensure context matches
+                localStorage.setItem('user_data', JSON.stringify(profile));
+                setUser(profile);
+
+                resolveAndSetDefaultScope(profile);
+
             } catch (error) {
                 console.error('Failed to fetch profile:', error);
                 await authService.logout();
@@ -130,32 +168,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const response = await authService.login(credentials);
             const payload = response?.data ?? response;
             const u = payload?.user;
+            const orgs = u?.organizations ?? [];
+            setOrganizations(Array.isArray(orgs) ? orgs : []);
+
+            // Fetch full facility list immediately
+            const oid = u?.organization_id || orgs[0]?.id;
+            if (oid) {
+                try {
+                    const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
+                    setFacilities(facsBody.data || []);
+                } catch (e) {
+                    console.error('Failed to fetch facilities during login:', e);
+                    setFacilities(Array.isArray(u?.facilities) ? u.facilities : []);
+                }
+            } else {
+                setFacilities(Array.isArray(u?.facilities) ? u.facilities : []);
+            }
+
+            // Resolve and set scope BEFORE setting user to ensure context is ready
+            resolveAndSetDefaultScope(u);
             setUser(u);
 
-            const orgs = u?.organizations ?? [];
-            const facs = u?.facilities ?? [];
-            setOrganizations(Array.isArray(orgs) ? orgs : []);
-            setFacilities(Array.isArray(facs) ? facs : []);
-
-            const isOwner = (u?.role ?? payload?.user?.role)?.toString().toUpperCase() === 'OWNER';
-            const isSuper = isSuperAdmin(u?.role ?? payload?.user?.role);
-            const multiFacilityOwner = isOwner && Array.isArray(facs) && facs.length > 1;
-            const defaultFacility =
-                multiFacilityOwner || isSuper
-                    ? null
-                    : (u?.facility ?? (Array.isArray(facs) && facs.length === 1 ? facs[0] : null));
-            let oid = localStorage.getItem(ORG_KEY);
-            let fid = localStorage.getItem(FACILITY_KEY);
-            if (!fid && defaultFacility?.id) {
-                fid = String(defaultFacility.id);
-                localStorage.setItem(FACILITY_KEY, fid);
-            }
-            if (!oid && ((defaultFacility as any)?.organization_id ?? (orgs?.[0] as any)?.id)) {
-                oid = String((defaultFacility as any)?.organization_id ?? (orgs?.[0] as any)?.id);
-                localStorage.setItem(ORG_KEY, oid);
-            }
-            if (oid) setOrganizationIdState(parseInt(oid, 10));
-            if (fid) setFacilityIdState(parseInt(fid, 10));
         } catch (error) {
             setIsLoading(false);
             throw error;
@@ -188,33 +221,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(profile);
         localStorage.setItem('user_data', JSON.stringify(profile));
         if (profile.organizations) setOrganizations(profile.organizations);
-        if (profile.facilities) setFacilities(profile.facilities);
 
-        const profileRole =
-            (profile as any).role || (profile as any).user_role || (profile as any).UserRole;
-        if (!profileRole) {
-            console.warn('[refreshProfile] Role missing in profile data:', profile);
+        const oid = profile.organization_id || profile.organizations?.[0]?.id;
+        if (oid) {
+            try {
+                const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
+                setFacilities(facsBody.data || []);
+            } catch (e) {
+                console.error('Failed to fetch facilities during refreshProfile:', e);
+                if (profile.facilities) setFacilities(profile.facilities);
+            }
+        } else if (profile.facilities) {
+            setFacilities(profile.facilities);
         }
-        const isOwner = profileRole?.toString().toUpperCase() === 'OWNER';
-        const isSuper = isSuperAdmin(profileRole?.toString());
-        const multiFacilityOwner = isOwner && (profile.facilities?.length ?? 0) > 1;
-        const defaultFacility =
-            multiFacilityOwner || isSuper
-                ? null
-                : ((profile as any).facility ??
-                  (profile.facilities?.length === 1 ? profile.facilities[0] : null));
-        if (defaultFacility?.id && !localStorage.getItem(FACILITY_KEY)) {
-            localStorage.setItem(FACILITY_KEY, String(defaultFacility.id));
-            setFacilityIdState(defaultFacility.id);
-        }
-        if (
-            (defaultFacility?.organization_id ?? profile.organizations?.[0]?.id) != null &&
-            !localStorage.getItem(ORG_KEY)
-        ) {
-            const oid = defaultFacility?.organization_id ?? profile.organizations?.[0]?.id;
-            localStorage.setItem(ORG_KEY, String(oid));
-            setOrganizationIdState(oid);
-        }
+
+        resolveAndSetDefaultScope(profile);
+
     };
 
     const can = useCallback(

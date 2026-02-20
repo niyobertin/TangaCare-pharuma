@@ -43,6 +43,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         return <Navigate to="/auth/login" search={{ redirect: location.pathname }} />;
     }
 
+    // Redirect users with baseline USER role to onboarding
+    if (user && role === 'USER' && !location.pathname.includes('/onboarding')) {
+        return <Navigate to="/app/onboarding" />;
+    }
+
+
     if (requireFacility && isFacilityAdmin && !isSuperAdminUser && user) {
         const hasFacility = facilityId != null || user.facility_id != null;
         if (!hasFacility) {

@@ -16,20 +16,8 @@ export const authService = {
             localStorage.setItem('user_data', JSON.stringify(user));
         }
 
-        const orgs = user?.organizations;
-        const facilities = user?.facilities;
-        if (orgs?.length) {
-            const firstOrg = orgs[0];
-            localStorage.setItem('selected_organization_id', String(firstOrg.id));
-        }
-        if (facilities?.length) {
-            const firstFacility = facilities[0];
-            localStorage.setItem('selected_facility_id', String(firstFacility.id));
-        } else {
-            const fid = user?.facility_id ?? user?.facility?.id;
-            if (fid) localStorage.setItem('selected_facility_id', String(fid));
-        }
         return response.data;
+
     },
 
     async register(credentials: RegisterCredentials): Promise<AuthResponse> {

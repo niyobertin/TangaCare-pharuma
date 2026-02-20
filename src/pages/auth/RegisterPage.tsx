@@ -32,7 +32,8 @@ export function RegisterPage() {
         setLoading(true);
         try {
             const { phone_number, ...rest } = data;
-            const role = searchParams.role || UserRole.FACILITY_ADMIN;
+            const role = searchParams.role || UserRole.USER;
+
             await registerUser({
                 ...rest,
                 phone_number: phone_number || undefined,

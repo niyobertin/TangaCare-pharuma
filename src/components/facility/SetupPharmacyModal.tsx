@@ -12,11 +12,11 @@ const step1Schema = yup.object({
         .trim()
         .min(2, 'Organization name must be at least 2 characters')
         .required('Organization name is required'),
-    organization_code: yup
-        .string()
-        .trim()
-        .max(20, 'Organization code must be at most 20 characters')
-        .optional(),
+    legal_name: yup.string().trim().optional(),
+    registration_number: yup.string().trim().optional(),
+    medical_license: yup.string().trim().optional(),
+    city: yup.string().trim().optional(),
+    country: yup.string().trim().optional(),
 });
 
 const step2Schema = yup.object({
@@ -55,7 +55,11 @@ export function SetupPharmacyModal({ onSuccess, onClose }: SetupPharmacyModalPro
     const [isLoading, setIsLoading] = useState(false);
     const [step1Form, setStep1Form] = useState({
         organization_name: '',
-        organization_code: '',
+        legal_name: '',
+        registration_number: '',
+        medical_license: '',
+        city: '',
+        country: '',
     });
     const [step2Form, setStep2Form] = useState({
         facility_name: '',
@@ -72,7 +76,11 @@ export function SetupPharmacyModal({ onSuccess, onClose }: SetupPharmacyModalPro
             await step1Schema.validate(step1Form, { abortEarly: false });
             const result = await pharmacyService.createOnboardingOrganization({
                 organization_name: step1Form.organization_name.trim(),
-                organization_code: step1Form.organization_code?.trim() || undefined,
+                legal_name: step1Form.legal_name?.trim() || undefined,
+                registration_number: step1Form.registration_number?.trim() || undefined,
+                medical_license: step1Form.medical_license?.trim() || undefined,
+                city: step1Form.city?.trim() || undefined,
+                country: step1Form.country?.trim() || undefined,
             });
             toast.success('Organization created. Now add your first branch.');
             if (result.organization) {
@@ -80,6 +88,11 @@ export function SetupPharmacyModal({ onSuccess, onClose }: SetupPharmacyModalPro
                     id: result.organization.id,
                     name: result.organization.name,
                 });
+                // Default branch name to organization name
+                setStep2Form(prev => ({
+                    ...prev,
+                    facility_name: step1Form.organization_name.trim()
+                }));
                 await authService.refreshToken();
                 setStep(2);
             }
@@ -179,19 +192,89 @@ export function SetupPharmacyModal({ onSuccess, onClose }: SetupPharmacyModalPro
                                 required
                             />
                         </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                                    Legal Name
+                                </label>
+                                <input
+                                    value={step1Form.legal_name}
+                                    onChange={(e) =>
+                                        setStep1Form((f) => ({
+                                            ...f,
+                                            legal_name: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="Full legal name"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                                    Reg Number
+                                </label>
+                                <input
+                                    value={step1Form.registration_number}
+                                    onChange={(e) =>
+                                        setStep1Form((f) => ({
+                                            ...f,
+                                            registration_number: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="Business ID"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                                    Medical License
+                                </label>
+                                <input
+                                    value={step1Form.medical_license}
+                                    onChange={(e) =>
+                                        setStep1Form((f) => ({
+                                            ...f,
+                                            medical_license: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="License #"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
+                                    City
+                                </label>
+                                <input
+                                    value={step1Form.city}
+                                    onChange={(e) =>
+                                        setStep1Form((f) => ({
+                                            ...f,
+                                            city: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="e.g. Kigali"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
+                                />
+                            </div>
+                        </div>
+
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">
-                                Organization code (optional)
+                                Country
                             </label>
                             <input
-                                value={step1Form.organization_code}
+                                value={step1Form.country}
                                 onChange={(e) =>
                                     setStep1Form((f) => ({
                                         ...f,
-                                        organization_code: e.target.value,
+                                        country: e.target.value,
                                     }))
                                 }
-                                placeholder="e.g. MP"
+                                placeholder="e.g. Rwanda"
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none focus:border-healthcare-primary border-slate-200 dark:border-slate-700"
                             />
                         </div>
@@ -294,7 +377,7 @@ export function SetupPharmacyModal({ onSuccess, onClose }: SetupPharmacyModalPro
                             <button
                                 type="button"
                                 onClick={() => setStep(1)}
-                                className="py-4 px-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl font-black text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                className="flex-1 py-4 border-2 border-slate-200 dark:border-slate-700 rounded-xl font-black text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                             >
                                 Back
                             </button>
@@ -306,7 +389,7 @@ export function SetupPharmacyModal({ onSuccess, onClose }: SetupPharmacyModalPro
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                                 ) : (
-                                    'Create organization & branch'
+                                    'Complete Setup'
                                 )}
                             </button>
                         </div>
