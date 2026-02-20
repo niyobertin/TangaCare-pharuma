@@ -51,16 +51,18 @@ export function DashboardPage() {
             {isOwnerView ? (
                 facilityId && organizationId ? (
                     <DashboardOwner facilityId={facilityId} />
+                ) : (organizationId || user?.organization_id) ? (
+                    <DashboardOwner facilityId={null} />
                 ) : (
                     <div className="p-10 flex flex-col items-center justify-center min-h-[60vh] text-center">
                         <div className="w-20 h-20 bg-healthcare-primary/10 rounded-full flex items-center justify-center mb-6">
                             <span className="text-4xl text-healthcare-primary font-black">!</span>
                         </div>
                         <h2 className="text-2xl font-black text-healthcare-dark dark:text-white uppercase tracking-tight">
-                            No Facility Selected
+                            Organization Context Required
                         </h2>
                         <p className="text-slate-500 max-w-sm mt-2 font-bold uppercase text-xs tracking-widest">
-                            Please select or create a facility to view dashboard analytics.
+                            Please ensure you are within an organization context to view analytics.
                         </p>
                     </div>
                 )

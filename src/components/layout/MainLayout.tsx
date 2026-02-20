@@ -367,12 +367,12 @@ export function MainLayout() {
         currentFacility,
         setFacility,
         organizations,
-        currentOrg,
         setOrganization,
         refreshProfile,
         organizationId,
         facilityId,
         hasOrganization,
+        isOwner,
     } = useAuth();
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -411,7 +411,7 @@ export function MainLayout() {
 
     const isSuperAdminUser = isSuperAdmin(user?.role);
 
-    const showSwitcher = organizations.length > 0 || facilities.length > 0 || isSuperAdminUser;
+    const showSwitcher = organizations.length > 0 || facilities.length > 0 || isSuperAdminUser || isOwner;
 
     const switcherLabel =
         currentFacility?.name ??
@@ -445,7 +445,7 @@ export function MainLayout() {
     );
 
     const showFacilityNameOnly =
-        !isSuperAdminUser && facilities.length <= 1 && organizations.length <= 1;
+        !isSuperAdminUser && !isOwner && facilities.length <= 1 && organizations.length <= 1;
 
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 overflow-hidden">
@@ -598,11 +598,9 @@ export function MainLayout() {
                                                 className="text-healthcare-primary flex-shrink-0 md:size-4"
                                             />
                                             <span className="truncate text-[10px] md:text-xs font-bold text-healthcare-dark dark:text-white">
-                                                {facilityId == null && isSuperAdminUser
+                                                {facilityId == null
                                                     ? 'All Facilities'
-                                                    : facilities.length > 0
-                                                        ? switcherLabel
-                                                        : (currentOrg?.name ?? 'Context')}
+                                                    : switcherLabel}
                                             </span>
                                             <ChevronDown
                                                 size={12}

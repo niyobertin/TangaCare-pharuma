@@ -7,6 +7,7 @@ import {
     type Organization,
 } from '../types/auth';
 import { authService } from '../services/auth.service';
+import { pharmacyService } from '../services/pharmacy.service';
 
 const ORG_KEY = 'selected_organization_id';
 const FACILITY_KEY = 'selected_facility_id';
@@ -69,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const resolveAndSetDefaultScope = useCallback((profile: any) => {
-        const role = profile.role?.toString().toUpperCase();
+        const role = (profile.role || profile.user_role)?.toString().toUpperCase();
         const isHighLevel = role === 'OWNER' || role === 'ADMIN' || isSuperAdmin(role);
 
         let fid = localStorage.getItem(FACILITY_KEY);
@@ -90,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 2. Resolve Organization Default
         if (!oid) {
             const selectedFacility = profile.facilities?.find((f: any) => String(f.id) === fid);
-            const resolvedOid = selectedFacility?.organization_id ?? profile.organizations?.[0]?.id ?? null;
+            const resolvedOid = selectedFacility?.organization_id ?? profile.organizations?.[0]?.id ?? profile.organization_id ?? null;
             oid = resolvedOid ? String(resolvedOid) : null;
         }
 
@@ -123,10 +124,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (token) {
             try {
                 const profile = await authService.getProfile();
-                setUser(profile);
-                localStorage.setItem('user_data', JSON.stringify(profile));
                 if (profile.organizations) setOrganizations(profile.organizations);
-                if (profile.facilities) setFacilities(profile.facilities);
+
+                // Fetch full facility list immediately if we have an organization ID
+                const oid = profile.organization_id || profile.organizations?.[0]?.id;
+                if (oid) {
+                    try {
+                        const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
+                        setFacilities(facsBody.data || []);
+                    } catch (e) {
+                        console.error('Failed to fetch facilities during checkAuth:', e);
+                        if (profile.facilities) setFacilities(profile.facilities);
+                    }
+                } else if (profile.facilities) {
+                    setFacilities(profile.facilities);
+                }
+
+                // Set these immediately before resolving scope to ensure context matches
+                localStorage.setItem('user_data', JSON.stringify(profile));
+                setUser(profile);
+
                 resolveAndSetDefaultScope(profile);
 
             } catch (error) {
@@ -151,14 +168,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const response = await authService.login(credentials);
             const payload = response?.data ?? response;
             const u = payload?.user;
-            setUser(u);
-
             const orgs = u?.organizations ?? [];
-            const facs = u?.facilities ?? [];
             setOrganizations(Array.isArray(orgs) ? orgs : []);
-            setFacilities(Array.isArray(facs) ? facs : []);
 
+            // Fetch full facility list immediately
+            const oid = u?.organization_id || orgs[0]?.id;
+            if (oid) {
+                try {
+                    const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
+                    setFacilities(facsBody.data || []);
+                } catch (e) {
+                    console.error('Failed to fetch facilities during login:', e);
+                    setFacilities(Array.isArray(u?.facilities) ? u.facilities : []);
+                }
+            } else {
+                setFacilities(Array.isArray(u?.facilities) ? u.facilities : []);
+            }
+
+            // Resolve and set scope BEFORE setting user to ensure context is ready
             resolveAndSetDefaultScope(u);
+            setUser(u);
 
         } catch (error) {
             setIsLoading(false);
@@ -192,7 +221,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(profile);
         localStorage.setItem('user_data', JSON.stringify(profile));
         if (profile.organizations) setOrganizations(profile.organizations);
-        if (profile.facilities) setFacilities(profile.facilities);
+
+        const oid = profile.organization_id || profile.organizations?.[0]?.id;
+        if (oid) {
+            try {
+                const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
+                setFacilities(facsBody.data || []);
+            } catch (e) {
+                console.error('Failed to fetch facilities during refreshProfile:', e);
+                if (profile.facilities) setFacilities(profile.facilities);
+            }
+        } else if (profile.facilities) {
+            setFacilities(profile.facilities);
+        }
 
         resolveAndSetDefaultScope(profile);
 

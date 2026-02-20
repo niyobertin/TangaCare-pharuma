@@ -838,10 +838,11 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async getReorderSuggestions(facilityId: number): Promise<ReorderSuggestion[]> {
-        const response = await api.get<any>(
-            `/pharmacy/analytics/reorder-suggestions/${facilityId}`,
-        );
+    async getReorderSuggestions(facilityId: number | null): Promise<ReorderSuggestion[]> {
+        const url = facilityId
+            ? `/pharmacy/analytics/reorder-suggestions/${facilityId}`
+            : '/pharmacy/analytics/reorder-suggestions';
+        const response = await api.get<any>(url);
         const data = (response.data as any).data ?? response.data;
         return Array.isArray(data) ? data : data.suggestions || [];
     },
@@ -1043,12 +1044,13 @@ export const pharmacyService = {
 
     // KPI Methods
     async getComprehensiveKPIs(
-        facilityId: number,
+        facilityId: number | null,
         params?: { start_date?: string; end_date?: string },
     ): Promise<ComprehensiveKPIs> {
-        const response = await api.get<any>(`/pharmacy/kpis/comprehensive/${facilityId}`, {
-            params,
-        });
+        const url = facilityId
+            ? `/pharmacy/kpis/comprehensive/${facilityId}`
+            : '/pharmacy/kpis/comprehensive';
+        const response = await api.get<any>(url, { params });
         return (response.data as any).data ?? response.data;
     },
 
@@ -1080,8 +1082,11 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async getDashboardSummary(facilityId: number): Promise<DashboardSummary> {
-        const response = await api.get<any>(`/pharmacy/kpis/summary/${facilityId}`);
+    async getDashboardSummary(facilityId: number | null): Promise<DashboardSummary> {
+        const url = facilityId
+            ? `/pharmacy/kpis/summary/${facilityId}`
+            : '/pharmacy/kpis/summary';
+        const response = await api.get<any>(url);
         return (response.data as any).data ?? response.data;
     },
 
