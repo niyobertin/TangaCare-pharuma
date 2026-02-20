@@ -13,6 +13,8 @@ import { RegisterPage } from '../pages/auth/RegisterPage';
 import { InventoryPage } from '../pages/dashboard/InventoryPage';
 import { DispensingPage } from '../pages/dashboard/DispensingPage';
 import { InsurancePage } from '../pages/dashboard/InsurancePage';
+import { OnboardingPage } from '../pages/auth/OnboardingPage';
+
 
 import { BatchStockPage } from '../pages/dashboard/BatchStockPage';
 import { AuditLogsPage } from '../pages/dashboard/AuditLogsPage';
@@ -317,6 +319,13 @@ const patientsRoute = createRoute({
     ),
 });
 
+const onboardingRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'onboarding',
+    component: OnboardingPage,
+});
+
+
 const insuranceRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'insurance',
@@ -529,9 +538,12 @@ const appRouteTree = appLayoutRoute.addChildren([
     variancesRoute,
     recallsRoute,
     reorderRoute,
+
     prescriptionsRoute,
     patientsRoute,
+    onboardingRoute,
     analyticsRoute.addChildren([
+
         analyticsIndexRoute,
         analyticsSalesRoute,
         analyticsReturnsRoute,

@@ -1,6 +1,8 @@
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { DashboardOwner } from '../../components/dashboard/DashboardOwner';
+import { Navigate } from '@tanstack/react-router';
+
 
 export function DashboardPage() {
     const { user, facilityId, organizationId } = useAuth();
@@ -20,6 +22,11 @@ export function DashboardPage() {
     const userRole = user?.role?.toUpperCase() || '';
     const isOwnerView = ownerRoles.some((role) => role.toUpperCase() === userRole);
 
+    if (userRole === 'USER' || userRole === 'user') {
+        return <Navigate to="/app/onboarding" />;
+    }
+
+
     return (
         <ProtectedRoute
             allowedRoles={[
@@ -36,7 +43,10 @@ export function DashboardPage() {
                 'STORE_MANAGER',
                 'STORE MANAGER',
                 'AUDITOR',
+                'USER',
+                'user',
             ]}
+
         >
             {isOwnerView ? (
                 facilityId && organizationId ? (

@@ -10,7 +10,9 @@ export const UserRole = {
     PHARMACIST: 'pharmacist',
     STORE_MANAGER: 'store_manager',
     AUDITOR: 'auditor',
+    USER: 'user',
 } as const;
+
 
 export const SUPER_ADMIN_ROLE = 'super_admin';
 

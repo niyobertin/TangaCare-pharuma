@@ -25,7 +25,8 @@ api.interceptors.request.use(
         const organizationId = localStorage.getItem('selected_organization_id');
         const facilityId = localStorage.getItem('selected_facility_id');
         if (organizationId) config.headers['x-organization-id'] = organizationId;
-        if (facilityId && !isFacilityAdmin) config.headers['x-tenant-id'] = facilityId;
+        if (facilityId) config.headers['x-facility-id'] = facilityId;
+
         return config;
     },
     (error) => Promise.reject(error),
