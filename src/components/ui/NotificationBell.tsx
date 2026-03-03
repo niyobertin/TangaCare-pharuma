@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Check, Trash2, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
+import { useAuth } from '../../context/AuthContext';
 import { Link } from '@tanstack/react-router';
 import { pharmacyService } from '../../services/pharmacy.service';
 import clsx from 'clsx';
@@ -22,6 +23,7 @@ interface Notification {
 
 export const NotificationBell: React.FC = () => {
     const { socket, isConnected } = useSocket();
+    const { facilityId } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -51,7 +53,7 @@ export const NotificationBell: React.FC = () => {
 
     const fetchAlertSummary = async () => {
         try {
-            const response = await pharmacyService.getAlertSummary();
+            const response = await pharmacyService.getAlertSummary(facilityId);
             setAlertCount(response.data.total);
         } catch (error) {
             console.error('Failed to fetch alert summary:', error);
@@ -66,7 +68,7 @@ export const NotificationBell: React.FC = () => {
         fetchAlertSummary();
         const interval = setInterval(fetchAlertSummary, 2 * 60 * 1000); // 2 mins
         return () => clearInterval(interval);
-    }, [socket, isConnected]);
+    }, [socket, isConnected, facilityId]);
 
     // Real-time listeners
     useEffect(() => {

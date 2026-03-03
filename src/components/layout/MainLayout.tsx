@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
+import { GlobalLoading } from '../ui/GlobalLoading';
 import { isSuperAdmin } from '../../types/auth';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -375,7 +376,9 @@ export function MainLayout() {
         facilityId,
         hasOrganization,
         isOwner,
+        isLoading,
     } = useAuth();
+    if (isLoading) return <GlobalLoading />;
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [switcherOpen, setSwitcherOpen] = useState(false);

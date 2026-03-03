@@ -461,8 +461,9 @@ export const reportService = {
         return normalizePaginatedResponse<Alert>(response.data);
     },
 
-    async getAlertSummary(): Promise<any> {
-        const response = await api.get<any>('/pharmacy/alerts/summary');
+    async getAlertSummary(facilityId?: number | null): Promise<any> {
+        const params = facilityId ? { facility_id: facilityId } : {};
+        const response = await api.get<any>('/pharmacy/alerts/summary', { params });
         return response.data;
     },
 
