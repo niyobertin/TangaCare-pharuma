@@ -596,10 +596,10 @@ export function FacilityManagementPage() {
                                                         <button
                                                             onClick={() =>
                                                                 navigate({
-                                                                    to: '/app/facility/$facilityId/settings',
+                                                                    to: '/app/facility/$facilityId/settings' as any,
                                                                     params: {
                                                                         facilityId: String(f.id),
-                                                                    },
+                                                                    } as any,
                                                                 })
                                                             }
                                                             className="text-xs lg:text-sm font-bold text-healthcare-primary hover:underline"
@@ -676,12 +676,13 @@ export function FacilityManagementPage() {
                                                                     <button
                                                                         onClick={() =>
                                                                             navigate({
-                                                                                to: '/app/facility/$facilityId/settings',
+                                                                                to: '/app/facility/$facilityId/settings' as any,
                                                                                 params: {
                                                                                     facilityId: String(
                                                                                         f.id,
                                                                                     ),
-                                                                                },
+                                                                                } as any,
+                                                                                search: {} as any
                                                                             })
                                                                         }
                                                                         className="text-[10px] text-healthcare-primary hover:underline text-left mt-0.5"
@@ -721,12 +722,13 @@ export function FacilityManagementPage() {
                                                                     <button
                                                                         onClick={() =>
                                                                             navigate({
-                                                                                to: '/app/facility/$facilityId/settings',
+                                                                                to: '/app/facility/$facilityId/settings' as any,
                                                                                 params: {
                                                                                     facilityId: String(
                                                                                         f.id,
                                                                                     ),
-                                                                                },
+                                                                                } as any,
+                                                                                search: {} as any
                                                                             })
                                                                         }
                                                                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors tooltip"
@@ -737,12 +739,13 @@ export function FacilityManagementPage() {
                                                                     <button
                                                                         onClick={() =>
                                                                             navigate({
-                                                                                to: '/app/facility/$facilityId/settings',
+                                                                                to: '/app/facility/$facilityId/settings' as any,
                                                                                 params: {
                                                                                     facilityId: String(
                                                                                         f.id,
                                                                                     ),
-                                                                                },
+                                                                                } as any,
+                                                                                search: {} as any
                                                                             })
                                                                         }
                                                                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors tooltip"

@@ -26,7 +26,7 @@ export function RegisterPage() {
         resolver: yupResolver(registerSchema) as any,
     });
 
-    if (isAuthenticated) return <Navigate to="/app" />;
+    if (isAuthenticated) return <Navigate to={"/app" as any} search={{} as any} />;
 
     const onSubmit = async (data: RegisterForm) => {
         setLoading(true);
@@ -42,8 +42,9 @@ export function RegisterPage() {
             });
             toast.success('Registration successful! Please verify your email.');
             navigate({
-                to: '/auth/verify-otp',
+                to: '/auth/verify-otp' as any,
                 search: { email: data.email, type: 'register' } as any,
+                params: {} as any,
             });
         } catch (err: any) {
             const message = err.response?.data?.message || 'Registration failed. Please try again.';
@@ -160,7 +161,7 @@ export function RegisterPage() {
             <div className="text-center">
                 <button
                     type="button"
-                    onClick={() => navigate({ to: '/auth/login' })}
+                    onClick={() => navigate({ to: '/auth/login' as any, search: {} as any })}
                     className="text-xs font-bold text-healthcare-primary hover:underline flex items-center justify-center mx-auto gap-1"
                 >
                     <ChevronLeft size={16} /> Back to login

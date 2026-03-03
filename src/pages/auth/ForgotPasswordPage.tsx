@@ -28,7 +28,7 @@ export function ForgotPasswordPage() {
             await authService.forgotPassword(data.email);
             toast.success('OTP sent to your email!');
             navigate({
-                to: '/auth/verify-otp',
+                to: '/auth/verify-otp' as any,
                 search: { email: data.email, type: 'reset' } as any,
             });
         } catch (err: any) {
@@ -93,7 +93,7 @@ export function ForgotPasswordPage() {
             <div className="text-center">
                 <button
                     type="button"
-                    onClick={() => navigate({ to: '/auth/login' })}
+                    onClick={() => navigate({ to: '/auth/login' as any, search: {} as any })}
                     className="text-xs font-bold text-healthcare-primary hover:underline flex items-center justify-center mx-auto gap-1"
                 >
                     <ChevronLeft size={16} /> Back to login

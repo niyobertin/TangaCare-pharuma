@@ -75,7 +75,7 @@ export function Navbar() {
                 <div className="hidden md:flex items-center gap-4">
                     {user ? (
                         <>
-                            <Link to="/app">
+                            <Link to={"/app" as any} search={{} as any}>
                                 <Button
                                     variant="outline"
                                     className="font-bold border-teal-600/50 text-teal-600 hover:bg-teal-50 dark:border-teal-400/30 dark:text-teal-400 dark:hover:bg-teal-900/20 rounded-full px-6 transition-all shadow-sm"
@@ -93,7 +93,7 @@ export function Navbar() {
                         </>
                     ) : (
                         <>
-                            <Link to="/auth/login">
+                            <Link to={"/auth/login" as any} search={{} as any}>
                                 <Button
                                     variant="ghost"
                                     className="font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full px-6 transition-all"
@@ -101,7 +101,7 @@ export function Navbar() {
                                     Log in
                                 </Button>
                             </Link>
-                            <Link to="/auth/register">
+                            <Link to={"/auth/register" as any} search={{} as any}>
                                 <Button className="shadow-xl shadow-teal-600/20 bg-teal-600 hover:bg-teal-700 text-white rounded-full px-8 font-bold h-11 transition-all hover:scale-105 active:scale-95">
                                     Get Started
                                 </Button>
@@ -150,7 +150,8 @@ export function Navbar() {
                                 {user ? (
                                     <>
                                         <Link
-                                            to="/app"
+                                            to={"/app" as any}
+                                            search={{} as any}
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className="block w-full"
                                         >
@@ -172,7 +173,7 @@ export function Navbar() {
                                 ) : (
                                     <>
                                         <Link
-                                            to="/auth/login"
+                                            to={"/auth/login" as any} search={{} as any}
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className="block w-full"
                                         >
@@ -184,7 +185,7 @@ export function Navbar() {
                                             </Button>
                                         </Link>
                                         <Link
-                                            to="/auth/register"
+                                            to={"/auth/register" as any} search={{} as any}
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className="block w-full"
                                         >

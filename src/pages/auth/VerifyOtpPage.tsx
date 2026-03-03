@@ -16,10 +16,10 @@ export function VerifyOtpPage() {
     useEffect(() => {
         if (!email) {
             if (type === 'register') {
-                navigate({ to: '/auth/register' });
+                navigate({ to: '/auth/register' as any, search: {} as any });
             } else {
                 toast.error('Session expired. Please try again.');
-                navigate({ to: '/auth/forgot-password' });
+                navigate({ to: '/auth/forgot-password' as any, search: {} as any });
             }
         }
     }, [email, navigate]);
@@ -84,15 +84,15 @@ export function VerifyOtpPage() {
                     if (payload?.user)
                         localStorage.setItem('user_data', JSON.stringify(payload.user));
                     toast.success('Email verified! Set your password to continue.');
-                    navigate({ to: '/auth/set-password' });
+                    navigate({ to: '/auth/set-password' as any, search: {} as any });
                 } else {
                     toast.success('Account verified! Please login.');
-                    navigate({ to: '/auth/login' });
+                    navigate({ to: '/auth/login' as any, search: {} as any });
                 }
             } else {
                 await authService.verifyResetOtp(email, otpValue);
                 toast.success('OTP verified successfully!');
-                navigate({ to: '/auth/reset-password', search: { email, otp: otpValue } as any });
+                navigate({ to: '/auth/reset-password' as any, search: { email, otp: otpValue } as any, params: {} as any });
             }
         } catch (err: any) {
             const message = err.response?.data?.message || 'Invalid OTP. Please try again.';
@@ -153,9 +153,9 @@ export function VerifyOtpPage() {
                     type="button"
                     onClick={() => {
                         if (type === 'register') {
-                            navigate({ to: '/auth/register' });
+                            navigate({ to: '/auth/register' as any, search: {} as any });
                         } else {
-                            navigate({ to: '/auth/forgot-password' });
+                            navigate({ to: '/auth/forgot-password' as any, search: {} as any });
                         }
                     }}
                     className="text-xs font-bold text-healthcare-primary hover:underline flex items-center justify-center mx-auto gap-1"

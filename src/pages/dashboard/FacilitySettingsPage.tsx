@@ -68,7 +68,7 @@ export function FacilitySettingsPage() {
             assignedFacilityId != null &&
             Number(facilityId) !== assignedFacilityId
         ) {
-            navigate({ to: '/app/facilities' });
+            navigate({ to: '/app/facilities' as any, search: {} as any });
             return;
         }
         loadFacility(Number(facilityId));
@@ -97,7 +97,7 @@ export function FacilitySettingsPage() {
         } catch (error) {
             console.error(error);
             toast.error('Failed to load facility details');
-            navigate({ to: '/app/facilities' });
+            navigate({ to: '/app/facilities' as any, search: {} as any });
         } finally {
             setLoading(false);
         }
@@ -157,7 +157,7 @@ export function FacilitySettingsPage() {
         try {
             await pharmacyService.deleteFacility(facility.id);
             toast.success('Facility deleted successfully');
-            navigate({ to: '/app/facilities' });
+            navigate({ to: '/app/facilities' as any, search: {} as any });
         } catch (error) {
             console.error(error);
             toast.error('Failed to delete facility');
@@ -238,7 +238,7 @@ export function FacilitySettingsPage() {
                 { }
                 <div className="flex items-center gap-4 mb-8">
                     <button
-                        onClick={() => navigate({ to: '/app/facilities' })}
+                        onClick={() => navigate({ to: '/app/facilities' as any, search: {} as any })}
                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
                     >
                         <ArrowLeft size={20} className="text-slate-500" />

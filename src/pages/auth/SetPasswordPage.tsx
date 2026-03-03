@@ -28,7 +28,7 @@ export function SetPasswordPage() {
             localStorage.removeItem('refresh_token');
             localStorage.removeItem('user_data');
             toast.success('Password set successfully. You can now log in.');
-            navigate({ to: '/auth/login' });
+            navigate({ to: '/auth/login' as any, search: {} as any });
         } catch (err: any) {
             toast.error(err?.response?.data?.message || 'Failed to set password');
         } finally {

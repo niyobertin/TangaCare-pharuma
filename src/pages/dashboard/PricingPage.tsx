@@ -309,7 +309,7 @@ export function PricingPage() {
                             <p className="text-xs text-slate-500">
                                 Set markup or selling price per product in{' '}
                                 <Link
-                                    to="/app/inventory"
+                                    to={"/app/inventory" as any} search={{} as any}
                                     className="text-healthcare-primary underline"
                                 >
                                     Medicines
