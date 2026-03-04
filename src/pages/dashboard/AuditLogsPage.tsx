@@ -45,7 +45,7 @@ function formatImpact(action: string): 'Low' | 'Medium' | 'High' {
 
 export function AuditLogsPage() {
     const { user, facilityId } = useAuth();
-    const searchParams = useSearch({ from: '/app/audit-logs' });
+    const searchParams = useSearch({ strict: false }) as any;
     const [searchQuery, setSearchQuery] = useState(searchParams.search || '');
     const [entityType, setEntityType] = useState<string>('');
     const [action, setAction] = useState<string>('');

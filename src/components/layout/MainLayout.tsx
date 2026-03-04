@@ -20,8 +20,6 @@ import {
     Building2,
     ChevronDown,
     FileText,
-    AlertTriangle,
-    ArrowRightLeft,
     ArrowLeft,
     ShieldCheck,
 } from 'lucide-react';
@@ -221,19 +219,6 @@ const NAV_ITEMS: NavItem[] = [
             'ADMIN',
         ],
         allowedPermissions: ['reports:read'],
-        children: [
-            { to: '/app/analytics/sales', label: 'Sales Report', icon: TrendingUp },
-            { to: '/app/analytics/inventory', label: 'Stock Report', icon: ShoppingCart },
-            { to: '/app/analytics/low-stock', label: 'Low Stock & Reorder', icon: Package },
-            { to: '/app/analytics/recall', label: 'Expiry Report', icon: AlertTriangle },
-            { to: '/app/analytics/movement', label: 'Item Movement', icon: ArrowRightLeft },
-            { to: '/app/analytics/tax', label: 'Tax & Compliance', icon: FileText },
-            { to: '/app/analytics/loyalty', label: 'Customer Report', icon: Users },
-            { to: '/app/analytics/procurement', label: 'Purchase Report', icon: Factory },
-            { to: '/app/analytics/performance', label: 'Staff Performance', icon: Users },
-            { to: '/app/audit-logs', label: 'Audit Logs', icon: TrendingUp },
-            { to: '/app/stock-movements', label: 'Stock Movement History', icon: Database },
-        ],
     },
     {
         to: '/app/pricing',

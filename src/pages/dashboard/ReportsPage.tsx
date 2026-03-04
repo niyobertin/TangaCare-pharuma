@@ -25,6 +25,8 @@ import { DashboardOwner } from '../../components/dashboard/DashboardOwner';
 import { CreateReturnModal } from '../../components/pharmacy/returns/CreateReturnModal';
 import { ABCAnalysisReport } from '../../components/pharmacy/reports/ABCAnalysisReport';
 import { PurchaseReport } from '../../components/pharmacy/reports/PurchaseReport';
+import { AuditLogsPage } from './AuditLogsPage';
+import { StockMovementsPage } from './StockMovementsPage';
 
 export interface ReportsPageProps {
     defaultTab?: string;
@@ -73,6 +75,18 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             emoji: '👥',
             subtabs: ['staff', 'performance', 'customer', 'loyalty', 'tax'],
         },
+        {
+            key: 'audit-logs',
+            label: 'Audit Logs',
+            emoji: '🛡️',
+            subtabs: ['audit-logs'],
+        },
+        {
+            key: 'stock-movements-history',
+            label: 'Movements History',
+            emoji: '🔄',
+            subtabs: ['stock-movements-history'],
+        },
     ] as const;
 
     // Determine which sub-report to load for the active tab
@@ -81,6 +95,8 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         if (tab === 'compliance') return 'kpis';
         if (tab === 'procurement') return 'purchase';
         if (tab === 'performance') return 'performance';
+        if (tab === 'audit-logs') return 'audit-logs';
+        if (tab === 'stock-movements-history') return 'stock-movements-history';
         return 'sales'; // 'sales' tab
     }
 
@@ -252,6 +268,16 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                             startDate={startDate}
                             endDate={endDate}
                         />
+                    )}
+                    {resolvedTab === 'audit-logs' && (
+                        <div className="-mx-6 -my-6">
+                            <AuditLogsPage />
+                        </div>
+                    )}
+                    {resolvedTab === 'stock-movements-history' && (
+                        <div className="-mx-6 -my-6">
+                            <StockMovementsPage />
+                        </div>
                     )}
                 </div>
             </div>
