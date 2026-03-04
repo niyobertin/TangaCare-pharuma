@@ -1,7 +1,0 @@
-
-> temp-vite@0.0.0 build
-> tsc -b && vite build
-
-src/pages/dashboard/FacilityManagement.tsx(681,85): error TS2353: Object literal may only specify known properties, and 'facilityId' does not exist in type 'ParamsReducerFn<RouterCore<Route<Register, any, "/", "/", string, "__root__", undefined, {}, {}, AnyContext, AnyContext, {}, undefined, readonly [Route<...>, Route<...>, Route<...>, Route<...>, Route<...>], unknown, unknown, unknown, undefined>, "never", false, RouterHistory, Record<...>>, "PATH", string, "/app/faci...'.
-src/pages/dashboard/FacilityManagement.tsx(726,85): error TS2353: Object literal may only specify known properties, and 'facilityId' does not exist in type 'ParamsReducerFn<RouterCore<Route<Register, any, "/", "/", string, "__root__", undefined, {}, {}, AnyContext, AnyContext, {}, undefined, readonly [Route<...>, Route<...>, Route<...>, Route<...>, Route<...>], unknown, unknown, unknown, undefined>, "never", false, RouterHistory, Record<...>>, "PATH", string, "/app/faci...'.
-src/pages/dashboard/FacilityManagement.tsx(742,85): error TS2353: Object literal may only specify known properties, and 'facilityId' does not exist in type 'ParamsReducerFn<RouterCore<Route<Register, any, "/", "/", string, "__root__", undefined, {}, {}, AnyContext, AnyContext, {}, undefined, readonly [Route<...>, Route<...>, Route<...>, Route<...>, Route<...>], unknown, unknown, unknown, undefined>, "never", false, RouterHistory, Record<...>>, "PATH", string, "/app/faci...'.
