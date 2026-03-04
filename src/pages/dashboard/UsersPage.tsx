@@ -466,8 +466,8 @@ function UserActionsIcons({
     return (
         <div className="flex items-center justify-end gap-1">
             <Link
-                to="/app/audit-logs"
-                search={{ search: user.email || user.id.toString() }}
+                to={"/app/audit-logs" as any}
+                search={{ search: user.email || user.id.toString() } as any}
                 className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-healthcare-primary transition-colors"
                 title="View activity history"
             >

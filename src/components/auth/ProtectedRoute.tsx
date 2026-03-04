@@ -40,7 +40,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
 
     if (!isAuthenticated) {
-        return <Navigate to="/auth/login" search={{ redirect: location.pathname }} />;
+        const Nav = Navigate as any;
+        return <Nav to="/auth/login" search={{ redirect: location.pathname }} />;
     }
 
     // Redirect users with baseline USER role to onboarding

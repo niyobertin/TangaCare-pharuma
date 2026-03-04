@@ -124,10 +124,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (token) {
             try {
                 const profile = await authService.getProfile();
-                if (profile.organizations) setOrganizations(profile.organizations);
+                let orgs = profile.organizations || [];
+
+                // For super_admin users, fetch organizations if not returned from profile
+                const userRole = (profile?.role || profile?.user_role || '').toString().toUpperCase();
+                const isSuperAdmin = userRole === 'SUPER_ADMIN' || userRole === 'SUPER ADMIN';
+
+                if (isSuperAdmin && (!orgs || orgs.length === 0)) {
+                    try {
+                        const orgsBody = await pharmacyService.getOrganizations({ limit: 100 });
+                        orgs = orgsBody.data || [];
+                    } catch (e) {
+                        console.error('Failed to fetch organizations for super_admin during checkAuth:', e);
+                    }
+                }
+
+                if (orgs) setOrganizations(orgs);
 
                 // Fetch full facility list immediately if we have an organization ID
-                const oid = profile.organization_id || profile.organizations?.[0]?.id;
+                const oid = profile.organization_id || orgs?.[0]?.id;
                 if (oid) {
                     try {
                         const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
@@ -168,8 +183,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const response = await authService.login(credentials);
             const payload = response?.data ?? response;
             const u = payload?.user;
-            const orgs = u?.organizations ?? [];
+            let orgs = u?.organizations ?? [];
             setOrganizations(Array.isArray(orgs) ? orgs : []);
+
+            // For super_admin users, fetch organizations if not returned from login
+            const userRole = (u?.role || u?.user_role || '').toString().toUpperCase();
+            const isSuperAdmin = userRole === 'SUPER_ADMIN' || userRole === 'SUPER ADMIN';
+
+            if (isSuperAdmin && (!orgs || orgs.length === 0)) {
+                try {
+                    const orgsBody = await pharmacyService.getOrganizations({ limit: 100 });
+                    orgs = orgsBody.data || [];
+                    setOrganizations(orgs);
+                } catch (e) {
+                    console.error('Failed to fetch organizations for super_admin during login:', e);
+                }
+            }
 
             // Fetch full facility list immediately
             const oid = u?.organization_id || orgs[0]?.id;
@@ -218,11 +247,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const refreshProfile = async () => {
         const profile = await authService.getProfile();
+        let orgs = profile.organizations || [];
+
+        // For super_admin users, fetch organizations if not returned from profile
+        const userRole = (profile?.role || profile?.user_role || '').toString().toUpperCase();
+        const isSuperAdmin = userRole === 'SUPER_ADMIN' || userRole === 'SUPER ADMIN';
+
+        if (isSuperAdmin && (!orgs || orgs.length === 0)) {
+            try {
+                const orgsBody = await pharmacyService.getOrganizations({ limit: 100 });
+                orgs = orgsBody.data || [];
+            } catch (e) {
+                console.error('Failed to fetch organizations for super_admin during refreshProfile:', e);
+            }
+        }
+
         setUser(profile);
         localStorage.setItem('user_data', JSON.stringify(profile));
-        if (profile.organizations) setOrganizations(profile.organizations);
+        if (orgs) setOrganizations(orgs);
 
-        const oid = profile.organization_id || profile.organizations?.[0]?.id;
+        const oid = profile.organization_id || orgs?.[0]?.id;
         if (oid) {
             try {
                 const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
@@ -269,7 +313,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 can,
                 isOwner:
                     user?.role?.toString().toUpperCase() === 'OWNER' ||
-                    (user as any)?.user_role?.toString().toUpperCase() === 'OWNER',
+                    user?.user_role?.toString().toUpperCase() === 'OWNER',
                 hasOrganization: (user?.organizations?.length ?? 0) > 0 || !!user?.organization_id,
             }}
         >

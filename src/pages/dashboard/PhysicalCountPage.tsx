@@ -216,21 +216,20 @@ function PhysicalCountDetail({
             item.batch?.batch_number.toLowerCase().includes(filter.toLowerCase()),
     );
 
-    const handleQuantityChange = async (itemId: number, qty: number) => {
+    const handleQuantityChange = async (itemId: number, qty: number, notes?: string) => {
         setSaving(itemId);
         try {
             // Optimistic update
             const updatedItems = items.map((i) =>
                 i.id === itemId
-                    ? { ...i, counted_quantity: qty, variance: qty - i.system_quantity }
+                    ? { ...i, counted_quantity: qty, variance: qty - i.system_quantity, notes: notes ?? i.notes }
                     : i,
             );
             setItems(updatedItems);
 
-            await pharmacyService.updatePhysicalCountItem(itemId, qty);
+            await pharmacyService.updatePhysicalCountItem(itemId, qty, notes);
         } catch (error) {
             console.error('Failed to update item', error);
-            // Revert on failure would be ideal here
         } finally {
             setSaving(null);
         }
@@ -327,6 +326,7 @@ function PhysicalCountDetail({
                             <th className="px-6 py-3 font-semibold text-slate-500 text-right">
                                 Variance
                             </th>
+                            <th className="px-6 py-3 font-semibold text-slate-500">Reason</th>
                             <th className="px-6 py-3 font-semibold text-slate-500">Status</th>
                         </tr>
                     </thead>
@@ -383,6 +383,25 @@ function PhysicalCountDetail({
                                 >
                                     {item.variance > 0 ? '+' : ''}
                                     {item.variance}
+                                </td>
+                                <td className="px-6 py-4">
+                                    {isEditable && item.variance !== 0 ? (
+                                        <select
+                                            className="text-xs border border-slate-300 dark:border-slate-600 rounded bg-transparent px-1 py-0.5 outline-none focus:ring-1 focus:ring-healthcare-primary"
+                                            value={item.notes || ''}
+                                            onChange={(e) => handleQuantityChange(item.id, item.counted_quantity, e.target.value)}
+                                        >
+                                            <option value="">Select Reason...</option>
+                                            <option value="Damage">Damage</option>
+                                            <option value="Theft">Theft</option>
+                                            <option value="Expired">Expired</option>
+                                            <option value="Data Entry Error">Data Entry Error</option>
+                                            <option value="Found Stock">Found Stock</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    ) : (
+                                        <span className="text-xs text-slate-500">{item.notes || '—'}</span>
+                                    )}
                                 </td>
                                 <td className="px-6 py-4">
                                     {item.variance === 0 ? (

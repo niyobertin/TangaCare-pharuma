@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Check, Trash2, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
+import { useAuth } from '../../context/AuthContext';
 import { Link } from '@tanstack/react-router';
 import { pharmacyService } from '../../services/pharmacy.service';
 import clsx from 'clsx';
@@ -22,6 +23,7 @@ interface Notification {
 
 export const NotificationBell: React.FC = () => {
     const { socket, isConnected } = useSocket();
+    const { facilityId } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -39,8 +41,9 @@ export const NotificationBell: React.FC = () => {
             if (notification.data && notification.data.order_id) {
                 setIsOpen(false); // Close popover
                 navigate({
-                    to: '/app/procurement/orders/$orderId',
-                    params: { orderId: String(notification.data.order_id) }
+                    to: '/app/procurement/orders/$orderId' as any,
+                    params: { orderId: String(notification.data.order_id) } as any,
+                    search: {} as any
                 });
             }
         } catch (error) {
@@ -50,7 +53,7 @@ export const NotificationBell: React.FC = () => {
 
     const fetchAlertSummary = async () => {
         try {
-            const response = await pharmacyService.getAlertSummary();
+            const response = await pharmacyService.getAlertSummary(facilityId);
             setAlertCount(response.data.total);
         } catch (error) {
             console.error('Failed to fetch alert summary:', error);
@@ -65,7 +68,7 @@ export const NotificationBell: React.FC = () => {
         fetchAlertSummary();
         const interval = setInterval(fetchAlertSummary, 2 * 60 * 1000); // 2 mins
         return () => clearInterval(interval);
-    }, [socket, isConnected]);
+    }, [socket, isConnected, facilityId]);
 
     // Real-time listeners
     useEffect(() => {
@@ -165,7 +168,8 @@ export const NotificationBell: React.FC = () => {
 
                         {alertCount > 0 && (
                             <Link
-                                to="/app/alerts"
+                                to={"/app/alerts" as any}
+                                search={{} as any}
                                 onClick={() => setIsOpen(false)}
                                 className="px-3 py-2 bg-red-50 dark:bg-red-900/10 border-b border-red-100 dark:border-red-900/20 flex items-center justify-between group"
                             >

@@ -9,8 +9,10 @@ import { PERMISSIONS } from '../../types/auth';
 import { OrganizationDetailsModal } from '../../components/organization/OrganizationDetailsModal';
 
 export function OrganizationsPage() {
-    const { user } = useAuth();
-    const [organizations, setOrganizations] = useState<Organization[]>([]);
+    const { user, organizations: authOrganizations } = useAuth();
+    const [organizations, setOrganizations] = useState<Organization[]>(() =>
+        Array.isArray(authOrganizations) && authOrganizations.length > 0 ? authOrganizations : [],
+    );
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [page] = useState(1);
@@ -29,10 +31,17 @@ export function OrganizationsPage() {
         }
     };
 
+    // If auth context already has organizations (e.g., after login), show them immediately.
     useEffect(() => {
+        if (Array.isArray(authOrganizations) && authOrganizations.length > 0 && !search) {
+            setOrganizations(authOrganizations);
+            setIsLoading(false);
+            return;
+        }
+
         const timer = setTimeout(() => loadOrganizations(), 300);
         return () => clearTimeout(timer);
-    }, [page, search]);
+    }, [page, search, authOrganizations]);
 
     const handleCreateSuccess = () => {
         setShowCreateModal(false);

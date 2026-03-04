@@ -70,6 +70,7 @@ export interface User {
     last_name?: string;
     lastName?: string;
     role: UserRole;
+    user_role?: UserRole;
     permissions?: Permission[];
     gender?: 'male' | 'female' | 'other';
     date_of_birth?: string;

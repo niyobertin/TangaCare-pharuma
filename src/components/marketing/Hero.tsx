@@ -44,7 +44,7 @@ export function Hero() {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start">
-                            <Link to="/auth/register">
+                            <Link to={"/auth/register" as any} search={{} as any}>
                                 <Button
                                     size="lg"
                                     className="h-14 px-10 rounded-full bg-teal-600 hover:bg-teal-700 text-white font-bold text-lg shadow-xl shadow-teal-600/25 transition-all hover:scale-105 active:scale-95 group"

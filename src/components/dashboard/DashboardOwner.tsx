@@ -185,7 +185,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             icon={<DollarSign size={16} />}
                             color="bg-emerald-500"
                             trend={summary?.month.operational.sales_growth_rate}
-                            onClick={() => navigate({ to: '/app/analytics/sales' })}
+                            onClick={() => navigate({ to: '/app/analytics/sales' as any, search: {} as any })}
                         />
                         <KPICard
                             title="Total Profit"
@@ -193,7 +193,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             isCurrency
                             icon={<TrendingUp size={16} />}
                             color="bg-blue-500"
-                            onClick={() => navigate({ to: '/app/analytics/sales' })}
+                            onClick={() => navigate({ to: '/app/analytics/sales' as any, search: {} as any })}
                         />
                         <KPICard
                             title="Low Stock"
@@ -201,7 +201,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             icon={<Package size={16} />}
                             color="bg-amber-500"
                             status={kpis?.inventory.low_stock_items! > 10 ? 'warning' : 'healthy'}
-                            onClick={() => navigate({ to: '/app/analytics/low-stock' })}
+                            onClick={() => navigate({ to: '/app/analytics/low-stock' as any, search: {} as any })}
                         />
                         <KPICard
                             title="Near-Expiry"
@@ -209,7 +209,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             icon={<Clock size={16} />}
                             color="bg-rose-500"
                             status={kpis?.inventory.expiring_soon_items! > 0 ? 'risk' : 'healthy'}
-                            onClick={() => navigate({ to: '/app/analytics/recall' })}
+                            onClick={() => navigate({ to: '/app/analytics/recall' as any, search: {} as any })}
                         />
                         <KPICard
                             title="Stock Value"
@@ -217,7 +217,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             isCurrency
                             icon={<DollarSign size={16} />}
                             color="bg-teal-600"
-                            onClick={() => navigate({ to: '/app/analytics/inventory' })}
+                            onClick={() => navigate({ to: '/app/analytics/inventory' as any, search: {} as any })}
                         />
                     </>
                 )}
@@ -232,7 +232,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             Sales Performance
                         </h3>
                         <button
-                            onClick={() => navigate({ to: '/app/analytics/sales' })}
+                            onClick={() => navigate({ to: '/app/analytics/sales' as any, search: {} as any })}
                             className="text-[10px] font-black text-slate-400 hover:text-healthcare-primary flex items-center gap-1 uppercase"
                         >
                             Details <ArrowRight size={10} />
@@ -262,7 +262,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             Stock Health
                         </h3>
                         <button
-                            onClick={() => navigate({ to: '/app/analytics/movement' })}
+                            onClick={() => navigate({ to: '/app/analytics/movement' as any, search: {} as any })}
                             className="text-[10px] font-black text-slate-400 hover:text-healthcare-primary flex items-center gap-1 uppercase"
                         >
                             Details <ArrowRight size={10} />
@@ -292,7 +292,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             Expiry Risk Analysis
                         </h3>
                         <button
-                            onClick={() => navigate({ to: '/app/analytics/recall' })}
+                            onClick={() => navigate({ to: '/app/analytics/recall' as any, search: {} as any })}
                             className="text-[10px] font-black text-slate-400 hover:text-healthcare-primary flex items-center gap-1 uppercase"
                         >
                             Details <ArrowRight size={10} />
@@ -338,7 +338,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                                     key={id}
                                     onClick={() => {
                                         setFacility(id);
-                                        navigate({ to: '/app' });
+                                        navigate({ to: '/app' as any, search: {} as any });
                                     }}
                                     className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-healthcare-primary transition-all cursor-pointer group"
                                 >
@@ -380,9 +380,9 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                     }))}
                     loading={loading}
                     onAction={(id) =>
-                        navigate({ to: '/app/procurement', search: { medicineId: id } })
+                        navigate({ to: '/app/procurement' as any, search: { medicineId: id } as any })
                     }
-                    onView={() => navigate({ to: '/app/analytics/low-stock' })}
+                    onView={() => navigate({ to: '/app/analytics/low-stock' as any, search: {} as any })}
                 />
 
                 <ActionTable
@@ -397,9 +397,9 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                     }))}
                     loading={loading}
                     onAction={(id) =>
-                        navigate({ to: '/app/inventory', search: { medicineId: id } })
+                        navigate({ to: '/app/inventory' as any, search: { medicineId: id } as any })
                     }
-                    onView={() => navigate({ to: '/app/analytics/recall' })}
+                    onView={() => navigate({ to: '/app/analytics/recall' as any, search: {} as any })}
                 />
             </div>
         </div>

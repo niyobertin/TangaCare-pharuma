@@ -19,6 +19,9 @@ import { DispensingCart } from '../../components/dispensing/DispensingCart';
 import { PaymentModal } from '../../components/dispensing/PaymentModal';
 import type { CartItem } from '../../types/pharmacy';
 import { toast } from 'react-hot-toast';
+import { APP_CONFIG } from '../../lib/config';
+import { useOfflineSync } from '../../hooks/useOfflineSync';
+import { db } from '../../lib/indexeddb';
 
 const WALK_IN_PATIENT = {
     id: null,
@@ -31,6 +34,7 @@ const WALK_IN_PATIENT = {
 
 export function DispensingPage() {
     const { user } = useAuth();
+    const { isOnline, queueCount } = useOfflineSync();
     const [medicines, setMedicines] = useState<Medicine[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -250,7 +254,7 @@ export function DispensingPage() {
     };
 
     const subtotal = cart.reduce((acc, item) => acc + item.selling_price * item.quantity, 0);
-    const tax = subtotal * 0.18;
+    const tax = subtotal * APP_CONFIG.VAT_RATE;
     const total = subtotal + tax;
 
     const handleCheckout = () => {
@@ -275,28 +279,46 @@ export function DispensingPage() {
         patientInsuranceNumber?: string
     ) => {
         setProcessing(true);
+        const saleData: any = {
+            patient_id: selectedPatient.id,
+            dispense_type: 'otc' as const,
+            vat_rate: APP_CONFIG.VAT_RATE,
+            items: cart
+                .filter((i) => !!i.selectedBatch)
+                .map((i) => ({
+                    medicine_id: i.id,
+                    batch_id: i.selectedBatch!.id,
+                    quantity: i.quantity,
+                    unit_price: i.selling_price,
+                })),
+            payments: payments,
+            patient_id_type: patientIdType,
+            patient_id_number: patientIdNumber,
+            insurance_provider_id: insuranceProviderId,
+            patient_insurance_number: patientInsuranceNumber,
+            ...(hasControlledDrug && prescriptionId
+                ? { prescription_id: parseInt(prescriptionId) || undefined }
+                : {}),
+        };
+
         try {
-            const response = await pharmacyService.createSale({
-                patient_id: selectedPatient.id,
-                dispense_type: 'otc',
-                vat_rate: 0.18,
-                items: cart
-                    .filter((i) => !!i.selectedBatch)
-                    .map((i) => ({
-                        medicine_id: i.id,
-                        batch_id: i.selectedBatch!.id,
-                        quantity: i.quantity,
-                        unit_price: i.selling_price,
-                    })),
-                payments: payments,
-                patient_id_type: patientIdType,
-                patient_id_number: patientIdNumber,
-                insurance_provider_id: insuranceProviderId,
-                patient_insurance_number: patientInsuranceNumber,
-                ...(hasControlledDrug && prescriptionId
-                    ? { prescription_id: parseInt(prescriptionId) || undefined }
-                    : {}),
-            });
+            if (!isOnline) {
+                const offlineId = `off_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                await db.saleQueue.add({
+                    ...saleData,
+                    offlineId,
+                    createdAt: new Date().toISOString(),
+                    status: 'pending',
+                    retryCount: 0
+                });
+                toast.success('Offline: Sale queued for sync');
+                setCart([]);
+                setShowPaymentModal(false);
+                setShowSuccess(true);
+                return;
+            }
+
+            const response = await pharmacyService.createSale(saleData);
 
             setLastSaleId(response.id);
             setShowSuccess(true);
@@ -333,6 +355,16 @@ export function DispensingPage() {
             ]}
             requireFacility
         >
+            {!isOnline && (
+                <div className="bg-amber-500 text-white px-4 py-1 text-[10px] font-black uppercase tracking-widest flex justify-between items-center animate-in slide-in-from-top duration-300">
+                    <span>Offline Mode Active • Sales will sync automatically</span>
+                    {queueCount > 0 && (
+                        <span className="bg-white/20 px-2 py-0.5 rounded-full">
+                            {queueCount} Pending
+                        </span>
+                    )}
+                </div>
+            )}
             <div className="flex h-full flex-row p-5 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-700 overflow-hidden">
                 {/* LEFT SIDE - Medicine Search and Cards */}
                 <div className="flex-1 flex flex-col gap-6 overflow-hidden min-h-0">

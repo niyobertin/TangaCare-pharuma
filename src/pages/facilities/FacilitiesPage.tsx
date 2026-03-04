@@ -217,7 +217,7 @@ export function FacilitiesPage() {
                                         facility.
                                     </p>
                                     <button
-                                        onClick={() => navigate({ to: '/app' })}
+                                        onClick={() => navigate({ to: '/app' as any, search: {} as any })}
                                         className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
                                     >
                                         Go to Dashboard
@@ -255,10 +255,11 @@ export function FacilitiesPage() {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         navigate({
-                                                            to: '/app/facility/$facilityId/settings',
+                                                            to: '/app/facility/$facilityId/settings' as any,
                                                             params: {
                                                                 facilityId: String(facility.id),
-                                                            },
+                                                            } as any,
+                                                            search: {} as any,
                                                         });
                                                     }}
                                                     className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg text-slate-500 hover:text-healthcare-primary transition-colors shadow-sm"
@@ -354,12 +355,13 @@ export function FacilitiesPage() {
                                                         <button
                                                             onClick={() =>
                                                                 navigate({
-                                                                    to: '/app/facility/$facilityId/settings',
+                                                                    to: '/app/facility/$facilityId/settings' as any,
                                                                     params: {
                                                                         facilityId: String(
                                                                             facility.id,
                                                                         ),
-                                                                    },
+                                                                    } as any,
+                                                                    search: {} as any,
                                                                 })
                                                             }
                                                             className="font-bold text-healthcare-primary hover:underline"
@@ -413,12 +415,13 @@ export function FacilitiesPage() {
                                                         <button
                                                             onClick={() =>
                                                                 navigate({
-                                                                    to: '/app/facility/$facilityId/settings',
+                                                                    to: '/app/facility/$facilityId/settings' as any,
                                                                     params: {
                                                                         facilityId: String(
                                                                             facility.id,
                                                                         ),
-                                                                    },
+                                                                    } as any,
+                                                                    search: {} as any,
                                                                 })
                                                             }
                                                             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors"

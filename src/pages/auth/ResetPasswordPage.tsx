@@ -21,7 +21,7 @@ export function ResetPasswordPage() {
     useEffect(() => {
         if (!email || !otp) {
             toast.error('Session expired. Please try again.');
-            navigate({ to: '/auth/forgot-password' });
+            navigate({ to: '/auth/forgot-password' as any, search: {} as any });
         }
     }, [email, otp, navigate]);
 
@@ -42,7 +42,7 @@ export function ResetPasswordPage() {
                 newPassword: data.password,
             });
             toast.success('Password reset successful! Please login.');
-            navigate({ to: '/auth/login' });
+            navigate({ to: '/auth/login' as any, search: {} as any });
         } catch (err: any) {
             const message =
                 err.response?.data?.message || 'Failed to reset password. Please try again.';
@@ -140,7 +140,7 @@ export function ResetPasswordPage() {
                 <button
                     type="button"
                     onClick={() =>
-                        navigate({ to: '/auth/verify-otp', search: { email, otp } as any })
+                        navigate({ to: '/auth/verify-otp' as any, search: { email, otp } as any, params: {} as any })
                     }
                     className="text-xs font-bold text-healthcare-primary hover:underline flex items-center justify-center mx-auto gap-1"
                 >

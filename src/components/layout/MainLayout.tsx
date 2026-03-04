@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
+import { GlobalLoading } from '../ui/GlobalLoading';
 import { isSuperAdmin } from '../../types/auth';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -307,7 +308,8 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isCollapsed,
     return (
         <div>
             <Link
-                to={to}
+                to={to as any}
+                search={{} as any}
                 onClick={handleClick}
                 activeProps={{
                     className:
@@ -343,7 +345,8 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isCollapsed,
                     {children.map((child) => (
                         <Link
                             key={child.to}
-                            to={child.to}
+                            to={child.to as any}
+                            search={{} as any}
                             activeProps={{
                                 className:
                                     'text-healthcare-primary font-bold bg-teal-50/50 dark:bg-teal-900/20',
@@ -373,7 +376,9 @@ export function MainLayout() {
         facilityId,
         hasOrganization,
         isOwner,
+        isLoading,
     } = useAuth();
+    if (isLoading) return <GlobalLoading />;
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -406,7 +411,7 @@ export function MainLayout() {
 
     const handleLogout = () => {
         logout();
-        navigate({ to: '/login' });
+        navigate({ to: '/auth/login' as any, search: {} as any });
     };
 
     const isSuperAdminUser = isSuperAdmin(user?.role);
@@ -436,7 +441,7 @@ export function MainLayout() {
     React.useEffect(() => {
         const path = window.location.pathname;
         if ((needsOnboarding || isUnassignedAdmin) && path !== '/app/facilities') {
-            navigate({ to: '/app/facilities', replace: true });
+            navigate({ to: '/app/facilities' as any, replace: true, search: {} as any } as any);
         }
     }, [needsOnboarding, isUnassignedAdmin, navigate]);
 

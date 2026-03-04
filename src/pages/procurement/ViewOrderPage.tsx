@@ -35,7 +35,7 @@ export function ViewOrderPage() {
         } catch (error) {
             console.error('Failed to fetch order details', error);
             toast.error('Failed to load order details');
-            navigate({ to: '/app/procurement/orders' });
+            navigate({ to: '/app/procurement' as any, search: {} as any });
         } finally {
             setLoading(false);
         }
@@ -84,7 +84,7 @@ export function ViewOrderPage() {
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-8 bg-slate-50 dark:bg-slate-950 min-h-screen">
             <Link
-                to="/app/procurement/orders"
+                to="/app/procurement" search={{}}
                 className="flex items-center gap-2 text-slate-500 hover:text-healthcare-primary font-bold mb-6 transition-colors group print:hidden"
             >
                 <div className="p-2 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 group-hover:border-healthcare-primary/20">
@@ -384,9 +384,9 @@ export function ViewOrderPage() {
                                     <div key={activity.id} className="flex gap-4 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-gray-100 dark:border-slate-800">
                                         <div className="flex-shrink-0 mt-1">
                                             <div className={`w-2 h-2 rounded-full ${activity.action.includes('rejected') || activity.action.includes('cancelled') ? 'bg-red-500' :
-                                                    activity.action.includes('confirmed') || activity.action.includes('approved') ? 'bg-teal-500' :
-                                                        activity.action.includes('clarification') ? 'bg-yellow-500' :
-                                                            'bg-gray-400'
+                                                activity.action.includes('confirmed') || activity.action.includes('approved') ? 'bg-teal-500' :
+                                                    activity.action.includes('clarification') ? 'bg-yellow-500' :
+                                                        'bg-gray-400'
                                                 }`}></div>
                                         </div>
                                         <div className="flex-grow">

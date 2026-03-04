@@ -26,7 +26,8 @@ export const RequirePermission: React.FC<RequirePermissionProps> = ({
     }
 
     if (!user) {
-        return <Navigate to="/auth/login" />;
+        const Nav = Navigate as any;
+        return <Nav to="/auth/login" search={{}} />;
     }
 
     // Super Admins and Owners bypass all permission checks

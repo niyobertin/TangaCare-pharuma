@@ -25,7 +25,7 @@ export function DashboardMetrics({ facilityId }: DashboardMetricsProps) {
     const fetchMetrics = async () => {
         try {
             setLoading(true);
-            const response = await pharmacyService.getAlertSummary();
+            const response = await pharmacyService.getAlertSummary(facilityId);
             setSummary(response.data);
         } catch (error) {
             console.error('Failed to fetch dashboard metrics:', error);
