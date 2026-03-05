@@ -48,6 +48,7 @@ export interface Medicine {
     dosage_form: string;
     unit: string;
     selling_price: number;
+    cost_price?: number;
     markup_percent?: number;
     category_id?: number;
     category?: MedicineCategory;
@@ -170,17 +171,22 @@ export interface Batch {
     current_quantity: number;
     unit_cost: number;
     status: 'active' | 'expired' | 'depleted' | 'quarantined';
+    location_id?: number | null;
+    location?: StorageLocation | null;
 }
 
 export interface Stock {
     id: number;
     facility_id: number;
     department_id?: number | null;
+    location_id?: number | null;
     storage_location_id?: number | null;
     medicine_id: number;
+    batch_id?: number;
     quantity: number;
     min_threshold: number;
     medicine?: Medicine;
+    batch?: Batch;
     department?: Department;
     location?: StorageLocation;
 }

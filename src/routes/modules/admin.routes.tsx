@@ -5,7 +5,6 @@ import { OrganizationsPage } from '../../pages/organizations/OrganizationsPage';
 import { FacilitiesPage } from '../../pages/facilities/FacilitiesPage';
 import { UsersPage } from '../../pages/dashboard/UsersPage';
 import { AuditLogsPage } from '../../pages/dashboard/AuditLogsPage';
-import { PricingPage } from '../../pages/dashboard/PricingPage';
 import { FacilitySettingsPage } from '../../pages/dashboard/FacilitySettingsPage';
 import { PatientsPage } from '../../pages/dashboard/PatientsPage';
 import { z } from 'zod';
@@ -59,16 +58,6 @@ export const createAdminRoutes = (parentRoute: any) => {
         },
     });
 
-    const pricingRoute = createRoute({
-        getParentRoute: () => parentRoute,
-        path: 'pricing',
-        component: () => (
-            <RequirePermission permissions={[PERMISSIONS.PRICING_READ, PERMISSIONS.PRICING_MANAGE]}>
-                <PricingPage />
-            </RequirePermission>
-        ),
-    });
-
     const facilitySettingsRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'facility/$facilityId/settings',
@@ -94,7 +83,6 @@ export const createAdminRoutes = (parentRoute: any) => {
         facilitiesRoute,
         usersRoute,
         auditLogsRoute,
-        pricingRoute,
         facilitySettingsRoute,
         patientsRoute,
     ];

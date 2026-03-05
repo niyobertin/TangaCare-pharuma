@@ -9,8 +9,6 @@ import {
     FileText,
     ArrowUpRight,
     AlertCircle,
-    ChevronLeft,
-    ChevronRight,
     Upload,
     Download,
     Loader2,
@@ -35,12 +33,35 @@ import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { CreatePurchaseOrderModal } from '../../components/inventory/CreatePurchaseOrderModal';
 import { ReceiveOrderModal } from '../../components/inventory/ReceiveOrderModal';
 import { StatsSkeleton } from '../../components/shared/Skeleton';
+import { Pagination } from '../../components/ui/Pagination';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
+
+const ACTIVE_ORDER_STATUSES = [
+    'approved',
+    'confirmed',
+    'partially_received',
+    'backordered',
+] as const;
+
+const formatRwfCompact = (value: number): string => {
+    const amount = Number(value || 0);
+    if (amount >= 1_000_000_000) return `RWF ${(amount / 1_000_000_000).toFixed(1)}B`;
+    if (amount >= 1_000_000) return `RWF ${(amount / 1_000_000).toFixed(1)}M`;
+    if (amount >= 1_000) return `RWF ${(amount / 1_000).toFixed(1)}K`;
+    return `RWF ${Math.round(amount).toLocaleString()}`;
+};
+
+const toLabelCase = (value: string): string =>
+    String(value || '')
+        .replace(/[_\s]+/g, ' ')
+        .trim()
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
 
 const ImportPreviewModal = ({
     isOpen,
@@ -412,71 +433,14 @@ const SuppliersTab = () => {
                 </div>
             </div>
 
-            { }
-            <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                    Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalItems)} of{' '}
-                    {totalItems}
-                </span>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                        disabled={page === 1 || loading}
-                        className="p-2 border rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary"
-                    >
-                        <ChevronLeft size={18} />
-                    </button>
-                    <div className="flex items-center gap-1">
-                        {(() => {
-                            const pages = [];
-                            const maxVisible = 5;
-                            if (totalPages <= maxVisible) {
-                                for (let i = 1; i <= totalPages; i++) pages.push(i);
-                            } else {
-                                pages.push(1);
-                                if (page > 3) pages.push('...');
-                                const start = Math.max(2, page - 1);
-                                const end = Math.min(totalPages - 1, page + 1);
-                                for (let i = start; i <= end; i++) {
-                                    if (!pages.includes(i)) pages.push(i);
-                                }
-                                if (page < totalPages - 2) pages.push('...');
-                                if (!pages.includes(totalPages)) pages.push(totalPages);
-                            }
-                            return pages.map((p, i) =>
-                                p === '...' ? (
-                                    <span
-                                        key={`sep-${i}`}
-                                        className="px-2 text-slate-400 font-bold"
-                                    >
-                                        ...
-                                    </span>
-                                ) : (
-                                    <button
-                                        key={p}
-                                        onClick={() => setPage(Number(p))}
-                                        className={cn(
-                                            'w-9 h-9 flex items-center justify-center rounded-xl text-[11px] font-black transition-all',
-                                            page === p
-                                                ? 'bg-healthcare-primary text-white shadow-md shadow-teal-500/20'
-                                                : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400',
-                                        )}
-                                    >
-                                        {p}
-                                    </button>
-                                ),
-                            );
-                        })()}
-                    </div>
-                    <button
-                        onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                        disabled={page === totalPages || loading}
-                        className="p-2 border rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary"
-                    >
-                        <ChevronRight size={18} />
-                    </button>
-                </div>
-            </div>
+            <Pagination
+                page={page}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                pageSize={limit}
+                onPageChange={setPage}
+                loading={loading}
+            />
 
             <SupplierModal
                 isOpen={isModalOpen}
@@ -522,7 +486,17 @@ export function ProcurementPage() {
     const navigate = useNavigate();
     const [orders, setOrders] = useState<ProcurementOrder[]>([]);
     const [loading, setLoading] = useState(true);
-    const [statusFilter, setStatusFilter] = useState('All');
+    const [statusFilter, setStatusFilter] = useState<
+        | 'all'
+        | 'draft'
+        | 'pending'
+        | 'approved'
+        | 'confirmed'
+        | 'partially_received'
+        | 'backordered'
+        | 'received'
+        | 'cancelled'
+    >('all');
     const [page, setPage] = useState(1);
     const [uploading, setUploading] = useState(false);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -531,8 +505,13 @@ export function ProcurementPage() {
     const [activeTab, setActiveTab] = useState<'orders' | 'suppliers'>('orders');
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [totalValue, setTotalValue] = useState(0);
     const [limit] = useState(10);
+    const [procurementStats, setProcurementStats] = useState({
+        pending: 0,
+        active: 0,
+        totalOrders: 0,
+        totalValue: 0,
+    });
 
 
     const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
@@ -551,19 +530,61 @@ export function ProcurementPage() {
     const fetchOrders = async () => {
         setLoading(true);
         try {
-            const params = {
+            const sharedParams = {
                 page,
                 limit,
-                status: statusFilter === 'All' ? undefined : statusFilter.toUpperCase(),
                 search: searchTerm || undefined,
                 start_date: startDate || undefined,
                 end_date: endDate || undefined,
             };
-            const response = await pharmacyService.getProcurementOrders(params);
-            setOrders(response.data);
+            const params = {
+                ...sharedParams,
+                status: statusFilter === 'all' ? undefined : statusFilter,
+            };
+
+            const activeRequests = ACTIVE_ORDER_STATUSES.map((status) =>
+                pharmacyService.getProcurementOrders({
+                    ...sharedParams,
+                    page: 1,
+                    limit: 1,
+                    status,
+                }),
+            );
+
+            const [response, allOrdersStats, pendingStats, ...activeStats] = await Promise.all([
+                pharmacyService.getProcurementOrders(params),
+                pharmacyService.getProcurementOrders({
+                    ...sharedParams,
+                    page: 1,
+                    limit: 1,
+                    status: undefined,
+                }),
+                pharmacyService.getProcurementOrders({
+                    ...sharedParams,
+                    page: 1,
+                    limit: 1,
+                    status: 'pending',
+                }),
+                ...activeRequests,
+            ]);
+
+            const activeCount = activeStats.reduce(
+                (sum, stat) => sum + Number(stat.meta?.total || 0),
+                0,
+            );
+
+            setOrders(Array.isArray(response.data) ? response.data : []);
             setTotalPages(response.meta?.totalPages || 1);
             setTotalItems(response.meta?.total || 0);
-            setTotalValue(response.meta?.totalValue || 0);
+            setProcurementStats({
+                pending: pendingStats.meta?.total || 0,
+                active: activeCount,
+                totalOrders: allOrdersStats.meta?.total || 0,
+                totalValue:
+                    allOrdersStats.meta?.totalValue ??
+                    response.meta?.totalValue ??
+                    0,
+            });
         } catch (error) {
             console.error('Failed to fetch procurement orders:', error);
         } finally {
@@ -688,28 +709,28 @@ export function ProcurementPage() {
     const stats = [
         {
             label: 'Pending POs',
-            value: orders.filter((o) => o.status === 'PENDING').length,
+            value: procurementStats.pending,
             icon: Clock,
             color: 'text-amber-500',
             bg: 'bg-amber-50 dark:bg-amber-900/20',
         },
         {
             label: 'Active Orders',
-            value: orders.filter((o) => o.status === 'ORDERED').length,
+            value: procurementStats.active,
             icon: Truck,
             color: 'text-blue-500',
             bg: 'bg-blue-50 dark:bg-blue-900/20',
         },
         {
             label: 'Total Value',
-            value: 'RWF ' + (totalValue / 1000000).toFixed(1) + 'M',
+            value: formatRwfCompact(procurementStats.totalValue),
             icon: ShoppingCart,
             color: 'text-teal-500',
             bg: 'bg-teal-50 dark:bg-teal-900/20',
         },
         {
             label: 'Total Orders',
-            value: totalItems,
+            value: procurementStats.totalOrders,
             icon: FileText,
             color: 'text-rose-500',
             bg: 'bg-rose-50 dark:bg-rose-900/20',
@@ -733,81 +754,83 @@ export function ProcurementPage() {
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
                 { }
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="space-y-1">
-                        <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
-                            Procurement & Orders
-                        </h2>
-                        <div className="flex items-center gap-1 mt-1">
-                            <button
-                                onClick={() => setActiveTab('orders')}
-                                className={cn(
-                                    'px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
-                                    activeTab === 'orders'
-                                        ? 'bg-healthcare-primary text-white shadow-lg shadow-teal-500/20'
-                                        : 'text-slate-400 hover:text-healthcare-primary bg-slate-100 dark:bg-slate-800',
-                                )}
-                            >
-                                Purchase Orders
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('suppliers')}
-                                className={cn(
-                                    'px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
-                                    activeTab === 'suppliers'
-                                        ? 'bg-healthcare-primary text-white shadow-lg shadow-teal-500/20'
-                                        : 'text-slate-400 hover:text-healthcare-primary bg-slate-100 dark:bg-slate-800',
-                                )}
-                            >
-                                Suppliers
-                            </button>
-                        </div>
-                    </div>
-                    {activeTab === 'orders' &&
-                        user?.role?.toString()?.toLowerCase() !== 'auditor' && (
-                            <div className="flex flex-wrap items-center gap-3">
-                                <select
-                                    value={selectedSupplierId || ''}
-                                    onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
-                                    className="px-4 py-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-healthcare-primary h-[42px]"
-                                >
-                                    <option value="">Select Supplier to Import</option>
-                                    {suppliers.map((s) => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.name}
-                                        </option>
-                                    ))}
-                                </select>
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+                    <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
+                                Procurement & Orders
+                            </h2>
+                            <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
                                 <button
-                                    onClick={downloadTemplate}
-                                    className="px-5 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98] flex items-center gap-2"
-                                >
-                                    <Download size={16} />
-                                    Template
-                                </button>
-                                <label className="cursor-pointer px-5 py-2.5 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98] flex items-center gap-2 h-[42px]">
-                                    {uploading ? (
-                                        <Loader2 className="animate-spin" size={16} />
-                                    ) : (
-                                        <Upload size={16} />
+                                    onClick={() => setActiveTab('orders')}
+                                    className={cn(
+                                        'px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
+                                        activeTab === 'orders'
+                                            ? 'bg-healthcare-primary text-white shadow-lg shadow-teal-500/20'
+                                            : 'text-slate-500 hover:text-healthcare-primary',
                                     )}
-                                    Import Excel
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        accept=".xlsx, .xls"
-                                        onChange={handleImport}
-                                        disabled={uploading}
-                                    />
-                                </label>
-                                <button
-                                    onClick={() => setIsPOModalOpen(true)}
-                                    className="px-5 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] flex items-center gap-2 h-[42px]"
                                 >
-                                    <Plus size={16} /> Create PO
+                                    Purchase orders
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('suppliers')}
+                                    className={cn(
+                                        'px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
+                                        activeTab === 'suppliers'
+                                            ? 'bg-healthcare-primary text-white shadow-lg shadow-teal-500/20'
+                                            : 'text-slate-500 hover:text-healthcare-primary',
+                                    )}
+                                >
+                                    Suppliers
                                 </button>
                             </div>
-                        )}
+                        </div>
+                        {activeTab === 'orders' &&
+                            user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <select
+                                        value={selectedSupplierId || ''}
+                                        onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
+                                        className="min-w-[220px] h-11 px-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-healthcare-primary"
+                                    >
+                                        <option value="">Select supplier to import</option>
+                                        {suppliers.map((s) => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        onClick={downloadTemplate}
+                                        className="h-11 px-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98] inline-flex items-center gap-2"
+                                    >
+                                        <Download size={16} />
+                                        Template
+                                    </button>
+                                    <label className="cursor-pointer h-11 px-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-500 rounded-xl font-black text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98] inline-flex items-center gap-2">
+                                        {uploading ? (
+                                            <Loader2 className="animate-spin" size={16} />
+                                        ) : (
+                                            <Upload size={16} />
+                                        )}
+                                        Import excel
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            accept=".xlsx, .xls"
+                                            onChange={handleImport}
+                                            disabled={uploading}
+                                        />
+                                    </label>
+                                    <button
+                                        onClick={() => setIsPOModalOpen(true)}
+                                        className="h-11 px-5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] inline-flex items-center gap-2"
+                                    >
+                                        <Plus size={16} /> Create PO
+                                    </button>
+                                </div>
+                            )}
+                    </div>
                 </div>
 
                 {activeTab === 'orders' ? (
@@ -820,24 +843,24 @@ export function ProcurementPage() {
                                 {stats.map((stat, i) => (
                                     <div
                                         key={i}
-                                        className="glass-card p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center gap-4 shadow-sm"
+                                        className="glass-card min-h-[108px] p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-4 shadow-sm"
                                     >
+                                        <div className="min-w-0">
+                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                {stat.label}
+                                            </p>
+                                            <p className="mt-1 text-xl font-black text-healthcare-dark dark:text-white leading-none truncate">
+                                                {stat.value}
+                                            </p>
+                                        </div>
                                         <div
                                             className={cn(
-                                                'w-12 h-12 rounded-xl flex items-center justify-center',
+                                                'w-12 h-12 shrink-0 rounded-xl flex items-center justify-center',
                                                 stat.bg,
                                                 stat.color,
                                             )}
                                         >
                                             <stat.icon size={22} />
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                {stat.label}
-                                            </p>
-                                            <p className="text-xl font-black text-healthcare-dark dark:text-white">
-                                                {stat.value}
-                                            </p>
                                         </div>
                                     </div>
                                 ))}
@@ -846,8 +869,8 @@ export function ProcurementPage() {
 
                         { }
                         <div className="space-y-4">
-                            <div className="flex flex-col lg:flex-row gap-4 items-center bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
-                                <div className="relative flex-1 w-full lg:min-w-[400px]">
+                            <div className="flex flex-col xl:flex-row xl:items-center gap-3 bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+                                <div className="relative flex-1 w-full xl:min-w-[340px]">
                                     <SearchIcon
                                         className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                                         size={14}
@@ -857,35 +880,37 @@ export function ProcurementPage() {
                                         placeholder="Search PO#, Supplier..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-xs font-bold text-slate-900 dark:text-white transition-all outline-none"
+                                        className="w-full h-10 pl-9 pr-4 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-xs font-bold text-slate-900 dark:text-white transition-all outline-none"
                                     />
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
+                                <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap mr-1">
                                             Status
                                         </span>
                                         <select
                                             value={statusFilter}
                                             onChange={(e) => {
-                                                setStatusFilter(e.target.value);
+                                                setStatusFilter(e.target.value as typeof statusFilter);
                                                 setPage(1);
                                             }}
-                                            className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
+                                            className="h-10 min-w-[150px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
                                         >
-                                            <option value="All">All Status</option>
-                                            <option value="Draft">Draft</option>
-                                            <option value="Pending">Pending</option>
-                                            <option value="Approved">Approved</option>
-                                            <option value="Ordered">Ordered</option>
-                                            <option value="Received">Received</option>
-                                            <option value="Cancelled">Cancelled</option>
+                                            <option value="all">All status</option>
+                                            <option value="draft">Draft</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="approved">Approved</option>
+                                            <option value="confirmed">Confirmed</option>
+                                            <option value="partially_received">Partially received</option>
+                                            <option value="backordered">Backordered</option>
+                                            <option value="received">Received</option>
+                                            <option value="cancelled">Cancelled</option>
                                         </select>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
-                                        <div className="relative">
+                                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                                        <div className="relative flex-1 sm:flex-none">
                                             <Calendar
                                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                                                 size={14}
@@ -894,13 +919,13 @@ export function ProcurementPage() {
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
-                                                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
+                                                className="w-full sm:w-auto h-10 pl-9 pr-3 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
                                             />
                                         </div>
-                                        <span className="text-slate-400 font-black text-[10px]">
+                                        <span className="text-slate-400 font-black text-[10px] shrink-0">
                                             TO
                                         </span>
-                                        <div className="relative">
+                                        <div className="relative flex-1 sm:flex-none">
                                             <Calendar
                                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                                                 size={14}
@@ -909,7 +934,7 @@ export function ProcurementPage() {
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.target.value)}
-                                                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
+                                                className="w-full sm:w-auto h-10 pl-9 pr-3 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
                                             />
                                         </div>
                                     </div>
@@ -919,9 +944,9 @@ export function ProcurementPage() {
                                             setSearchTerm('');
                                             setStartDate('');
                                             setEndDate('');
-                                            setStatusFilter('All');
+                                            setStatusFilter('all');
                                         }}
-                                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 transition-colors"
+                                        className="h-10 w-10 inline-flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 transition-colors"
                                         title="Reset Filters"
                                     >
                                         <RefreshCw size={18} />
@@ -1010,9 +1035,10 @@ export function ProcurementPage() {
                                                                     order.status.toUpperCase() ===
                                                                         'RECEIVED'
                                                                         ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                                        : [
+                                                                    : [
                                                                             'ORDERED',
                                                                             'APPROVED',
+                                                                            'CONFIRMED',
                                                                         ].includes(
                                                                             order.status.toUpperCase(),
                                                                         )
@@ -1023,6 +1049,7 @@ export function ProcurementPage() {
                                                                                 : [
                                                                                     'PARTIAL',
                                                                                     'PARTIALLY_RECEIVED',
+                                                                                    'BACKORDERED',
                                                                                 ].includes(
                                                                                     order.status.toUpperCase(),
                                                                                 )
@@ -1039,7 +1066,11 @@ export function ProcurementPage() {
                                                                 ) : order.status.toUpperCase() ===
                                                                     'PENDING' ? (
                                                                     <Clock size={12} />
-                                                                ) : ['ORDERED', 'APPROVED'].includes(
+                                                                ) : [
+                                                                    'ORDERED',
+                                                                    'APPROVED',
+                                                                    'CONFIRMED',
+                                                                ].includes(
                                                                     order.status.toUpperCase(),
                                                                 ) ? (
                                                                     <CheckCircle2
@@ -1049,6 +1080,7 @@ export function ProcurementPage() {
                                                                 ) : [
                                                                     'PARTIAL',
                                                                     'PARTIALLY_RECEIVED',
+                                                                    'BACKORDERED',
                                                                 ].includes(
                                                                     order.status.toUpperCase(),
                                                                 ) ? (
@@ -1062,7 +1094,12 @@ export function ProcurementPage() {
                                                                 ) : (
                                                                     <XCircle size={12} />
                                                                 )}
-                                                                {order.status.replace(/_/g, ' ')}
+                                                                {toLabelCase(
+                                                                    order.status.toUpperCase() ===
+                                                                        'CONFIRMED'
+                                                                        ? 'ordered'
+                                                                        : order.status,
+                                                                )}
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 text-right">
@@ -1088,8 +1125,10 @@ export function ProcurementPage() {
                                                                             {/* Internal approval removed as per new flow. Only supplier approves. */}
                                                                             {[
                                                                                 'APPROVED',
+                                                                                'CONFIRMED',
                                                                                 'PARTIAL',
                                                                                 'PARTIALLY_RECEIVED',
+                                                                                'BACKORDERED',
                                                                                 'ORDERED',
                                                                             ].includes(
                                                                                 order.status.toUpperCase(),
@@ -1174,72 +1213,14 @@ export function ProcurementPage() {
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
-                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                Showing {(page - 1) * limit + 1} to{' '}
-                                {Math.min(page * limit, totalItems)} of {totalItems}
-                            </span>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                                    disabled={page === 1 || loading}
-                                    className="p-2 border rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary"
-                                >
-                                    <ChevronLeft size={18} />
-                                </button>
-                                <div className="flex items-center gap-1">
-                                    {(() => {
-                                        const pages = [];
-                                        const maxVisible = 5;
-                                        if (totalPages <= maxVisible) {
-                                            for (let i = 1; i <= totalPages; i++) pages.push(i);
-                                        } else {
-                                            pages.push(1);
-                                            if (page > 3) pages.push('...');
-                                            const start = Math.max(2, page - 1);
-                                            const end = Math.min(totalPages - 1, page + 1);
-                                            for (let i = start; i <= end; i++) {
-                                                if (!pages.includes(i)) pages.push(i);
-                                            }
-                                            if (page < totalPages - 2) pages.push('...');
-                                            if (!pages.includes(totalPages)) pages.push(totalPages);
-                                        }
-                                        return pages.map((p, i) =>
-                                            p === '...' ? (
-                                                <span
-                                                    key={`sep-${i}`}
-                                                    className="px-2 text-slate-400 font-bold"
-                                                >
-                                                    ...
-                                                </span>
-                                            ) : (
-                                                <button
-                                                    key={p}
-                                                    onClick={() => setPage(Number(p))}
-                                                    className={cn(
-                                                        'w-9 h-9 flex items-center justify-center rounded-xl text-[11px] font-black transition-all',
-                                                        page === p
-                                                            ? 'bg-healthcare-primary text-white shadow-md shadow-teal-500/20'
-                                                            : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400',
-                                                    )}
-                                                >
-                                                    {p}
-                                                </button>
-                                            ),
-                                        );
-                                    })()}
-                                </div>
-                                <button
-                                    onClick={() =>
-                                        setPage((prev) => Math.min(prev + 1, totalPages))
-                                    }
-                                    disabled={page === totalPages || loading}
-                                    className="p-2 border rounded-xl disabled:opacity-50 text-slate-500 hover:text-healthcare-primary"
-                                >
-                                    <ChevronRight size={18} />
-                                </button>
-                            </div>
-                        </div>
+                        <Pagination
+                            page={page}
+                            totalPages={totalPages}
+                            totalItems={totalItems}
+                            pageSize={limit}
+                            onPageChange={setPage}
+                            loading={loading}
+                        />
                     </>
                 ) : (
                     <SuppliersTab />

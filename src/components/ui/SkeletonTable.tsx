@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 const shimmer = `
   @keyframes skeletonShimmer {
@@ -46,8 +46,8 @@ function SkeletonCell({ width = "80%", animate = true, delay = 0, align = "left"
                     height: "14px",
                     borderRadius: "6px",
                     background: animate
-                        ? "linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%)"
-                        : "#e8e8e8",
+                        ? "linear-gradient(90deg, var(--sk-cell-base) 25%, var(--sk-cell-mid) 50%, var(--sk-cell-base) 75%)"
+                        : "var(--sk-cell-base)",
                     backgroundSize: animate ? "600px 100%" : "auto",
                     animation: animate
                         ? `skeletonShimmer 1.6s ease-in-out ${delay}s infinite`
@@ -83,7 +83,7 @@ function SkeletonRow({ colCount, animate, rowIndex, density, columnAligns = [] }
                     key={ci}
                     style={{
                         padding: pad,
-                        borderBottom: "1px solid #f0f0f0",
+                        borderBottom: "1px solid var(--sk-border)",
                     }}
                 >
                     <SkeletonCell
@@ -127,9 +127,9 @@ function DataRow({ row, headers, rowIndex, density, columnAligns = [], actions, 
                 animation: `fadeInRow 0.35s ease both`,
                 animationDelay: `${rowIndex * 0.04}s`,
                 backgroundColor: hovered
-                    ? "#f0f7ff"
+                    ? "var(--sk-row-hover)"
                     : zebra && rowIndex % 2 === 1
-                        ? "#fafafa"
+                        ? "var(--sk-row-zebra)"
                         : "transparent",
                 cursor: onRowClick ? "pointer" : "default",
                 transition: "background-color 0.15s ease",
@@ -140,9 +140,9 @@ function DataRow({ row, headers, rowIndex, density, columnAligns = [], actions, 
                     key={ci}
                     style={{
                         padding: pad,
-                        borderBottom: "1px solid #f0f0f0",
+                        borderBottom: "1px solid var(--sk-border)",
                         fontSize: "14px",
-                        color: "#2d2d2d",
+                        color: "var(--sk-body-text)",
                         textAlign: (columnAligns[ci] || "left") as any,
                         fontFamily: "'DM Mono', 'Fira Code', monospace",
                         letterSpacing: "-0.01em",
@@ -152,7 +152,7 @@ function DataRow({ row, headers, rowIndex, density, columnAligns = [], actions, 
                 </td>
             ))}
             {actions && (
-                <td style={{ padding: pad, borderBottom: "1px solid #f0f0f0", textAlign: "right" }}>
+                <td style={{ padding: pad, borderBottom: "1px solid var(--sk-border)", textAlign: "right" }}>
                     <span style={{ display: "inline-flex", gap: "6px" }}>
                         <ActionBtn label="Edit" color="#3b82f6" />
                         <ActionBtn label="Delete" color="#ef4444" />
@@ -214,8 +214,8 @@ function HeaderCell({ label, width, align = "left", isAction }: HeaderCellProps)
                 fontWeight: 700,
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
-                color: "#8a8a9a",
-                borderBottom: "2px solid #e8e8ef",
+                color: "var(--sk-header-text)",
+                borderBottom: "2px solid var(--sk-header-border)",
                 whiteSpace: "nowrap",
                 userSelect: "none",
             }}
@@ -263,6 +263,25 @@ export function SkeletonTable({
     emptyMessage = "No data available.",
     className = "",
 }: SkeletonTableProps) {
+    const readDarkMode = () =>
+        typeof document !== "undefined" &&
+        document.documentElement.classList.contains("dark");
+
+    const [isDark, setIsDark] = useState(readDarkMode);
+
+    useEffect(() => {
+        setIsDark(readDarkMode());
+
+        if (typeof document === "undefined") return;
+        const observer = new MutationObserver(() => setIsDark(readDarkMode()));
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
     const colCount =
         headers?.length || (data?.[0] ? Object.keys(data[0]).length : columns);
     const effectiveCols = actions ? colCount + 1 : colCount;
@@ -278,20 +297,40 @@ export function SkeletonTable({
             : headers
         : null;
 
+    const themeVars: CSSProperties = {
+        ["--sk-bg" as string]: isDark ? "#0f172a" : "#ffffff",
+        ["--sk-border" as string]: isDark ? "#1e293b" : "#f0f0f0",
+        ["--sk-header-bg" as string]: isDark ? "#111827" : "#fafafa",
+        ["--sk-header-border" as string]: isDark ? "#334155" : "#e8e8ef",
+        ["--sk-header-text" as string]: isDark ? "#94a3b8" : "#8a8a9a",
+        ["--sk-title-text" as string]: isDark ? "#e2e8f0" : "#111111",
+        ["--sk-caption-text" as string]: isDark ? "#94a3b8" : "#999999",
+        ["--sk-loading-text" as string]: isDark ? "#94a3b8" : "#bbbbbb",
+        ["--sk-dot" as string]: isDark ? "#38bdf8" : "#94a3b8",
+        ["--sk-body-text" as string]: isDark ? "#d1d5db" : "#2d2d2d",
+        ["--sk-row-hover" as string]: isDark ? "#1e293b" : "#f0f7ff",
+        ["--sk-row-zebra" as string]: isDark ? "#111827" : "#fafafa",
+        ["--sk-cell-base" as string]: isDark ? "#1f2937" : "#e8e8e8",
+        ["--sk-cell-mid" as string]: isDark ? "#334155" : "#f5f5f5",
+    };
+
     return (
         <>
             <style>{shimmer}</style>
             <div
                 className={className}
                 style={{
+                    ...themeVars,
                     width: "100%",
                     fontFamily: "'DM Mono', 'Fira Code', monospace",
                     borderRadius: "12px",
-                    border: "1px solid #e8e8ef",
+                    border: "1px solid var(--sk-header-border)",
                     overflow: "hidden",
                     boxShadow:
-                        "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)",
-                    background: "#ffffff",
+                        isDark
+                            ? "0 1px 3px rgba(0,0,0,0.45), 0 4px 16px rgba(0,0,0,0.35)"
+                            : "0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)",
+                    background: "var(--sk-bg)",
                 }}
             >
                 {/* ── Title bar ── */}
@@ -299,7 +338,7 @@ export function SkeletonTable({
                     <div
                         style={{
                             padding: "16px 20px 14px",
-                            borderBottom: "1px solid #f0f0f0",
+                            borderBottom: "1px solid var(--sk-border)",
                             display: "flex",
                             alignItems: "baseline",
                             gap: "12px",
@@ -311,7 +350,7 @@ export function SkeletonTable({
                                 style={{
                                     fontSize: "15px",
                                     fontWeight: 700,
-                                    color: "#111",
+                                    color: "var(--sk-title-text)",
                                     letterSpacing: "-0.02em",
                                 }}
                             >
@@ -319,7 +358,7 @@ export function SkeletonTable({
                             </span>
                         )}
                         {caption && (
-                            <span style={{ fontSize: "12px", color: "#999", fontWeight: 400 }}>
+                            <span style={{ fontSize: "12px", color: "var(--sk-caption-text)", fontWeight: 400 }}>
                                 {caption}
                             </span>
                         )}
@@ -328,7 +367,7 @@ export function SkeletonTable({
                                 style={{
                                     marginLeft: "auto",
                                     fontSize: "11px",
-                                    color: "#bbb",
+                                    color: "var(--sk-loading-text)",
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "6px",
@@ -339,7 +378,7 @@ export function SkeletonTable({
                                         width: "6px",
                                         height: "6px",
                                         borderRadius: "50%",
-                                        background: "#94a3b8",
+                                        background: "var(--sk-dot)",
                                         display: "inline-block",
                                         animation: "pulse 1.2s ease-in-out infinite",
                                     }}
@@ -362,7 +401,7 @@ export function SkeletonTable({
                         {/* Header */}
                         {headersToShow && (
                             <thead>
-                                <tr style={{ background: "#fafafa" }}>
+                                <tr style={{ background: "var(--sk-header-bg)" }}>
                                     {headersToShow.map((h, i) => (
                                         <HeaderCell
                                             key={i}
@@ -379,13 +418,13 @@ export function SkeletonTable({
                         {/* Skeleton header (no headers provided) */}
                         {!headersToShow && isLoading && (
                             <thead>
-                                <tr style={{ background: "#fafafa" }}>
+                                <tr style={{ background: "var(--sk-header-bg)" }}>
                                     {Array.from({ length: effectiveCols }).map((_, i) => (
                                         <th
                                             key={i}
                                             style={{
                                                 padding: "10px 16px",
-                                                borderBottom: "2px solid #e8e8ef",
+                                                borderBottom: "2px solid var(--sk-header-border)",
                                                 width: columnWidths[i],
                                             }}
                                         >
@@ -399,7 +438,7 @@ export function SkeletonTable({
                         {/* Skeleton or real data header when data is shown but no headers prop */}
                         {!headersToShow && !isLoading && data && data.length > 0 && (
                             <thead>
-                                <tr style={{ background: "#fafafa" }}>
+                                <tr style={{ background: "var(--sk-header-bg)" }}>
                                     {Object.keys(data[0]).map((k, i) => (
                                         <HeaderCell
                                             key={i}
@@ -435,7 +474,7 @@ export function SkeletonTable({
                                                 style={{
                                                     padding: "48px 20px",
                                                     textAlign: "center",
-                                                    color: "#bbb",
+                                                    color: "var(--sk-loading-text)",
                                                     fontSize: "14px",
                                                     letterSpacing: "0.02em",
                                                 }}
@@ -466,9 +505,9 @@ export function SkeletonTable({
                     <div
                         style={{
                             padding: "10px 20px",
-                            borderTop: "1px solid #f0f0f0",
+                            borderTop: "1px solid var(--sk-border)",
                             fontSize: "11px",
-                            color: "#bbb",
+                            color: "var(--sk-loading-text)",
                             display: "flex",
                             justifyContent: "flex-end",
                             letterSpacing: "0.04em",

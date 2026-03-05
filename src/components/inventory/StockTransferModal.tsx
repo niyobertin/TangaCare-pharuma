@@ -7,6 +7,7 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import type { Medicine, Batch, Department, StorageLocation } from '../../types/pharmacy';
 import { X, ArrowRightLeft, Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { toSentenceCase } from '../../lib/text';
 
 interface StockTransferModalProps {
     medicine: Medicine;
@@ -193,7 +194,7 @@ export function StockTransferModal({
                                     <option value="">Default Location...</option>
                                     {storageLocations.map((loc) => (
                                         <option key={loc.id} value={loc.id}>
-                                            {loc.name} ({loc.code})
+                                            {toSentenceCase(loc.name)} ({loc.code})
                                         </option>
                                     ))}
                                 </select>
@@ -211,7 +212,7 @@ export function StockTransferModal({
                                     <option value="">Select destination...</option>
                                     {departments.map((d) => (
                                         <option key={d.id} value={d.id}>
-                                            {d.name} ({d.type})
+                                            {toSentenceCase(d.name)} ({toSentenceCase(d.type)})
                                         </option>
                                     ))}
                                 </select>
@@ -234,7 +235,7 @@ export function StockTransferModal({
                                     <option value="">Default Location...</option>
                                     {storageLocations.map((loc) => (
                                         <option key={loc.id} value={loc.id}>
-                                            {loc.name} ({loc.code})
+                                            {toSentenceCase(loc.name)} ({loc.code})
                                         </option>
                                     ))}
                                 </select>

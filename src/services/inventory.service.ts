@@ -20,6 +20,7 @@ export const inventoryService = {
 
     async getStock(params?: {
         facility_id?: number;
+        medicine_id?: number;
         page?: number;
         limit?: number;
         low_stock_only?: boolean;

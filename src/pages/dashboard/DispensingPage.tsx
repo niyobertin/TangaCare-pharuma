@@ -22,6 +22,7 @@ import { toast } from 'react-hot-toast';
 import { APP_CONFIG } from '../../lib/config';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { db } from '../../lib/indexeddb';
+import { toSentenceCase } from '../../lib/text';
 
 const WALK_IN_PATIENT = {
     id: null,
@@ -53,6 +54,7 @@ export function DispensingPage() {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [prescriptionId, setPrescriptionId] = useState('');
     const [lastSaleId, setLastSaleId] = useState<number | null>(null);
+    const shownExpiryWarningsRef = useRef<Set<number>>(new Set());
 
     const hasControlledDrug = cart.some((item) => item.is_controlled_drug);
 
@@ -145,19 +147,40 @@ export function DispensingPage() {
 
         let bestBatch: Batch | undefined;
         try {
-            const batches = await pharmacyService.getBatches({ medicine_id: med.id });
+            const stockResponse = await pharmacyService.getStock({
+                medicine_id: med.id,
+                ...(user?.facility_id ? { facility_id: user.facility_id } : {}),
+                page: 1,
+                limit: 100,
+            });
             const now = new Date();
-            const activeBatches = batches
-                .filter((b) => (b.current_quantity || 0) > 0 && new Date(b.expiry_date) > now)
+            const activeStocks = stockResponse.data
+                .filter(
+                    (stock) =>
+                        (stock.quantity || 0) > 0 &&
+                        !!stock.batch?.expiry_date &&
+                        new Date(stock.batch.expiry_date) > now,
+                )
                 .sort(
-                    (a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime(),
+                    (a, b) =>
+                        new Date(a.batch!.expiry_date).getTime() -
+                        new Date(b.batch!.expiry_date).getTime(),
                 );
 
-            if (activeBatches.length > 0) {
-                bestBatch = activeBatches[0];
+            if (activeStocks.length > 0) {
+                const bestStock =
+                    activeStocks.find((stock) => !!stock.location?.name) || activeStocks[0];
+                if (bestStock.batch) {
+                    bestBatch = {
+                        ...bestStock.batch,
+                        current_quantity: bestStock.quantity,
+                        location_id: bestStock.location?.id ?? bestStock.location_id ?? null,
+                        location: bestStock.location || null,
+                    };
+                }
             }
         } catch (err) {
-            console.error('Failed to fetch batches', err);
+            console.error('Failed to fetch stock details', err);
         }
 
         if (!bestBatch) {
@@ -180,12 +203,12 @@ export function DispensingPage() {
                         : item,
                 );
             }
-            const safeSellingPrice = Math.max(Number(med.selling_price || 0), Number(bestBatch.unit_cost || 0));
+            const sellingPrice = Number(med.selling_price || 0);
             return [
                 ...prev,
                 {
                     ...med,
-                    selling_price: safeSellingPrice,
+                    selling_price: sellingPrice,
                     quantity: 1,
                     selectedBatch: bestBatch,
                 },
@@ -195,38 +218,19 @@ export function DispensingPage() {
         // FEFO Prompt & Expiry Warning
         const expiryDate = new Date(bestBatch.expiry_date);
         const daysToExpiry = Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        const locationName = (bestBatch as any).location?.name || 'Main Shelf';
+        const locationName = toSentenceCase(bestBatch.location?.name || 'Main Shelf');
 
-        if (daysToExpiry <= 30) {
+        if (daysToExpiry <= 30 && !shownExpiryWarningsRef.current.has(bestBatch.id)) {
+            shownExpiryWarningsRef.current.add(bestBatch.id);
             toast(() => (
                 <div className="flex flex-col gap-1">
                     <span className="font-bold text-orange-600">⚠️ Batch Expiring Soon!</span>
-                    <span className="text-xs">Batch {bestBatch!.batch_number} expires in {daysToExpiry} days.</span>
+                    <span className="text-xs">
+                        {med.name} • Batch {bestBatch!.batch_number} • {locationName}
+                    </span>
                 </div>
-            ), { duration: 5000, icon: '⚠️' });
+            ), { duration: 3500, icon: '⚠️' });
         }
-
-        toast.custom((t) => (
-            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white dark:bg-slate-800 shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
-                <div className="flex-1 w-0 p-4">
-                    <div className="flex items-start">
-                        <div className="flex-shrink-0 pt-0.5">
-                            <CheckCircle2 className="h-10 w-10 text-green-500" />
-                        </div>
-                        <div className="ml-3 flex-1">
-                            <p className="text-sm font-medium text-slate-900 dark:text-white">
-                                Added {med.name}
-                            </p>
-                            <p className="mt-1 text-sm text-slate-500">
-                                Batch: <span className="font-bold">{bestBatch!.batch_number}</span><br />
-                                Exp: {expiryDate.toLocaleDateString()}<br />
-                                Location: <span className="font-bold">{locationName}</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        ), { duration: 3000 });
     };
 
     const updateQuantity = (id: number, batchId: number, delta: number) => {
@@ -267,6 +271,18 @@ export function DispensingPage() {
             return;
         }
         if (cart.length === 0) return;
+
+        const belowCostItem = cart.find(
+            (item) =>
+                !!item.selectedBatch &&
+                Number(item.selling_price || 0) < Number(item.selectedBatch.unit_cost || 0),
+        );
+        if (belowCostItem) {
+            toast.error(
+                `Selling price for ${belowCostItem.name} is below cost. Update medicine pricing first.`,
+            );
+            return;
+        }
 
         setShowPaymentModal(true);
     };
@@ -576,18 +592,8 @@ export function DispensingPage() {
                     <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                         <DispensingCart
                             cart={cart}
-                            updateQuantity={(id, delta) => {
-                                const item = cart.find(i => i.id === id);
-                                if (item && item.selectedBatch) {
-                                    updateQuantity(id, item.selectedBatch.id, delta);
-                                }
-                            }}
-                            removeFromCart={(id) => {
-                                const item = cart.find(i => i.id === id);
-                                if (item && item.selectedBatch) {
-                                    removeFromCart(id, item.selectedBatch.id);
-                                }
-                            }}
+                            updateQuantity={updateQuantity}
+                            removeFromCart={removeFromCart}
                             subtotal={subtotal}
                             tax={tax}
                             total={total}

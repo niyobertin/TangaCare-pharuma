@@ -1,11 +1,12 @@
 import React from 'react';
-import { Minus, Plus, Trash2, ShoppingCart, MapPin } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import type { CartItem } from '../../types/pharmacy';
+import { toSentenceCase } from '../../lib/text';
 
 interface DispensingCartProps {
     cart: CartItem[];
-    updateQuantity: (id: number, delta: number) => void;
-    removeFromCart: (id: number) => void;
+    updateQuantity: (id: number, batchId: number, delta: number) => void;
+    removeFromCart: (id: number, batchId: number) => void;
     subtotal: number;
     tax: number;
     total: number;
@@ -43,41 +44,43 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
             <div className="flex-1 overflow-y-auto space-y-3 p-1">
                 {cart.map((item) => (
                     <div
-                        key={item.id}
-                        className="group flex flex-col gap-2 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm transition-all hover:shadow-md"
+                        key={`${item.id}-${item.selectedBatch?.id || 'no-batch'}`}
+                        className="group flex flex-col gap-1.5 p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm transition-all hover:shadow-md"
                     >
                         <div className="flex justify-between items-start">
                             <div>
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1 text-center">
                                     {item.name}
                                 </h4>
-                                <p className="text-[10px] text-slate-500 font-medium uppercase mt-0.5">
-                                    {item.strength} • {item.dosage_form}
+                                <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                    {String(item.strength || '').toLowerCase()} • {toSentenceCase(item.dosage_form)}
+                                </p>
+                                <p className="text-[10px] text-slate-500 font-bold mt-0.5">
+                                    RWF {Number(item.selling_price || 0).toLocaleString()} / {toSentenceCase(item.unit)}
                                 </p>
                             </div>
-                            <p className="text-sm font-black text-healthcare-primary">
-                                RWF {(item.selling_price * item.quantity).toLocaleString()}
-                            </p>
-                        </div>
-
+                            <div>
                         {item.selectedBatch?.id && (
-                            <div className="flex flex-wrap gap-2">
-                                <span className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700 w-fit text-[10px] font-bold text-slate-500 uppercase">
-                                    <MapPin size={10} className="text-slate-400" />
-                                    {(item.selectedBatch as any).location?.name || 'Main Shelf'}
+                            <div className="flex justify-center mt-0.5">
+                                <span className="px-2 py-0.5 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700 text-[10px] font-bold text-slate-500 uppercase">
+                                    {toSentenceCase(item.selectedBatch.location?.name || 'Main Shelf')}
                                 </span>
-                                {item.is_controlled_drug && (
-                                    <span className="flex items-center gap-1.5 px-2 py-1 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-100 dark:border-orange-800 w-fit text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase">
-                                        ⚠ Controlled Drug
-                                    </span>
-                                )}
                             </div>
                         )}
 
-                        <div className="flex items-center justify-between mt-2">
-                            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-lg p-1">
+                        {item.is_controlled_drug && (
+                            <div className="flex justify-center">
+                                <span className="px-2 py-0.5 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-100 dark:border-orange-800 w-fit text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase">
+                                    Controlled Drug
+                                </span>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-3 items-center mt-0.5">
+                            <div />
+                            <div className="justify-self-center flex items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-lg p-1">
                                 <button
-                                    onClick={() => updateQuantity(item.id, -1)}
+                                    onClick={() => updateQuantity(item.id, item.selectedBatch?.id || 0, -1)}
                                     className="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 shadow-sm text-slate-600 dark:text-slate-400 hover:text-healthcare-primary disabled:opacity-50"
                                     disabled={item.quantity <= 1}
                                 >
@@ -85,7 +88,7 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                                 </button>
                                 <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
                                 <button
-                                    onClick={() => updateQuantity(item.id, 1)}
+                                    onClick={() => updateQuantity(item.id, item.selectedBatch?.id || 0, 1)}
                                     className="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 shadow-sm text-slate-600 dark:text-slate-400 hover:text-healthcare-primary"
                                 >
                                     <Plus size={12} />
@@ -93,15 +96,14 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                             </div>
 
                             <button
-                                onClick={() => removeFromCart(item.id)}
-                                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                onClick={() => removeFromCart(item.id, item.selectedBatch?.id || 0)}
+                                className="justify-self-end p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                             >
                                 <Trash2 size={14} />
                             </button>
                         </div>
-
-                        {/* Hidden Batch Info (Internal FEFO Logic applies, but user doesn't need to see specific batch unless necessary) */}
-                        {/* We could add a tooltip here if needed */}
+                        </div>
+                        </div>
                     </div>
                 ))}
             </div>

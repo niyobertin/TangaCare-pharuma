@@ -30,6 +30,7 @@ import { useAuth } from '../../context/AuthContext';
 import { StockTransferModal } from '../../components/inventory/StockTransferModal';
 import { AddStockModal } from '../../components/inventory/AddStockModal';
 import { toast } from 'react-hot-toast';
+import { toSentenceCase } from '../../lib/text';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -141,8 +142,8 @@ const MedicineImportPreviewModal = ({
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-xs font-bold text-slate-500 capitalize">
-                                            {item.dosage_form}
+                                        <td className="px-4 py-3 text-xs font-bold text-slate-500">
+                                            {toSentenceCase(item.dosage_form)}
                                         </td>
 
                                     </tr>
@@ -608,6 +609,12 @@ export function InventoryPage() {
                                         Dosage Form
                                     </th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right whitespace-nowrap">
+                                        Selling Price
+                                    </th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right whitespace-nowrap">
+                                        Cost Price
+                                    </th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right whitespace-nowrap">
                                         Total Stock
                                     </th>
                                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
@@ -631,15 +638,15 @@ export function InventoryPage() {
                                 {loading ? (
                                     <SkeletonTable
                                         rows={5}
-                                        columns={9}
-                                        headers={['', 'ID', 'Medicine Details', 'Dosage Form', 'Total Stock', 'Expiry Date', 'Date Added', 'Status']}
-                                        columnAligns={['left', 'left', 'left', 'center', 'right', 'center', 'center', 'center', 'right']}
+                                        columns={11}
+                                        headers={['', 'ID', 'Medicine Details', 'Dosage Form', 'Selling Price', 'Cost Price', 'Total Stock', 'Expiry Date', 'Location', 'Date Added', 'Status']}
+                                        columnAligns={['left', 'left', 'left', 'center', 'right', 'right', 'right', 'center', 'center', 'center', 'center', 'right']}
                                         actions
                                         className="border-none shadow-none"
                                     />
                                 ) : medicines.length === 0 ? (
                                     <tr>
-                                        <td colSpan={9} className="px-6 py-20 text-center">
+                                        <td colSpan={12} className="px-6 py-20 text-center">
                                             <div className="flex flex-col items-center justify-center space-y-3">
                                                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full">
                                                     <Search size={32} className="text-slate-300" />
@@ -688,8 +695,18 @@ export function InventoryPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                <span className="text-xs font-bold text-slate-500 capitalize">
-                                                    {med.dosage_form}
+                                                <span className="text-xs font-bold text-slate-500">
+                                                    {toSentenceCase(med.dosage_form)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                <span className="text-sm font-black text-emerald-700">
+                                                    RWF {Number(med.selling_price || 0).toLocaleString()}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                <span className="text-sm font-black text-blue-700">
+                                                    RWF {Number(med.cost_price || 0).toLocaleString()}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right whitespace-nowrap">
@@ -698,7 +715,7 @@ export function InventoryPage() {
                                                         {med.stock_quantity || 0}
                                                     </span>
                                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                        {med.unit}
+                                                        {toSentenceCase(med.unit)}
                                                     </span>
                                                 </div>
                                             </td>
@@ -721,7 +738,7 @@ export function InventoryPage() {
                                             </td>
                                             <td className="px-6 py-4 text-center whitespace-nowrap">
                                                 <span className="text-xs font-bold text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">
-                                                    {(med as any).storage_location?.name || (med as any).location?.name || 'N/A'}
+                                                    {toSentenceCase((med as any).storage_location?.name || (med as any).location?.name || 'N/A')}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-center whitespace-nowrap">

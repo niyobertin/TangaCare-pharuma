@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -57,7 +57,11 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
         name: 'items',
     });
 
-    const watchItems = watch('items');
+    const watchItems = watch('items') || [];
+    const medicineById = useMemo(
+        () => new Map(medicines.map((medicine) => [medicine.id, medicine])),
+        [medicines],
+    );
 
     useEffect(() => {
         const loadData = async () => {
@@ -93,6 +97,11 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
     const taxableBase = Math.max(0, subtotal - discountAmount);
     const vatAmount = taxableBase * (vatRate / 100);
     const grandTotal = taxableBase + vatAmount;
+    const hasCostAboveSelling = (watchItems || []).some((item) => {
+        const medicine = medicineById.get(Number(item.medicine_id));
+        if (!medicine) return false;
+        return Number(item.unit_price || 0) > Number(medicine.selling_price || 0);
+    });
 
     const onSubmit = async (data: any) => {
         if (!user?.facility_id) return;
@@ -276,6 +285,40 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                                 }
                                                             </p>
                                                         )}
+                                                        {(() => {
+                                                            const selectedMedicine = medicineById.get(
+                                                                Number(watchItems[index]?.medicine_id),
+                                                            );
+                                                            const selectedSellingPrice = Number(
+                                                                selectedMedicine?.selling_price || 0,
+                                                            );
+                                                            const selectedCostPrice = Number(
+                                                                selectedMedicine?.cost_price || 0,
+                                                            );
+                                                            const enteredCost = Number(
+                                                                watchItems[index]?.unit_price || 0,
+                                                            );
+                                                            const isCostAboveSelling =
+                                                                enteredCost > selectedSellingPrice;
+
+                                                            if (!selectedMedicine) return null;
+                                                            return (
+                                                                <div className="mt-1 space-y-1">
+                                                                    <p className="text-[10px] font-black text-slate-500">
+                                                                        Selling: RWF{' '}
+                                                                        {selectedSellingPrice.toLocaleString()} |
+                                                                        Last Cost: RWF{' '}
+                                                                        {selectedCostPrice.toLocaleString()}
+                                                                    </p>
+                                                                    {isCostAboveSelling && (
+                                                                        <p className="text-[10px] font-black text-red-600">
+                                                                            Cost is above selling price. Update medicine
+                                                                            selling price first.
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })()}
                                                     </td>
                                                     <td className="p-2">
                                                         <input
@@ -384,6 +427,11 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
 
                 {}
                 <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+                    {hasCostAboveSelling && (
+                        <p className="mr-auto text-[10px] font-black text-red-600 self-center">
+                            Fix items where Unit Cost is above Selling Price before creating order.
+                        </p>
+                    )}
                     <button
                         onClick={onClose}
                         className="px-6 py-2 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition-colors"
@@ -393,7 +441,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                     <button
                         type="submit"
                         form="order-form"
-                        disabled={isSubmitting || !isValid || calculateTotal() === 0}
+                        disabled={isSubmitting || !isValid || calculateTotal() === 0 || hasCostAboveSelling}
                         className="px-6 py-2 bg-healthcare-primary text-white rounded-xl font-bold hover:bg-teal-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/10"
                     >
                         {isSubmitting ? (

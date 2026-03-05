@@ -27,6 +27,9 @@ export const normalizePaginatedResponse = <T>(body: any): PaginatedResponse<T> =
         typeof payload.totalPages === 'number'
             ? payload.totalPages
             : Math.ceil(result.meta.total / result.meta.limit) || 1;
+    if (typeof payload.totalValue === 'number') {
+        result.meta.totalValue = payload.totalValue;
+    }
 
     return result;
 };

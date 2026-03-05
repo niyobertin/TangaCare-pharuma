@@ -21,7 +21,6 @@ import { cn } from '../../lib/utils';
 import { ReorderSuggestions } from '../../components/pharmacy/reports/ReorderSuggestions';
 import { DeadStockReport } from '../../components/pharmacy/reports/DeadStockReport';
 import { ExpiryReport } from '../../components/pharmacy/reports/ExpiryReport';
-import { DashboardOwner } from '../../components/dashboard/DashboardOwner';
 import { CreateReturnModal } from '../../components/pharmacy/returns/CreateReturnModal';
 import { ABCAnalysisReport } from '../../components/pharmacy/reports/ABCAnalysisReport';
 import { PurchaseReport } from '../../components/pharmacy/reports/PurchaseReport';
@@ -32,6 +31,19 @@ export interface ReportsPageProps {
     defaultTab?: string;
 }
 
+function mapDefaultTabToTopLevel(tab: string): string {
+    if (['sales', 'returns', 'profit'].includes(tab)) return 'sales';
+    if (['stock', 'low-stock', 'reorder', 'expiry', 'recall', 'stock-movement', 'movement'].includes(tab)) {
+        return 'inventory';
+    }
+    if (['purchase', 'procurement'].includes(tab)) return 'procurement';
+    if (['staff', 'performance', 'customer', 'loyalty'].includes(tab)) return 'performance';
+    if (tab === 'tax') return 'tax';
+    if (tab === 'audit-logs') return 'audit-logs';
+    if (tab === 'stock-movements-history') return 'stock-movements-history';
+    return tab;
+}
+
 export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
     const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -39,9 +51,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
     const effectiveFacilityId = facilityId ?? user?.facility_id;
 
     // H-9: 5 top-level tabs; activeTab overrides defaultTab from the router
-    const [activeTab, setActiveTab] = useState<string>(
-        defaultTab === 'profit' ? 'sales' : defaultTab,
-    );
+    const [activeTab, setActiveTab] = useState<string>(mapDefaultTabToTopLevel(defaultTab));
 
     // Map the 5 tabs → the existing sub-section keys
     const TABS = [
@@ -58,12 +68,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             subtabs: ['stock', 'low-stock', 'reorder', 'expiry', 'recall', 'stock-movement', 'movement'],
         },
         {
-            key: 'compliance',
-            label: 'Compliance',
-            emoji: '💊',
-            subtabs: ['kpis'],
-        },
-        {
             key: 'procurement',
             label: 'Procurement',
             emoji: '🏪',
@@ -73,7 +77,13 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             key: 'performance',
             label: 'Performance',
             emoji: '👥',
-            subtabs: ['staff', 'performance', 'customer', 'loyalty', 'tax'],
+            subtabs: ['staff', 'performance', 'customer', 'loyalty'],
+        },
+        {
+            key: 'tax',
+            label: 'Tax',
+            emoji: '🧾',
+            subtabs: ['tax'],
         },
         {
             key: 'audit-logs',
@@ -92,9 +102,9 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
     // Determine which sub-report to load for the active tab
     function defaultSubtabFor(tab: string): string {
         if (tab === 'inventory') return 'stock';
-        if (tab === 'compliance') return 'kpis';
         if (tab === 'procurement') return 'purchase';
         if (tab === 'performance') return 'performance';
+        if (tab === 'tax') return 'tax';
         if (tab === 'audit-logs') return 'audit-logs';
         if (tab === 'stock-movements-history') return 'stock-movements-history';
         return 'sales'; // 'sales' tab
@@ -220,7 +230,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                 )}
 
                 <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 min-h-[400px]">
-                    {defaultTab === 'kpis' && <DashboardOwner facilityId={effectiveFacilityId!} />}
                     {resolvedTab === 'sales' && (
                         <SalesReports
                             facilityId={effectiveFacilityId}

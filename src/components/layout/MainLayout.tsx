@@ -13,7 +13,6 @@ import {
     Moon,
     Sun,
     Zap,
-    TrendingUp,
     ShoppingCart,
     Factory,
     Database,
@@ -219,20 +218,6 @@ const NAV_ITEMS: NavItem[] = [
             'ADMIN',
         ],
         allowedPermissions: ['reports:read'],
-    },
-    {
-        to: '/app/pricing',
-        icon: TrendingUp,
-        label: 'Pricing',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'OWNER',
-            'ADMIN',
-            'AUDITOR',
-        ],
-        allowedPermissions: ['pricing:read', 'pricing:manage'],
     },
     {
         to: '/app/settings',

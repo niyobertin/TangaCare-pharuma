@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -67,6 +67,10 @@ export function CreatePurchaseOrderModal({
     });
 
     const watchItems = watch('items') || [];
+    const medicineById = useMemo(
+        () => new Map(medicines.map((medicine) => [medicine.id, medicine])),
+        [medicines],
+    );
 
     useEffect(() => {
         if (isOpen) {
@@ -117,7 +121,7 @@ export function CreatePurchaseOrderModal({
             medicine_id: med.id,
             medicine_name: med.name,
             quantity: 1,
-            unit_price: 0,
+            unit_price: Number(med.cost_price || 0),
         });
     };
 
@@ -150,6 +154,11 @@ export function CreatePurchaseOrderModal({
     );
 
     const totalAmount = watchItems.reduce((acc, i) => acc + i.quantity * i.unit_price, 0);
+    const hasCostAboveSelling = watchItems.some((item) => {
+        const medicine = medicineById.get(Number(item.medicine_id));
+        if (!medicine) return false;
+        return Number(item.unit_price || 0) > Number(medicine.selling_price || 0);
+    });
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-teal-900/20 backdrop-blur-md animate-in fade-in duration-300">
@@ -236,6 +245,10 @@ export function CreatePurchaseOrderModal({
                                             <p className="text-[10px] text-slate-400 font-bold uppercase">
                                                 {med.code}
                                             </p>
+                                            <p className="text-[10px] text-slate-500 font-bold mt-1">
+                                                Sell: RWF {Number(med.selling_price || 0).toLocaleString()} | Cost:
+                                                {' '}RWF {Number(med.cost_price || 0).toLocaleString()}
+                                            </p>
                                         </div>
                                         <div className="p-1.5 bg-teal-50 text-teal-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all">
                                             <Plus size={14} />
@@ -263,54 +276,77 @@ export function CreatePurchaseOrderModal({
                                     <p className="text-xs font-bold italic">No items added yet</p>
                                 </div>
                             ) : (
-                                fields.map((field, index) => (
-                                    <div
-                                        key={field.id}
-                                        className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-2"
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <p className="text-xs font-black text-healthcare-dark">
-                                                {field.medicine_name}
-                                            </p>
-                                            <button
-                                                onClick={() => remove(index)}
-                                                className="text-slate-300 hover:text-red-500 transition-colors"
-                                            >
-                                                <X size={14} />
-                                            </button>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-1">
-                                                <p className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">
-                                                    Qty
+                                fields.map((field, index) => {
+                                    const selectedMedicine = medicineById.get(
+                                        Number(watchItems[index]?.medicine_id || field.medicine_id),
+                                    );
+                                    const sellingPrice = Number(selectedMedicine?.selling_price || 0);
+                                    const currentCost = Number(watchItems[index]?.unit_price || 0);
+                                    const isCostAboveSelling = currentCost > sellingPrice;
+
+                                    return (
+                                        <div
+                                            key={field.id}
+                                            className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-2"
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <p className="text-xs font-black text-healthcare-dark">
+                                                    {field.medicine_name}
                                                 </p>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    {...register(`items.${index}.quantity`)}
-                                                    className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.quantity
-                                                        ? 'border-red-500'
-                                                        : 'focus:border-teal-500 font-bold'
-                                                        }`}
-                                                />
+                                                <button
+                                                    onClick={() => remove(index)}
+                                                    className="text-slate-300 hover:text-red-500 transition-colors"
+                                                >
+                                                    <X size={14} />
+                                                </button>
                                             </div>
-                                            <div className="space-y-1">
-                                                <p className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">
-                                                    Unit Cost
+                                            <div className="flex flex-wrap gap-2">
+                                                <span className="px-2 py-1 bg-teal-50 text-teal-700 rounded-md text-[10px] font-black uppercase tracking-wider">
+                                                    Selling: RWF {sellingPrice.toLocaleString()}
+                                                </span>
+                                                <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-md text-[10px] font-black uppercase tracking-wider">
+                                                    Last Cost: RWF {Number(selectedMedicine?.cost_price || 0).toLocaleString()}
+                                                </span>
+                                            </div>
+                                            {isCostAboveSelling && (
+                                                <p className="text-[10px] font-black text-red-600">
+                                                    Unit cost is above current selling price. Update medicine selling price
+                                                    first to avoid below-cost sale errors.
                                                 </p>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    {...register(`items.${index}.unit_price`)}
-                                                    className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.unit_price
-                                                        ? 'border-red-500'
-                                                        : 'focus:border-teal-500 font-bold'
-                                                        }`}
-                                                />
+                                            )}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1">
+                                                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">
+                                                        Qty
+                                                    </p>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        {...register(`items.${index}.quantity`)}
+                                                        className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.quantity
+                                                            ? 'border-red-500'
+                                                            : 'focus:border-teal-500 font-bold'
+                                                            }`}
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-tighter">
+                                                        Unit Cost
+                                                    </p>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        {...register(`items.${index}.unit_price`)}
+                                                        className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.unit_price
+                                                            ? 'border-red-500'
+                                                            : 'focus:border-teal-500 font-bold'
+                                                            }`}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
                         {errors.items && (
@@ -331,12 +367,17 @@ export function CreatePurchaseOrderModal({
                             </div>
                             <button
                                 onClick={handleSubmit(onSubmit)}
-                                disabled={loading || fields.length === 0}
+                                disabled={loading || fields.length === 0 || hasCostAboveSelling}
                                 className="w-full flex items-center justify-center gap-2 py-3 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/20 disabled:opacity-50 active:scale-[0.98]"
                             >
                                 {loading ? <Loader2 className="animate-spin" size={18} /> : null}
                                 Generate Purchase Order
                             </button>
+                            {hasCostAboveSelling && (
+                                <p className="text-[10px] font-black text-red-600 text-center">
+                                    Fix items where Unit Cost is above Selling Price before creating PO.
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>

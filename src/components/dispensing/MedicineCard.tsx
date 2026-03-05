@@ -1,8 +1,9 @@
 import React from 'react';
 import type { Medicine } from '../../types/pharmacy';
-import { Calendar, AlertTriangle, AlertCircle, MapPin } from 'lucide-react';
+import { Calendar, AlertTriangle, AlertCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useMedicineStock } from '../../hooks/useMedicineStock';
+import { toSentenceCase } from '../../lib/text';
 
 interface MedicineCardProps {
     medicine: Medicine;
@@ -10,7 +11,11 @@ interface MedicineCardProps {
 }
 
 export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onAddToCart }) => {
-    const { nearestExpiry, storageLocation, isLoading } = useMedicineStock(medicine.id);
+    const { nearestExpiry, isLoading } = useMedicineStock(medicine.id);
+    const sellingPrice = Number(medicine.selling_price || 0);
+    const displayStrength = String(medicine.strength || '').toLowerCase();
+    const displayDosageForm = toSentenceCase(medicine.dosage_form);
+    const displayUnit = toSentenceCase(medicine.unit);
 
     const isLowStock = (medicine.stock_quantity || 0) < 10;
     const isExpired = !!nearestExpiry && new Date(nearestExpiry) <= new Date();
@@ -18,12 +23,9 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onAddToCar
         new Date(nearestExpiry) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     return (
-        <div className={clsx(
-            "relative group flex flex-col bg-white dark:bg-slate-800 rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 overflow-hidden",
-            isExpired ? "border-red-200 dark:border-red-900/50" :
-                isNearExpiry ? "border-amber-200 dark:border-amber-900/50" :
-                    "border-slate-200 dark:border-slate-700"
-        )}>
+        <div
+            className="relative group flex flex-col bg-white dark:bg-slate-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 overflow-hidden shadow-sm"
+        >
             {/* Top Status Bar */}
             {(isLowStock || isNearExpiry || isExpired) && (
                 <div className={clsx(
@@ -53,55 +55,45 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onAddToCar
                                 </span>
                             )}
                         </div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mt-1">
-                            {medicine.strength} • {medicine.dosage_form}
+                        <p className="text-xs font-medium text-slate-500 tracking-wide mt-1">
+                            {displayStrength} • {displayDosageForm}
                         </p>
                         <div className="mt-1 flex items-center gap-1.5">
                             <span className="text-sm font-black text-healthcare-primary">
-                                RWF {Number(medicine.selling_price || 0).toLocaleString()}
+                                RWF {sellingPrice.toLocaleString()}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-bold uppercase">/ {medicine.unit}</span>
+                            <span className="text-[10px] text-slate-400 font-bold">/ {displayUnit}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-2 mt-1">
+                <div className="grid grid-cols-1 gap-2 mt-1">
                     {/* Stock */}
                     <div className={clsx(
-                        "flex items-center gap-2 p-2 rounded-lg border",
+                        "flex items-center gap-2 p-2 rounded-lg",
                         isLowStock
-                            ? "bg-rose-50 border-rose-100 text-rose-700 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400"
-                            : "bg-emerald-50 border-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400"
+                            ? "bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400"
+                            : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
                     )}>
                         <div className="flex flex-col">
                             <span className="text-xs font-bold leading-none">{medicine.stock_quantity || 0} Left</span>
-                        </div>
-                    </div>
-
-                    {/* Location */}
-                    <div className="flex items-center gap-2 p-2 rounded-lg border bg-slate-50 border-slate-100 text-slate-600 dark:bg-slate-800/50 dark:border-slate-700 dark:text-slate-400">
-                        <MapPin size={14} className="shrink-0" />
-                        <div className="flex flex-col">
-                            <span className="text-xs font-bold leading-none">
-                                {isLoading ? "..." : storageLocation || "N/A"}
-                            </span>
                         </div>
                     </div>
                 </div>
 
                 {/* Expiry Warning */}
                 <div className={clsx(
-                    "flex items-center gap-2 p-2 rounded-lg border mt-auto",
+                    "flex items-center gap-2 p-2 rounded-lg mt-auto",
                     isExpired
-                        ? "bg-red-50 border-red-100 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400"
+                        ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
                         : isNearExpiry
-                            ? "bg-amber-50 border-amber-100 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400"
-                            : "bg-blue-50 border-blue-100 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400"
+                            ? "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                            : "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
                 )}>
                     {isExpired || isNearExpiry ? <AlertTriangle size={14} className="shrink-0" /> : <Calendar size={14} className="shrink-0" />}
                     <div className="flex flex-col">
-                        <span className="text-[10px] opacity-70 font-semibold uppercase">
+                        <span className="text-[10px] opacity-70 font-semibold leading-none">
                             {isExpired ? "Expired" : isNearExpiry ? "Expiring Soon" : "Nearest Expiry"}
                         </span>
                         <span className="text-xs font-bold leading-none">
@@ -112,7 +104,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onAddToCar
             </div>
 
             {/* Action Footer */}
-            <div className="p-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+            <div className="p-3 bg-slate-50/50 dark:bg-slate-800/50">
                 <button
                     onClick={() => onAddToCart(medicine)}
                     disabled={!medicine.stock_quantity || medicine.stock_quantity <= 0 || isExpired}
@@ -120,7 +112,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onAddToCar
                         "w-full py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2",
                         !medicine.stock_quantity || medicine.stock_quantity <= 0 || isExpired
                             ? "bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600"
-                            : "bg-white border-2 border-healthcare-primary text-healthcare-primary hover:bg-healthcare-primary hover:text-white dark:bg-slate-700 dark:border-healthcare-primary dark:text-healthcare-primary dark:hover:bg-healthcare-primary dark:hover:text-white"
+                            : "bg-healthcare-primary text-white hover:bg-healthcare-primary/90 dark:bg-healthcare-primary dark:text-white"
                     )}
                 >
                     {isExpired ? (

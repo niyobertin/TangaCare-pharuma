@@ -19,6 +19,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { toSentenceCase } from '../../lib/text';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -342,7 +343,7 @@ export function AddStockModal({ isOpen, onClose, onSuccess }: AddStockModalProps
                                 <option value="">Select Storage Location...</option>
                                 {storageLocations.map((loc) => (
                                     <option key={loc.id} value={loc.id}>
-                                        {loc.name} ({loc.code})
+                                        {toSentenceCase(loc.name)} ({loc.code})
                                     </option>
                                 ))}
                             </select>
