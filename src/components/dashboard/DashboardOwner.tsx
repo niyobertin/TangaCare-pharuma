@@ -9,16 +9,30 @@ import {
     Filter,
     ArrowRight,
     Building2,
+    Snowflake,
+    ShieldCheck,
 } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
-import type { DashboardSummary, ReorderSuggestion, Alert } from '../../types/pharmacy';
-import { ConsumptionTrendChart, ExpiryRiskChart, InventoryStatusChart } from './DashboardCharts';
+import type {
+    DashboardSummary,
+    ReorderSuggestion,
+    Alert,
+    ColdChainOverview,
+    ColdChainExcursion,
+} from '../../types/pharmacy';
+import {
+    ConsumptionTrendChart,
+    ExpiryRiskChart,
+    InventoryStatusChart,
+    ColdChainTelemetryChart,
+} from './DashboardCharts';
 import { ChartSkeleton, StatCardSkeleton } from './DashboardSkeletons';
 import { SkeletonTable } from '../ui/SkeletonTable';
 import { cn } from '../../lib/utils';
 import { format, subDays, startOfToday, endOfToday } from 'date-fns';
+import toast from 'react-hot-toast';
 
 interface DashboardOwnerProps {
     facilityId: number | null;
@@ -31,6 +45,8 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
     const [lowStock, setLowStock] = useState<ReorderSuggestion[]>([]);
     const [nearExpiry, setNearExpiry] = useState<Alert[]>([]);
+    const [coldChainOverview, setColdChainOverview] = useState<ColdChainOverview | null>(null);
+    const [excursionActionLoading, setExcursionActionLoading] = useState<number | null>(null);
 
     const [facilityComparison, setFacilityComparison] = useState<import('../../types/pharmacy').MultiLocationData | null>(null);
 
@@ -38,6 +54,53 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     const [dateRange, setDateRange] = useState<'today' | '7days' | '30days' | 'custom'>('7days');
     const [startDate, setStartDate] = useState<string>(format(startOfToday(), 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState<string>(format(endOfToday(), 'yyyy-MM-dd'));
+
+    const loadColdChainOverview = async () => {
+        if (facilityId === null) {
+            setColdChainOverview(null);
+            return;
+        }
+
+        try {
+            const data = await pharmacyService.getColdChainOverview();
+            setColdChainOverview(data);
+        } catch (error) {
+            console.error('Failed to load cold-chain overview:', error);
+            setColdChainOverview(null);
+        }
+    };
+
+    const handleAcknowledgeExcursion = async (excursionId: number) => {
+        setExcursionActionLoading(excursionId);
+        try {
+            await pharmacyService.acknowledgeColdChainExcursion(
+                excursionId,
+                'Acknowledged from executive dashboard',
+            );
+            toast.success('Excursion acknowledged');
+            await loadColdChainOverview();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || 'Failed to acknowledge excursion');
+        } finally {
+            setExcursionActionLoading(null);
+        }
+    };
+
+    const handleResolveExcursion = async (excursionId: number) => {
+        setExcursionActionLoading(excursionId);
+        try {
+            await pharmacyService.resolveColdChainExcursion(excursionId, {
+                action_taken: 'Temperature stabilized and stock integrity verified',
+                notes: 'Resolved from executive dashboard',
+            });
+            toast.success('Excursion resolved');
+            await loadColdChainOverview();
+        } catch (error: any) {
+            toast.error(error?.response?.data?.message || 'Failed to resolve excursion');
+        } finally {
+            setExcursionActionLoading(null);
+        }
+    };
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -61,8 +124,11 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                 if (facilityId === null) {
                     const comparison = await pharmacyService.getMultiLocationComparison('revenue');
                     setFacilityComparison(comparison);
+                    setColdChainOverview(null);
                 } else {
                     setFacilityComparison(null);
+                    const coldChainData = await pharmacyService.getColdChainOverview();
+                    setColdChainOverview(coldChainData);
                 }
             } catch (error) {
                 console.error('Failed to load initial dashboard data:', error);
@@ -170,6 +236,33 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                 </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                <QuickActionCard
+                    title="Create Purchase Order"
+                    subtitle="Restock critical products quickly"
+                    icon={<Package size={16} />}
+                    onClick={() => navigate({ to: '/app/procurement' as any, search: {} as any })}
+                />
+                <QuickActionCard
+                    title="Review Low Stock"
+                    subtitle="Prioritize products nearing shortage"
+                    icon={<AlertTriangle size={16} />}
+                    onClick={() => navigate({ to: '/app/analytics/low-stock' as any, search: {} as any })}
+                />
+                <QuickActionCard
+                    title="Inspect Expiry Risk"
+                    subtitle="Protect margins and patient safety"
+                    icon={<Clock size={16} />}
+                    onClick={() => navigate({ to: '/app/analytics/recall' as any, search: {} as any })}
+                />
+                <QuickActionCard
+                    title="Cold-Chain Status"
+                    subtitle="Track active excursions live"
+                    icon={<Snowflake size={16} />}
+                    onClick={() => navigate({ to: '/app/settings' as any, search: {} as any })}
+                />
+            </div>
+
             {/* SECTION 1: TOP KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 {loading ? (
@@ -224,7 +317,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
             </div>
 
             {/* SECTION 2: CORE GRAPHS */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-wider flex items-center gap-2">
@@ -312,6 +405,37 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         </div>
                     )}
                 </div>
+
+                <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <Snowflake size={16} className="text-cyan-600" />
+                            Cold-Chain Integrity
+                        </h3>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 font-black uppercase">
+                                {coldChainOverview?.compliance_rate_24h ?? 0}% compliant
+                            </span>
+                            <span
+                                className={cn(
+                                    'text-[10px] px-2 py-1 rounded-full font-black uppercase',
+                                    (coldChainOverview?.active_excursions || 0) > 0
+                                        ? 'bg-rose-50 text-rose-700'
+                                        : 'bg-slate-100 text-slate-600',
+                                )}
+                            >
+                                {coldChainOverview?.active_excursions || 0} active
+                            </span>
+                        </div>
+                    </div>
+                    {loading ? (
+                        <ChartSkeleton />
+                    ) : (
+                        <div className="h-[180px]">
+                            <ColdChainTelemetryChart data={coldChainOverview?.temperature_trend || []} />
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* SECTION: FACILITY OVERVIEW (Global View Only) */}
@@ -367,7 +491,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
             )}
 
             {/* SECTION 3: ACTION TABLES */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <ActionTable
                     title="Low Stock Items"
                     subtitle="Items below reorder level"
@@ -400,6 +524,16 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         navigate({ to: '/app/inventory' as any, search: { medicineId: id } as any })
                     }
                     onView={() => navigate({ to: '/app/analytics/recall' as any, search: {} as any })}
+                />
+
+                <ExcursionTable
+                    title="Cold-Chain Excursions"
+                    subtitle="Immediate containment workflow"
+                    data={coldChainOverview?.active_excursions_list || []}
+                    loading={loading}
+                    onAcknowledge={handleAcknowledgeExcursion}
+                    onResolve={handleResolveExcursion}
+                    loadingId={excursionActionLoading}
                 />
             </div>
         </div>
@@ -483,6 +617,26 @@ const KPICard: React.FC<KPICardProps> = ({
                 )}
             </div>
         </div>
+    );
+};
+
+const QuickActionCard: React.FC<{
+    title: string;
+    subtitle: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+}> = ({ title, subtitle, icon, onClick }) => {
+    return (
+        <button
+            onClick={onClick}
+            className="group text-left p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-healthcare-primary hover:-translate-y-0.5 transition-all shadow-sm"
+        >
+            <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-healthcare-primary/10 text-healthcare-primary rounded-xl">{icon}</div>
+                <span className="text-xs font-black text-healthcare-dark dark:text-white">{title}</span>
+            </div>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{subtitle}</p>
+        </button>
     );
 };
 
@@ -578,6 +732,73 @@ const ActionTable: React.FC<ActionTableProps> = ({
                         <span className="text-[9px] font-bold uppercase tracking-wider">
                             No critical items
                         </span>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const ExcursionTable: React.FC<{
+    title: string;
+    subtitle: string;
+    data: ColdChainExcursion[];
+    loading?: boolean;
+    loadingId: number | null;
+    onAcknowledge: (id: number) => void;
+    onResolve: (id: number) => void;
+}> = ({ title, subtitle, data, loading, loadingId, onAcknowledge, onResolve }) => {
+    return (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="text-xs font-bold text-healthcare-dark dark:text-white uppercase tracking-wider">
+                    {title}
+                </h3>
+                <p className="text-[9px] text-slate-400 font-medium uppercase mt-0.5">{subtitle}</p>
+            </div>
+            <div className="flex-1">
+                {loading ? (
+                    <div className="p-0">
+                        <SkeletonTable rows={5} columns={2} headers={null} className="border-none shadow-none" />
+                    </div>
+                ) : data.length > 0 ? (
+                    <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                        {data.slice(0, 5).map((item) => (
+                            <div key={item.id} className="p-4 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-xs font-black text-healthcare-dark dark:text-white">
+                                        {item.location?.name || `Location #${item.storage_location_id}`}
+                                    </p>
+                                    <span className="text-[9px] font-black uppercase text-rose-600 bg-rose-50 px-2 py-1 rounded-full">
+                                        {item.status}
+                                    </span>
+                                </div>
+                                <div className="text-[10px] text-slate-500 font-semibold uppercase">
+                                    Temp: {item.last_temperature_c.toFixed(1)}°C
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => onAcknowledge(item.id)}
+                                        disabled={loadingId === item.id}
+                                        className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase bg-amber-50 text-amber-700 disabled:opacity-50"
+                                    >
+                                        {loadingId === item.id ? 'Working...' : 'Acknowledge'}
+                                    </button>
+                                    <button
+                                        onClick={() => onResolve(item.id)}
+                                        disabled={loadingId === item.id}
+                                        className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 disabled:opacity-50"
+                                    >
+                                        Resolve
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="h-32 flex flex-col items-center justify-center text-slate-300">
+                        <ShieldCheck size={24} className="mb-2 opacity-25" />
+                        <span className="text-[9px] font-bold uppercase tracking-wider">No active excursions</span>
                     </div>
                 )}
             </div>

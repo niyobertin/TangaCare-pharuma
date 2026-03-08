@@ -23,6 +23,7 @@ import { APP_CONFIG } from '../../lib/config';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { db } from '../../lib/indexeddb';
 import { toSentenceCase } from '../../lib/text';
+import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 
 const WALK_IN_PATIENT = {
     id: null,
@@ -40,6 +41,7 @@ export function DispensingPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 500);
+    const medicineSearchInputRef = useRef<HTMLInputElement>(null);
     const [hasMore, setHasMore] = useState(true);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [page, setPage] = useState(1);
@@ -138,6 +140,33 @@ export function DispensingPage() {
     useEffect(() => {
         fetchMedicines();
     }, [debouncedSearch, page]);
+
+    useBarcodeScanner(
+        (barcode) => {
+            const activeElement = document.activeElement as HTMLElement | null;
+            const activeTag = activeElement?.tagName;
+            const isTextInput =
+                activeTag === 'INPUT' ||
+                activeTag === 'TEXTAREA' ||
+                activeElement?.getAttribute('contenteditable') === 'true';
+            const isMedicineSearchFocused = activeElement === medicineSearchInputRef.current;
+
+            if (isTextInput && !isMedicineSearchFocused) {
+                return;
+            }
+
+            setSearchQuery(barcode);
+            setPage(1);
+            setHasMore(true);
+            medicineSearchInputRef.current?.focus();
+            toast.success(`Scanned barcode: ${barcode}`, { duration: 1200 });
+        },
+        {
+            enabled: !showPaymentModal && !showCreatePatient,
+            minLength: 4,
+            scanTimeoutMs: 60,
+        },
+    );
 
     const addToCart = async (med: Medicine) => {
         if ((med.stock_quantity || 0) <= 0) {
@@ -399,6 +428,7 @@ export function DispensingPage() {
                             size={20}
                         />
                         <input
+                            ref={medicineSearchInputRef}
                             type="text"
                             placeholder="Search medicine by name, code, brand, or barcode..."
                             value={searchQuery}

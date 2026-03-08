@@ -19,7 +19,6 @@ import { format, subDays } from 'date-fns';
 import { cn } from '../../lib/utils';
 
 import { ReorderSuggestions } from '../../components/pharmacy/reports/ReorderSuggestions';
-import { DeadStockReport } from '../../components/pharmacy/reports/DeadStockReport';
 import { ExpiryReport } from '../../components/pharmacy/reports/ExpiryReport';
 import { CreateReturnModal } from '../../components/pharmacy/returns/CreateReturnModal';
 import { ABCAnalysisReport } from '../../components/pharmacy/reports/ABCAnalysisReport';
@@ -52,6 +51,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
 
     // H-9: 5 top-level tabs; activeTab overrides defaultTab from the router
     const [activeTab, setActiveTab] = useState<string>(mapDefaultTabToTopLevel(defaultTab));
+    const [preferredSubtab, setPreferredSubtab] = useState<string>(defaultTab);
 
     // Map the 5 tabs → the existing sub-section keys
     const TABS = [
@@ -110,12 +110,21 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         return 'sales'; // 'sales' tab
     }
 
+    useEffect(() => {
+        setActiveTab(mapDefaultTabToTopLevel(defaultTab));
+        setPreferredSubtab(defaultTab);
+    }, [defaultTab]);
+
     // resolvedTab = the specific sub-section key used by the existing render logic below
-    const resolvedTab = TABS.some((t) => t.key === activeTab)
-        ? defaultSubtabFor(activeTab)
+    const activeTabConfig = TABS.find((t) => t.key === activeTab);
+    const activeSubtabs = (activeTabConfig?.subtabs ?? []) as readonly string[];
+    const resolvedTab = activeTabConfig
+        ? activeSubtabs.includes(preferredSubtab)
+            ? preferredSubtab
+            : defaultSubtabFor(activeTab)
         : activeTab === 'profit'
-            ? 'sales'
-            : activeTab;
+          ? 'sales'
+          : activeTab;
 
     const [days, setDays] = useState(30);
 
@@ -182,7 +191,10 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                     {TABS.map((tab) => (
                         <button
                             key={tab.key}
-                            onClick={() => setActiveTab(tab.key)}
+                            onClick={() => {
+                                setActiveTab(tab.key);
+                                setPreferredSubtab(defaultSubtabFor(tab.key));
+                            }}
                             className={cn(
                                 'flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all',
                                 activeTab === tab.key
@@ -247,11 +259,8 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         <ExpiryReport facilityId={effectiveFacilityId} />
                     )}
                     {(resolvedTab === 'stock-movement' || resolvedTab === 'movement') && (
-                        <div className="space-y-6">
-                            <h2 className="text-xl font-black text-healthcare-dark dark:text-white mb-6 uppercase">
-                                Dead Stock Analysis
-                            </h2>
-                            <DeadStockReport />
+                        <div className="-mx-6 -my-6">
+                            <StockMovementsPage />
                         </div>
                     )}
                     {resolvedTab === 'tax' && (

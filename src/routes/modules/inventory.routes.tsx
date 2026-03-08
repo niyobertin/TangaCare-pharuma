@@ -1,15 +1,29 @@
 import { createRoute } from '@tanstack/react-router';
 import { RequirePermission } from '../../components/auth/RequirePermission';
 import { PERMISSIONS } from '../../types/auth';
-import { InventoryPage } from '../../pages/dashboard/InventoryPage';
-import { BatchStockPage } from '../../pages/dashboard/BatchStockPage';
-import { StockMovementsPage } from '../../pages/dashboard/StockMovementsPage';
-import { PhysicalCountPage } from '../../pages/dashboard/PhysicalCountPage';
-import { VarianceTrackingPage } from '../../pages/dashboard/VarianceTrackingPage';
-import { BatchRecallPage } from '../../pages/dashboard/BatchRecallPage';
-import { ReorderDashboardPage } from '../../pages/dashboard/ReorderDashboardPage';
-import { StockRegisterReportPage } from '../../pages/dashboard/StockRegisterReportPage';
+import { lazyNamed, withRouteSuspense } from '../lazy';
 // import React from 'react';
+
+const InventoryPage = lazyNamed(() => import('../../pages/dashboard/InventoryPage'), 'InventoryPage');
+const BatchStockPage = lazyNamed(() => import('../../pages/dashboard/BatchStockPage'), 'BatchStockPage');
+const StockMovementsPage = lazyNamed(
+    () => import('../../pages/dashboard/StockMovementsPage'),
+    'StockMovementsPage',
+);
+const PhysicalCountPage = lazyNamed(() => import('../../pages/dashboard/PhysicalCountPage'), 'PhysicalCountPage');
+const VarianceTrackingPage = lazyNamed(
+    () => import('../../pages/dashboard/VarianceTrackingPage'),
+    'VarianceTrackingPage',
+);
+const BatchRecallPage = lazyNamed(() => import('../../pages/dashboard/BatchRecallPage'), 'BatchRecallPage');
+const ReorderDashboardPage = lazyNamed(
+    () => import('../../pages/dashboard/ReorderDashboardPage'),
+    'ReorderDashboardPage',
+);
+const StockRegisterReportPage = lazyNamed(
+    () => import('../../pages/dashboard/StockRegisterReportPage'),
+    'StockRegisterReportPage',
+);
 
 // This will be attached to the appLayoutRoute in the main router
 export const createInventoryRoutes = (parentRoute: any) => {
@@ -17,9 +31,11 @@ export const createInventoryRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'inventory',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
-                <InventoryPage />
-            </RequirePermission>
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+                    <InventoryPage />
+                </RequirePermission>,
+            )
         ),
     });
 
@@ -27,9 +43,11 @@ export const createInventoryRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'stock',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
-                <BatchStockPage />
-            </RequirePermission>
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+                    <BatchStockPage />
+                </RequirePermission>,
+            )
         ),
     });
 
@@ -37,9 +55,11 @@ export const createInventoryRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'stock-movements',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.STOCK_MOVEMENTS_READ}>
-                <StockMovementsPage />
-            </RequirePermission>
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.STOCK_MOVEMENTS_READ}>
+                    <StockMovementsPage />
+                </RequirePermission>,
+            )
         ),
     });
 
@@ -47,9 +67,11 @@ export const createInventoryRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'stocktaking',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.INVENTORY_WRITE}>
-                <PhysicalCountPage />
-            </RequirePermission>
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.INVENTORY_WRITE}>
+                    <PhysicalCountPage />
+                </RequirePermission>,
+            )
         ),
     });
 
@@ -57,9 +79,11 @@ export const createInventoryRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'variances',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
-                <VarianceTrackingPage />
-            </RequirePermission>
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+                    <VarianceTrackingPage />
+                </RequirePermission>,
+            )
         ),
     });
 
@@ -67,9 +91,11 @@ export const createInventoryRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'recalls',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
-                <BatchRecallPage />
-            </RequirePermission>
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+                    <BatchRecallPage />
+                </RequirePermission>,
+            )
         ),
     });
 
@@ -77,9 +103,11 @@ export const createInventoryRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'reorder-dashboard',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.PROCUREMENT_READ}>
-                <ReorderDashboardPage />
-            </RequirePermission>
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.PROCUREMENT_READ}>
+                    <ReorderDashboardPage />
+                </RequirePermission>,
+            )
         ),
     });
 
@@ -87,9 +115,11 @@ export const createInventoryRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'stock-register',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.REPORTS_READ}>
-                <StockRegisterReportPage />
-            </RequirePermission>
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.REPORTS_READ}>
+                    <StockRegisterReportPage />
+                </RequirePermission>,
+            )
         ),
     });
 

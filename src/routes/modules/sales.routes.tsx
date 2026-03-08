@@ -1,19 +1,23 @@
 import { createRoute } from '@tanstack/react-router';
 import { RequirePermission } from '../../components/auth/RequirePermission';
 import { PERMISSIONS } from '../../types/auth';
-import { DispensingPage } from '../../pages/dashboard/DispensingPage';
-import { InsurancePage } from '../../pages/dashboard/InsurancePage';
-import { ModulePlaceholder } from '../../pages/shared/ModulePlaceholder';
+import { lazyNamed, withRouteSuspense } from '../lazy';
 // import React from 'react';
+
+const DispensingPage = lazyNamed(() => import('../../pages/dashboard/DispensingPage'), 'DispensingPage');
+const InsurancePage = lazyNamed(() => import('../../pages/dashboard/InsurancePage'), 'InsurancePage');
+const PrescriptionsPage = lazyNamed(() => import('../../pages/dashboard/PrescriptionsPage'), 'PrescriptionsPage');
 
 export const createSalesRoutes = (parentRoute: any) => {
     const dispensingRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'dispensing',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
-                <DispensingPage />
-            </RequirePermission>
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
+                    <DispensingPage />
+                </RequirePermission>,
+            )
         ),
     });
 
@@ -21,9 +25,11 @@ export const createSalesRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'insurance',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
-                <InsurancePage />
-            </RequirePermission>
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
+                    <InsurancePage />
+                </RequirePermission>,
+            )
         ),
     });
 
@@ -31,10 +37,11 @@ export const createSalesRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'prescriptions',
         component: () => (
-            <ModulePlaceholder
-                title="Prescriptions"
-                description="View and process electronic prescriptions from doctors."
-            />
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
+                    <PrescriptionsPage />
+                </RequirePermission>,
+            )
         ),
     });
 

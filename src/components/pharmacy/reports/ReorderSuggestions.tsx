@@ -168,6 +168,9 @@ export function ReorderSuggestions() {
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {suggestions.map((item) => {
                                     const daysRemaining = Number(item.days_remaining || 0);
+                                    const averageDailyUsage = Number(
+                                        item.average_daily_usage ?? item.avg_daily_consumption ?? 0,
+                                    );
                                     const isCritical =
                                         daysRemaining < 3 || item.current_quantity === 0;
                                     const isWarning = daysRemaining >= 3 && daysRemaining < 7;
@@ -199,8 +202,7 @@ export function ReorderSuggestions() {
                                             </td>
                                             <td className="px-6 py-5 text-right text-slate-500 whitespace-nowrap">
                                                 <span className="font-bold text-sm tracking-tight bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
-                                                    {(item.average_daily_usage || 0).toFixed(1)} /
-                                                    day
+                                                    {averageDailyUsage.toFixed(1)} / day
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5 text-right whitespace-nowrap">
