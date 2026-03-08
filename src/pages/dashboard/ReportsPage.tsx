@@ -18,6 +18,7 @@ import { PerformanceChart } from '../../components/pharmacy/PerformanceChart';
 import { TaxSummaryTable } from '../../components/pharmacy/TaxSummaryTable';
 import { format, subDays } from 'date-fns';
 import { cn } from '../../lib/utils';
+import { useNavigate } from '@tanstack/react-router';
 
 import { ReorderSuggestions } from '../../components/pharmacy/reports/ReorderSuggestions';
 import { ExpiryReport } from '../../components/pharmacy/reports/ExpiryReport';
@@ -85,48 +86,11 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
     const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const { user, facilityId } = useAuth();
     const effectiveFacilityId = facilityId ?? user?.facility_id;
+    const navigate = useNavigate();
 
     // Active top-level bucket is derived from the route-level defaultTab.
     const [activeTab, setActiveTab] = useState<string>(mapDefaultTabToTopLevel(defaultTab));
     const [preferredSubtab, setPreferredSubtab] = useState<string>(normalizeSubtab(defaultTab));
-
-    // Map top-level route buckets to concrete report sections.
-    const TABS = [
-        {
-            key: 'sales',
-            subtabs: ['sales'],
-        },
-        {
-            key: 'inventory',
-            subtabs: [
-                'stock',
-                'low-stock',
-                'expiry',
-                'movement',
-                'fast-moving',
-                'demand-forecast',
-                'forecast-reorder',
-                'near-expiry-actions',
-                'par',
-            ],
-        },
-        {
-            key: 'procurement',
-            subtabs: ['purchase'],
-        },
-        {
-            key: 'performance',
-            subtabs: ['performance', 'customer'],
-        },
-        {
-            key: 'tax',
-            subtabs: ['tax'],
-        },
-        {
-            key: 'audit-logs',
-            subtabs: ['audit-logs'],
-        },
-    ] as const;
 
     const SUBTAB_LABELS: Record<string, string> = {
         sales: 'Sales',
@@ -161,17 +125,48 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         setPreferredSubtab(normalizeSubtab(defaultTab));
     }, [defaultTab]);
 
-    // resolvedTab = the specific sub-section key used by the existing render logic below
-    const activeTabConfig = TABS.find((t) => t.key === activeTab);
-    const activeSubtabs = (activeTabConfig?.subtabs ?? []) as readonly string[];
+    // Unified report tab menu to replace sidebar report sections.
+    const activeSubtabs = [
+        'sales',
+        'stock',
+        'low-stock',
+        'expiry',
+        'movement',
+        'fast-moving',
+        'demand-forecast',
+        'forecast-reorder',
+        'near-expiry-actions',
+        'par',
+        'purchase',
+        'performance',
+        'customer',
+        'tax',
+        'audit-logs',
+    ] as const;
     const normalizedPreferredSubtab = normalizeSubtab(preferredSubtab);
-    const resolvedTab = activeTabConfig
-        ? activeSubtabs.includes(normalizedPreferredSubtab)
-            ? normalizedPreferredSubtab
-            : defaultSubtabFor(activeTab)
-        : normalizeSubtab(activeTab);
+    const resolvedTab = activeSubtabs.includes(normalizedPreferredSubtab as any)
+        ? normalizedPreferredSubtab
+        : defaultSubtabFor(activeTab);
 
     const [days, setDays] = useState(30);
+    const routeForSubtab = (tab: string): string => {
+        if (tab === 'sales') return '/app/analytics/sales';
+        if (tab === 'stock') return '/app/analytics/inventory';
+        if (tab === 'low-stock') return '/app/analytics/low-stock';
+        if (tab === 'expiry') return '/app/analytics/recall';
+        if (tab === 'movement') return '/app/analytics/movement';
+        if (tab === 'fast-moving') return '/app/analytics/fast-moving';
+        if (tab === 'demand-forecast') return '/app/analytics/demand-forecast';
+        if (tab === 'forecast-reorder') return '/app/analytics/forecast-reorder';
+        if (tab === 'near-expiry-actions') return '/app/analytics/near-expiry-actions';
+        if (tab === 'par') return '/app/analytics/par';
+        if (tab === 'purchase') return '/app/analytics/procurement';
+        if (tab === 'performance') return '/app/analytics/performance';
+        if (tab === 'customer') return '/app/analytics/loyalty';
+        if (tab === 'tax') return '/app/analytics/tax';
+        if (tab === 'audit-logs') return '/app/audit-logs';
+        return '/app/analytics/inventory';
+    };
 
     const getExportType = (
         tab: string,
@@ -303,7 +298,11 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         {activeSubtabs.map((subtab) => (
                             <button
                                 key={subtab}
-                                onClick={() => setPreferredSubtab(subtab)}
+                                onClick={() => {
+                                    setPreferredSubtab(subtab);
+                                    setActiveTab(mapDefaultTabToTopLevel(subtab));
+                                    navigate({ to: routeForSubtab(subtab) as any, search: {} as any });
+                                }}
                                 className={cn(
                                     'px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors',
                                     resolvedTab === subtab

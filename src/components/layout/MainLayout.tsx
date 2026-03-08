@@ -218,18 +218,6 @@ const NAV_ITEMS: NavItem[] = [
             'ADMIN',
         ],
         allowedPermissions: ['reports:read'],
-        children: [
-            { to: '/app/analytics/sales', icon: FileText, label: 'Sales' },
-            { to: '/app/analytics/inventory', icon: FileText, label: 'Inventory' },
-            { to: '/app/analytics/fast-moving', icon: FileText, label: 'Fast/Slow' },
-            { to: '/app/analytics/demand-forecast', icon: FileText, label: 'Demand Forecast' },
-            { to: '/app/analytics/forecast-reorder', icon: FileText, label: 'Forecast Reorder' },
-            { to: '/app/analytics/near-expiry-actions', icon: FileText, label: 'Near-Expiry Actions' },
-            { to: '/app/analytics/par', icon: FileText, label: 'PAR Replenishment' },
-            { to: '/app/analytics/procurement', icon: FileText, label: 'Procurement' },
-            { to: '/app/analytics/performance', icon: FileText, label: 'Performance' },
-            { to: '/app/analytics/tax', icon: FileText, label: 'Tax' },
-        ],
     },
     {
         to: '/app/settings',
