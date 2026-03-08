@@ -86,22 +86,18 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
     const { user, facilityId } = useAuth();
     const effectiveFacilityId = facilityId ?? user?.facility_id;
 
-    // H-9: 5 top-level tabs; activeTab overrides defaultTab from the router
+    // Active top-level bucket is derived from the route-level defaultTab.
     const [activeTab, setActiveTab] = useState<string>(mapDefaultTabToTopLevel(defaultTab));
     const [preferredSubtab, setPreferredSubtab] = useState<string>(normalizeSubtab(defaultTab));
 
-    // Map the 5 tabs → the existing sub-section keys
+    // Map top-level route buckets to concrete report sections.
     const TABS = [
         {
             key: 'sales',
-            label: 'Sales',
-            emoji: '📊',
             subtabs: ['sales'],
         },
         {
             key: 'inventory',
-            label: 'Inventory',
-            emoji: '📦',
             subtabs: [
                 'stock',
                 'low-stock',
@@ -116,26 +112,18 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         },
         {
             key: 'procurement',
-            label: 'Procurement',
-            emoji: '🏪',
             subtabs: ['purchase'],
         },
         {
             key: 'performance',
-            label: 'Performance',
-            emoji: '👥',
             subtabs: ['performance', 'customer'],
         },
         {
             key: 'tax',
-            label: 'Tax',
-            emoji: '🧾',
             subtabs: ['tax'],
         },
         {
             key: 'audit-logs',
-            label: 'Audit Logs',
-            emoji: '🛡️',
             subtabs: ['audit-logs'],
         },
     ] as const;
@@ -308,27 +296,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                             <Download size={14} /> PDF
                         </button>
                     </div>
-                </div>
-
-                {/* Tab pills */}
-                <div className="flex gap-2 flex-wrap border-b border-slate-200 dark:border-slate-700 pb-2">
-                    {TABS.map((tab) => (
-                        <button
-                            key={tab.key}
-                            onClick={() => {
-                                setActiveTab(tab.key);
-                                setPreferredSubtab(defaultSubtabFor(tab.key));
-                            }}
-                            className={cn(
-                                'flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all',
-                                activeTab === tab.key
-                                    ? 'bg-healthcare-primary text-white shadow-md shadow-healthcare-primary/30'
-                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700',
-                            )}
-                        >
-                            <span>{tab.emoji}</span> {tab.label}
-                        </button>
-                    ))}
                 </div>
 
                 {activeSubtabs.length > 1 && (
