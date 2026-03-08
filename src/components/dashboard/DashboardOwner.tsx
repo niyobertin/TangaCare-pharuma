@@ -367,7 +367,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         <div className="h-[180px]">
                             <InventoryStatusChart
                                 data={
-                                    summary?.categories.map((c) => ({
+                                    summary?.categories?.map((c) => ({
                                         category: c.category_name,
                                         count: c.quantity_sold,
                                         value: c.revenue,
@@ -397,9 +397,9 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         <div className="h-[180px]">
                             <ExpiryRiskChart
                                 data={{
-                                    days_30: summary?.expiry_risk.under_30_days.count || 0,
-                                    days_60: summary?.expiry_risk.under_60_days.count || 0,
-                                    days_90: summary?.expiry_risk.under_90_days.count || 0,
+                                    days_30: summary?.expiry_risk?.under_30_days?.count || 0,
+                                    days_60: summary?.expiry_risk?.under_60_days?.count || 0,
+                                    days_90: summary?.expiry_risk?.under_90_days?.count || 0,
                                 }}
                             />
                         </div>

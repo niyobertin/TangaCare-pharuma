@@ -8,9 +8,16 @@ import { toSentenceCase } from '../../lib/text';
 interface MedicineCardProps {
     medicine: Medicine;
     onAddToCart: (medicine: Medicine) => void;
+    onFindAlternatives?: (medicine: Medicine) => void;
+    isFindingAlternatives?: boolean;
 }
 
-export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onAddToCart }) => {
+export const MedicineCard: React.FC<MedicineCardProps> = ({
+    medicine,
+    onAddToCart,
+    onFindAlternatives,
+    isFindingAlternatives = false,
+}) => {
     const { nearestExpiry, isLoading } = useMedicineStock(medicine.id);
     const sellingPrice = Number(medicine.selling_price || 0);
     const displayStrength = String(medicine.strength || '').toLowerCase();
@@ -128,6 +135,15 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onAddToCar
                         </>
                     )}
                 </button>
+                {onFindAlternatives && (
+                    <button
+                        onClick={() => onFindAlternatives(medicine)}
+                        disabled={isFindingAlternatives}
+                        className="mt-2 w-full py-2 rounded-xl text-[11px] font-black uppercase tracking-wide border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        {isFindingAlternatives ? 'Checking alternatives...' : 'Find Alternatives'}
+                    </button>
+                )}
             </div>
         </div>
     );

@@ -63,6 +63,25 @@ export const reportService = {
         return (response.data as any).data ?? response.data;
     },
 
+    async getLowStockReport(facilityId: number): Promise<{
+        facility_id: number;
+        items: Array<{
+            medicine_id: number;
+            medicine_name: string;
+            current_quantity: number;
+            min_stock_level: number;
+            reorder_point: number;
+            avg_daily_consumption?: number;
+            days_of_cover?: number;
+            deficit_quantity?: number;
+            status: 'critical' | 'low' | 'warning';
+            recommended_action?: string;
+        }>;
+    }> {
+        const response = await api.get<any>(`/pharmacy/reports/low-stock/${facilityId}`);
+        return (response.data as any).data ?? response.data;
+    },
+
     async getSalesReport(
         facilityId: number,
         params?: { start_date?: string; end_date?: string },
@@ -98,7 +117,31 @@ export const reportService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async getExpiryReport(facilityId: number, params?: { days?: number }): Promise<any> {
+    async getExpiryReport(
+        facilityId: number,
+        params?: { days?: number },
+    ): Promise<{
+        facility_id: number;
+        expiring_soon: Array<{
+            batch_id: number;
+            batch_number: string;
+            medicine_name: string;
+            expiry_date: string;
+            days_until_expiry: number;
+            quantity: number;
+            risk_level?: 'critical' | 'warning' | 'watch';
+            recommended_action?: string;
+        }>;
+        expired: Array<{
+            batch_id: number;
+            batch_number: string;
+            medicine_name: string;
+            expiry_date: string;
+            quantity: number;
+            risk_level?: 'expired';
+            recommended_action?: string;
+        }>;
+    }> {
         const response = await api.get<any>(`/pharmacy/reports/expiry/${facilityId}`, { params });
         return (response.data as any).data ?? response.data;
     },
@@ -207,10 +250,48 @@ export const reportService = {
         return (response.data as any).data ?? response.data;
     },
 
+    async getInventoryAgingReport(
+        facilityId: number,
+        params?: { as_of_date?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/inventory-aging/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getPurchaseVsSalesReport(
+        facilityId: number,
+        params: { start_date: string; end_date: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/purchase-vs-sales/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getMedicineMarginReport(
+        facilityId: number,
+        params: { start_date: string; end_date: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/reports/medicine-margin/${facilityId}`, {
+            params,
+        });
+        return (response.data as any).data ?? response.data;
+    },
+
     async downloadReport(
         type: string,
         format: 'excel' | 'pdf',
-        params?: { start_date?: string; end_date?: string; days?: number },
+        params?: {
+            start_date?: string;
+            end_date?: string;
+            as_of_date?: string;
+            days?: number;
+            horizon_days?: number;
+            history_days?: number;
+            status?: string;
+        },
     ): Promise<void> {
         const response = await api.get(`/pharmacy/reports/export/${type}/${format}`, {
             params,
@@ -317,6 +398,107 @@ export const reportService = {
 
     async getSupplierPerformance(): Promise<SupplierPerformanceItem[]> {
         const response = await api.get<any>('/pharmacy/analytics/supplier-performance');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getVelocitySegmentation(params?: { days?: number; facilityId?: number }): Promise<any> {
+        const response = await api.get<any>('/pharmacy/analytics/velocity-segmentation', { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getSupplierIntelligence(params?: {
+        start_date?: string;
+        end_date?: string;
+        facilityId?: number;
+    }): Promise<any> {
+        const response = await api.get<any>('/pharmacy/analytics/supplier-intelligence', { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getNearExpiryActions(params?: {
+        horizon_days?: number;
+        facilityId?: number;
+    }): Promise<any> {
+        const response = await api.get<any>('/pharmacy/analytics/near-expiry-actions', { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getDemandForecast(params?: {
+        horizon_days?: number;
+        history_days?: number;
+        facilityId?: number;
+    }): Promise<any> {
+        const response = await api.get<any>('/pharmacy/analytics/demand-forecast', { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getSmartReorderPlan(params?: {
+        horizon_days?: number;
+        facilityId?: number;
+    }): Promise<any> {
+        const response = await api.get<any>('/pharmacy/analytics/smart-reorder', { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getPredictiveExpiry(params?: {
+        horizon_days?: number;
+        facilityId?: number;
+    }): Promise<any> {
+        const response = await api.get<any>('/pharmacy/analytics/predictive-expiry', { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getMultiBranchTransferSuggestions(params?: {
+        organizationId?: number;
+        lookback_days?: number;
+    }): Promise<any> {
+        const response = await api.get<any>('/pharmacy/analytics/multi-branch-transfer', { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getMobileWorkflowBoard(params?: { facilityId?: number; organizationId?: number }): Promise<any> {
+        const response = await api.get<any>('/pharmacy/analytics/mobile-workflow-board', { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getParDashboard(facilityId: number, params?: { department_id?: number }): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/par/dashboard/${facilityId}`, { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async upsertDepartmentParLevels(
+        departmentId: number,
+        levels: Array<{
+            medicine_id: number;
+            par_level: number;
+            min_level?: number;
+            refill_to_level?: number;
+            is_active?: boolean;
+        }>,
+    ): Promise<any> {
+        const response = await api.put<any>(`/pharmacy/par/levels/department/${departmentId}`, { levels });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async generateParTasks(facilityId: number, department_id?: number): Promise<any> {
+        const response = await api.post<any>(`/pharmacy/par/tasks/generate/${facilityId}`, { department_id });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getParTasks(
+        facilityId: number,
+        params?: { status?: string; department_id?: number; priority?: string },
+    ): Promise<any> {
+        const response = await api.get<any>(`/pharmacy/par/tasks/${facilityId}`, { params });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async updateParTaskStatus(
+        taskId: number,
+        facilityId: number,
+        payload: { status: 'pending' | 'in_progress' | 'completed' | 'cancelled'; notes?: string },
+    ): Promise<any> {
+        const response = await api.patch<any>(`/pharmacy/par/tasks/${taskId}/status/${facilityId}`, payload);
         return (response.data as any).data ?? response.data;
     },
 

@@ -379,6 +379,10 @@ export interface Alert {
     threshold_value?: number;
     severity: 'info' | 'warning' | 'critical' | 'out_of_stock';
     last_notified_at?: string;
+    action_taken?: string;
+    action_reason?: string;
+    resolved_at?: string;
+    resolved_by_id?: number;
     medicine?: Medicine;
     batch?: Batch;
 }
@@ -581,6 +585,9 @@ export interface ReorderSuggestion {
     average_daily_usage?: number;
     avg_daily_consumption?: number;
     days_remaining?: number;
+    days_of_cover?: number;
+    deficit_quantity?: number;
+    recommended_action?: string;
     urgency: 'low' | 'medium' | 'high';
 }
 

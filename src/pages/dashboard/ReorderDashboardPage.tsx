@@ -13,12 +13,17 @@ import {
     Loader2,
     CheckCircle2,
     FilePlus,
+    ClipboardList,
+    Smartphone,
 } from 'lucide-react';
 
 export function ReorderDashboardPage() {
     const { user, facilityId } = useAuth();
     const effectiveFacilityId = facilityId ?? user?.facility_id;
     const [suggestions, setSuggestions] = useState<ReorderSuggestion[]>([]);
+    const [smartReorder, setSmartReorder] = useState<any[]>([]);
+    const [parTasks, setParTasks] = useState<any[]>([]);
+    const [mobileBoard, setMobileBoard] = useState<any | null>(null);
     const [loading, setLoading] = useState(false);
     const [creatingPO, setCreatingPO] = useState(false);
     const [poCreated, setPoCreated] = useState<string | null>(null);
@@ -27,8 +32,42 @@ export function ReorderDashboardPage() {
         if (!effectiveFacilityId) return;
         setLoading(true);
         try {
-            const data = await pharmacyService.getReorderSuggestions(effectiveFacilityId);
-            setSuggestions(data);
+            const [reorderData, smartData, taskData, mobileData] = await Promise.allSettled([
+                pharmacyService.getReorderSuggestions(effectiveFacilityId),
+                pharmacyService.getSmartReorderPlan({
+                    facilityId: effectiveFacilityId,
+                    horizon_days: 30,
+                }),
+                pharmacyService.getParTasks(effectiveFacilityId, { status: 'pending' }),
+                pharmacyService.getMobileWorkflowBoard({
+                    facilityId: effectiveFacilityId,
+                    organizationId: user?.organization_id,
+                }),
+            ]);
+
+            if (reorderData.status === 'fulfilled') {
+                setSuggestions(reorderData.value);
+            } else {
+                setSuggestions([]);
+            }
+
+            if (smartData.status === 'fulfilled') {
+                setSmartReorder(smartData.value?.items || []);
+            } else {
+                setSmartReorder([]);
+            }
+
+            if (taskData.status === 'fulfilled') {
+                setParTasks(taskData.value || []);
+            } else {
+                setParTasks([]);
+            }
+
+            if (mobileData.status === 'fulfilled') {
+                setMobileBoard(mobileData.value || null);
+            } else {
+                setMobileBoard(null);
+            }
         } catch (error) {
             console.error('Failed to load suggestions', error);
         } finally {
@@ -38,7 +77,7 @@ export function ReorderDashboardPage() {
 
     useEffect(() => {
         loadSuggestions();
-    }, [effectiveFacilityId]);
+    }, [effectiveFacilityId, user?.organization_id]);
 
     const handleCreateDraftPOs = async () => {
         if (!effectiveFacilityId) return;
@@ -60,6 +99,7 @@ export function ReorderDashboardPage() {
 
     const highUrgency = suggestions.filter((s) => s.urgency === 'high');
     const mediumUrgency = suggestions.filter((s) => s.urgency === 'medium');
+    const smartCritical = smartReorder.filter((item) => item.priority === 'critical' || item.priority === 'high');
 
     return (
         <ProtectedRoute
@@ -109,25 +149,85 @@ export function ReorderDashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <StatCard
                         title="Critical Reorders"
-                        value={highUrgency.length}
+                        value={Math.max(highUrgency.length, smartCritical.length)}
                         color="text-rose-500"
                         icon={<AlertCircle size={24} />}
                         subtitle="Below min threshold"
                     />
                     <StatCard
-                        title="Pending Orders"
-                        value={mediumUrgency.length}
+                        title="PAR Tasks"
+                        value={parTasks.length}
                         color="text-amber-500"
-                        icon={<ShoppingCart size={24} />}
-                        subtitle="Optimized stock targets"
+                        icon={<ClipboardList size={24} />}
+                        subtitle="Pending replenishment"
                     />
                     <StatCard
-                        title="Draft POs Today"
-                        value={0} // Mocked until we track this
+                        title="Mobile Urgents"
+                        value={mobileBoard?.quick_actions?.urgent_expiry?.length || mediumUrgency.length}
                         color="text-healthcare-primary"
-                        icon={<Package size={24} />}
-                        subtitle="Created automatically"
+                        icon={<Smartphone size={24} />}
+                        subtitle="Counter-ready actions"
                     />
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">
+                            Smart Reorder Engine
+                        </h3>
+                        <div className="space-y-2 max-h-64 overflow-auto">
+                            {(smartReorder.length > 0 ? smartReorder : suggestions)
+                                .slice(0, 8)
+                                .map((item: any, idx: number) => (
+                                    <div
+                                        key={`${item.medicine_id}-${idx}`}
+                                        className="flex items-center justify-between rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2"
+                                    >
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800 dark:text-white">
+                                                {item.medicine_name}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 uppercase tracking-widest">
+                                                {item.priority || item.urgency || 'medium'} priority
+                                            </p>
+                                        </div>
+                                        <p className="text-sm font-black text-healthcare-primary">
+                                            +{item.recommended_order_qty ?? item.suggested_quantity ?? 0}
+                                        </p>
+                                    </div>
+                                ))}
+                            {smartReorder.length === 0 && suggestions.length === 0 && (
+                                <p className="text-xs text-slate-500">No smart reorder actions right now.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">
+                            PAR Replenishment Queue
+                        </h3>
+                        <div className="space-y-2 max-h-64 overflow-auto">
+                            {parTasks.slice(0, 8).map((task: any) => (
+                                <div
+                                    key={task.id}
+                                    className="flex items-center justify-between rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2"
+                                >
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-white">
+                                            {task.medicine?.name || `Medicine #${task.medicine_id}`}
+                                        </p>
+                                        <p className="text-[10px] text-slate-400 uppercase tracking-widest">
+                                            {task.priority} · Dept {task.department?.name || task.department_id}
+                                        </p>
+                                    </div>
+                                    <p className="text-sm font-black text-amber-600">+{task.suggested_quantity}</p>
+                                </div>
+                            ))}
+                            {parTasks.length === 0 && (
+                                <p className="text-xs text-slate-500">No pending PAR tasks.</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">

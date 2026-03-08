@@ -22,7 +22,7 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
         path: '/',
         component: () => {
             const Nav = Navigate as any;
-            return <Nav to="/app/analytics/sales" search={{}} />;
+            return <Nav to="/app/analytics/inventory" search={{}} />;
         },
     });
 
@@ -95,6 +95,36 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
         component: () => withRouteSuspense(<ReportsPage defaultTab="movement" />),
     });
 
+    const analyticsFastMovingRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'fast-moving',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="fast-moving" />),
+    });
+
+    const analyticsDemandForecastRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'demand-forecast',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="demand-forecast" />),
+    });
+
+    const analyticsForecastReorderRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'forecast-reorder',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="forecast-reorder" />),
+    });
+
+    const analyticsNearExpiryActionsRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'near-expiry-actions',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="near-expiry-actions" />),
+    });
+
+    const analyticsParRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'par',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="par" />),
+    });
+
     return [
         analyticsRoute.addChildren([
             analyticsIndexRoute,
@@ -109,6 +139,11 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
             analyticsProfitRoute,
             analyticsLowStockRoute,
             analyticsMovementRoute,
+            analyticsFastMovingRoute,
+            analyticsDemandForecastRoute,
+            analyticsForecastReorderRoute,
+            analyticsNearExpiryActionsRoute,
+            analyticsParRoute,
         ]),
     ];
 };

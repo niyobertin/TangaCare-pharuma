@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     TrendingUp,
     Calendar,
@@ -8,6 +8,7 @@ import {
     Package,
     DollarSign,
     RotateCcw,
+    Search,
 } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { SkeletonTable } from '../../components/ui/SkeletonTable';
@@ -23,24 +24,60 @@ import { ExpiryReport } from '../../components/pharmacy/reports/ExpiryReport';
 import { CreateReturnModal } from '../../components/pharmacy/returns/CreateReturnModal';
 import { ABCAnalysisReport } from '../../components/pharmacy/reports/ABCAnalysisReport';
 import { PurchaseReport } from '../../components/pharmacy/reports/PurchaseReport';
+import { FastSlowMovingReport } from '../../components/pharmacy/reports/FastSlowMovingReport';
+import { DemandForecastReport } from '../../components/pharmacy/reports/DemandForecastReport';
+import { NearExpiryActionsReport } from '../../components/pharmacy/reports/NearExpiryActionsReport';
+import { ForecastReorderReport } from '../../components/pharmacy/reports/ForecastReorderReport';
+import { ParReplenishmentReport } from '../../components/pharmacy/reports/ParReplenishmentReport';
 import { AuditLogsPage } from './AuditLogsPage';
 import { StockMovementsPage } from './StockMovementsPage';
+import type { Medicine } from '../../types/pharmacy';
+import { toast } from 'react-hot-toast';
 
 export interface ReportsPageProps {
     defaultTab?: string;
 }
 
+const SUBTAB_ALIASES: Record<string, string> = {
+    returns: 'sales',
+    profit: 'sales',
+    reorder: 'low-stock',
+    recall: 'expiry',
+    'stock-movement': 'movement',
+    'stock-movements-history': 'movement',
+    procurement: 'purchase',
+    staff: 'performance',
+    loyalty: 'customer',
+};
+
+function normalizeSubtab(tab: string): string {
+    const key = String(tab || '').trim();
+    return SUBTAB_ALIASES[key] || key;
+}
+
 function mapDefaultTabToTopLevel(tab: string): string {
-    if (['sales', 'returns', 'profit'].includes(tab)) return 'sales';
-    if (['stock', 'low-stock', 'reorder', 'expiry', 'recall', 'stock-movement', 'movement'].includes(tab)) {
+    const normalized = normalizeSubtab(tab);
+    if (['sales'].includes(normalized)) return 'sales';
+    if (
+        [
+            'stock',
+            'low-stock',
+            'expiry',
+            'movement',
+            'fast-moving',
+            'demand-forecast',
+            'forecast-reorder',
+            'near-expiry-actions',
+            'par',
+        ].includes(normalized)
+    ) {
         return 'inventory';
     }
-    if (['purchase', 'procurement'].includes(tab)) return 'procurement';
-    if (['staff', 'performance', 'customer', 'loyalty'].includes(tab)) return 'performance';
-    if (tab === 'tax') return 'tax';
-    if (tab === 'audit-logs') return 'audit-logs';
-    if (tab === 'stock-movements-history') return 'stock-movements-history';
-    return tab;
+    if (['purchase'].includes(normalized)) return 'procurement';
+    if (['performance', 'customer'].includes(normalized)) return 'performance';
+    if (normalized === 'tax') return 'tax';
+    if (normalized === 'audit-logs') return 'audit-logs';
+    return normalized;
 }
 
 export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
@@ -51,7 +88,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
 
     // H-9: 5 top-level tabs; activeTab overrides defaultTab from the router
     const [activeTab, setActiveTab] = useState<string>(mapDefaultTabToTopLevel(defaultTab));
-    const [preferredSubtab, setPreferredSubtab] = useState<string>(defaultTab);
+    const [preferredSubtab, setPreferredSubtab] = useState<string>(normalizeSubtab(defaultTab));
 
     // Map the 5 tabs → the existing sub-section keys
     const TABS = [
@@ -65,19 +102,29 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             key: 'inventory',
             label: 'Inventory',
             emoji: '📦',
-            subtabs: ['stock', 'low-stock', 'reorder', 'expiry', 'recall', 'stock-movement', 'movement'],
+            subtabs: [
+                'stock',
+                'low-stock',
+                'expiry',
+                'movement',
+                'fast-moving',
+                'demand-forecast',
+                'forecast-reorder',
+                'near-expiry-actions',
+                'par',
+            ],
         },
         {
             key: 'procurement',
             label: 'Procurement',
             emoji: '🏪',
-            subtabs: ['purchase', 'procurement'],
+            subtabs: ['purchase'],
         },
         {
             key: 'performance',
             label: 'Performance',
             emoji: '👥',
-            subtabs: ['staff', 'performance', 'customer', 'loyalty'],
+            subtabs: ['performance', 'customer'],
         },
         {
             key: 'tax',
@@ -91,13 +138,25 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             emoji: '🛡️',
             subtabs: ['audit-logs'],
         },
-        {
-            key: 'stock-movements-history',
-            label: 'Movements History',
-            emoji: '🔄',
-            subtabs: ['stock-movements-history'],
-        },
     ] as const;
+
+    const SUBTAB_LABELS: Record<string, string> = {
+        sales: 'Sales',
+        stock: 'Stock',
+        'low-stock': 'Low Stock',
+        expiry: 'Expiry',
+        movement: 'Movements',
+        'fast-moving': 'Fast/Slow',
+        'demand-forecast': 'Demand Forecast',
+        'forecast-reorder': 'Forecast Reorder',
+        'near-expiry-actions': 'Near-Expiry Actions',
+        par: 'PAR Replenishment',
+        purchase: 'Purchase',
+        performance: 'Performance',
+        customer: 'Customers',
+        tax: 'Tax',
+        'audit-logs': 'Audit Logs',
+    };
 
     // Determine which sub-report to load for the active tab
     function defaultSubtabFor(tab: string): string {
@@ -106,45 +165,98 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         if (tab === 'performance') return 'performance';
         if (tab === 'tax') return 'tax';
         if (tab === 'audit-logs') return 'audit-logs';
-        if (tab === 'stock-movements-history') return 'stock-movements-history';
         return 'sales'; // 'sales' tab
     }
 
     useEffect(() => {
         setActiveTab(mapDefaultTabToTopLevel(defaultTab));
-        setPreferredSubtab(defaultTab);
+        setPreferredSubtab(normalizeSubtab(defaultTab));
     }, [defaultTab]);
 
     // resolvedTab = the specific sub-section key used by the existing render logic below
     const activeTabConfig = TABS.find((t) => t.key === activeTab);
     const activeSubtabs = (activeTabConfig?.subtabs ?? []) as readonly string[];
+    const normalizedPreferredSubtab = normalizeSubtab(preferredSubtab);
     const resolvedTab = activeTabConfig
-        ? activeSubtabs.includes(preferredSubtab)
-            ? preferredSubtab
+        ? activeSubtabs.includes(normalizedPreferredSubtab)
+            ? normalizedPreferredSubtab
             : defaultSubtabFor(activeTab)
-        : activeTab === 'profit'
-          ? 'sales'
-          : activeTab;
+        : normalizeSubtab(activeTab);
 
     const [days, setDays] = useState(30);
 
+    const getExportType = (
+        tab: string,
+    ):
+        | 'sales'
+        | 'stock'
+        | 'low-stock'
+        | 'expiry'
+        | 'movement'
+        | 'fast-moving'
+        | 'demand-forecast'
+        | 'forecast-reorder'
+        | 'near-expiry-actions'
+        | 'par'
+        | 'purchase'
+        | 'performance'
+        | 'customer'
+        | 'tax'
+        | 'audit-logs'
+        | null => {
+        if (['sales'].includes(tab)) return 'sales';
+        if (tab === 'stock') return 'stock';
+        if (tab === 'low-stock') return 'low-stock';
+        if (tab === 'expiry') return 'expiry';
+        if (tab === 'movement') return 'movement';
+        if (tab === 'fast-moving') return 'fast-moving';
+        if (tab === 'demand-forecast') return 'demand-forecast';
+        if (tab === 'forecast-reorder') return 'forecast-reorder';
+        if (tab === 'near-expiry-actions') return 'near-expiry-actions';
+        if (tab === 'par') return 'par';
+        if (tab === 'purchase') return 'purchase';
+        if (tab === 'performance') return 'performance';
+        if (tab === 'customer') return 'customer';
+        if (tab === 'tax') return 'tax';
+        if (tab === 'audit-logs') return 'audit-logs';
+        return null;
+    };
+
+    const exportType = getExportType(resolvedTab);
+    const canExport = exportType !== null;
+
     const handleExport = async (format: 'excel' | 'pdf') => {
-        let type = resolvedTab;
-        if (type === 'reorder') type = 'low-stock';
-        if (type === 'recall' || type === 'expiry') type = 'expiry';
-        if (type === 'movement') type = 'stock-movement';
+        if (!exportType) {
+            toast.error('Export is not available for this report yet.');
+            return;
+        }
 
         const params: any = { facilityId: effectiveFacilityId };
-        if (['sales', 'tax', 'performance', 'staff', 'purchase'].includes(type)) {
+        if (['sales', 'purchase', 'performance', 'tax'].includes(exportType)) {
             params.start_date = startDate;
             params.end_date = endDate;
         }
-        if (type === 'expiry') params.days = days;
+        if (exportType === 'expiry') params.days = days;
+        if (exportType === 'fast-moving') params.days = 90;
+        if (exportType === 'demand-forecast') {
+            params.horizon_days = 30;
+            params.history_days = 180;
+        }
+        if (exportType === 'forecast-reorder') {
+            params.horizon_days = 30;
+        }
+        if (exportType === 'near-expiry-actions') {
+            params.horizon_days = 90;
+        }
+        if (exportType === 'par') {
+            params.status = 'pending';
+        }
 
         try {
-            await pharmacyService.downloadReport(type, format, params);
+            await pharmacyService.downloadReport(exportType, format, params);
         } catch (error) {
             console.error('Export failed:', error);
+            toast.error('Failed to export report.');
         }
     };
 
@@ -173,13 +285,25 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                     <div className="flex gap-2">
                         <button
                             onClick={() => handleExport('excel')}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md shadow-emerald-500/20"
+                            disabled={!canExport}
+                            className={cn(
+                                'flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-md',
+                                canExport
+                                    ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-500/20'
+                                    : 'bg-slate-200 text-slate-500 cursor-not-allowed shadow-slate-200/20',
+                            )}
                         >
                             <Download size={14} /> Excel
                         </button>
                         <button
                             onClick={() => handleExport('pdf')}
-                            className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-md shadow-rose-500/20"
+                            disabled={!canExport}
+                            className={cn(
+                                'flex items-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-md',
+                                canExport
+                                    ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-rose-500/20'
+                                    : 'bg-slate-200 text-slate-500 cursor-not-allowed shadow-slate-200/20',
+                            )}
                         >
                             <Download size={14} /> PDF
                         </button>
@@ -207,8 +331,27 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                     ))}
                 </div>
 
+                {activeSubtabs.length > 1 && (
+                    <div className="flex gap-2 flex-wrap">
+                        {activeSubtabs.map((subtab) => (
+                            <button
+                                key={subtab}
+                                onClick={() => setPreferredSubtab(subtab)}
+                                className={cn(
+                                    'px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors',
+                                    resolvedTab === subtab
+                                        ? 'bg-healthcare-primary text-white'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700',
+                                )}
+                            >
+                                {SUBTAB_LABELS[subtab] || subtab}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {/* Date / day pickers (conditionally shown) */}
-                {(resolvedTab === 'expiry' || resolvedTab === 'recall') && (
+                {resolvedTab === 'expiry' && (
                     <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm w-fit">
                         <span className="text-[10px] font-black text-slate-400 uppercase">Days:</span>
                         <select
@@ -222,7 +365,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         </select>
                     </div>
                 )}
-                {['sales', 'tax', 'performance', 'staff', 'purchase'].includes(resolvedTab) && (
+                {['sales', 'tax', 'performance', 'purchase'].includes(resolvedTab) && (
                     <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm w-fit">
                         <Calendar size={14} className="text-slate-400" />
                         <input
@@ -250,15 +393,30 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         />
                     )}
                     {resolvedTab === 'stock' && <StockReports facilityId={effectiveFacilityId} />}
-                    {(resolvedTab === 'low-stock' || resolvedTab === 'reorder') && (
+                    {resolvedTab === 'low-stock' && (
                         <div className="w-full">
                             <ReorderSuggestions />
                         </div>
                     )}
-                    {(resolvedTab === 'expiry' || resolvedTab === 'recall') && (
+                    {resolvedTab === 'fast-moving' && (
+                        <FastSlowMovingReport facilityId={effectiveFacilityId} />
+                    )}
+                    {resolvedTab === 'demand-forecast' && (
+                        <DemandForecastReport facilityId={effectiveFacilityId} />
+                    )}
+                    {resolvedTab === 'near-expiry-actions' && (
+                        <NearExpiryActionsReport facilityId={effectiveFacilityId} />
+                    )}
+                    {resolvedTab === 'forecast-reorder' && (
+                        <ForecastReorderReport facilityId={effectiveFacilityId} />
+                    )}
+                    {resolvedTab === 'par' && (
+                        <ParReplenishmentReport facilityId={effectiveFacilityId} />
+                    )}
+                    {resolvedTab === 'expiry' && (
                         <ExpiryReport facilityId={effectiveFacilityId} />
                     )}
-                    {(resolvedTab === 'stock-movement' || resolvedTab === 'movement') && (
+                    {resolvedTab === 'movement' && (
                         <div className="-mx-6 -my-6">
                             <StockMovementsPage />
                         </div>
@@ -270,17 +428,17 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                             endDate={endDate}
                         />
                     )}
-                    {(resolvedTab === 'customer' || resolvedTab === 'loyalty') && (
+                    {resolvedTab === 'customer' && (
                         <LoyaltyReports facilityId={effectiveFacilityId} />
                     )}
-                    {(resolvedTab === 'purchase' || resolvedTab === 'procurement') && (
+                    {resolvedTab === 'purchase' && (
                         <PurchaseReport
                             facilityId={effectiveFacilityId}
                             startDate={startDate}
                             endDate={endDate}
                         />
                     )}
-                    {(resolvedTab === 'staff' || resolvedTab === 'performance') && (
+                    {resolvedTab === 'performance' && (
                         <PerformanceReports
                             facilityId={effectiveFacilityId}
                             startDate={startDate}
@@ -290,11 +448,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                     {resolvedTab === 'audit-logs' && (
                         <div className="-mx-6 -my-6">
                             <AuditLogsPage />
-                        </div>
-                    )}
-                    {resolvedTab === 'stock-movements-history' && (
-                        <div className="-mx-6 -my-6">
-                            <StockMovementsPage />
                         </div>
                     )}
                 </div>
@@ -529,6 +682,8 @@ function SalesReports({
     const [loading, setLoading] = useState(false);
     const [sales, setSales] = useState<any | null>(null);
     const [profit, setProfit] = useState<any | null>(null);
+    const [purchaseVsSales, setPurchaseVsSales] = useState<any | null>(null);
+    const [medicineMargin, setMedicineMargin] = useState<any | null>(null);
     const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
     const [selectedSale, setSelectedSale] = useState<any>(null);
 
@@ -537,7 +692,8 @@ function SalesReports({
         const load = async () => {
             setLoading(true);
             try {
-                const [salesResult, profitResult] = await Promise.allSettled([
+                const [salesResult, profitResult, purchaseVsSalesResult, medicineMarginResult] =
+                    await Promise.allSettled([
                     pharmacyService.getSalesReport(facilityId, {
                         start_date: startDate,
                         end_date: endDate,
@@ -545,6 +701,14 @@ function SalesReports({
                     pharmacyService.getProfitReport(facilityId, {
                         start_date: startDate,
                         end_date: endDate,
+                    }),
+                    pharmacyService.getPurchaseVsSalesReport(facilityId, {
+                        start_date: startDate || '',
+                        end_date: endDate || '',
+                    }),
+                    pharmacyService.getMedicineMarginReport(facilityId, {
+                        start_date: startDate || '',
+                        end_date: endDate || '',
                     }),
                 ]);
 
@@ -558,6 +722,18 @@ function SalesReports({
                     setProfit(profitResult.value);
                 } else {
                     setProfit(null);
+                }
+
+                if (purchaseVsSalesResult?.status === 'fulfilled') {
+                    setPurchaseVsSales(purchaseVsSalesResult.value);
+                } else {
+                    setPurchaseVsSales(null);
+                }
+
+                if (medicineMarginResult?.status === 'fulfilled') {
+                    setMedicineMargin(medicineMarginResult.value);
+                } else {
+                    setMedicineMargin(null);
                 }
             } finally {
                 setLoading(false);
@@ -600,6 +776,158 @@ function SalesReports({
                     icon={<DollarSign size={20} />}
                 />
             </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-sm font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">
+                            Purchase vs Sales
+                        </h3>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() =>
+                                    pharmacyService.downloadReport('purchase-vs-sales', 'excel', {
+                                        start_date: startDate,
+                                        end_date: endDate,
+                                    })
+                                }
+                                className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                            >
+                                Excel
+                            </button>
+                            <button
+                                onClick={() =>
+                                    pharmacyService.downloadReport('purchase-vs-sales', 'pdf', {
+                                        start_date: startDate,
+                                        end_date: endDate,
+                                    })
+                                }
+                                className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-rose-100 text-rose-700 hover:bg-rose-200"
+                            >
+                                PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
+                            <p className="text-[10px] font-black uppercase text-slate-400">Purchases</p>
+                            <p className="text-sm font-black text-slate-700 dark:text-slate-100">
+                                RWF {Number(purchaseVsSales?.totals?.purchase_amount || 0).toLocaleString()}
+                            </p>
+                        </div>
+                        <div className="rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
+                            <p className="text-[10px] font-black uppercase text-slate-400">Sales</p>
+                            <p className="text-sm font-black text-slate-700 dark:text-slate-100">
+                                RWF {Number(purchaseVsSales?.totals?.sales_amount || 0).toLocaleString()}
+                            </p>
+                        </div>
+                        <div className="rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
+                            <p className="text-[10px] font-black uppercase text-slate-400">Variance</p>
+                            <p className="text-sm font-black text-slate-700 dark:text-slate-100">
+                                RWF {Number(purchaseVsSales?.totals?.variance_amount || 0).toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="max-h-56 overflow-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                        <table className="w-full text-xs">
+                            <thead className="bg-white dark:bg-slate-900 sticky top-0">
+                                <tr className="text-slate-400 uppercase">
+                                    <th className="px-3 py-2 text-left">Date</th>
+                                    <th className="px-3 py-2 text-right">Purchase</th>
+                                    <th className="px-3 py-2 text-right">Sales</th>
+                                    <th className="px-3 py-2 text-right">Variance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(purchaseVsSales?.timeline || []).slice(0, 20).map((row: any) => (
+                                    <tr key={row.date} className="border-t border-slate-100 dark:border-slate-800">
+                                        <td className="px-3 py-2 text-slate-600 dark:text-slate-200">{row.date}</td>
+                                        <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-200">
+                                            {Number(row.purchase_amount || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-200">
+                                            {Number(row.sales_amount || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-3 py-2 text-right font-bold text-slate-700 dark:text-slate-100">
+                                            {Number(row.variance_amount || 0).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-sm font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">
+                            Medicine Margin
+                        </h3>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() =>
+                                    pharmacyService.downloadReport('medicine-margin', 'excel', {
+                                        start_date: startDate,
+                                        end_date: endDate,
+                                    })
+                                }
+                                className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                            >
+                                Excel
+                            </button>
+                            <button
+                                onClick={() =>
+                                    pharmacyService.downloadReport('medicine-margin', 'pdf', {
+                                        start_date: startDate,
+                                        end_date: endDate,
+                                    })
+                                }
+                                className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-rose-100 text-rose-700 hover:bg-rose-200"
+                            >
+                                PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div className="max-h-72 overflow-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                        <table className="w-full text-xs">
+                            <thead className="bg-white dark:bg-slate-900 sticky top-0">
+                                <tr className="text-slate-400 uppercase">
+                                    <th className="px-3 py-2 text-left">Medicine</th>
+                                    <th className="px-3 py-2 text-right">Qty</th>
+                                    <th className="px-3 py-2 text-right">Revenue</th>
+                                    <th className="px-3 py-2 text-right">COGS</th>
+                                    <th className="px-3 py-2 text-right">Margin</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(medicineMargin?.items || []).slice(0, 20).map((row: any) => (
+                                    <tr
+                                        key={row.medicine_id}
+                                        className="border-t border-slate-100 dark:border-slate-800"
+                                    >
+                                        <td className="px-3 py-2 font-semibold text-slate-700 dark:text-slate-100">
+                                            {row.medicine_name}
+                                        </td>
+                                        <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-200">
+                                            {Number(row.quantity_sold || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-200">
+                                            {Number(row.revenue || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-200">
+                                            {Number(row.cogs || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-3 py-2 text-right font-bold text-slate-700 dark:text-slate-100">
+                                            {Number(row.profit_margin_percent || 0).toFixed(1)}%
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div className="overflow-x-auto bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
                 <table className="w-full text-left text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-800/50">
@@ -700,102 +1028,567 @@ function SalesReports({
 }
 
 function StockReports({ facilityId }: { facilityId?: number }) {
+    type InventoryStatus =
+        | 'in_stock'
+        | 'low_stock'
+        | 'expiring_soon'
+        | 'expired'
+        | 'out_of_stock';
+    type StockSummary = {
+        total_medicines: number;
+        low_stock_count: number;
+        expiring_batches_count: number;
+        total_value: number;
+    };
+    type SortOption =
+        | 'name_asc'
+        | 'stock_desc'
+        | 'stock_asc'
+        | 'expiry_soonest'
+        | 'value_desc';
+    type DetailedInventoryRow = Medicine & {
+        status: InventoryStatus;
+        days_to_expiry: number | null;
+        inventory_value: number;
+        is_expired: boolean;
+        is_low_stock: boolean;
+        is_out_of_stock: boolean;
+        is_expiring_soon: boolean;
+    };
+
     const [loading, setLoading] = useState(false);
-    const [stock, setStock] = useState<any | null>(null);
+    const [stockSummary, setStockSummary] = useState<StockSummary | null>(null);
+    const [inventoryAging, setInventoryAging] = useState<any | null>(null);
+    const [medicines, setMedicines] = useState<Medicine[]>([]);
+    const [lowStockMedicineIds, setLowStockMedicineIds] = useState<number[]>([]);
+    const [asOfDate, setAsOfDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | InventoryStatus>('all');
+    const [dosageFormFilter, setDosageFormFilter] = useState('all');
+    const [expiryWindowDays, setExpiryWindowDays] = useState(90);
+    const [sortBy, setSortBy] = useState<SortOption>('name_asc');
+    const [rowLimit, setRowLimit] = useState(50);
 
     useEffect(() => {
         if (!facilityId) return;
+
+        let active = true;
         const load = async () => {
             setLoading(true);
             try {
-                const data = await pharmacyService.getStockReport(facilityId);
-                setStock(data);
+                const fetchAllMedicines = async (facility: number): Promise<Medicine[]> => {
+                    const pageSize = 200;
+                    const all: Medicine[] = [];
+                    let page = 1;
+                    let totalPages = 1;
+
+                    while (page <= totalPages) {
+                        const response = await pharmacyService.getMedicines({
+                            facility_id: facility,
+                            page,
+                            limit: pageSize,
+                            sort_by: 'expiry_date',
+                        });
+                        all.push(...(response.data || []));
+                        totalPages = response.meta?.totalPages || 1;
+                        page += 1;
+                    }
+
+                    return all;
+                };
+
+                const [summary, allMedicines, lowStockReport, agingReport] = await Promise.all([
+                    pharmacyService.getStockReport(facilityId),
+                    fetchAllMedicines(facilityId),
+                    pharmacyService.getLowStockReport(facilityId),
+                    pharmacyService.getInventoryAgingReport(facilityId, { as_of_date: asOfDate }),
+                ]);
+
+                if (!active) return;
+
+                const ids = Array.from(
+                    new Set(
+                        (lowStockReport?.items || [])
+                            .map((item) => Number(item.medicine_id))
+                            .filter((id) => Number.isFinite(id)),
+                    ),
+                );
+
+                setStockSummary(summary);
+                setMedicines(allMedicines);
+                setLowStockMedicineIds(ids);
+                setInventoryAging(agingReport);
+            } catch (error) {
+                console.error('Failed to load stock report details:', error);
             } finally {
-                setLoading(false);
+                if (active) setLoading(false);
             }
         };
-        load();
-    }, [facilityId]);
 
-    if (loading)
-        return <SkeletonTable rows={3} columns={3} headers={null} className="border-none shadow-none" />;
+        load();
+
+        return () => {
+            active = false;
+        };
+    }, [facilityId, asOfDate]);
+
+    const lowStockIdSet = useMemo(() => new Set(lowStockMedicineIds), [lowStockMedicineIds]);
+
+    const detailedRows = useMemo<DetailedInventoryRow[]>(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return medicines.map((medicine) => {
+            const stockQty = Number(medicine.stock_quantity || 0);
+            const costPrice = Number(medicine.cost_price || 0);
+            const inventoryValue = stockQty * costPrice;
+
+            let daysToExpiry: number | null = null;
+            if (medicine.expiry_date) {
+                const expiryDate = new Date(medicine.expiry_date);
+                if (!Number.isNaN(expiryDate.getTime())) {
+                    expiryDate.setHours(0, 0, 0, 0);
+                    daysToExpiry = Math.ceil(
+                        (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+                    );
+                }
+            }
+
+            const isExpired = daysToExpiry !== null && daysToExpiry < 0;
+            const isOutOfStock = stockQty <= 0;
+            const isLowStock = lowStockIdSet.has(medicine.id);
+            const isExpiringSoon =
+                daysToExpiry !== null &&
+                daysToExpiry >= 0 &&
+                daysToExpiry <= expiryWindowDays &&
+                !isExpired;
+
+            let status: InventoryStatus = 'in_stock';
+            if (isExpired) {
+                status = 'expired';
+            } else if (isOutOfStock) {
+                status = 'out_of_stock';
+            } else if (isLowStock) {
+                status = 'low_stock';
+            } else if (isExpiringSoon) {
+                status = 'expiring_soon';
+            }
+
+            return {
+                ...medicine,
+                status,
+                days_to_expiry: daysToExpiry,
+                inventory_value: inventoryValue,
+                is_expired: isExpired,
+                is_low_stock: isLowStock,
+                is_out_of_stock: isOutOfStock,
+                is_expiring_soon: isExpiringSoon,
+            };
+        });
+    }, [expiryWindowDays, lowStockIdSet, medicines]);
+
+    const dosageForms = useMemo(() => {
+        return [
+            'all',
+            ...Array.from(
+                new Set(
+                    medicines
+                        .map((med) => med.dosage_form?.toLowerCase())
+                        .filter((value): value is string => Boolean(value)),
+                ),
+            ),
+        ];
+    }, [medicines]);
+
+    const filteredRows = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        const rows = detailedRows.filter((row) => {
+            const matchesSearch =
+                !q ||
+                row.name.toLowerCase().includes(q) ||
+                row.code.toLowerCase().includes(q) ||
+                (row.brand_name || '').toLowerCase().includes(q);
+
+            const matchesStatus = statusFilter === 'all' || row.status === statusFilter;
+            const matchesDosage =
+                dosageFormFilter === 'all' ||
+                (row.dosage_form || '').toLowerCase() === dosageFormFilter;
+
+            return matchesSearch && matchesStatus && matchesDosage;
+        });
+
+        rows.sort((a, b) => {
+            if (sortBy === 'stock_desc') {
+                return Number(b.stock_quantity || 0) - Number(a.stock_quantity || 0);
+            }
+            if (sortBy === 'stock_asc') {
+                return Number(a.stock_quantity || 0) - Number(b.stock_quantity || 0);
+            }
+            if (sortBy === 'expiry_soonest') {
+                const left = a.days_to_expiry ?? Number.POSITIVE_INFINITY;
+                const right = b.days_to_expiry ?? Number.POSITIVE_INFINITY;
+                return left - right;
+            }
+            if (sortBy === 'value_desc') {
+                return b.inventory_value - a.inventory_value;
+            }
+            return a.name.localeCompare(b.name);
+        });
+
+        return rows;
+    }, [detailedRows, dosageFormFilter, searchQuery, sortBy, statusFilter]);
+
+    const visibleRows = useMemo(
+        () => filteredRows.slice(0, Math.max(1, rowLimit)),
+        [filteredRows, rowLimit],
+    );
+
+    const statusCounts = useMemo(() => {
+        return detailedRows.reduce<Record<InventoryStatus, number>>(
+            (acc, row) => {
+                acc[row.status] += 1;
+                return acc;
+            },
+            {
+                in_stock: 0,
+                low_stock: 0,
+                expiring_soon: 0,
+                expired: 0,
+                out_of_stock: 0,
+            },
+        );
+    }, [detailedRows]);
+
+    const filteredInventoryValue = useMemo(
+        () => filteredRows.reduce((sum, row) => sum + row.inventory_value, 0),
+        [filteredRows],
+    );
+
+    const statusLabel: Record<InventoryStatus, string> = {
+        in_stock: 'In Stock',
+        low_stock: 'Low Stock',
+        expiring_soon: 'Expiring Soon',
+        expired: 'Expired',
+        out_of_stock: 'Out of Stock',
+    };
+
+    const statusClassName: Record<InventoryStatus, string> = {
+        in_stock: 'bg-teal-50 text-teal-700 border-teal-100',
+        low_stock: 'bg-amber-50 text-amber-700 border-amber-100',
+        expiring_soon: 'bg-orange-50 text-orange-700 border-orange-100',
+        expired: 'bg-rose-50 text-rose-700 border-rose-100',
+        out_of_stock: 'bg-red-50 text-red-700 border-red-100',
+    };
+
+    if (loading) {
+        return (
+            <SkeletonTable
+                rows={8}
+                columns={10}
+                headers={[
+                    'Medicine',
+                    'Code',
+                    'Form',
+                    'Stock',
+                    'Cost',
+                    'Value',
+                    'Expiry Date',
+                    'Days Left',
+                    'Status',
+                    'Date Added',
+                ]}
+                className="border-none shadow-none"
+            />
+        );
+    }
 
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white dark:bg-slate-900 rounded-xl p-2.5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:shadow-md transition-all flex flex-col justify-center min-h-[70px]">
-                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <DollarSign size={32} className="text-teal-600" />
-                    </div>
-                    <div className="relative z-10 flex items-center justify-between">
-                        <div>
-                            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-0.5">
-                                Total Valuation
-                            </p>
-                            <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tighter">
-                                RWF {Number(stock?.total_value || 0).toLocaleString()}
-                            </h3>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
-                            <TrendingUp size={16} />
-                        </div>
-                    </div>
-                    <div className="relative z-10 mt-0.5">
-                        <p className="text-[9px] font-bold text-teal-600 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
-                            Active valuation
-                        </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+                <SummaryCard
+                    title="Total Valuation"
+                    value={`RWF ${Number(stockSummary?.total_value || 0).toLocaleString()}`}
+                    trend="Inventory value"
+                    icon={<DollarSign size={16} />}
+                />
+                <SummaryCard
+                    title="SKU Count"
+                    value={`${Number(stockSummary?.total_medicines || detailedRows.length)}`}
+                    trend="Tracked medicines"
+                    icon={<Package size={16} />}
+                    color="teal"
+                />
+                <SummaryCard
+                    title="Low Stock"
+                    value={`${Number(stockSummary?.low_stock_count || statusCounts.low_stock)}`}
+                    trend="Reorder candidates"
+                    icon={<AlertTriangle size={16} />}
+                    color="amber"
+                />
+                <SummaryCard
+                    title="Expiring / Expired"
+                    value={`${statusCounts.expiring_soon + statusCounts.expired}`}
+                    trend={`${expiryWindowDays}d window`}
+                    icon={<AlertTriangle size={16} />}
+                    color="rose"
+                />
+                <SummaryCard
+                    title="Out of Stock"
+                    value={`${statusCounts.out_of_stock}`}
+                    trend="Immediate action"
+                    icon={<Package size={16} />}
+                    color="rose"
+                />
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <h3 className="text-sm font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">
+                        Inventory Aging
+                    </h3>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="date"
+                            value={asOfDate}
+                            onChange={(e) => setAsOfDate(e.target.value)}
+                            className="px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200"
+                        />
+                        <button
+                            onClick={() =>
+                                pharmacyService.downloadReport('inventory-aging', 'excel', {
+                                    as_of_date: asOfDate,
+                                })
+                            }
+                            className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                        >
+                            Excel
+                        </button>
+                        <button
+                            onClick={() =>
+                                pharmacyService.downloadReport('inventory-aging', 'pdf', {
+                                    as_of_date: asOfDate,
+                                })
+                            }
+                            className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase bg-rose-100 text-rose-700 hover:bg-rose-200"
+                        >
+                            PDF
+                        </button>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 rounded-xl p-2.5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:shadow-md transition-all flex flex-col justify-center min-h-[70px]">
-                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Package size={32} className="text-blue-600" />
-                    </div>
-                    <div className="relative z-10 flex items-center justify-between">
-                        <div>
-                            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-0.5">
-                                SKU Count
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {(inventoryAging?.buckets || []).map((bucket: any) => (
+                        <div
+                            key={bucket.bucket}
+                            className="rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3"
+                        >
+                            <p className="text-[10px] font-black uppercase text-slate-400">
+                                {bucket.bucket} days
                             </p>
-                            <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tighter">
-                                {stock?.total_medicines || 0}
-                            </h3>
+                            <p className="text-sm font-black text-slate-700 dark:text-slate-100">
+                                {Number(bucket.quantity || 0).toLocaleString()} units
+                            </p>
+                            <p className="text-[11px] font-semibold text-slate-500">
+                                RWF {Number(bucket.value || 0).toLocaleString()}
+                            </p>
                         </div>
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                            <Package size={16} />
-                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
+                    <div className="relative md:col-span-2 xl:col-span-2">
+                        <Search
+                            size={16}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                        />
+                        <input
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search by medicine, code, brand..."
+                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-healthcare-primary/30"
+                        />
                     </div>
-                    <div className="relative z-10 mt-0.5">
-                        <p className="text-[9px] font-bold text-blue-600">Unique medicines</p>
+
+                    <select
+                        value={statusFilter}
+                        onChange={(e) =>
+                            setStatusFilter(e.target.value as 'all' | InventoryStatus)
+                        }
+                        className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                    >
+                        <option value="all">All Status</option>
+                        <option value="in_stock">In Stock</option>
+                        <option value="low_stock">Low Stock</option>
+                        <option value="expiring_soon">Expiring Soon</option>
+                        <option value="expired">Expired</option>
+                        <option value="out_of_stock">Out of Stock</option>
+                    </select>
+
+                    <select
+                        value={dosageFormFilter}
+                        onChange={(e) => setDosageFormFilter(e.target.value)}
+                        className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                    >
+                        {dosageForms.map((form) => (
+                            <option key={form} value={form}>
+                                {form === 'all' ? 'All Forms' : form}
+                            </option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={String(expiryWindowDays)}
+                        onChange={(e) => setExpiryWindowDays(Number(e.target.value))}
+                        className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                    >
+                        <option value="30">Expiry Window: 30d</option>
+                        <option value="60">Expiry Window: 60d</option>
+                        <option value="90">Expiry Window: 90d</option>
+                        <option value="180">Expiry Window: 180d</option>
+                    </select>
+
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as SortOption)}
+                        className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
+                    >
+                        <option value="name_asc">Sort: Name</option>
+                        <option value="stock_desc">Sort: Stock High-Low</option>
+                        <option value="stock_asc">Sort: Stock Low-High</option>
+                        <option value="expiry_soonest">Sort: Earliest Expiry</option>
+                        <option value="value_desc">Sort: Value High-Low</option>
+                    </select>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                        <span>
+                            Showing {visibleRows.length} / {filteredRows.length} filtered items
+                        </span>
+                        <span className="text-slate-300">•</span>
+                        <span>Total Inventory: {detailedRows.length}</span>
+                        <span className="text-slate-300">•</span>
+                        <span>Filtered Value: RWF {filteredInventoryValue.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <select
+                            value={String(rowLimit)}
+                            onChange={(e) => setRowLimit(Number(e.target.value))}
+                            className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider"
+                        >
+                            <option value="25">25 rows</option>
+                            <option value="50">50 rows</option>
+                            <option value="100">100 rows</option>
+                            <option value="200">200 rows</option>
+                        </select>
+                        <button
+                            onClick={() => {
+                                setSearchQuery('');
+                                setStatusFilter('all');
+                                setDosageFormFilter('all');
+                                setExpiryWindowDays(90);
+                                setSortBy('name_asc');
+                                setRowLimit(50);
+                            }}
+                            className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                        >
+                            Reset Filters
+                        </button>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 rounded-xl p-2.5 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:shadow-md transition-all flex flex-col justify-center min-h-[70px]">
-                    <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <AlertTriangle size={32} className="text-amber-600" />
-                    </div>
-                    <div className="relative z-10 flex items-center justify-between">
-                        <div>
-                            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-0.5">
-                                Stock Alerts
-                            </p>
-                            <h3 className="text-lg font-black text-slate-800 dark:text-white tracking-tighter">
-                                {Number(stock?.low_stock_count || 0) +
-                                    Number(stock?.expiring_batches_count || 0)}
-                            </h3>
-                        </div>
-                        <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                            <AlertTriangle size={16} />
-                        </div>
-                    </div>
-                    <div className="relative z-10 mt-0.5 flex gap-2">
-                        <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-100">
-                            {stock?.low_stock_count || 0} Low
-                        </span>
-                        <span className="text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-full border border-rose-100">
-                            {stock?.expiring_batches_count || 0} Exp
-                        </span>
-                    </div>
+                <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                        <thead className="bg-slate-50 dark:bg-slate-800/50">
+                            <tr className="text-[10px] uppercase tracking-wider text-slate-400">
+                                <th className="px-4 py-3 font-semibold whitespace-nowrap">Medicine</th>
+                                <th className="px-4 py-3 font-semibold whitespace-nowrap">Code</th>
+                                <th className="px-4 py-3 font-semibold whitespace-nowrap">Form</th>
+                                <th className="px-4 py-3 font-semibold text-right whitespace-nowrap">Stock</th>
+                                <th className="px-4 py-3 font-semibold text-right whitespace-nowrap">Cost</th>
+                                <th className="px-4 py-3 font-semibold text-right whitespace-nowrap">Value</th>
+                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">Expiry</th>
+                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">Days Left</th>
+                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">Status</th>
+                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">Date Added</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {visibleRows.length === 0 ? (
+                                <tr>
+                                    <td colSpan={10} className="px-6 py-12 text-center">
+                                        <p className="text-sm font-bold text-slate-500">
+                                            No inventory items match the selected filters.
+                                        </p>
+                                    </td>
+                                </tr>
+                            ) : (
+                                visibleRows.map((row) => (
+                                    <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                                        <td className="px-4 py-3 whitespace-nowrap">
+                                            <div className="font-black text-slate-800 dark:text-white">
+                                                {row.name}
+                                            </div>
+                                            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">
+                                                {row.brand_name || 'N/A'}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                            {row.code}
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
+                                            {row.dosage_form || 'N/A'}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-black text-slate-800 dark:text-white whitespace-nowrap">
+                                            {Number(row.stock_quantity || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
+                                            RWF {Number(row.cost_price || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-black text-healthcare-primary whitespace-nowrap">
+                                            RWF {Number(row.inventory_value || 0).toLocaleString()}
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
+                                            {row.expiry_date
+                                                ? new Date(row.expiry_date).toLocaleDateString()
+                                                : 'N/A'}
+                                        </td>
+                                        <td className="px-4 py-3 text-center font-semibold whitespace-nowrap">
+                                            {row.days_to_expiry === null ? (
+                                                <span className="text-slate-400">—</span>
+                                            ) : row.days_to_expiry < 0 ? (
+                                                <span className="text-rose-600">
+                                                    {Math.abs(row.days_to_expiry)}d overdue
+                                                </span>
+                                            ) : (
+                                                <span className="text-slate-700 dark:text-slate-200">
+                                                    {row.days_to_expiry}d
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 text-center whitespace-nowrap">
+                                            <span
+                                                className={cn(
+                                                    'px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider whitespace-nowrap',
+                                                    statusClassName[row.status],
+                                                )}
+                                            >
+                                                {statusLabel[row.status]}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-slate-500 dark:text-slate-400 text-xs font-semibold whitespace-nowrap">
+                                            {row.created_at
+                                                ? new Date(row.created_at).toLocaleDateString()
+                                                : 'N/A'}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -809,9 +1602,6 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                             ABC Classification based on consumption value
                         </p>
                     </div>
-                    <button className="px-4 py-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-colors">
-                        View Full Report
-                    </button>
                 </div>
                 <ABCAnalysisReport />
             </div>
