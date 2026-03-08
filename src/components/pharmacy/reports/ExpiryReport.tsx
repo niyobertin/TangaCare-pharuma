@@ -215,9 +215,9 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                 </div>
                 <SkeletonTable
                     rows={10}
-                    columns={6}
-                    headers={['Medicine', 'Batch', 'Expiry', 'Qty', 'Risk', 'Action']}
-                    columnAligns={['left', 'left', 'left', 'right', 'left', 'left']}
+                    columns={7}
+                    headers={['Medicine', 'Batch', 'Expiry', 'Days Left', 'Qty', 'Risk', 'Action']}
+                    columnAligns={['left', 'left', 'left', 'left', 'right', 'left', 'left']}
                     actions
                     className="border-none shadow-none"
                 />
@@ -420,13 +420,14 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                     <table className="w-full text-left text-sm">
                         <thead>
                             <tr className="bg-slate-50/50 dark:bg-slate-800/50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                                <th className="px-6 py-4">Medicine</th>
-                                <th className="px-6 py-4">Batch</th>
-                                <th className="px-6 py-4">Expiry</th>
-                                <th className="px-6 py-4 text-right">Quantity</th>
-                                <th className="px-6 py-4">Risk</th>
-                                <th className="px-6 py-4">Recommended Action</th>
-                                <th className="px-6 py-4 text-right">Trace</th>
+                                <th className="px-6 py-4 whitespace-nowrap">Medicine</th>
+                                <th className="px-6 py-4 whitespace-nowrap">Batch</th>
+                                <th className="px-6 py-4 whitespace-nowrap">Expiry</th>
+                                <th className="px-6 py-4 whitespace-nowrap">Days Left</th>
+                                <th className="px-6 py-4 text-right whitespace-nowrap">Quantity</th>
+                                <th className="px-6 py-4 whitespace-nowrap">Risk</th>
+                                <th className="px-6 py-4 whitespace-nowrap">Recommended Action</th>
+                                <th className="px-6 py-4 text-right whitespace-nowrap">Trace</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
@@ -445,24 +446,26 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                                             )}
                                         >
                                             <td className="px-6 py-5">
-                                                <div className="font-black text-healthcare-dark dark:text-white">
+                                                <div className="font-black text-healthcare-dark dark:text-white whitespace-nowrap">
                                                     {item.medicine_name}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">
-                                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">
+                                                <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">
                                                     #{item.batch_number}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5">
-                                                <div className="font-bold text-slate-700 dark:text-slate-200">
+                                                <div className="font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
                                                     {new Date(item.expiry_date).toLocaleDateString('en-US', {
                                                         month: 'short',
                                                         day: 'numeric',
                                                         year: 'numeric',
                                                     })}
                                                 </div>
-                                                <div className="text-[10px] font-bold text-slate-400 uppercase mt-1">
+                                            </td>
+                                            <td className="px-6 py-5">
+                                                <div className="text-[10px] font-bold text-slate-500 uppercase whitespace-nowrap">
                                                     {item.status === 'expired'
                                                         ? 'Expired'
                                                         : `${Math.max(daysLeft, 0)} days left`}
@@ -506,7 +509,7 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                                 })
                             ) : (
                                 <tr>
-                                    <td colSpan={7} className="px-8 py-20 text-center">
+                                    <td colSpan={8} className="px-8 py-20 text-center">
                                         <div className="max-w-xs mx-auto">
                                             <div className="w-16 h-16 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-6 opacity-40">
                                                 <CheckCircle size={32} className="text-healthcare-primary" />

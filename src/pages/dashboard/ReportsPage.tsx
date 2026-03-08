@@ -39,6 +39,37 @@ export interface ReportsPageProps {
     defaultTab?: string;
 }
 
+type ReportGroupKey = 'operations' | 'inventory-intelligence' | 'business-compliance';
+
+const REPORT_TAB_GROUPS: Array<{
+    key: ReportGroupKey;
+    label: string;
+    tabs: readonly string[];
+}> = [
+    {
+        key: 'operations',
+        label: 'Operations',
+        tabs: ['sales', 'stock', 'low-stock', 'movement', 'purchase'],
+    },
+    {
+        key: 'inventory-intelligence',
+        label: 'Inventory Intelligence',
+        tabs: [
+            'expiry',
+            'near-expiry-actions',
+            'fast-moving',
+            'demand-forecast',
+            'forecast-reorder',
+            'par',
+        ],
+    },
+    {
+        key: 'business-compliance',
+        label: 'Business & Compliance',
+        tabs: ['performance', 'customer', 'tax', 'audit-logs'],
+    },
+];
+
 const SUBTAB_ALIASES: Record<string, string> = {
     returns: 'sales',
     profit: 'sales',
@@ -49,6 +80,9 @@ const SUBTAB_ALIASES: Record<string, string> = {
     procurement: 'purchase',
     staff: 'performance',
     loyalty: 'customer',
+    operations: 'operations',
+    intelligence: 'inventory-intelligence',
+    compliance: 'business-compliance',
 };
 
 function normalizeSubtab(tab: string): string {
@@ -56,29 +90,20 @@ function normalizeSubtab(tab: string): string {
     return SUBTAB_ALIASES[key] || key;
 }
 
-function mapDefaultTabToTopLevel(tab: string): string {
+function groupForTab(tab: string): ReportGroupKey {
     const normalized = normalizeSubtab(tab);
-    if (['sales'].includes(normalized)) return 'sales';
-    if (
-        [
-            'stock',
-            'low-stock',
-            'expiry',
-            'movement',
-            'fast-moving',
-            'demand-forecast',
-            'forecast-reorder',
-            'near-expiry-actions',
-            'par',
-        ].includes(normalized)
-    ) {
-        return 'inventory';
-    }
-    if (['purchase'].includes(normalized)) return 'procurement';
-    if (['performance', 'customer'].includes(normalized)) return 'performance';
-    if (normalized === 'tax') return 'tax';
-    if (normalized === 'audit-logs') return 'audit-logs';
-    return normalized;
+    if (normalized === 'operations') return 'operations';
+    if (normalized === 'inventory-intelligence') return 'inventory-intelligence';
+    if (normalized === 'business-compliance') return 'business-compliance';
+
+    const group = REPORT_TAB_GROUPS.find((item) => item.tabs.includes(normalized));
+    return group?.key || 'operations';
+}
+
+function defaultSubtabForGroup(group: ReportGroupKey): string {
+    if (group === 'inventory-intelligence') return 'expiry';
+    if (group === 'business-compliance') return 'performance';
+    return 'stock';
 }
 
 export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
@@ -88,8 +113,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
     const effectiveFacilityId = facilityId ?? user?.facility_id;
     const navigate = useNavigate();
 
-    // Active top-level bucket is derived from the route-level defaultTab.
-    const [activeTab, setActiveTab] = useState<string>(mapDefaultTabToTopLevel(defaultTab));
+    const [activeGroup, setActiveGroup] = useState<ReportGroupKey>(groupForTab(defaultTab));
     const [preferredSubtab, setPreferredSubtab] = useState<string>(normalizeSubtab(defaultTab));
 
     const SUBTAB_LABELS: Record<string, string> = {
@@ -110,43 +134,20 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         'audit-logs': 'Audit Logs',
     };
 
-    // Determine which sub-report to load for the active tab
-    function defaultSubtabFor(tab: string): string {
-        if (tab === 'inventory') return 'stock';
-        if (tab === 'procurement') return 'purchase';
-        if (tab === 'performance') return 'performance';
-        if (tab === 'tax') return 'tax';
-        if (tab === 'audit-logs') return 'audit-logs';
-        return 'sales'; // 'sales' tab
-    }
-
     useEffect(() => {
-        setActiveTab(mapDefaultTabToTopLevel(defaultTab));
+        setActiveGroup(groupForTab(defaultTab));
         setPreferredSubtab(normalizeSubtab(defaultTab));
     }, [defaultTab]);
 
-    // Unified report tab menu to replace sidebar report sections.
-    const activeSubtabs = [
-        'sales',
-        'stock',
-        'low-stock',
-        'expiry',
-        'movement',
-        'fast-moving',
-        'demand-forecast',
-        'forecast-reorder',
-        'near-expiry-actions',
-        'par',
-        'purchase',
-        'performance',
-        'customer',
-        'tax',
-        'audit-logs',
-    ] as const;
+    const activeGroupConfig = useMemo(
+        () => REPORT_TAB_GROUPS.find((group) => group.key === activeGroup) || REPORT_TAB_GROUPS[0],
+        [activeGroup],
+    );
+    const activeSubtabs = activeGroupConfig.tabs;
     const normalizedPreferredSubtab = normalizeSubtab(preferredSubtab);
-    const resolvedTab = activeSubtabs.includes(normalizedPreferredSubtab as any)
+    const resolvedTab = activeSubtabs.includes(normalizedPreferredSubtab)
         ? normalizedPreferredSubtab
-        : defaultSubtabFor(activeTab);
+        : defaultSubtabForGroup(activeGroup);
 
     const [days, setDays] = useState(30);
     const routeForSubtab = (tab: string): string => {
@@ -164,7 +165,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         if (tab === 'performance') return '/app/analytics/performance';
         if (tab === 'customer') return '/app/analytics/loyalty';
         if (tab === 'tax') return '/app/analytics/tax';
-        if (tab === 'audit-logs') return '/app/audit-logs';
+        if (tab === 'audit-logs') return '/app/analytics/audit-logs';
         return '/app/analytics/inventory';
     };
 
@@ -294,25 +295,34 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                 </div>
 
                 {activeSubtabs.length > 1 && (
-                    <div className="flex gap-2 flex-wrap">
-                        {activeSubtabs.map((subtab) => (
-                            <button
-                                key={subtab}
-                                onClick={() => {
-                                    setPreferredSubtab(subtab);
-                                    setActiveTab(mapDefaultTabToTopLevel(subtab));
-                                    navigate({ to: routeForSubtab(subtab) as any, search: {} as any });
-                                }}
-                                className={cn(
-                                    'px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors',
-                                    resolvedTab === subtab
-                                        ? 'bg-healthcare-primary text-white'
-                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700',
-                                )}
-                            >
-                                {SUBTAB_LABELS[subtab] || subtab}
-                            </button>
-                        ))}
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 whitespace-nowrap mb-2">
+                            {activeGroupConfig.label}
+                        </p>
+                        <div className="overflow-x-auto">
+                            <div className="flex gap-2 min-w-max">
+                                {activeSubtabs.map((subtab) => (
+                                    <button
+                                        key={subtab}
+                                        onClick={() => {
+                                            setPreferredSubtab(subtab);
+                                            navigate({
+                                                to: routeForSubtab(subtab) as any,
+                                                search: {} as any,
+                                            });
+                                        }}
+                                        className={cn(
+                                            'px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors',
+                                            resolvedTab === subtab
+                                                ? 'bg-healthcare-primary text-white'
+                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700',
+                                        )}
+                                    >
+                                        {SUBTAB_LABELS[subtab] || subtab}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 )}
 

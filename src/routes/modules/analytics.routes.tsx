@@ -22,8 +22,26 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
         path: '/',
         component: () => {
             const Nav = Navigate as any;
-            return <Nav to="/app/analytics/inventory" search={{}} />;
+            return <Nav to="/app/analytics/operations" search={{}} />;
         },
+    });
+
+    const analyticsOperationsRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'operations',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="operations" />),
+    });
+
+    const analyticsIntelligenceRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'intelligence',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="inventory-intelligence" />),
+    });
+
+    const analyticsComplianceRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'compliance',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="business-compliance" />),
     });
 
     const analyticsSalesRoute = createRoute({
@@ -125,9 +143,18 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
         component: () => withRouteSuspense(<ReportsPage defaultTab="par" />),
     });
 
+    const analyticsAuditLogsRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'audit-logs',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="audit-logs" />),
+    });
+
     return [
         analyticsRoute.addChildren([
             analyticsIndexRoute,
+            analyticsOperationsRoute,
+            analyticsIntelligenceRoute,
+            analyticsComplianceRoute,
             analyticsSalesRoute,
             analyticsReturnsRoute,
             analyticsInventoryRoute,
@@ -144,6 +171,7 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
             analyticsForecastReorderRoute,
             analyticsNearExpiryActionsRoute,
             analyticsParRoute,
+            analyticsAuditLogsRoute,
         ]),
     ];
 };
