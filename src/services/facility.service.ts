@@ -7,6 +7,10 @@ import type {
     Department,
     StorageLocation,
     CreateStorageLocationDto,
+    ColdChainOverview,
+    ColdChainTelemetry,
+    ColdChainExcursion,
+    ColdChainExcursionStatus,
     PaginatedResponse,
 } from '../types/pharmacy';
 import { normalizePaginatedResponse } from './utils';
@@ -145,5 +149,60 @@ export const facilityService = {
 
     async deleteStorageLocation(id: number): Promise<void> {
         await api.delete(`/pharmacy/storage-locations/${id}`);
+    },
+
+    async getColdChainOverview(): Promise<ColdChainOverview> {
+        const response = await api.get<any>('/pharmacy/cold-chain/overview');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getColdChainExcursions(params?: {
+        status?: ColdChainExcursionStatus;
+        location_id?: number;
+        limit?: number;
+    }): Promise<ColdChainExcursion[]> {
+        const response = await api.get<any>('/pharmacy/cold-chain/excursions', { params });
+        const data = (response.data as any).data ?? response.data;
+        return Array.isArray(data) ? data : [];
+    },
+
+    async acknowledgeColdChainExcursion(id: number, notes?: string): Promise<ColdChainExcursion> {
+        const response = await api.patch<any>(`/pharmacy/cold-chain/excursions/${id}/acknowledge`, { notes });
+        return (response.data as any).data ?? response.data;
+    },
+
+    async resolveColdChainExcursion(
+        id: number,
+        payload: { action_taken: string; notes?: string },
+    ): Promise<ColdChainExcursion> {
+        const response = await api.patch<any>(`/pharmacy/cold-chain/excursions/${id}/resolve`, payload);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async logColdChainTelemetry(
+        locationId: number,
+        payload: {
+            temperature_c: number;
+            humidity_percent?: number;
+            source?: 'manual' | 'sensor';
+            notes?: string;
+            recorded_at?: string;
+        },
+    ): Promise<{
+        telemetry: ColdChainTelemetry;
+        excursion: ColdChainExcursion | null;
+        within_range: boolean;
+    }> {
+        const response = await api.post<any>(`/pharmacy/cold-chain/locations/${locationId}/telemetry`, payload);
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getColdChainTelemetryHistory(
+        locationId: number,
+        params?: { limit?: number },
+    ): Promise<ColdChainTelemetry[]> {
+        const response = await api.get<any>(`/pharmacy/cold-chain/locations/${locationId}/telemetry`, { params });
+        const data = (response.data as any).data ?? response.data;
+        return Array.isArray(data) ? data : [];
     },
 };

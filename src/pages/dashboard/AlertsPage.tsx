@@ -23,6 +23,20 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+const ACTIONS_BY_ALERT_TYPE: Record<string, string[]> = {
+    low_stock: ['Restocked', 'PO Created', 'Transferred', 'Adjusted Count', 'False Alarm'],
+    expiry_soon: ['Discounted', 'Transferred', 'Returned to Supplier', 'Quarantined', 'False Alarm'],
+    expired: ['Disposed', 'Returned to Supplier', 'Quarantined', 'False Alarm'],
+    controlled_drug_threshold: ['Investigated', 'Adjusted Count', 'Escalated', 'False Alarm'],
+    reorder_suggestion: ['PO Created', 'Transferred', 'Deferred', 'False Alarm'],
+};
+
+const normalizeAlertType = (type: string | undefined): string => {
+    if (!type) return 'low_stock';
+    if (type === 'expiry') return 'expiry_soon';
+    return type;
+};
+
 // Modal Component
 function ResolveAlertModal({
     alert,
@@ -33,18 +47,39 @@ function ResolveAlertModal({
     onClose: () => void;
     onResolve: (id: number, data: { action_taken: string; action_reason: string }) => Promise<void>;
 }) {
-    const [actionTaken, setActionTaken] = useState('');
+    const alertType = normalizeAlertType(alert.type);
+    const actionOptions =
+        ACTIONS_BY_ALERT_TYPE[alertType] || ACTIONS_BY_ALERT_TYPE.low_stock;
+
+    const [actionTaken, setActionTaken] = useState(actionOptions[0] || '');
     const [reason, setReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formError, setFormError] = useState('');
+
+    useEffect(() => {
+        setActionTaken(actionOptions[0] || '');
+        setFormError('');
+    }, [alert.id, alertType]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        const normalizedReason = reason.trim();
+        if (!actionTaken) {
+            setFormError('Action is required.');
+            return;
+        }
+        if (normalizedReason.length < 10) {
+            setFormError('Reason must be at least 10 characters.');
+            return;
+        }
+
         setIsSubmitting(true);
+        setFormError('');
         try {
-            await onResolve(alert.id, { action_taken: actionTaken, action_reason: reason });
+            await onResolve(alert.id, { action_taken: actionTaken, action_reason: normalizedReason });
             onClose();
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            setFormError(error?.response?.data?.message || 'Failed to resolve alert.');
         } finally {
             setIsSubmitting(false);
         }
@@ -87,14 +122,15 @@ function ResolveAlertModal({
                             onChange={(e) => setActionTaken(e.target.value)}
                             className="w-full p-3 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl font-medium text-sm focus:border-healthcare-primary outline-none"
                         >
-                            <option value="">Select Action...</option>
-                            <option value="Restocked">Restocked / Ordered</option>
-                            <option value="Disposed">Disposed Expired Items</option>
-                            <option value="Returned">Returned to Supplier</option>
-                            <option value="Discounted">Applied Discount</option>
-                            <option value="Ignored">False Alarm / Ignored</option>
-                            <option value="Other">Other</option>
+                            {actionOptions.map((action) => (
+                                <option key={action} value={action}>
+                                    {action}
+                                </option>
+                            ))}
                         </select>
+                        <p className="text-[11px] text-slate-500">
+                            Suggested: <span className="font-semibold">{actionOptions[0]}</span>
+                        </p>
                     </div>
 
                     <div className="space-y-2">
@@ -103,12 +139,19 @@ function ResolveAlertModal({
                         </label>
                         <textarea
                             required
+                            minLength={10}
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
                             placeholder="Describe existing conditions or specific details..."
                             className="w-full p-3 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-xl font-medium text-sm focus:border-healthcare-primary outline-none min-h-[100px]"
                         />
                     </div>
+
+                    {formError && (
+                        <div className="text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
+                            {formError}
+                        </div>
+                    )}
 
                     <div className="pt-4 flex gap-3">
                         <button
@@ -406,6 +449,18 @@ export function AlertsPage() {
                                                 </div>
                                             )}
                                     </div>
+                                    {alert.status === 'resolved' && alert.action_taken && (
+                                        <div className="mt-2 text-[11px]">
+                                            <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded px-2 py-1">
+                                                Resolved: {alert.action_taken}
+                                            </span>
+                                            {alert.action_reason && (
+                                                <p className="mt-1 text-slate-500 font-medium">
+                                                    {alert.action_reason}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-2 self-end md:self-center">
                                     {alert.status === 'active' &&

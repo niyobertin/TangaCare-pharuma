@@ -23,7 +23,6 @@ import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import type { Medicine } from '../../types/pharmacy';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { useDebounce } from '../../hooks/useDebounce';
-import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../../context/AuthContext';
@@ -636,14 +635,24 @@ export function InventoryPage() {
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {loading ? (
-                                    <SkeletonTable
-                                        rows={5}
-                                        columns={11}
-                                        headers={['', 'ID', 'Medicine Details', 'Dosage Form', 'Selling Price', 'Cost Price', 'Total Stock', 'Expiry Date', 'Location', 'Date Added', 'Status']}
-                                        columnAligns={['left', 'left', 'left', 'center', 'right', 'right', 'right', 'center', 'center', 'center', 'center', 'right']}
-                                        actions
-                                        className="border-none shadow-none"
-                                    />
+                                    Array.from({ length: 5 }).map((_, rowIdx) => (
+                                        <tr key={`skeleton-${rowIdx}`} className="animate-pulse">
+                                            {Array.from({ length: 12 }).map((__, colIdx) => (
+                                                <td key={`skeleton-${rowIdx}-${colIdx}`} className="px-4 py-4">
+                                                    <div
+                                                        className={cn(
+                                                            'h-3 rounded bg-slate-200 dark:bg-slate-700',
+                                                            colIdx === 0
+                                                                ? 'w-4'
+                                                                : colIdx === 2
+                                                                    ? 'w-36'
+                                                                    : 'w-20',
+                                                        )}
+                                                    />
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))
                                 ) : medicines.length === 0 ? (
                                     <tr>
                                         <td colSpan={12} className="px-6 py-20 text-center">

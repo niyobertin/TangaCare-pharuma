@@ -59,6 +59,37 @@ export const saleService = {
         return items.slice(0, limit) as Sale[];
     },
 
+    async getSubstitutionRecommendations(
+        medicineId: number,
+        facilityId?: number,
+    ): Promise<
+        Array<{
+            id: number;
+            name: string;
+            selling_price: number;
+            total_stock: number;
+            reason: string;
+        }>
+    > {
+        const response = await api.get<any>(`/pharmacy/dispensing/substitutions/${medicineId}`, {
+            params: facilityId ? { facilityId } : undefined,
+        });
+        const payload = (response.data as any).data ?? response.data;
+        const alternatives = Array.isArray(payload?.alternatives)
+            ? payload.alternatives
+            : Array.isArray(payload)
+              ? payload
+              : [];
+
+        return alternatives.map((item: any) => ({
+            id: Number(item?.id ?? item?.medicine_id ?? 0),
+            name: String(item?.name ?? item?.medicine_name ?? 'Unknown'),
+            selling_price: Number(item?.selling_price ?? 0),
+            total_stock: Number(item?.total_stock ?? 0),
+            reason: String(item?.reason ?? 'Same therapeutic category with available stock'),
+        }));
+    },
+
     async getFacilityMedicinePrice(medicineId: number): Promise<number | null> {
         try {
             const response = await api.get<any>(`/pharmacy/facility-settings/medicine/${medicineId}/price`);

@@ -20,10 +20,20 @@ interface StockAdjustmentModalProps {
     onSuccess: () => void;
 }
 
+type UiAdjustmentType = 'increase' | 'decrease' | 'damage' | 'expired' | 'return';
+
+const reasonByType: Record<UiAdjustmentType, 'correction' | 'damage' | 'expiry' | 'customer_return'> = {
+    increase: 'correction',
+    decrease: 'correction',
+    damage: 'damage',
+    expired: 'expiry',
+    return: 'customer_return',
+};
+
 const adjustmentSchema = yup.object({
     type: yup.string().oneOf(['increase', 'decrease', 'damage', 'expired', 'return']).required(),
     quantity: yup.number().min(1, 'Quantity must be at least 1').required('Required'),
-    reason: yup.string().required('Reason is required').min(5, 'Reason must be detailed'),
+    notes: yup.string().required('Notes are required').min(5, 'Notes must be detailed'),
 });
 
 export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustmentModalProps) {
@@ -45,7 +55,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
 
     const adjustmentType = watch('type');
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: { type: UiAdjustmentType; quantity: number; notes: string }) => {
         if (!user?.facility_id) {
             toast.error('User facility not found');
             return;
@@ -65,7 +75,8 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                 batch_id: batch.id,
                 type: data.type,
                 quantity: data.quantity,
-                reason: data.reason,
+                reason: reasonByType[data.type],
+                notes: data.notes,
             });
             toast.success('Stock adjusted successfully');
             onSuccess();
@@ -168,16 +179,16 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                         {}
                         <div>
                             <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
-                                Reason / Notes
+                                Notes
                             </label>
                             <textarea
-                                {...register('reason')}
+                                {...register('notes')}
                                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                 rows={2}
                                 placeholder="Explain why this adjustment is being made..."
                             />
-                            {errors.reason && (
-                                <p className="text-red-500 text-xs mt-1">{errors.reason.message}</p>
+                            {errors.notes && (
+                                <p className="text-red-500 text-xs mt-1">{errors.notes.message}</p>
                             )}
                         </div>
 

@@ -6,18 +6,11 @@ import {
     Navigate,
 } from '@tanstack/react-router';
 import React from 'react';
-import { MainLayout } from '../components/layout/MainLayout';
-import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { GlobalLoading } from '../components/ui/GlobalLoading';
-import { AuthLayout } from '../components/layout/AuthLayout';
-import { LandingPage } from '../pages/marketing/LandingPage';
-import { PublicPurchaseOrder } from '../pages/public/PublicPurchaseOrder';
-import { ModulePlaceholder } from '../pages/shared/ModulePlaceholder';
-import { OnboardingPage } from '../pages/auth/OnboardingPage';
-import { AlertsPage } from '../pages/dashboard/AlertsPage';
 import { z } from 'zod';
 import { RequirePermission } from '../components/auth/RequirePermission';
 import { PERMISSIONS } from '../types/auth';
+import { lazyNamed, withRouteSuspense } from './lazy';
 
 // Modular Route Creators
 import { createInventoryRoutes } from './modules/inventory.routes';
@@ -26,6 +19,22 @@ import { createSalesRoutes } from './modules/sales.routes';
 import { createProcurementRoutes } from './modules/procurement.routes';
 import { createAdminRoutes } from './modules/admin.routes';
 import { createAnalyticsRoutes } from './modules/analytics.routes';
+
+const MainLayout = lazyNamed(() => import('../components/layout/MainLayout'), 'MainLayout');
+const AuthLayout = lazyNamed(() => import('../components/layout/AuthLayout'), 'AuthLayout');
+const DashboardPage = lazyNamed(() => import('../pages/dashboard/DashboardPage'), 'DashboardPage');
+const LandingPage = lazyNamed(() => import('../pages/marketing/LandingPage'), 'LandingPage');
+const DocsPage = lazyNamed(() => import('../pages/marketing/DocsPage'), 'DocsPage');
+const PrivacyPolicyPage = lazyNamed(
+    () => import('../pages/marketing/PrivacyPolicyPage'),
+    'PrivacyPolicyPage',
+);
+const TermsOfUsePage = lazyNamed(() => import('../pages/marketing/TermsOfUsePage'), 'TermsOfUsePage');
+const PublicPurchaseOrder = lazyNamed(() => import('../pages/public/PublicPurchaseOrder'), 'PublicPurchaseOrder');
+const OnboardingPage = lazyNamed(() => import('../pages/auth/OnboardingPage'), 'OnboardingPage');
+const AlertsPage = lazyNamed(() => import('../pages/dashboard/AlertsPage'), 'AlertsPage');
+const UsersPage = lazyNamed(() => import('../pages/dashboard/UsersPage'), 'UsersPage');
+const SettingsPage = lazyNamed(() => import('../pages/dashboard/SettingsPage'), 'SettingsPage');
 
 const RootComponent = () => (
     <React.Fragment>
@@ -54,7 +63,25 @@ const rootRoute = createRootRoute({
 const rootIndexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/',
-    component: LandingPage,
+    component: () => withRouteSuspense(<LandingPage />),
+});
+
+const docsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/docs',
+    component: () => withRouteSuspense(<DocsPage />),
+});
+
+const privacyPolicyRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/privacy-policy',
+    component: () => withRouteSuspense(<PrivacyPolicyPage />),
+});
+
+const termsOfUseRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/terms-of-use',
+    component: () => withRouteSuspense(<TermsOfUsePage />),
 });
 
 const loginFallbackRoute = createRoute({
@@ -67,22 +94,24 @@ const loginFallbackRoute = createRoute({
 const appLayoutRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/app',
-    component: () => <MainLayout />,
+    component: () => withRouteSuspense(<MainLayout />),
 });
 
 const indexRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: '/',
-    component: DashboardPage,
+    component: () => withRouteSuspense(<DashboardPage />),
 });
 
 const alertsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'alerts',
     component: () => (
-        <RequirePermission permission={PERMISSIONS.ALERTS_READ}>
-            <AlertsPage />
-        </RequirePermission>
+        withRouteSuspense(
+            <RequirePermission permission={PERMISSIONS.ALERTS_READ}>
+                <AlertsPage />
+            </RequirePermission>,
+        )
     ),
     validateSearch: (search: Record<string, unknown>) => {
         return z.object({
@@ -96,19 +125,25 @@ const alertsRoute = createRoute({
 const employeeRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'employees',
-    component: () => <ModulePlaceholder title="Employee Directory" description="Manage pharmacy staff and permissions." />,
+    component: () => (
+        withRouteSuspense(
+            <RequirePermission permissions={[PERMISSIONS.USERS_READ, PERMISSIONS.USERS_MANAGE]}>
+                <UsersPage />
+            </RequirePermission>,
+        )
+    ),
 });
 
 const settingsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'settings',
-    component: () => <ModulePlaceholder title="General Settings" description="Configure system-wide pharmacy preferences." />,
+    component: () => withRouteSuspense(<SettingsPage />),
 });
 
 const onboardingRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'onboarding',
-    component: OnboardingPage,
+    component: () => withRouteSuspense(<OnboardingPage />),
 });
 
 // Compose App Route Tree
@@ -129,7 +164,7 @@ const appRouteTree = appLayoutRoute.addChildren([
 const authLayoutRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/auth',
-    component: () => <AuthLayout />,
+    component: () => withRouteSuspense(<AuthLayout />),
 });
 
 const authRouteTree = authLayoutRoute.addChildren(createAuthRoutes(authLayoutRoute, rootRoute));
@@ -144,7 +179,7 @@ const publicRoute = createRoute({
 const publicPORoute = createRoute({
     getParentRoute: () => publicRoute,
     path: 'po/$token',
-    component: PublicPurchaseOrder,
+    component: () => withRouteSuspense(<PublicPurchaseOrder />),
 });
 
 const publicRouteTree = publicRoute.addChildren([publicPORoute]);
@@ -152,6 +187,9 @@ const publicRouteTree = publicRoute.addChildren([publicPORoute]);
 // Final Route Tree
 const routeTree = rootRoute.addChildren([
     rootIndexRoute,
+    docsRoute,
+    privacyPolicyRoute,
+    termsOfUseRoute,
     loginFallbackRoute,
     appRouteTree,
     authRouteTree,

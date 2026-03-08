@@ -1,0 +1,127 @@
+import { useEffect, useMemo, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
+import { pharmacyService } from '../../../services/pharmacy.service';
+import { SkeletonTable } from '../../ui/SkeletonTable';
+
+interface NearExpiryActionsReportProps {
+    facilityId?: number;
+}
+
+export function NearExpiryActionsReport({ facilityId }: NearExpiryActionsReportProps) {
+    const [horizonDays, setHorizonDays] = useState(90);
+    const [loading, setLoading] = useState(false);
+    const [data, setData] = useState<any | null>(null);
+
+    useEffect(() => {
+        if (!facilityId) return;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const result = await pharmacyService.getNearExpiryActions({
+                    facilityId,
+                    horizon_days: horizonDays,
+                });
+                setData(result);
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, [facilityId, horizonDays]);
+
+    const rows = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
+
+    if (!facilityId) {
+        return <div className="text-sm text-slate-500">Select a facility to view this report.</div>;
+    }
+
+    if (loading) {
+        return (
+            <SkeletonTable
+                rows={8}
+                columns={8}
+                headers={['Medicine', 'Batch', 'Days', 'Qty', 'Risk', 'Action', 'Reason', 'Value']}
+                className="border-none shadow-none"
+            />
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-rose-500" />
+                    <h3 className="text-sm font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">
+                        Near-Expiry Action Plan
+                    </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                    <select
+                        value={String(horizonDays)}
+                        onChange={(e) => setHorizonDays(Number(e.target.value))}
+                        className="px-2 py-1 rounded-md text-[11px] font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                    >
+                        <option value="45">Horizon: 45d</option>
+                        <option value="90">Horizon: 90d</option>
+                        <option value="120">Horizon: 120d</option>
+                    </select>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {['markdown', 'transfer', 'vendor_return', 'disposal', 'monitor'].map((actionType) => (
+                    <div key={actionType} className="rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2 bg-white dark:bg-slate-900">
+                        <p className="text-[10px] font-black uppercase text-slate-400">{actionType.replace('_', ' ')}</p>
+                        <p className="text-lg font-black text-slate-700 dark:text-slate-100">
+                            {Number(data?.summary?.[actionType] || 0)}
+                        </p>
+                    </div>
+                ))}
+            </div>
+
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                <table className="w-full text-sm">
+                    <thead className="bg-slate-50 dark:bg-slate-800/50">
+                        <tr className="text-[10px] uppercase tracking-widest text-slate-400">
+                            <th className="px-4 py-3 text-left font-black">Medicine</th>
+                            <th className="px-4 py-3 text-left font-black">Batch</th>
+                            <th className="px-4 py-3 text-right font-black">Days</th>
+                            <th className="px-4 py-3 text-right font-black">Qty</th>
+                            <th className="px-4 py-3 text-left font-black">Risk</th>
+                            <th className="px-4 py-3 text-left font-black">Action</th>
+                            <th className="px-4 py-3 text-left font-black">Reason</th>
+                            <th className="px-4 py-3 text-right font-black">Risk Value</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {rows.map((item: any) => (
+                            <tr key={item.stock_id}>
+                                <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">{item.medicine_name}</td>
+                                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{item.batch_number}</td>
+                                <td className="px-4 py-3 text-right">{Number(item.days_to_expiry || 0)}</td>
+                                <td className="px-4 py-3 text-right">{Number(item.quantity || 0).toLocaleString()}</td>
+                                <td className="px-4 py-3">
+                                    <span className="px-2 py-1 rounded-full text-[10px] font-black uppercase bg-rose-50 text-rose-700">
+                                        {String(item.risk_level || 'low')}
+                                    </span>
+                                </td>
+                                <td className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
+                                    {String(item.recommended_action || '').replace('_', ' ')}
+                                </td>
+                                <td className="px-4 py-3 text-xs text-slate-500">{item.action_reason}</td>
+                                <td className="px-4 py-3 text-right font-semibold">RWF {Number(item.risk_value || 0).toLocaleString()}</td>
+                            </tr>
+                        ))}
+                        {rows.length === 0 && (
+                            <tr>
+                                <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                                    No near-expiry action candidates found.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}

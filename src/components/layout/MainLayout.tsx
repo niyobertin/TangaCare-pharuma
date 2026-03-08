@@ -218,6 +218,19 @@ const NAV_ITEMS: NavItem[] = [
             'ADMIN',
         ],
         allowedPermissions: ['reports:read'],
+        children: [
+            { to: '/app/analytics/operations', icon: FileText, label: 'Operations' },
+            {
+                to: '/app/analytics/intelligence',
+                icon: FileText,
+                label: 'Inventory Intelligence',
+            },
+            {
+                to: '/app/analytics/compliance',
+                icon: FileText,
+                label: 'Business & Compliance',
+            },
+        ],
     },
     {
         to: '/app/settings',
@@ -292,7 +305,7 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isCollapsed,
                                 className:
                                     'text-healthcare-primary font-bold bg-teal-50/50 dark:bg-teal-900/20',
                             }}
-                            className="block px-3 py-2 text-sm text-slate-500 hover:text-healthcare-primary hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors"
+                            className="block px-3 py-2 text-sm text-slate-500 hover:text-healthcare-primary hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors whitespace-nowrap"
                         >
                             {child.label}
                         </Link>

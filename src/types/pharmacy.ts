@@ -223,6 +223,90 @@ export interface CreateStorageLocationDto {
     parent_id?: number | null;
 }
 
+export const ColdChainExcursionStatus = {
+    OPEN: 'open',
+    ACKNOWLEDGED: 'acknowledged',
+    RESOLVED: 'resolved',
+} as const;
+export type ColdChainExcursionStatus = (typeof ColdChainExcursionStatus)[keyof typeof ColdChainExcursionStatus];
+
+export interface ColdChainTelemetry {
+    id: number;
+    facility_id: number;
+    storage_location_id: number;
+    recorded_by_id?: number | null;
+    source: 'manual' | 'sensor';
+    temperature_c: number;
+    humidity_percent?: number | null;
+    expected_min_c: number;
+    expected_max_c: number;
+    within_range: boolean;
+    notes?: string | null;
+    recorded_at: string;
+    created_at: string;
+}
+
+export interface ColdChainExcursion {
+    id: number;
+    facility_id: number;
+    storage_location_id: number;
+    status: ColdChainExcursionStatus;
+    started_at: string;
+    last_observed_at: string;
+    recovered_at?: string | null;
+    resolved_at?: string | null;
+    opened_by_id?: number | null;
+    acknowledged_by_id?: number | null;
+    resolved_by_id?: number | null;
+    highest_temperature_c: number;
+    lowest_temperature_c: number;
+    last_temperature_c: number;
+    expected_min_c: number;
+    expected_max_c: number;
+    resolution_action?: string | null;
+    resolution_notes?: string | null;
+    created_at: string;
+    updated_at: string;
+    location?: {
+        id: number;
+        name: string;
+        code: string;
+        temperature_type: TemperatureType;
+    };
+}
+
+export interface ColdChainLocationStatus {
+    location_id: number;
+    location_name: string;
+    location_code: string;
+    temperature_type: TemperatureType;
+    expected_min_c: number;
+    expected_max_c: number;
+    expected_label: string;
+    current_temperature_c: number | null;
+    last_logged_at: string | null;
+    within_range: boolean | null;
+    status: 'stable' | 'warning' | 'critical' | 'unknown';
+    active_excursion_id: number | null;
+}
+
+export interface ColdChainOverview {
+    generated_at: string;
+    monitored_locations: number;
+    active_excursions: number;
+    recovered_pending_resolution: number;
+    excursions_last_7_days: number;
+    compliance_rate_24h: number;
+    temperature_trend: Array<{
+        timestamp: string;
+        average_temperature_c: number;
+        readings: number;
+        excursion_readings: number;
+    }>;
+    location_status: ColdChainLocationStatus[];
+    active_excursions_list: ColdChainExcursion[];
+}
+
 export interface Supplier {
     id: number;
     name: string;
@@ -295,6 +379,10 @@ export interface Alert {
     threshold_value?: number;
     severity: 'info' | 'warning' | 'critical' | 'out_of_stock';
     last_notified_at?: string;
+    action_taken?: string;
+    action_reason?: string;
+    resolved_at?: string;
+    resolved_by_id?: number;
     medicine?: Medicine;
     batch?: Batch;
 }
@@ -495,7 +583,11 @@ export interface ReorderSuggestion {
     min_stock_level?: number; // Alias for legacy support if needed
     suggested_quantity: number;
     average_daily_usage?: number;
+    avg_daily_consumption?: number;
     days_remaining?: number;
+    days_of_cover?: number;
+    deficit_quantity?: number;
+    recommended_action?: string;
     urgency: 'low' | 'medium' | 'high';
 }
 

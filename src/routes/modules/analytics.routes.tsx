@@ -1,8 +1,10 @@
 import { createRoute, Outlet, Navigate } from '@tanstack/react-router';
 import { RequirePermission } from '../../components/auth/RequirePermission';
 import { PERMISSIONS } from '../../types/auth';
-import { ReportsPage } from '../../pages/dashboard/ReportsPage';
+import { lazyNamed, withRouteSuspense } from '../lazy';
 // import React from 'react';
+
+const ReportsPage = lazyNamed(() => import('../../pages/dashboard/ReportsPage'), 'ReportsPage');
 
 export const createAnalyticsRoutes = (parentRoute: any) => {
     const analyticsRoute = createRoute({
@@ -20,56 +22,74 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
         path: '/',
         component: () => {
             const Nav = Navigate as any;
-            return <Nav to="/app/analytics/sales" search={{}} />;
+            return <Nav to="/app/analytics/operations" search={{}} />;
         },
+    });
+
+    const analyticsOperationsRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'operations',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="operations" />),
+    });
+
+    const analyticsIntelligenceRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'intelligence',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="inventory-intelligence" />),
+    });
+
+    const analyticsComplianceRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'compliance',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="business-compliance" />),
     });
 
     const analyticsSalesRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'sales',
-        component: () => <ReportsPage defaultTab="sales" />,
+        component: () => withRouteSuspense(<ReportsPage defaultTab="sales" />),
     });
 
     const analyticsReturnsRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'returns',
-        component: () => <ReportsPage defaultTab="returns" />,
+        component: () => withRouteSuspense(<ReportsPage defaultTab="returns" />),
     });
 
     const analyticsInventoryRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'inventory',
-        component: () => <ReportsPage defaultTab="stock" />,
+        component: () => withRouteSuspense(<ReportsPage defaultTab="stock" />),
     });
 
     const analyticsPerformanceRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'performance',
-        component: () => <ReportsPage defaultTab="performance" />,
+        component: () => withRouteSuspense(<ReportsPage defaultTab="performance" />),
     });
 
     const analyticsProcurementRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'procurement',
-        component: () => <ReportsPage defaultTab="procurement" />,
+        component: () => withRouteSuspense(<ReportsPage defaultTab="procurement" />),
     });
 
     const analyticsLoyaltyRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'loyalty',
-        component: () => <ReportsPage defaultTab="loyalty" />,
+        component: () => withRouteSuspense(<ReportsPage defaultTab="loyalty" />),
     });
 
     const analyticsTaxRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'tax',
-        component: () => <ReportsPage defaultTab="tax" />,
+        component: () => withRouteSuspense(<ReportsPage defaultTab="tax" />),
     });
 
     const analyticsRecallRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'recall',
-        component: () => <ReportsPage defaultTab="recall" />,
+        component: () => withRouteSuspense(<ReportsPage defaultTab="recall" />),
     });
 
     const analyticsProfitRoute = createRoute({
@@ -84,18 +104,57 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
     const analyticsLowStockRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'low-stock',
-        component: () => <ReportsPage defaultTab="low-stock" />,
+        component: () => withRouteSuspense(<ReportsPage defaultTab="low-stock" />),
     });
 
     const analyticsMovementRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'movement',
-        component: () => <ReportsPage defaultTab="movement" />,
+        component: () => withRouteSuspense(<ReportsPage defaultTab="movement" />),
+    });
+
+    const analyticsFastMovingRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'fast-moving',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="fast-moving" />),
+    });
+
+    const analyticsDemandForecastRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'demand-forecast',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="demand-forecast" />),
+    });
+
+    const analyticsForecastReorderRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'forecast-reorder',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="forecast-reorder" />),
+    });
+
+    const analyticsNearExpiryActionsRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'near-expiry-actions',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="near-expiry-actions" />),
+    });
+
+    const analyticsParRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'par',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="par" />),
+    });
+
+    const analyticsAuditLogsRoute = createRoute({
+        getParentRoute: () => analyticsRoute,
+        path: 'audit-logs',
+        component: () => withRouteSuspense(<ReportsPage defaultTab="audit-logs" />),
     });
 
     return [
         analyticsRoute.addChildren([
             analyticsIndexRoute,
+            analyticsOperationsRoute,
+            analyticsIntelligenceRoute,
+            analyticsComplianceRoute,
             analyticsSalesRoute,
             analyticsReturnsRoute,
             analyticsInventoryRoute,
@@ -107,6 +166,12 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
             analyticsProfitRoute,
             analyticsLowStockRoute,
             analyticsMovementRoute,
+            analyticsFastMovingRoute,
+            analyticsDemandForecastRoute,
+            analyticsForecastReorderRoute,
+            analyticsNearExpiryActionsRoute,
+            analyticsParRoute,
+            analyticsAuditLogsRoute,
         ]),
     ];
 };

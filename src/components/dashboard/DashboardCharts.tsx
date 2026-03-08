@@ -11,6 +11,9 @@ import {
     AreaChart,
     Area,
     Cell,
+    Line,
+    LineChart,
+    ReferenceLine,
 } from 'recharts';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -25,6 +28,13 @@ export interface TrendData {
     date: string;
     dispensed: number;
     received: number;
+}
+
+export interface ColdChainTrendData {
+    timestamp: string;
+    average_temperature_c: number;
+    readings: number;
+    excursion_readings: number;
 }
 
 // --- Components ---
@@ -171,6 +181,64 @@ export const ExpiryRiskChart: React.FC<{ data: any }> = ({ data }) => {
                     ))}
                 </Bar>
             </BarChart>
+        </ResponsiveContainer>
+    );
+};
+
+export const ColdChainTelemetryChart: React.FC<{ data: ColdChainTrendData[] }> = ({ data }) => {
+    const { isDark } = useTheme();
+    const axisColor = isDark ? '#94a3b8' : '#475569';
+    const gridColor = isDark ? '#334155' : '#e2e8f0';
+    const tooltipStyle = {
+        backgroundColor: isDark ? '#1e293b' : '#ffffff',
+        borderColor: isDark ? '#334155' : '#e2e8f0',
+        color: isDark ? '#f8fafc' : '#0f172a',
+    };
+
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+                <XAxis
+                    dataKey="timestamp"
+                    stroke={axisColor}
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(value) => {
+                        const d = new Date(value);
+                        return `${d.getHours().toString().padStart(2, '0')}:00`;
+                    }}
+                />
+                <YAxis stroke={axisColor} tick={{ fontSize: 10 }} width={35} />
+                <Tooltip
+                    contentStyle={tooltipStyle}
+                    labelFormatter={(label) => new Date(label).toLocaleString()}
+                    formatter={(value: any, name: any) => {
+                        if (name === 'average_temperature_c') {
+                            return [`${Number(value).toFixed(1)}°C`, 'Avg Temperature'];
+                        }
+                        return [value, 'Excursion Readings'];
+                    }}
+                />
+                <ReferenceLine y={8} stroke="#f59e0b" strokeDasharray="4 4" />
+                <ReferenceLine y={-15} stroke="#f59e0b" strokeDasharray="4 4" />
+                <Line
+                    type="monotone"
+                    dataKey="average_temperature_c"
+                    name="average_temperature_c"
+                    stroke="#0f766e"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4 }}
+                />
+                <Line
+                    type="monotone"
+                    dataKey="excursion_readings"
+                    name="excursion_readings"
+                    stroke="#ef4444"
+                    strokeWidth={1.5}
+                    dot={false}
+                />
+            </LineChart>
         </ResponsiveContainer>
     );
 };

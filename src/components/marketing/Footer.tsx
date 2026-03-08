@@ -2,6 +2,13 @@ import { Link } from '@tanstack/react-router';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 
 export function Footer() {
+    const supportLinks = [
+        { label: 'Contact', href: '#contact' },
+        { label: 'Privacy Policy', to: '/privacy-policy' as const },
+        { label: 'Terms of Use', to: '/terms-of-use' as const },
+        { label: 'Documentation', to: '/docs' as const },
+    ];
+
     return (
         <footer className="bg-white dark:bg-black border-t border-slate-200 dark:border-zinc-800 pt-20 pb-10 transition-colors">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -58,18 +65,26 @@ export function Footer() {
                     <div>
                         <h4 className="text-slate-900 dark:text-white font-bold mb-6">Support</h4>
                         <ul className="space-y-4">
-                            {['Contact', 'Privacy Policy', 'Terms of Service', 'Documentation'].map(
-                                (item) => (
-                                    <li key={item}>
-                                        <a
-                                            href={item === 'Contact' ? '#contact' : '#'}
+                            {supportLinks.map((item) => (
+                                <li key={item.label}>
+                                    {'to' in item ? (
+                                        <Link
+                                            to={item.to as any}
+                                            search={{} as any}
                                             className="text-slate-500 dark:text-zinc-400 text-sm font-bold hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
                                         >
-                                            {item}
+                                            {item.label}
+                                        </Link>
+                                    ) : (
+                                        <a
+                                            href={item.href}
+                                            className="text-slate-500 dark:text-zinc-400 text-sm font-bold hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+                                        >
+                                            {item.label}
                                         </a>
-                                    </li>
-                                ),
-                            )}
+                                    )}
+                                </li>
+                            ))}
                         </ul>
                     </div>
 

@@ -73,7 +73,21 @@ export const inventoryService = {
         batch_id: number;
         type: 'increase' | 'decrease' | 'damage' | 'expired' | 'return';
         quantity: number;
-        reason: string;
+        reason:
+            | 'physical_count'
+            | 'damage'
+            | 'expiry'
+            | 'theft'
+            | 'loss'
+            | 'found'
+            | 'correction'
+            | 'transfer'
+            | 'return_to_supplier'
+            | 'customer_return'
+            | 'sample'
+            | 'donation'
+            | 'other';
+        notes?: string;
     }): Promise<any> {
         const response = await api.post('/pharmacy/stock/adjust', data);
         return response.data;

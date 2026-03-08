@@ -6,6 +6,7 @@ import {
     CheckCircle2,
     User,
     ChevronDown,
+    X,
 } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -17,12 +18,14 @@ import { CreatePatientModal } from '../../components/patients/CreatePatientModal
 import { MedicineCard } from '../../components/dispensing/MedicineCard';
 import { DispensingCart } from '../../components/dispensing/DispensingCart';
 import { PaymentModal } from '../../components/dispensing/PaymentModal';
+import { PatientSummaryPanel } from '../../components/dispensing/PatientSummaryPanel';
 import type { CartItem } from '../../types/pharmacy';
 import { toast } from 'react-hot-toast';
 import { APP_CONFIG } from '../../lib/config';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { db } from '../../lib/indexeddb';
 import { toSentenceCase } from '../../lib/text';
+import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 
 const WALK_IN_PATIENT = {
     id: null,
@@ -33,6 +36,14 @@ const WALK_IN_PATIENT = {
     is_walk_in: true,
 };
 
+interface SubstitutionAlternative {
+    id: number;
+    name: string;
+    selling_price: number;
+    total_stock: number;
+    reason: string;
+}
+
 export function DispensingPage() {
     const { user } = useAuth();
     const { isOnline, queueCount } = useOfflineSync();
@@ -40,6 +51,7 @@ export function DispensingPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 500);
+    const medicineSearchInputRef = useRef<HTMLInputElement>(null);
     const [hasMore, setHasMore] = useState(true);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [page, setPage] = useState(1);
@@ -54,6 +66,11 @@ export function DispensingPage() {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [prescriptionId, setPrescriptionId] = useState('');
     const [lastSaleId, setLastSaleId] = useState<number | null>(null);
+    const [substitutionLoadingMedicineId, setSubstitutionLoadingMedicineId] = useState<number | null>(null);
+    const [substitutionContext, setSubstitutionContext] = useState<{
+        medicine: Medicine;
+        alternatives: SubstitutionAlternative[];
+    } | null>(null);
     const shownExpiryWarningsRef = useRef<Set<number>>(new Set());
 
     const hasControlledDrug = cart.some((item) => item.is_controlled_drug);
@@ -138,6 +155,33 @@ export function DispensingPage() {
     useEffect(() => {
         fetchMedicines();
     }, [debouncedSearch, page]);
+
+    useBarcodeScanner(
+        (barcode) => {
+            const activeElement = document.activeElement as HTMLElement | null;
+            const activeTag = activeElement?.tagName;
+            const isTextInput =
+                activeTag === 'INPUT' ||
+                activeTag === 'TEXTAREA' ||
+                activeElement?.getAttribute('contenteditable') === 'true';
+            const isMedicineSearchFocused = activeElement === medicineSearchInputRef.current;
+
+            if (isTextInput && !isMedicineSearchFocused) {
+                return;
+            }
+
+            setSearchQuery(barcode);
+            setPage(1);
+            setHasMore(true);
+            medicineSearchInputRef.current?.focus();
+            toast.success(`Scanned barcode: ${barcode}`, { duration: 1200 });
+        },
+        {
+            enabled: !showPaymentModal && !showCreatePatient,
+            minLength: 4,
+            scanTimeoutMs: 60,
+        },
+    );
 
     const addToCart = async (med: Medicine) => {
         if ((med.stock_quantity || 0) <= 0) {
@@ -230,6 +274,50 @@ export function DispensingPage() {
                     </span>
                 </div>
             ), { duration: 3500, icon: '⚠️' });
+        }
+    };
+
+    const handleFindAlternatives = async (medicine: Medicine) => {
+        const activeFacilityId = user?.facility_id;
+        if (!activeFacilityId) {
+            toast.error('No facility selected for your account');
+            return;
+        }
+
+        setSubstitutionLoadingMedicineId(medicine.id);
+        try {
+            const alternatives = await pharmacyService.getSubstitutionRecommendations(medicine.id, activeFacilityId);
+            if (!alternatives.length) {
+                toast('No substitution candidates with stock found.', { icon: 'ℹ️' });
+                return;
+            }
+            setSubstitutionContext({
+                medicine,
+                alternatives,
+            });
+        } catch (error) {
+            console.error('Failed to load substitution recommendations:', error);
+            toast.error('Failed to load substitution recommendations');
+        } finally {
+            setSubstitutionLoadingMedicineId(null);
+        }
+    };
+
+    const useAlternative = async (alternative: SubstitutionAlternative) => {
+        try {
+            const existingMedicine = medicines.find((medicine) => medicine.id === alternative.id);
+            if (existingMedicine) {
+                await addToCart(existingMedicine);
+                setSubstitutionContext(null);
+                return;
+            }
+
+            const medicine = await pharmacyService.getMedicine(alternative.id);
+            await addToCart(medicine);
+            setSubstitutionContext(null);
+        } catch (error) {
+            console.error('Failed to apply substitution:', error);
+            toast.error('Could not add substitution medicine to cart');
         }
     };
 
@@ -399,6 +487,7 @@ export function DispensingPage() {
                             size={20}
                         />
                         <input
+                            ref={medicineSearchInputRef}
                             type="text"
                             placeholder="Search medicine by name, code, brand, or barcode..."
                             value={searchQuery}
@@ -432,6 +521,8 @@ export function DispensingPage() {
                                         key={med.id}
                                         medicine={med}
                                         onAddToCart={addToCart}
+                                        onFindAlternatives={handleFindAlternatives}
+                                        isFindingAlternatives={substitutionLoadingMedicineId === med.id}
                                     />
                                 ))}
                             </div>
@@ -573,6 +664,24 @@ export function DispensingPage() {
                         ) : null}
                     </div>
 
+                    {selectedPatient && !selectedPatient.is_walk_in && (
+                        <PatientSummaryPanel
+                            patient={{
+                                id: Number(selectedPatient.id),
+                                name: `${selectedPatient.first_name || selectedPatient.firstName || selectedPatient.name || ''} ${selectedPatient.last_name || selectedPatient.lastName || ''}`.trim(),
+                                id_type: selectedPatient.id_type,
+                                id_number: selectedPatient.id_number,
+                                phone: selectedPatient.phone_number || selectedPatient.phoneNumber || selectedPatient.phone,
+                                insurance_provider: selectedPatient.insurance_provider || selectedPatient.insurance,
+                            }}
+                            onDownloadReceipt={(saleId) => {
+                                if (user?.facility_id) {
+                                    pharmacyService.getSaleReceipt(saleId, user.facility_id);
+                                }
+                            }}
+                        />
+                    )}
+
                     {/* Cart Header */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -626,6 +735,69 @@ export function DispensingPage() {
                     )}
                 </div>
             </div>
+
+            {substitutionContext && (
+                <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+                            <div>
+                                <h3 className="text-sm font-black uppercase tracking-widest text-slate-700 dark:text-slate-200">
+                                    Substitution Options
+                                </h3>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Alternatives for <span className="font-bold">{substitutionContext.medicine.name}</span>
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setSubstitutionContext(null)}
+                                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+
+                        <div className="max-h-[420px] overflow-auto">
+                            <table className="w-full text-sm">
+                                <thead className="bg-slate-50 dark:bg-slate-800/60 sticky top-0">
+                                    <tr className="text-[10px] uppercase tracking-widest text-slate-400">
+                                        <th className="px-4 py-3 text-left font-black">Medicine</th>
+                                        <th className="px-4 py-3 text-right font-black">Stock</th>
+                                        <th className="px-4 py-3 text-right font-black">Price</th>
+                                        <th className="px-4 py-3 text-left font-black">Reason</th>
+                                        <th className="px-4 py-3 text-right font-black">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    {substitutionContext.alternatives.map((alternative) => (
+                                        <tr key={alternative.id}>
+                                            <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">
+                                                {alternative.name}
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-bold text-slate-600 dark:text-slate-300">
+                                                {alternative.total_stock.toLocaleString()}
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-bold text-slate-600 dark:text-slate-300">
+                                                RWF {alternative.selling_price.toLocaleString()}
+                                            </td>
+                                            <td className="px-4 py-3 text-xs text-slate-500">
+                                                {alternative.reason}
+                                            </td>
+                                            <td className="px-4 py-3 text-right">
+                                                <button
+                                                    onClick={() => useAlternative(alternative)}
+                                                    className="px-3 py-1.5 rounded-lg bg-healthcare-primary text-white text-[10px] font-black uppercase tracking-wider hover:bg-teal-700 transition-colors"
+                                                >
+                                                    Use
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Create Patient Modal */}
             {showCreatePatient && (

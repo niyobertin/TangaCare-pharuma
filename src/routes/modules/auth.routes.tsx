@@ -1,12 +1,17 @@
 import { createRoute, Navigate } from '@tanstack/react-router';
-import { LoginPage } from '../../pages/auth/LoginPage';
-import { RegisterPage } from '../../pages/auth/RegisterPage';
-import { ForgotPasswordPage } from '../../pages/auth/ForgotPasswordPage';
-import { VerifyOtpPage } from '../../pages/auth/VerifyOtpPage';
-import { ResetPasswordPage } from '../../pages/auth/ResetPasswordPage';
-import { SetPasswordPage } from '../../pages/auth/SetPasswordPage';
+import { lazyNamed, withRouteSuspense } from '../lazy';
 import { z } from 'zod';
 // import React from 'react';
+
+const LoginPage = lazyNamed(() => import('../../pages/auth/LoginPage'), 'LoginPage');
+const RegisterPage = lazyNamed(() => import('../../pages/auth/RegisterPage'), 'RegisterPage');
+const ForgotPasswordPage = lazyNamed(
+    () => import('../../pages/auth/ForgotPasswordPage'),
+    'ForgotPasswordPage',
+);
+const VerifyOtpPage = lazyNamed(() => import('../../pages/auth/VerifyOtpPage'), 'VerifyOtpPage');
+const ResetPasswordPage = lazyNamed(() => import('../../pages/auth/ResetPasswordPage'), 'ResetPasswordPage');
+const SetPasswordPage = lazyNamed(() => import('../../pages/auth/SetPasswordPage'), 'SetPasswordPage');
 
 export const createAuthRoutes = (parentRoute: any, _rootRoute: any) => {
     const authIndexRoute = createRoute({
@@ -18,7 +23,7 @@ export const createAuthRoutes = (parentRoute: any, _rootRoute: any) => {
     const loginRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'login',
-        component: LoginPage,
+        component: () => withRouteSuspense(<LoginPage />),
         validateSearch: (search: Record<string, unknown>) => {
             return z
                 .object({
@@ -31,7 +36,7 @@ export const createAuthRoutes = (parentRoute: any, _rootRoute: any) => {
     const registerRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'register',
-        component: RegisterPage,
+        component: () => withRouteSuspense(<RegisterPage />),
         validateSearch: (search: Record<string, unknown>) => {
             return z
                 .object({
@@ -45,13 +50,13 @@ export const createAuthRoutes = (parentRoute: any, _rootRoute: any) => {
     const forgotPasswordRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'forgot-password',
-        component: ForgotPasswordPage,
+        component: () => withRouteSuspense(<ForgotPasswordPage />),
     });
 
     const verifyOtpRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'verify-otp',
-        component: VerifyOtpPage,
+        component: () => withRouteSuspense(<VerifyOtpPage />),
         validateSearch: (search: Record<string, unknown>) => {
             return z
                 .object({
@@ -64,7 +69,7 @@ export const createAuthRoutes = (parentRoute: any, _rootRoute: any) => {
     const resetPasswordRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'reset-password',
-        component: ResetPasswordPage,
+        component: () => withRouteSuspense(<ResetPasswordPage />),
         validateSearch: (search: Record<string, unknown>) => {
             return z
                 .object({
@@ -78,7 +83,7 @@ export const createAuthRoutes = (parentRoute: any, _rootRoute: any) => {
     const setPasswordRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'set-password',
-        component: SetPasswordPage,
+        component: () => withRouteSuspense(<SetPasswordPage />),
     });
 
     return [
