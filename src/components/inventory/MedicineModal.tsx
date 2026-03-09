@@ -419,6 +419,11 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                         disabled={isPrefilling}
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     />
+                                    {errors.selling_price && (
+                                        <p className="text-red-500 text-xs mt-1">
+                                            {errors.selling_price.message as string}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div>
