@@ -393,7 +393,6 @@ export function MainLayout() {
         isOwner,
         isLoading,
     } = useAuth();
-    if (isLoading) return <GlobalLoading />;
     const navigate = useNavigate();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -663,6 +662,8 @@ export function MainLayout() {
 
     const showFacilityNameOnly =
         !isSuperAdminUser && !isOwner && facilities.length <= 1 && organizations.length <= 1;
+
+    if (isLoading) return <GlobalLoading />;
 
     return (
         <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 overflow-hidden">

@@ -59,8 +59,6 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
         setReceivedItems(prev => prev.map(item => ({ ...item, location_id: locationId })));
     };
 
-    if (!isOpen || !order) return null;
-
     const receivingSummary = useMemo(() => {
         const receivingRows = receivedItems.filter((item) => Number(item.quantity_received || 0) > 0);
         const actionRows = receivedItems.filter(
@@ -99,6 +97,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
     };
 
     const handleSubmit = async () => {
+        if (!order) return;
         const todayStr = new Date().toISOString().split('T')[0];
 
         const attemptedItems = receivedItems.filter(
@@ -246,6 +245,8 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
             setLoading(false);
         }
     };
+
+    if (!isOpen || !order) return null;
 
     return (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
