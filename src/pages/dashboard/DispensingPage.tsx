@@ -337,6 +337,7 @@ export function DispensingPage() {
 
                 bestBatch = {
                     ...bestStock.batch,
+                    stock_id: bestStock.id,
                     current_quantity: bestBatchAvailableQty,
                     location_id: bestStock.location?.id ?? bestStock.location_id ?? null,
                     location: bestStock.location || null,
@@ -357,8 +358,14 @@ export function DispensingPage() {
         }
 
         setCart((prev) => {
+            const isSameCartLine = (item: CartItem) =>
+                item.id === med.id &&
+                (bestBatch?.stock_id && item.selectedBatch?.stock_id
+                    ? Number(item.selectedBatch.stock_id) === Number(bestBatch.stock_id)
+                    : item.selectedBatch?.id === bestBatch?.id);
+
             const existing = prev.find(
-                (item) => item.id === med.id && item.selectedBatch?.id === bestBatch?.id,
+                (item) => isSameCartLine(item),
             );
             if (existing) {
                 if (existing.quantity >= bestBatchAvailableQty) {
@@ -366,7 +373,7 @@ export function DispensingPage() {
                     return prev;
                 }
                 return prev.map((item) =>
-                    item.id === med.id && item.selectedBatch?.id === bestBatch?.id
+                    isSameCartLine(item)
                         ? { ...item, quantity: item.quantity + 1 }
                         : item,
                 );
@@ -445,9 +452,15 @@ export function DispensingPage() {
         }
     };
 
-    const updateQuantity = async (id: number, batchId: number, delta: number) => {
+    const updateQuantity = async (id: number, batchId: number, delta: number, stockId?: number) => {
+        const isTargetLine = (item: CartItem) =>
+            item.id === id &&
+            (stockId && item.selectedBatch?.stock_id
+                ? Number(item.selectedBatch.stock_id) === Number(stockId)
+                : item.selectedBatch?.id === batchId);
+
         if (delta > 0) {
-            const targetItem = cart.find((item) => item.id === id && item.selectedBatch?.id === batchId);
+            const targetItem = cart.find((item) => isTargetLine(item));
             if (!targetItem?.selectedBatch) return;
 
             try {
@@ -459,9 +472,11 @@ export function DispensingPage() {
                     return;
                 }
 
-                const selectedStock = dispensableStocks.find(
-                    (stock) => Number(stock.batch?.id) === Number(batchId),
-                );
+                const selectedStock =
+                    (stockId
+                        ? dispensableStocks.find((stock) => Number(stock.id) === Number(stockId))
+                        : undefined) ||
+                    dispensableStocks.find((stock) => Number(stock.batch?.id) === Number(batchId));
                 if (!selectedStock?.batch) {
                     toast.error(
                         `Batch ${targetItem.selectedBatch.batch_number} is no longer available`,
@@ -477,12 +492,13 @@ export function DispensingPage() {
 
                 setCart((prev) =>
                     prev.map((item) =>
-                        item.id === id && item.selectedBatch?.id === batchId
+                        isTargetLine(item)
                             ? {
                                 ...item,
                                 quantity: requestedQty,
                                 selectedBatch: {
                                     ...item.selectedBatch!,
+                                    stock_id: selectedStock.id,
                                     current_quantity: availableQty,
                                 },
                             }
@@ -502,7 +518,7 @@ export function DispensingPage() {
 
         setCart((prev) =>
             prev.map((item) => {
-                if (item.id === id && item.selectedBatch?.id === batchId) {
+                if (isTargetLine(item)) {
                     return { ...item, quantity: Math.max(1, item.quantity + delta) };
                 }
                 return item;
@@ -510,9 +526,17 @@ export function DispensingPage() {
         );
     };
 
-    const removeFromCart = (id: number, batchId: number) => {
+    const removeFromCart = (id: number, batchId: number, stockId?: number) => {
         setCart((prev) =>
-            prev.filter((item) => !(item.id === id && item.selectedBatch?.id === batchId)),
+            prev.filter(
+                (item) =>
+                    !(
+                        item.id === id &&
+                        (stockId && item.selectedBatch?.stock_id
+                            ? Number(item.selectedBatch.stock_id) === Number(stockId)
+                            : item.selectedBatch?.id === batchId)
+                    ),
+            ),
         );
     };
 
@@ -563,6 +587,7 @@ export function DispensingPage() {
                 .map((i) => ({
                     medicine_id: i.id,
                     batch_id: i.selectedBatch!.id,
+                    stock_id: i.selectedBatch?.stock_id,
                     quantity: i.quantity,
                     unit_price: i.selling_price,
                 })),

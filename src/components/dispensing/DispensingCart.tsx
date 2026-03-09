@@ -5,8 +5,8 @@ import { toSentenceCase } from '../../lib/text';
 
 interface DispensingCartProps {
     cart: CartItem[];
-    updateQuantity: (id: number, batchId: number, delta: number) => void;
-    removeFromCart: (id: number, batchId: number) => void;
+    updateQuantity: (id: number, batchId: number, delta: number, stockId?: number) => void;
+    removeFromCart: (id: number, batchId: number, stockId?: number) => void;
     subtotal: number;
     tax: number;
     total: number;
@@ -80,7 +80,14 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                             <div />
                             <div className="justify-self-center flex items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-lg p-1">
                                 <button
-                                    onClick={() => updateQuantity(item.id, item.selectedBatch?.id || 0, -1)}
+                                    onClick={() =>
+                                        updateQuantity(
+                                            item.id,
+                                            item.selectedBatch?.id || 0,
+                                            -1,
+                                            item.selectedBatch?.stock_id,
+                                        )
+                                    }
                                     className="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 shadow-sm text-slate-600 dark:text-slate-400 hover:text-healthcare-primary disabled:opacity-50"
                                     disabled={item.quantity <= 1}
                                 >
@@ -88,7 +95,14 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                                 </button>
                                 <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
                                 <button
-                                    onClick={() => updateQuantity(item.id, item.selectedBatch?.id || 0, 1)}
+                                    onClick={() =>
+                                        updateQuantity(
+                                            item.id,
+                                            item.selectedBatch?.id || 0,
+                                            1,
+                                            item.selectedBatch?.stock_id,
+                                        )
+                                    }
                                     className="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 shadow-sm text-slate-600 dark:text-slate-400 hover:text-healthcare-primary"
                                 >
                                     <Plus size={12} />
@@ -96,7 +110,13 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                             </div>
 
                             <button
-                                onClick={() => removeFromCart(item.id, item.selectedBatch?.id || 0)}
+                                onClick={() =>
+                                    removeFromCart(
+                                        item.id,
+                                        item.selectedBatch?.id || 0,
+                                        item.selectedBatch?.stock_id,
+                                    )
+                                }
                                 className="justify-self-end p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                             >
                                 <Trash2 size={14} />

@@ -174,6 +174,7 @@ export interface CreateOnboardingSetupDto {
 
 export interface Batch {
     id: number;
+    stock_id?: number;
     medicine_id: number;
     batch_number: string;
     expiry_date: string;
@@ -527,6 +528,7 @@ export interface CreateSaleDto {
     items: Array<{
         medicine_id: number;
         batch_id: number;
+        stock_id?: number;
         quantity: number;
         unit_price: number;
     }>;
