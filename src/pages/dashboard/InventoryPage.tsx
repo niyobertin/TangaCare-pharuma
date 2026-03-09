@@ -6,7 +6,6 @@ import {
     AlertCircle,
     Download,
     Pill,
-    ArrowRightLeft,
     Upload,
     Loader2,
     CheckCircle2,
@@ -133,7 +132,7 @@ const MedicineImportPreviewModal = ({
                     </div>
 
                     <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-                        <table className="w-full text-left border-collapse">
+                        <table className="tc-table w-full text-left border-collapse">
                             <thead className="bg-slate-50 dark:bg-slate-800/50">
                                 <tr>
                                     <th className="px-4 py-3 text-[10px] font-black uppercase text-slate-500 tracking-wider">
@@ -275,6 +274,7 @@ export function InventoryPage() {
     );
 
     const debouncedSearch = useDebounce(searchQuery, 500);
+    const canManageInventory = user?.role?.toString() !== 'auditor';
 
     const fetchMedicines = async () => {
         setLoading(true);
@@ -673,72 +673,56 @@ export function InventoryPage() {
 
                 { }
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-healthcare-primary/30 transition-all group">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-1.5 bg-healthcare-primary/10 rounded-lg group-hover:scale-110 transition-transform">
-                                <Pill className="text-healthcare-primary" size={16} />
-                            </div>
-                            <span className="text-[8px] font-black bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                                Total
+                    <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#2563EB] to-[#1D4ED8]">
+                        <div className="tc-stat-card-header">
+                            <h3 className="tc-stat-card-title text-white/90">Medicines</h3>
+                            <span className="tc-stat-card-icon bg-white/20">
+                                <Pill size={15} />
                             </span>
                         </div>
-                        <h3 className="text-xl font-medium text-slate-800 dark:text-white leading-tight">
-                            {stats.totalItems}
-                        </h3>
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
-                            Medicines
-                        </p>
+                        <div className="tc-stat-card-foot">
+                            <span className="tc-stat-card-value">{stats.totalItems.toLocaleString()}</span>
+                            <span className="tc-stat-card-subtitle">Total</span>
+                        </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500/30 transition-all group">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-1.5 bg-blue-500/10 rounded-lg group-hover:scale-110 transition-transform">
-                                <Filter className="text-blue-500" size={16} />
-                            </div>
-                            <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                                Types
+                    <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#1D4ED8] to-[#1E40AF]">
+                        <div className="tc-stat-card-header">
+                            <h3 className="tc-stat-card-title text-white/90">Categories</h3>
+                            <span className="tc-stat-card-icon bg-white/20">
+                                <Filter size={15} />
                             </span>
                         </div>
-                        <h3 className="text-xl font-medium text-slate-800 dark:text-white leading-tight">
-                            {stats.totalCategories}
-                        </h3>
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
-                            Categories
-                        </p>
+                        <div className="tc-stat-card-foot">
+                            <span className="tc-stat-card-value">{stats.totalCategories.toLocaleString()}</span>
+                            <span className="tc-stat-card-subtitle">Types</span>
+                        </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-healthcare-secondary/30 transition-all group">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-1.5 bg-healthcare-secondary/10 rounded-lg group-hover:scale-110 transition-transform">
-                                <AlertCircle className="text-healthcare-secondary" size={16} />
-                            </div>
-                            <span className="text-[8px] font-black bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                                Alert
+                    <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#F59E0B] to-[#D97706]">
+                        <div className="tc-stat-card-header">
+                            <h3 className="tc-stat-card-title text-white/90">Low stock</h3>
+                            <span className="tc-stat-card-icon bg-white/20">
+                                <AlertCircle size={15} />
                             </span>
                         </div>
-                        <h3 className="text-xl font-medium text-slate-800 dark:text-white leading-tight">
-                            {stats.lowStock}
-                        </h3>
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
-                            Low Stock
-                        </p>
+                        <div className="tc-stat-card-foot">
+                            <span className="tc-stat-card-value">{stats.lowStock.toLocaleString()}</span>
+                            <span className="tc-stat-card-subtitle">Alert</span>
+                        </div>
                     </div>
 
-                    <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-red-500/30 transition-all group">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-1.5 bg-red-500/10 rounded-lg group-hover:scale-110 transition-transform">
-                                <AlertCircle className="text-red-500" size={16} />
-                            </div>
-                            <span className="text-[8px] font-black bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                                Critical
+                    <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#EF4444] to-[#DC2626]">
+                        <div className="tc-stat-card-header">
+                            <h3 className="tc-stat-card-title text-white/90">Expired</h3>
+                            <span className="tc-stat-card-icon bg-white/20">
+                                <AlertCircle size={15} />
                             </span>
                         </div>
-                        <h3 className="text-xl font-medium text-slate-800 dark:text-white leading-tight">
-                            {stats.expired}
-                        </h3>
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
-                            Expired
-                        </p>
+                        <div className="tc-stat-card-foot">
+                            <span className="tc-stat-card-value">{stats.expired.toLocaleString()}</span>
+                            <span className="tc-stat-card-subtitle">Critical</span>
+                        </div>
                     </div>
                 </div>
 
@@ -852,7 +836,7 @@ export function InventoryPage() {
                         onScroll={(event) => setInventoryScrollTop(event.currentTarget.scrollTop)}
                         className="overflow-x-auto overflow-y-auto max-h-[560px]"
                     >
-                        <table className="w-full text-left border-collapse">
+                        <table className="tc-table w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b-2 border-slate-200 dark:border-slate-800">
                                     {inventoryVisibleColumnSet.has('select') && (
@@ -1137,7 +1121,7 @@ export function InventoryPage() {
                                                 {inventoryVisibleColumnSet.has('actions') && (
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center justify-end gap-2 transition-all">
-                                                            {user?.role?.toString() !== 'auditor' && (
+                                                            {canManageInventory && (
                                                                 <button
                                                                     onClick={() => setIsAddStockModalOpen(true)}
                                                                     title="Add Stock"
@@ -1146,44 +1130,7 @@ export function InventoryPage() {
                                                                     <PackagePlus size={16} />
                                                                 </button>
                                                             )}
-                                                            {user?.role?.toString() !== 'auditor' && (
-                                                                <button
-                                                                    onClick={() =>
-                                                                        navigate({
-                                                                            to: '/app/stock' as any,
-                                                                            search: {} as any,
-                                                                        })
-                                                                    }
-                                                                    title="View Batches"
-                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-indigo-600 hover:bg-indigo-50 bg-indigo-50/10 rounded-lg transition-colors touch-manipulation"
-                                                                >
-                                                                    <FileText size={16} />
-                                                                </button>
-                                                            )}
-                                                            {user?.role?.toString() !== 'auditor' && (
-                                                                <button
-                                                                    onClick={() =>
-                                                                        navigate({
-                                                                            to: '/app/stock' as any,
-                                                                            search: {} as any,
-                                                                        })
-                                                                    }
-                                                                    title="Adjust Stock"
-                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-amber-600 hover:bg-amber-50 bg-amber-50/10 rounded-lg transition-colors touch-manipulation"
-                                                                >
-                                                                    <AlertCircle size={16} />
-                                                                </button>
-                                                            )}
-                                                            {user?.role?.toString() !== 'auditor' && (
-                                                                <button
-                                                                    onClick={() => setSelectedMedForTransfer(med)}
-                                                                    title="Transfer Stock"
-                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-blue-600 hover:bg-blue-50 bg-blue-50/10 rounded-lg transition-colors touch-manipulation"
-                                                                >
-                                                                    <ArrowRightLeft size={16} />
-                                                                </button>
-                                                            )}
-                                                            {user?.role?.toString() !== 'auditor' && (
+                                                            {canManageInventory && (
                                                                 <button
                                                                     onClick={() => openEditMedicine(med)}
                                                                     title="Edit Medicine"

@@ -224,7 +224,7 @@ export function MedicineDetailsPage() {
                         </span>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
+                        <table className="tc-table w-full text-left text-sm">
                             <thead className="bg-slate-50 dark:bg-slate-800/50">
                                 <tr className="text-[10px] uppercase tracking-wider text-slate-400">
                                     <th className="px-6 py-3 font-black">Batch</th>
@@ -281,7 +281,7 @@ export function MedicineDetailsPage() {
                         </span>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
+                        <table className="tc-table w-full text-left text-sm">
                             <thead className="bg-slate-50 dark:bg-slate-800/50">
                                 <tr className="text-[10px] uppercase tracking-wider text-slate-400">
                                     <th className="px-6 py-3 font-black">Type</th>

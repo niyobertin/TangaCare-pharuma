@@ -232,7 +232,7 @@ export function UsersPage() {
                     <>
                         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-700">
                             <div className="overflow-x-auto">
-                                <table className="w-full min-w-[900px]">
+                                <table className="tc-table w-full min-w-[900px]">
                                     <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">

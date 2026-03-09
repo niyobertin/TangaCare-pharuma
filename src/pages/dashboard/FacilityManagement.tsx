@@ -555,7 +555,7 @@ export function FacilityManagementPage() {
                                 className="border-none shadow-none"
                             />
                         ) : (
-                            <table className="w-full text-left border-collapse">
+                            <table className="tc-table w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800/50">
                                         <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center w-16">

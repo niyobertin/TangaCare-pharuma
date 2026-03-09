@@ -113,7 +113,7 @@ export function ViewGoodsReceiptPage() {
 
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                    <table className="tc-table w-full text-left">
                         <thead className="bg-slate-50 dark:bg-slate-800/50">
                             <tr>
                                 <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Medicine</th>

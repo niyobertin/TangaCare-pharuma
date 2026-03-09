@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../../../context/AuthContext';
 import { pharmacyService } from '../../../services/pharmacy.service';
 import { SkeletonTable } from '../../ui/SkeletonTable';
-import { AlertCircle, RefreshCcw, CheckCircle, Activity, Package } from 'lucide-react';
+import { AlertCircle, RefreshCcw, CheckCircle, Activity, Package, Loader2 } from 'lucide-react';
 import { CreatePurchaseOrderModal } from '../../inventory/CreatePurchaseOrderModal';
-import type { ReorderSuggestion } from '../../../types/pharmacy';
+import { AddStockModal } from '../../inventory/AddStockModal';
+import { StockTransferModal } from '../../inventory/StockTransferModal';
+import type { Medicine, ReorderSuggestion } from '../../../types/pharmacy';
+import toast from 'react-hot-toast';
 
 const getRecommendedAction = (item: ReorderSuggestion): string => {
     if (item.recommended_action) return item.recommended_action;
@@ -24,12 +26,15 @@ const getRecommendedAction = (item: ReorderSuggestion): string => {
 };
 
 export function ReorderSuggestions() {
-    const navigate = useNavigate();
     const { user, facilityId } = useAuth();
     const effectiveFacilityId = facilityId ?? user?.facility_id;
     const [suggestions, setSuggestions] = useState<ReorderSuggestion[]>([]);
     const [loading, setLoading] = useState(false);
     const [isPOModalOpen, setIsPOModalOpen] = useState(false);
+    const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
+    const [addStockMedicineId, setAddStockMedicineId] = useState<number | null>(null);
+    const [transferMedicine, setTransferMedicine] = useState<Medicine | null>(null);
+    const [transferLoadingId, setTransferLoadingId] = useState<number | null>(null);
     const [selectedItem, setSelectedItem] = useState<{
         medicine_id: number;
         medicine_name: string;
@@ -64,6 +69,29 @@ export function ReorderSuggestions() {
         setIsPOModalOpen(true);
     };
 
+    const handleAddStock = (item: ReorderSuggestion) => {
+        setAddStockMedicineId(item.medicine_id);
+        setIsAddStockModalOpen(true);
+    };
+
+    const handleTransfer = async (item: ReorderSuggestion) => {
+        if (!effectiveFacilityId) {
+            toast.error('Facility is required for stock transfer.');
+            return;
+        }
+
+        setTransferLoadingId(item.medicine_id);
+        try {
+            const medicine = await pharmacyService.getMedicine(item.medicine_id);
+            setTransferMedicine(medicine);
+        } catch (error) {
+            console.error('Failed to load medicine for transfer:', error);
+            toast.error('Unable to open transfer action right now.');
+        } finally {
+            setTransferLoadingId(null);
+        }
+    };
+
     const criticalCount = suggestions.filter(
         (s) => Number(s.days_remaining) < 3 || s.current_quantity === 0,
     ).length;
@@ -95,43 +123,40 @@ export function ReorderSuggestions() {
 
             {!loading && suggestions.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in slide-in-from-top-4 duration-500">
-                    <div className="bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/20 rounded-xl p-3 flex items-center gap-3 group hover:shadow-md transition-all">
-                        <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/30 text-rose-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                            <AlertCircle size={16} />
+                    <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#EF4444] to-[#DC2626] group hover:shadow-md">
+                        <div className="tc-stat-card-header">
+                            <p className="tc-stat-card-title text-white/90">Critical</p>
+                            <span className="tc-stat-card-icon bg-white/20 transition-transform group-hover:scale-110">
+                                <AlertCircle size={15} />
+                            </span>
                         </div>
-                        <div>
-                            <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest leading-none">
-                                Critical
-                            </p>
-                            <h4 className="text-xl font-black text-rose-700 dark:text-rose-400 mt-1 leading-none">
-                                {criticalCount}
-                            </h4>
-                        </div>
-                    </div>
-                    <div className="bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 rounded-xl p-3 flex items-center gap-3 group hover:shadow-md transition-all">
-                        <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                            <Activity size={16} />
-                        </div>
-                        <div>
-                            <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest leading-none">
-                                Warning
-                            </p>
-                            <h4 className="text-xl font-black text-amber-700 dark:text-amber-400 mt-1 leading-none">
-                                {warningCount}
-                            </h4>
+                        <div className="tc-stat-card-foot">
+                            <p className="tc-stat-card-value">{criticalCount.toLocaleString()}</p>
+                            <p className="tc-stat-card-subtitle">Immediate action</p>
                         </div>
                     </div>
-                    <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 rounded-xl p-3 flex items-center gap-3 group hover:shadow-md transition-all">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center transition-transform group-hover:scale-110">
-                            <Package size={16} />
+                    <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#F59E0B] to-[#D97706] group hover:shadow-md">
+                        <div className="tc-stat-card-header">
+                            <p className="tc-stat-card-title text-white/90">Warning</p>
+                            <span className="tc-stat-card-icon bg-white/20 transition-transform group-hover:scale-110">
+                                <Activity size={15} />
+                            </span>
                         </div>
-                        <div>
-                            <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest leading-none">
-                                Recommended
-                            </p>
-                            <h4 className="text-xl font-black text-blue-700 dark:text-blue-400 mt-1 leading-none">
-                                {optimalCount}
-                            </h4>
+                        <div className="tc-stat-card-foot">
+                            <p className="tc-stat-card-value">{warningCount.toLocaleString()}</p>
+                            <p className="tc-stat-card-subtitle">24-48h</p>
+                        </div>
+                    </div>
+                    <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] group hover:shadow-md">
+                        <div className="tc-stat-card-header">
+                            <p className="tc-stat-card-title text-white/90">Recommended</p>
+                            <span className="tc-stat-card-icon bg-white/20 transition-transform group-hover:scale-110">
+                                <Package size={15} />
+                            </span>
+                        </div>
+                        <div className="tc-stat-card-foot">
+                            <p className="tc-stat-card-value">{optimalCount.toLocaleString()}</p>
+                            <p className="tc-stat-card-subtitle">Monitor</p>
                         </div>
                     </div>
                 </div>
@@ -167,9 +192,9 @@ export function ReorderSuggestions() {
                     </p>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm border-collapse">
+                <div className="tc-table-surface animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="tc-table-scroll">
+                        <table className="tc-table w-full text-left text-sm border-collapse">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                                     <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest">
@@ -284,26 +309,24 @@ export function ReorderSuggestions() {
                                                         Create PO
                                                     </button>
                                                     <button
-                                                        onClick={() =>
-                                                            navigate({
-                                                                to: '/app/inventory' as any,
-                                                                search: { search: item.medicine_name } as any,
-                                                            })
-                                                        }
+                                                        onClick={() => handleAddStock(item)}
                                                         className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                                                     >
                                                         Adjust
                                                     </button>
                                                     <button
-                                                        onClick={() =>
-                                                            navigate({
-                                                                to: '/app/inventory' as any,
-                                                                search: { search: item.medicine_name } as any,
-                                                            })
-                                                        }
-                                                        className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                                        onClick={() => handleTransfer(item)}
+                                                        disabled={transferLoadingId === item.medicine_id}
+                                                        className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-60"
                                                     >
-                                                        Transfer
+                                                        {transferLoadingId === item.medicine_id ? (
+                                                            <span className="inline-flex items-center gap-1">
+                                                                <Loader2 size={12} className="animate-spin" />
+                                                                Opening
+                                                            </span>
+                                                        ) : (
+                                                            'Transfer'
+                                                        )}
                                                     </button>
                                                 </div>
                                             </td>
@@ -325,6 +348,30 @@ export function ReorderSuggestions() {
                 }}
                 initialItem={selectedItem}
             />
+
+            <AddStockModal
+                isOpen={isAddStockModalOpen}
+                onClose={() => {
+                    setIsAddStockModalOpen(false);
+                    setAddStockMedicineId(null);
+                }}
+                onSuccess={() => {
+                    loadSuggestions();
+                }}
+                initialMedicineId={addStockMedicineId}
+            />
+
+            {transferMedicine && effectiveFacilityId ? (
+                <StockTransferModal
+                    medicine={transferMedicine}
+                    facilityId={effectiveFacilityId}
+                    onClose={() => setTransferMedicine(null)}
+                    onSuccess={() => {
+                        setTransferMedicine(null);
+                        loadSuggestions();
+                    }}
+                />
+            ) : null}
         </div>
     );
 }

@@ -306,7 +306,7 @@ export function ViewOrderPage() {
                             Requested Items
                         </h4>
                         <div className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm shadow-slate-100/50">
-                            <table className="w-full text-left">
+                            <table className="tc-table w-full text-left">
                                 <thead className="bg-slate-50 dark:bg-slate-800/50">
                                     <tr>
                                         <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider">

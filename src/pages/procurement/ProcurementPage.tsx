@@ -146,7 +146,7 @@ const ImportPreviewModal = ({
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6">
-                    <table className="w-full text-left border-collapse">
+                    <table className="tc-table w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b-2 border-slate-200 dark:border-slate-800">
                                 <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
@@ -360,7 +360,7 @@ const SuppliersTab = () => {
                             className="border-none shadow-none"
                         />
                     ) : (
-                        <table className="w-full text-left border-collapse">
+                        <table className="tc-table w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-slate-800/50">
                                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
@@ -1178,7 +1178,7 @@ export function ProcurementPage() {
                                         className="border-none shadow-none"
                                     />
                                 ) : (
-                                    <table className="w-full text-left border-collapse">
+                                    <table className="tc-table w-full text-left border-collapse">
                                         <thead>
                                             <tr className="bg-slate-50 dark:bg-slate-800/50">
                                                 {procurementVisibleColumnSet.has('order_id') && (

@@ -41,12 +41,12 @@ export interface ColdChainTrendData {
 
 export const InventoryStatusChart: React.FC<{ data: InventoryData[] }> = ({ data }) => {
     const { isDark } = useTheme();
-    const axisColor = isDark ? '#94a3b8' : '#475569';
-    const gridColor = isDark ? '#334155' : '#e2e8f0';
+    const axisColor = isDark ? '#94a3b8' : '#6B7280';
+    const gridColor = isDark ? '#334155' : '#E5E7EB';
     const tooltipStyle = {
         backgroundColor: isDark ? '#1e293b' : '#ffffff',
-        borderColor: isDark ? '#334155' : '#e2e8f0',
-        color: isDark ? '#f8fafc' : '#0f172a',
+        borderColor: isDark ? '#334155' : '#E5E7EB',
+        color: isDark ? '#f8fafc' : '#111827',
     };
 
     return (
@@ -80,7 +80,7 @@ export const InventoryStatusChart: React.FC<{ data: InventoryData[] }> = ({ data
                     ]}
                 />
                 <Legend />
-                <Bar dataKey="count" name="Items" fill="#8884d8" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="count" name="Items" fill="#2563EB" radius={[0, 4, 4, 0]} />
             </BarChart>
         </ResponsiveContainer>
     );
@@ -88,12 +88,12 @@ export const InventoryStatusChart: React.FC<{ data: InventoryData[] }> = ({ data
 
 export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data }) => {
     const { isDark } = useTheme();
-    const axisColor = isDark ? '#94a3b8' : '#475569';
-    const gridColor = isDark ? '#334155' : '#e2e8f0';
+    const axisColor = isDark ? '#94a3b8' : '#6B7280';
+    const gridColor = isDark ? '#334155' : '#E5E7EB';
     const tooltipStyle = {
         backgroundColor: isDark ? '#1e293b' : '#ffffff',
-        borderColor: isDark ? '#334155' : '#e2e8f0',
-        color: isDark ? '#f8fafc' : '#0f172a',
+        borderColor: isDark ? '#334155' : '#E5E7EB',
+        color: isDark ? '#f8fafc' : '#111827',
     };
 
     return (
@@ -101,12 +101,12 @@ export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data })
             <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
                 <defs>
                     <linearGradient id="colorDispensed" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#2563EB" stopOpacity={0.85} />
+                        <stop offset="95%" stopColor="#2563EB" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorReceived" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.85} />
+                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
                     </linearGradient>
                 </defs>
                 <XAxis
@@ -129,7 +129,7 @@ export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data })
                     type="monotone"
                     dataKey="dispensed"
                     stackId="1"
-                    stroke="#8884d8"
+                    stroke="#2563EB"
                     fillOpacity={1}
                     fill="url(#colorDispensed)"
                     name="Dispensed"
@@ -138,7 +138,7 @@ export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data })
                     type="monotone"
                     dataKey="received"
                     stackId="1"
-                    stroke="#82ca9d"
+                    stroke="#10B981"
                     fillOpacity={1}
                     fill="url(#colorReceived)"
                     name="Received"
@@ -150,21 +150,21 @@ export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data })
 
 export const ExpiryRiskChart: React.FC<{ data: any }> = ({ data }) => {
     const { isDark } = useTheme();
-    const axisColor = isDark ? '#94a3b8' : '#475569';
-    const gridColor = isDark ? '#334155' : '#e2e8f0';
+    const axisColor = isDark ? '#94a3b8' : '#6B7280';
+    const gridColor = isDark ? '#334155' : '#E5E7EB';
     const tooltipStyle = {
         backgroundColor: isDark ? '#1e293b' : '#ffffff',
-        borderColor: isDark ? '#334155' : '#e2e8f0',
-        color: isDark ? '#f8fafc' : '#0f172a',
+        borderColor: isDark ? '#334155' : '#E5E7EB',
+        color: isDark ? '#f8fafc' : '#111827',
     };
 
     // Transform backend data to chart format if needed, or assume data is ready
     // Expected data: { "0-30 days": 10, "30-60 days": 5, ... } array or object
     // Adapting to generic array for now
     const chartData = [
-        { name: '0-30 Days', count: data?.days_30 || 0, fill: '#ff4d4f' }, // Red for immediate risk
-        { name: '31-60 Days', count: data?.days_60 || 0, fill: '#faad14' }, // Orange
-        { name: '61-90 Days', count: data?.days_90 || 0, fill: '#fadb14' }, // Yellow
+        { name: '0-30 Days', count: data?.days_30 || 0, fill: '#EF4444' },
+        { name: '31-60 Days', count: data?.days_60 || 0, fill: '#F59E0B' },
+        { name: '61-90 Days', count: data?.days_90 || 0, fill: '#10B981' },
     ];
 
     return (
@@ -187,12 +187,12 @@ export const ExpiryRiskChart: React.FC<{ data: any }> = ({ data }) => {
 
 export const ColdChainTelemetryChart: React.FC<{ data: ColdChainTrendData[] }> = ({ data }) => {
     const { isDark } = useTheme();
-    const axisColor = isDark ? '#94a3b8' : '#475569';
-    const gridColor = isDark ? '#334155' : '#e2e8f0';
+    const axisColor = isDark ? '#94a3b8' : '#6B7280';
+    const gridColor = isDark ? '#334155' : '#E5E7EB';
     const tooltipStyle = {
         backgroundColor: isDark ? '#1e293b' : '#ffffff',
-        borderColor: isDark ? '#334155' : '#e2e8f0',
-        color: isDark ? '#f8fafc' : '#0f172a',
+        borderColor: isDark ? '#334155' : '#E5E7EB',
+        color: isDark ? '#f8fafc' : '#111827',
     };
 
     return (
@@ -219,13 +219,13 @@ export const ColdChainTelemetryChart: React.FC<{ data: ColdChainTrendData[] }> =
                         return [value, 'Excursion Readings'];
                     }}
                 />
-                <ReferenceLine y={8} stroke="#f59e0b" strokeDasharray="4 4" />
-                <ReferenceLine y={-15} stroke="#f59e0b" strokeDasharray="4 4" />
+                <ReferenceLine y={8} stroke="#F59E0B" strokeDasharray="4 4" />
+                <ReferenceLine y={-15} stroke="#F59E0B" strokeDasharray="4 4" />
                 <Line
                     type="monotone"
                     dataKey="average_temperature_c"
                     name="average_temperature_c"
-                    stroke="#0f766e"
+                    stroke="#10B981"
                     strokeWidth={2}
                     dot={false}
                     activeDot={{ r: 4 }}
@@ -234,7 +234,7 @@ export const ColdChainTelemetryChart: React.FC<{ data: ColdChainTrendData[] }> =
                     type="monotone"
                     dataKey="excursion_readings"
                     name="excursion_readings"
-                    stroke="#ef4444"
+                    stroke="#EF4444"
                     strokeWidth={1.5}
                     dot={false}
                 />

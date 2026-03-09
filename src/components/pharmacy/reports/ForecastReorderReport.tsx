@@ -91,7 +91,7 @@ export function ForecastReorderReport({ facilityId }: ForecastReorderReportProps
             </div>
 
             <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <table className="w-full text-sm">
+                <table className="tc-table w-full text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-800/50">
                         <tr className="text-[10px] uppercase tracking-widest text-slate-400">
                             <th className="px-4 py-3 text-left font-black">Medicine</th>

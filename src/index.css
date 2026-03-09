@@ -3,11 +3,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --color-healthcare-primary: #0d9488;
-    --color-healthcare-secondary: #2563eb;
-    --color-healthcare-accent: #10b981;
+    --color-healthcare-primary: #2563eb;
+    --color-healthcare-secondary: #10b981;
+    --color-healthcare-accent: #f59e0b;
     --color-healthcare-danger: #ef4444;
-    --color-healthcare-dark: #0f172a;
+    --color-healthcare-dark: #111827;
 
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
@@ -34,14 +34,30 @@ html {
 :root {
     --bg-primary: #f8fafc;
     --bg-secondary: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
     --text-muted: #94a3b8;
-    --border-color: #e2e8f0;
+    --border-color: #e5e7eb;
     --card-bg: #ffffff;
     --header-bg: #ffffff;
     --sidebar-bg: #ffffff;
     --input-bg: #f1f5f9;
+    --layout-shell-bg: #f8fafc;
+    --layout-shell-accent: rgba(37, 99, 235, 0.08);
+    --layout-sidebar-bg: #e8f1ff;
+    --layout-sidebar-border: #c6dcff;
+    --layout-header-bg: #2563eb;
+    --layout-header-border: #1d4ed8;
+    --layout-content-bg: #f8fafc;
+    --layout-content-border: #e5e7eb;
+    --tc-stat-title: #e2e8f0;
+    --tc-stat-value: #ffffff;
+    --tc-stat-muted: rgba(255, 255, 255, 0.88);
+    --tc-table-head-bg: #f8fafc;
+    --tc-table-head-text: #6b7280;
+    --tc-table-row-border: #e5e7eb;
+    --tc-table-row-hover: #eff6ff;
+    --tc-table-body-text: #111827;
 }
 
 .dark {
@@ -55,6 +71,22 @@ html {
     --header-bg: #0f172a;
     --sidebar-bg: #0f172a;
     --input-bg: #1e293b;
+    --layout-shell-bg: #020617;
+    --layout-shell-accent: rgba(37, 99, 235, 0.08);
+    --layout-sidebar-bg: #10233a;
+    --layout-sidebar-border: #2a4566;
+    --layout-header-bg: #0f2035;
+    --layout-header-border: #1f3148;
+    --layout-content-bg: #0b1220;
+    --layout-content-border: #1e293b;
+    --tc-stat-title: #cbd5e1;
+    --tc-stat-value: #ffffff;
+    --tc-stat-muted: #cbd5e1;
+    --tc-table-head-bg: #0f172a;
+    --tc-table-head-text: #94a3b8;
+    --tc-table-row-border: #1e293b;
+    --tc-table-row-hover: #172238;
+    --tc-table-body-text: #e2e8f0;
 }
 
 @layer base {
@@ -78,6 +110,134 @@ html {
         border-bottom-color: var(--border-color);
         @apply border-b sticky top-0 z-50 transition-all duration-300;
     }
+
+    .layout-shell {
+        background-color: var(--layout-shell-bg);
+        background-image: radial-gradient(
+            circle at top right,
+            var(--layout-shell-accent) 0,
+            transparent 45%
+        );
+    }
+
+    .layout-sidebar {
+        background-color: var(--layout-sidebar-bg);
+        border-color: var(--layout-sidebar-border);
+    }
+
+    .layout-topbar {
+        background-image: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
+        border: 1px solid var(--layout-header-border);
+        color: #ffffff;
+    }
+
+    .layout-content-panel {
+        background-color: var(--layout-content-bg);
+        border: 1px solid var(--layout-content-border);
+    }
+
+    .tc-stat-card {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        min-height: 78px;
+        @apply relative overflow-hidden rounded-2xl border px-3 py-2 shadow-sm transition-all duration-200;
+    }
+
+    .tc-stat-card-gradient {
+        @apply border-0 text-white;
+    }
+
+    .tc-stat-card-neutral .tc-stat-card-title {
+        color: #6b7280;
+    }
+
+    .tc-stat-card-neutral .tc-stat-card-value {
+        color: #111827;
+    }
+
+    .dark .tc-stat-card-neutral .tc-stat-card-value {
+        color: #f8fafc;
+    }
+
+    .tc-stat-card-neutral .tc-stat-card-subtitle {
+        color: #6b7280;
+    }
+
+    .dark .tc-stat-card-neutral .tc-stat-card-subtitle {
+        color: #94a3b8;
+    }
+
+    .tc-stat-card-header {
+        @apply flex items-start justify-between gap-2;
+    }
+
+    .tc-stat-card-title {
+        color: var(--tc-stat-title);
+        @apply truncate text-[10px] font-semibold tracking-wide;
+    }
+
+    .tc-stat-card-icon {
+        @apply inline-flex shrink-0 rounded-md p-1 text-white;
+    }
+
+    .tc-stat-card-value {
+        color: var(--tc-stat-value);
+        @apply truncate text-base font-bold leading-none;
+    }
+
+    .tc-stat-card-subtitle {
+        color: var(--tc-stat-muted);
+        @apply truncate text-[10px] font-semibold;
+    }
+
+    .tc-stat-card-foot {
+        @apply mt-1 flex items-end justify-between gap-2;
+    }
+
+    .tc-table-surface {
+        background-color: var(--card-bg);
+        border-color: var(--border-color);
+        @apply rounded-2xl border shadow-sm overflow-hidden;
+    }
+
+    .tc-table-scroll {
+        @apply overflow-x-auto;
+    }
+
+    .tc-table {
+        @apply w-full text-left border-collapse;
+    }
+
+    .tc-table > thead > tr {
+        background-color: var(--tc-table-head-bg) !important;
+        border-bottom: 1px solid var(--tc-table-row-border) !important;
+    }
+
+    .tc-table > thead > tr > th {
+        color: var(--tc-table-head-text) !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.6875rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+        white-space: nowrap;
+    }
+
+    .tc-table > tbody > tr {
+        border-bottom: 1px solid var(--tc-table-row-border) !important;
+        transition: background-color 0.18s ease;
+    }
+
+    .tc-table > tbody > tr:hover {
+        background-color: var(--tc-table-row-hover) !important;
+    }
+
+    .tc-table > tbody > tr > td {
+        color: var(--tc-table-body-text);
+        padding: 0.8rem 1rem !important;
+        font-size: 0.8125rem;
+        vertical-align: middle;
+    }
 }
 
 ::-webkit-scrollbar {
@@ -89,5 +249,5 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-    @apply bg-teal-600/20 rounded-full hover:bg-teal-600/40 transition-colors;
+    @apply bg-blue-600/20 rounded-full hover:bg-blue-600/40 transition-colors;
 }

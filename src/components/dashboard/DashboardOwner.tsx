@@ -1,194 +1,147 @@
 import React, { useEffect, useState } from 'react';
 import {
-    TrendingUp,
-    TrendingDown,
-    Package,
     AlertTriangle,
+    ArrowRight,
+    Building2,
     Clock,
     DollarSign,
     Filter,
-    ArrowRight,
-    Building2,
-    Snowflake,
-    ShieldCheck,
-    Users,
+    Package,
+    TrendingDown,
+    TrendingUp,
 } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
-import { useAuth } from '../../context/AuthContext';
+import { format, subDays, startOfToday, endOfToday } from 'date-fns';
 import { pharmacyService } from '../../services/pharmacy.service';
-import type {
-    DashboardSummary,
-    ReorderSuggestion,
-    Alert,
-    ColdChainOverview,
-    ColdChainExcursion,
-} from '../../types/pharmacy';
-import {
-    ConsumptionTrendChart,
-    ExpiryRiskChart,
-    InventoryStatusChart,
-    ColdChainTelemetryChart,
-} from './DashboardCharts';
+import type { Alert, DashboardSummary, ReorderSuggestion, Stock } from '../../types/pharmacy';
+import { ConsumptionTrendChart } from './DashboardCharts';
 import { ChartSkeleton, StatCardSkeleton } from './DashboardSkeletons';
 import { SkeletonTable } from '../ui/SkeletonTable';
 import { cn } from '../../lib/utils';
-import { format, subDays, startOfToday, endOfToday } from 'date-fns';
-import toast from 'react-hot-toast';
+import { CreatePurchaseOrderModal } from '../inventory/CreatePurchaseOrderModal';
+import { AddStockModal } from '../inventory/AddStockModal';
 
 interface DashboardOwnerProps {
     facilityId: number | null;
 }
 
+type DateRange = 'today' | '7days' | '30days' | 'custom';
+
+interface TopStockMedicine {
+    id: number;
+    name: string;
+    category: string;
+    quantity: number;
+}
+
 export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) => {
     const navigate = useNavigate();
-    const { setFacility, facilities } = useAuth();
-    const [loading, setLoading] = useState(true);
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
     const [lowStock, setLowStock] = useState<ReorderSuggestion[]>([]);
-    const [nearExpiry, setNearExpiry] = useState<Alert[]>([]);
-    const [coldChainOverview, setColdChainOverview] = useState<ColdChainOverview | null>(null);
-    const [excursionActionLoading, setExcursionActionLoading] = useState<number | null>(null);
+    const [criticalAlerts, setCriticalAlerts] = useState<Alert[]>([]);
+    const [topStockMedicines, setTopStockMedicines] = useState<TopStockMedicine[]>([]);
     const [topSelling, setTopSelling] = useState<Array<{ name: string; value: number }>>([]);
-    const [recentMovements, setRecentMovements] = useState<any[]>([]);
-    const [supplierCount, setSupplierCount] = useState(0);
-    const [poPipeline, setPoPipeline] = useState({ pending: 0, active: 0, received: 0 });
+    const [kpiLoading, setKpiLoading] = useState(true);
+    const [panelLoading, setPanelLoading] = useState(true);
+    const [isLowStockPOModalOpen, setIsLowStockPOModalOpen] = useState(false);
+    const [isLowStockAddStockOpen, setIsLowStockAddStockOpen] = useState(false);
+    const [selectedLowStockItem, setSelectedLowStockItem] = useState<{
+        medicine_id: number;
+        medicine_name: string;
+        quantity: number;
+    } | null>(null);
 
-    const [facilityComparison, setFacilityComparison] = useState<import('../../types/pharmacy').MultiLocationData | null>(null);
-
-    // Filters
-    const [dateRange, setDateRange] = useState<'today' | '7days' | '30days' | 'custom'>('7days');
+    const [dateRange, setDateRange] = useState<DateRange>('7days');
     const [startDate, setStartDate] = useState<string>(format(startOfToday(), 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState<string>(format(endOfToday(), 'yyyy-MM-dd'));
 
-    const loadColdChainOverview = async () => {
-        if (facilityId === null) {
-            setColdChainOverview(null);
-            return;
-        }
-
-        try {
-            const data = await pharmacyService.getColdChainOverview();
-            setColdChainOverview(data);
-        } catch (error) {
-            console.error('Failed to load cold-chain overview:', error);
-            setColdChainOverview(null);
-        }
-    };
-
-    const handleAcknowledgeExcursion = async (excursionId: number) => {
-        setExcursionActionLoading(excursionId);
-        try {
-            await pharmacyService.acknowledgeColdChainExcursion(
-                excursionId,
-                'Acknowledged from executive dashboard',
-            );
-            toast.success('Excursion acknowledged');
-            await loadColdChainOverview();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.message || 'Failed to acknowledge excursion');
-        } finally {
-            setExcursionActionLoading(null);
-        }
-    };
-
-    const handleResolveExcursion = async (excursionId: number) => {
-        setExcursionActionLoading(excursionId);
-        try {
-            await pharmacyService.resolveColdChainExcursion(excursionId, {
-                action_taken: 'Temperature stabilized and stock integrity verified',
-                notes: 'Resolved from executive dashboard',
-            });
-            toast.success('Excursion resolved');
-            await loadColdChainOverview();
-        } catch (error: any) {
-            toast.error(error?.response?.data?.message || 'Failed to resolve excursion');
-        } finally {
-            setExcursionActionLoading(null);
-        }
-    };
-
     useEffect(() => {
-        const loadInitialData = async () => {
+        let cancelled = false;
+        const loadPanels = async () => {
+            setPanelLoading(true);
             try {
-                const [reorderData, alertsData, topSellingRows, suppliersData] = await Promise.all([
+                const [reorderData, alertsData, topSellingRows, stockData] = await Promise.all([
                     pharmacyService.getReorderSuggestions(facilityId as any),
                     pharmacyService.getAlerts({
                         facility_id: facilityId || undefined,
                         status: 'active',
+                        limit: 25,
                     }),
                     pharmacyService.getTopSellingMedicines('DESC'),
-                    pharmacyService.getSuppliers({ page: 1, limit: 1 }),
+                    pharmacyService.getStock({
+                        ...(facilityId ? { facility_id: facilityId } : {}),
+                        page: 1,
+                        limit: 200,
+                    }),
                 ]);
 
-                // Fetch real-time low stock suggestions
-                setLowStock(reorderData.slice(0, 5));
+                if (cancelled) return;
 
-                // Fetch real-time expiry alerts
-                setNearExpiry(
-                    alertsData.data
-                        .filter((a) => a.type === 'expiry_soon' || a.type === 'expiry')
+                const lowStockRows = Array.isArray(reorderData) ? reorderData.slice(0, 5) : [];
+                setLowStock(lowStockRows);
+
+                const alerts = Array.isArray(alertsData.data) ? alertsData.data : [];
+                const criticalRows = alerts
+                    .filter(
+                        (item) =>
+                            item.severity === 'critical' ||
+                            item.severity === 'out_of_stock' ||
+                            item.type === 'expired' ||
+                            item.type === 'low_stock',
+                    )
+                    .slice(0, 5);
+                setCriticalAlerts(criticalRows.length > 0 ? criticalRows : alerts.slice(0, 5));
+
+                setTopSelling(Array.isArray(topSellingRows) ? topSellingRows.slice(0, 5) : []);
+
+                const stockRows = Array.isArray(stockData.data) ? (stockData.data as Stock[]) : [];
+                const grouped = new Map<number, TopStockMedicine>();
+                for (const row of stockRows) {
+                    const medicineId = row.medicine_id ?? row.medicine?.id;
+                    if (!medicineId) continue;
+
+                    const quantity = Number(row.quantity || 0);
+                    const existing = grouped.get(medicineId);
+                    if (existing) {
+                        existing.quantity += quantity;
+                    } else {
+                        grouped.set(medicineId, {
+                            id: medicineId,
+                            name: row.medicine?.name || `Medicine #${medicineId}`,
+                            category: row.medicine?.category?.name || 'Uncategorized',
+                            quantity,
+                        });
+                    }
+                }
+
+                setTopStockMedicines(
+                    Array.from(grouped.values())
+                        .sort((a, b) => b.quantity - a.quantity)
                         .slice(0, 5),
                 );
-                setTopSelling(Array.isArray(topSellingRows) ? topSellingRows.slice(0, 5) : []);
-                setSupplierCount(Number(suppliersData?.meta?.total || 0));
-
-                // Fetch facility comparison if in global view
-                if (facilityId === null) {
-                    const comparison = await pharmacyService.getMultiLocationComparison('revenue');
-                    setFacilityComparison(comparison);
-                    setColdChainOverview(null);
-                    setRecentMovements([]);
-                    setPoPipeline({ pending: 0, active: 0, received: 0 });
-                } else {
-                    setFacilityComparison(null);
-                    const [coldChainData, movementData, pendingPOs, receivedPOs] = await Promise.all([
-                        pharmacyService.getColdChainOverview(),
-                        pharmacyService.getStockMovements({
-                            facilityId,
-                            page: 1,
-                            limit: 5,
-                        }),
-                        pharmacyService.getProcurementOrders({
-                            page: 1,
-                            limit: 1,
-                            status: 'pending',
-                        }),
-                        pharmacyService.getProcurementOrders({
-                            page: 1,
-                            limit: 1,
-                            status: 'received',
-                        }),
-                    ]);
-                    setColdChainOverview(coldChainData);
-                    setRecentMovements(Array.isArray(movementData.data) ? movementData.data : []);
-                    let activeCount = 0;
-                    try {
-                        const activePOs = await pharmacyService.getProcurementOrders({
-                            page: 1,
-                            limit: 1,
-                            status: 'approved,confirmed,partially_received,backordered',
-                        });
-                        activeCount = Number(activePOs.meta?.total || 0);
-                    } catch (error) {
-                        activeCount = 0;
-                    }
-                    setPoPipeline({
-                        pending: Number(pendingPOs.meta?.total || 0),
-                        active: activeCount,
-                        received: Number(receivedPOs.meta?.total || 0),
-                    });
-                }
             } catch (error) {
-                console.error('Failed to load initial dashboard data:', error);
+                console.error('Failed to load dashboard panels:', error);
+                if (!cancelled) {
+                    setLowStock([]);
+                    setCriticalAlerts([]);
+                    setTopStockMedicines([]);
+                    setTopSelling([]);
+                }
+            } finally {
+                if (!cancelled) setPanelLoading(false);
             }
         };
 
-        loadInitialData();
+        loadPanels();
+
+        return () => {
+            cancelled = true;
+        };
     }, [facilityId]);
 
-    // Handle data refresh when date range changes
     useEffect(() => {
-        const updateDashboardData = async () => {
+        let cancelled = false;
+        const loadKpis = async () => {
             let start = format(startOfToday(), 'yyyy-MM-dd');
             let end = format(endOfToday(), 'yyyy-MM-dd');
 
@@ -201,9 +154,8 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                 end = endDate;
             }
 
-            setLoading(true);
+            setKpiLoading(true);
             try {
-                // Fetch both KPIs for chosen period and a global summary for trends/categories
                 const [kpis, summaryData] = await Promise.all([
                     pharmacyService.getComprehensiveKPIs(facilityId as any, {
                         start_date: start,
@@ -212,51 +164,65 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                     pharmacyService.getDashboardSummary(facilityId as any),
                 ]);
 
+                if (cancelled) return;
+
                 setSummary({
                     ...summaryData,
-                    today: kpis, // Uses the selected period data for the KPI cards
+                    today: kpis,
                 });
             } catch (error) {
-                console.error('Error updating dashboard data:', error);
+                console.error('Failed to load KPI summary:', error);
+                if (!cancelled) setSummary(null);
             } finally {
-                setLoading(false);
+                if (!cancelled) setKpiLoading(false);
             }
         };
 
-        updateDashboardData();
+        loadKpis();
+
+        return () => {
+            cancelled = true;
+        };
     }, [dateRange, startDate, endDate, facilityId]);
 
     const kpis = summary?.today;
 
+    const refreshLowStock = async () => {
+        try {
+            const reorderData = await pharmacyService.getReorderSuggestions(facilityId as any);
+            const lowStockRows = Array.isArray(reorderData) ? reorderData.slice(0, 5) : [];
+            setLowStock(lowStockRows);
+        } catch (error) {
+            console.error('Failed to refresh low stock rows:', error);
+        }
+    };
+
     return (
-        <div className="space-y-6 p-4 bg-slate-50/50 dark:bg-slate-950/50 min-h-screen">
-            {/* TOP BAR / FILTERS */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="space-y-6 p-4 min-h-screen bg-[#F8FAFC] text-[#111827] dark:bg-slate-950 dark:text-slate-100">
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-[#FFFFFF] dark:bg-slate-900 p-4 rounded-2xl shadow-sm">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-healthcare-primary/10 rounded-xl">
-                        <Filter className="text-healthcare-primary" size={20} />
+                    <div className="p-2 bg-[#DBEAFE] dark:bg-blue-900/40 rounded-xl">
+                        <Filter className="text-[#2563EB] dark:text-blue-300" size={20} />
                     </div>
                     <div>
-                        <h2 className="text-lg font-black text-healthcare-dark dark:text-white leading-tight">
-                            Dashboard Overview
-                        </h2>
-                        <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
-                            Quick insights & actions
+                        <h2 className="text-xl font-bold text-[#111827] dark:text-slate-100 leading-tight">Dashboard</h2>
+                        <p className="text-xs text-[#6B7280] dark:text-slate-400 font-semibold">
+                            Pharmacy inventory overview
                         </p>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-                    <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                    <div className="flex p-1 bg-[#F8FAFC] dark:bg-slate-800 rounded-xl border border-[#E5E7EB] dark:border-slate-700">
                         {(['today', '7days', '30days', 'custom'] as const).map((r) => (
                             <button
                                 key={r}
                                 onClick={() => setDateRange(r)}
                                 className={cn(
-                                    'px-4 py-2 text-xs font-black rounded-lg transition-all uppercase tracking-tight',
+                                    'px-4 py-2 text-xs font-semibold rounded-lg transition-colors',
                                     dateRange === r
-                                        ? 'bg-white dark:bg-slate-700 text-healthcare-primary shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300',
+                                        ? 'bg-[#2563EB] text-white'
+                                        : 'text-[#6B7280] dark:text-slate-400 hover:text-[#111827] dark:hover:text-slate-100',
                                 )}
                             >
                                 {r === '7days' ? '7 Days' : r === '30days' ? '30 Days' : r}
@@ -265,698 +231,400 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                     </div>
 
                     {dateRange === 'custom' && (
-                        <div className="flex items-center gap-2 animate-in slide-in-from-right-2">
+                        <div className="flex items-center gap-2">
                             <input
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold"
+                                className="px-3 py-2 bg-white dark:bg-slate-900 border border-[#E5E7EB] dark:border-slate-700 rounded-lg text-xs font-semibold text-[#111827] dark:text-slate-100"
                             />
-                            <span className="text-slate-400 font-black">→</span>
+                            <span className="text-[#6B7280] dark:text-slate-400 font-bold">→</span>
                             <input
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold"
+                                className="px-3 py-2 bg-white dark:bg-slate-900 border border-[#E5E7EB] dark:border-slate-700 rounded-lg text-xs font-semibold text-[#111827] dark:text-slate-100"
                             />
                         </div>
                     )}
+
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#E5E7EB] dark:border-slate-700 bg-[#F8FAFC] dark:bg-slate-800">
+                        <Building2 size={14} className="text-[#2563EB] dark:text-blue-300" />
+                        <span className="text-xs font-semibold text-[#111827] dark:text-slate-100">
+                            {facilityId === null ? 'All Branches' : 'Main Branch'}
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-                <QuickActionCard
-                    title="Create Purchase Order"
-                    subtitle="Restock critical products quickly"
-                    icon={<Package size={16} />}
-                    onClick={() => navigate({ to: '/app/procurement' as any, search: {} as any })}
-                />
-                <QuickActionCard
-                    title="Review Low Stock"
-                    subtitle="Prioritize products nearing shortage"
-                    icon={<AlertTriangle size={16} />}
-                    onClick={() => navigate({ to: '/app/analytics/low-stock' as any, search: {} as any })}
-                />
-                <QuickActionCard
-                    title="Inspect Expiry Risk"
-                    subtitle="Protect margins and patient safety"
-                    icon={<Clock size={16} />}
-                    onClick={() => navigate({ to: '/app/analytics/recall' as any, search: {} as any })}
-                />
-                <QuickActionCard
-                    title="Cold-Chain Status"
-                    subtitle="Track active excursions live"
-                    icon={<Snowflake size={16} />}
-                    onClick={() => navigate({ to: '/app/settings' as any, search: {} as any })}
-                />
-            </div>
-
-            {/* SECTION 1: TOP KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-                {loading ? (
-                    Array(6)
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                {kpiLoading ? (
+                    Array(4)
                         .fill(0)
                         .map((_, i) => <StatCardSkeleton key={i} />)
                 ) : (
                     <>
-                        <KPICard
-                            title="Total Sales"
+                        <StatCard
+                            title="Sales"
                             value={kpis?.financial.total_revenue || 0}
                             isCurrency
-                            icon={<DollarSign size={16} />}
-                            color="bg-emerald-500"
                             trend={summary?.month.operational.sales_growth_rate}
+                            icon={<DollarSign size={15} />}
+                            gradient="from-[#10B981] to-[#059669]"
                             onClick={() => navigate({ to: '/app/analytics/sales' as any, search: {} as any })}
                         />
-                        <KPICard
-                            title="Total Profit"
-                            value={kpis?.financial.net_profit || 0}
-                            isCurrency
-                            icon={<TrendingUp size={16} />}
-                            color="bg-blue-500"
-                            onClick={() => navigate({ to: '/app/analytics/sales' as any, search: {} as any })}
+                        <StatCard
+                            title="Medicines"
+                            value={kpis?.inventory.total_items || 0}
+                            icon={<Package size={15} />}
+                            gradient="from-[#2563EB] to-[#1D4ED8]"
+                            onClick={() => navigate({ to: '/app/inventory' as any, search: {} as any })}
                         />
-                        <KPICard
-                            title="Low Stock"
+                        <StatCard
+                            title="Low stock"
                             value={kpis?.inventory.low_stock_items || 0}
-                            icon={<Package size={16} />}
-                            color="bg-amber-500"
-                            status={kpis?.inventory.low_stock_items! > 10 ? 'warning' : 'healthy'}
+                            icon={<AlertTriangle size={15} />}
+                            gradient="from-[#F59E0B] to-[#D97706]"
+                            actionLabel="View Details"
                             onClick={() => navigate({ to: '/app/analytics/low-stock' as any, search: {} as any })}
                         />
-                        <KPICard
-                            title="Near-Expiry"
+                        <StatCard
+                            title="Expiring soon"
                             value={kpis?.inventory.expiring_soon_items || 0}
-                            icon={<Clock size={16} />}
-                            color="bg-rose-500"
-                            status={kpis?.inventory.expiring_soon_items! > 0 ? 'risk' : 'healthy'}
+                            icon={<Clock size={15} />}
+                            gradient="from-[#EF4444] to-[#DC2626]"
+                            actionLabel="View Details"
                             onClick={() => navigate({ to: '/app/analytics/recall' as any, search: {} as any })}
-                        />
-                        <KPICard
-                            title="Stock Value"
-                            value={kpis?.inventory.total_inventory_value || 0}
-                            isCurrency
-                            icon={<DollarSign size={16} />}
-                            color="bg-teal-600"
-                            onClick={() => navigate({ to: '/app/analytics/inventory' as any, search: {} as any })}
-                        />
-                        <KPICard
-                            title="Suppliers"
-                            value={supplierCount}
-                            icon={<Users size={16} />}
-                            color="bg-violet-600"
-                            onClick={() =>
-                                navigate({ to: '/app/procurement/suppliers' as any, search: {} as any })
-                            }
                         />
                     </>
                 )}
             </div>
 
-            {/* SECTION 2: CORE GRAPHS */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-wider flex items-center gap-2">
-                            <TrendingUp size={16} className="text-healthcare-primary" />
-                            Sales Performance
-                        </h3>
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div className="xl:col-span-2 bg-[#FFFFFF] dark:bg-slate-900 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-[#E5E7EB] dark:border-slate-700 flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Sales trend</h3>
                         <button
                             onClick={() => navigate({ to: '/app/analytics/sales' as any, search: {} as any })}
-                            className="text-[10px] font-black text-slate-400 hover:text-healthcare-primary flex items-center gap-1 uppercase"
+                            className="text-xs font-semibold text-[#2563EB] dark:text-blue-300 hover:underline inline-flex items-center gap-1"
                         >
-                            Details <ArrowRight size={10} />
+                            View Report <ArrowRight size={13} />
                         </button>
                     </div>
-                    {loading ? (
-                        <ChartSkeleton />
-                    ) : (
-                        <div className="h-[180px]">
-                            <ConsumptionTrendChart
-                                data={
-                                    summary?.sales_trend?.map((d) => ({
-                                        date: d.date,
-                                        dispensed: d.sales,
-                                        received: 0,
-                                    })) || []
-                                }
-                            />
-                        </div>
-                    )}
-                </div>
-
-                <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-wider flex items-center gap-2">
-                            <Package size={16} className="text-teal-500" />
-                            Stock Health
-                        </h3>
-                        <button
-                            onClick={() => navigate({ to: '/app/analytics/movement' as any, search: {} as any })}
-                            className="text-[10px] font-black text-slate-400 hover:text-healthcare-primary flex items-center gap-1 uppercase"
-                        >
-                            Details <ArrowRight size={10} />
-                        </button>
-                    </div>
-                    {loading ? (
-                        <ChartSkeleton />
-                    ) : (
-                        <div className="h-[180px]">
-                            <InventoryStatusChart
-                                data={
-                                    summary?.categories?.map((c) => ({
-                                        category: c.category_name,
-                                        count: c.quantity_sold,
-                                        value: c.revenue,
-                                    })) || []
-                                }
-                            />
-                        </div>
-                    )}
-                </div>
-
-                <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-wider flex items-center gap-2">
-                            <AlertTriangle size={16} className="text-rose-500" />
-                            Expiry Risk Analysis
-                        </h3>
-                        <button
-                            onClick={() => navigate({ to: '/app/analytics/recall' as any, search: {} as any })}
-                            className="text-[10px] font-black text-slate-400 hover:text-healthcare-primary flex items-center gap-1 uppercase"
-                        >
-                            Details <ArrowRight size={10} />
-                        </button>
-                    </div>
-                    {loading ? (
-                        <ChartSkeleton />
-                    ) : (
-                        <div className="h-[180px]">
-                            <ExpiryRiskChart
-                                data={{
-                                    days_30: summary?.expiry_risk?.under_30_days?.count || 0,
-                                    days_60: summary?.expiry_risk?.under_60_days?.count || 0,
-                                    days_90: summary?.expiry_risk?.under_90_days?.count || 0,
-                                }}
-                            />
-                        </div>
-                    )}
-                </div>
-
-                <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-wider flex items-center gap-2">
-                            <Snowflake size={16} className="text-cyan-600" />
-                            Cold-Chain Integrity
-                        </h3>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 font-black uppercase">
-                                {coldChainOverview?.compliance_rate_24h ?? 0}% compliant
-                            </span>
-                            <span
-                                className={cn(
-                                    'text-[10px] px-2 py-1 rounded-full font-black uppercase',
-                                    (coldChainOverview?.active_excursions || 0) > 0
-                                        ? 'bg-rose-50 text-rose-700'
-                                        : 'bg-slate-100 text-slate-600',
-                                )}
-                            >
-                                {coldChainOverview?.active_excursions || 0} active
-                            </span>
-                        </div>
-                    </div>
-                    {loading ? (
-                        <ChartSkeleton />
-                    ) : (
-                        <div className="h-[180px]">
-                            <ColdChainTelemetryChart data={coldChainOverview?.temperature_trend || []} />
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* SECTION: FACILITY OVERVIEW (Global View Only) */}
-            {facilityId === null && (
-                <div className="glass-card p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-wider flex items-center gap-2">
-                            <Building2 size={16} className="text-healthcare-primary" />
-                            Branch Performance
-                        </h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {(facilityComparison?.facilities && facilityComparison.facilities.length > 0
-                            ? facilityComparison.facilities
-                            : (facilities || [])
-                        ).map((f: any) => {
-                            const id = f.facility_id || f.id;
-                            const name = f.facility_name || f.name;
-                            const revenue = f.metric_value || 0;
-                            const rank = f.rank || '-';
-
-                            return (
-                                <div
-                                    key={id}
-                                    onClick={() => {
-                                        setFacility(id);
-                                        navigate({ to: '/app' as any, search: {} as any });
-                                    }}
-                                    className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-healthcare-primary transition-all cursor-pointer group"
-                                >
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-xs font-black text-healthcare-dark dark:text-white truncate">
-                                            {name}
-                                        </span>
-                                        <ArrowRight
-                                            size={14}
-                                            className="text-slate-300 group-hover:text-healthcare-primary transition-colors"
-                                        />
-                                    </div>
-                                    <div className="text-lg font-bold text-healthcare-primary">
-                                        {revenue > 0
-                                            ? `RWF ${revenue.toLocaleString()}`
-                                            : 'No recent sales'}
-                                    </div>
-                                    <div className="text-[10px] text-slate-500 font-bold uppercase mt-1">
-                                        {rank !== '-' ? `Rank #${rank}` : 'New Branch'}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                    <div className="p-5">
+                        {kpiLoading ? (
+                            <ChartSkeleton />
+                        ) : (
+                            <div className="h-[250px]">
+                                <ConsumptionTrendChart
+                                    data={
+                                        summary?.sales_trend?.map((d) => ({
+                                            date: d.date,
+                                            dispensed: d.sales,
+                                            received: 0,
+                                        })) || []
+                                    }
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
-            )}
 
-            {/* SECTION 3: ACTION TABLES */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <ActionTable
-                    title="Low Stock Items"
-                    subtitle="Items below reorder level"
-                    data={lowStock.map((i) => ({
-                        id: i.medicine_id,
-                        name: i.medicine_name,
-                        qty: i.current_quantity,
-                        meta: `${i.reorder_point} needed`,
-                        action: 'order',
-                    }))}
-                    loading={loading}
-                    onAction={(id) =>
-                        navigate({ to: '/app/procurement' as any, search: { medicineId: id } as any })
-                    }
-                    onView={() => navigate({ to: '/app/analytics/low-stock' as any, search: {} as any })}
-                />
-
-                <ActionTable
-                    title="Expiring Items"
-                    subtitle="Upcoming stock expiration"
-                    data={nearExpiry.map((a) => ({
-                        id: a.medicine_id!,
-                        name: a.medicine?.name || a.title,
-                        qty: a.current_value || 0,
-                        meta: formatRelativeDate(a.created_at),
-                        action: 'view',
-                    }))}
-                    loading={loading}
-                    onAction={(id) =>
-                        navigate({ to: '/app/inventory' as any, search: { medicineId: id } as any })
-                    }
-                    onView={() => navigate({ to: '/app/analytics/recall' as any, search: {} as any })}
-                />
-
-                <ExcursionTable
-                    title="Cold-Chain Excursions"
-                    subtitle="Immediate containment workflow"
-                    data={coldChainOverview?.active_excursions_list || []}
-                    loading={loading}
-                    onAcknowledge={handleAcknowledgeExcursion}
-                    onResolve={handleResolveExcursion}
-                    loadingId={excursionActionLoading}
+                <CriticalAlertsCard
+                    loading={panelLoading}
+                    rows={criticalAlerts}
+                    onViewAll={() => navigate({ to: '/app/alerts' as any, search: {} as any })}
                 />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <InsightListCard
-                    title="Top Selling Medicines"
-                    subtitle="Dispensing velocity this period"
-                    rows={topSelling.map((item, index) => ({
-                        id: index,
-                        primary: item.name,
-                        secondary: `${Number(item.value || 0).toLocaleString()} units sold`,
-                    }))}
-                />
-                <InsightListCard
-                    title="Recent Stock Movements"
-                    subtitle="Latest inventory audit entries"
-                    rows={recentMovements.map((row) => ({
-                        id: row.id,
-                        primary:
-                            row.medicine_name || row.medicine?.name || row.reference || 'Stock movement',
-                        secondary: `${String(row.movement_subtype || row.movement_type || 'movement').toUpperCase()} • ${row.created_at ? formatRelativeDate(row.created_at) : 'now'}`,
-                    }))}
-                />
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
-                    <h3 className="text-xs font-bold text-healthcare-dark dark:text-white uppercase tracking-wider">
-                        Purchase Order Pipeline
-                    </h3>
-                    <p className="text-[9px] text-slate-400 font-medium uppercase mt-0.5">
-                        Pending, active and received orders
-                    </p>
-                    <div className="mt-4 space-y-2">
-                        <PipelineRow label="Pending" value={poPipeline.pending} color="amber" />
-                        <PipelineRow label="Active" value={poPipeline.active} color="blue" />
-                        <PipelineRow label="Received" value={poPipeline.received} color="emerald" />
-                    </div>
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div className="xl:col-span-2">
+                    <LowStockCard
+                        loading={panelLoading}
+                        rows={lowStock}
+                        onCreatePO={(item) => {
+                            setSelectedLowStockItem({
+                                medicine_id: item.medicine_id,
+                                medicine_name: item.medicine_name,
+                                quantity: item.suggested_quantity,
+                            });
+                            setIsLowStockPOModalOpen(true);
+                        }}
+                        onAddStock={(item) => {
+                            setSelectedLowStockItem({
+                                medicine_id: item.medicine_id,
+                                medicine_name: item.medicine_name,
+                                quantity: item.suggested_quantity,
+                            });
+                            setIsLowStockAddStockOpen(true);
+                        }}
+                    />
                 </div>
+                <TopStockMedicinesCard loading={panelLoading} rows={topStockMedicines} />
             </div>
+
+            <TopSellingMedicinesCard loading={panelLoading} rows={topSelling} />
+
+            <CreatePurchaseOrderModal
+                isOpen={isLowStockPOModalOpen}
+                onClose={() => {
+                    setIsLowStockPOModalOpen(false);
+                    setSelectedLowStockItem(null);
+                }}
+                onSuccess={() => {
+                    setIsLowStockPOModalOpen(false);
+                    refreshLowStock();
+                }}
+                initialItem={selectedLowStockItem}
+            />
+
+            <AddStockModal
+                isOpen={isLowStockAddStockOpen}
+                onClose={() => {
+                    setIsLowStockAddStockOpen(false);
+                    setSelectedLowStockItem(null);
+                }}
+                onSuccess={() => {
+                    setIsLowStockAddStockOpen(false);
+                    refreshLowStock();
+                }}
+                initialMedicineId={selectedLowStockItem?.medicine_id || null}
+            />
         </div>
     );
 };
 
-// --- Sub-components ---
-
-interface KPICardProps {
+const StatCard: React.FC<{
     title: string;
     value: number;
     isCurrency?: boolean;
     trend?: number;
     icon: React.ReactNode;
-    color: string;
-    status?: 'healthy' | 'warning' | 'risk';
+    gradient: string;
+    actionLabel?: string;
     onClick: () => void;
-}
-
-const KPICard: React.FC<KPICardProps> = ({
-    title,
-    value,
-    isCurrency,
-    trend,
-    icon,
-    color,
-    status,
-    onClick,
-}) => {
-    return (
-        <div
-            onClick={onClick}
-            className="group relative bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden min-h-[100px]"
-        >
-            <div
-                className={cn(
-                    'absolute top-0 right-0 w-16 h-16 -mr-4 -mt-4 rounded-full opacity-5 transition-transform group-hover:scale-125',
-                    color,
-                )}
-            />
-
-            <div className="flex justify-between items-start mb-2">
-                <div className={cn('p-1.5 rounded-xl text-white shadow-md', color)}>{icon}</div>
-                {status && (
-                    <div
-                        className={cn(
-                            'px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter',
-                            status === 'healthy'
-                                ? 'bg-emerald-100 text-emerald-600'
-                                : status === 'warning'
-                                    ? 'bg-amber-100 text-amber-600'
-                                    : 'bg-rose-100 text-rose-600',
-                        )}
-                    >
-                        {status}
-                    </div>
-                )}
-            </div>
-
-            <h3 className="text-slate-500 dark:text-slate-400 text-[9px] font-bold uppercase tracking-wider mb-0.5">
-                {title}
-            </h3>
-            <div className="flex items-baseline gap-2">
-                <span className="text-xl font-bold text-healthcare-dark dark:text-white tracking-tight">
-                    {isCurrency ? `RWF ${value.toLocaleString()}` : value.toLocaleString()}
-                </span>
-                {trend !== undefined && (
-                    <span
-                        className={cn(
-                            'text-[10px] font-black flex items-center',
-                            trend >= 0 ? 'text-emerald-500' : 'text-rose-500',
-                        )}
-                    >
-                        {trend >= 0 ? (
-                            <TrendingUp size={10} className="mr-0.5" />
-                        ) : (
-                            <TrendingDown size={10} className="mr-0.5" />
-                        )}
-                        {Math.abs(trend).toFixed(1)}%
-                    </span>
-                )}
-            </div>
-        </div>
-    );
-};
-
-const QuickActionCard: React.FC<{
-    title: string;
-    subtitle: string;
-    icon: React.ReactNode;
-    onClick: () => void;
-}> = ({ title, subtitle, icon, onClick }) => {
+}> = ({ title, value, isCurrency, trend, icon, gradient, actionLabel, onClick }) => {
     return (
         <button
             onClick={onClick}
-            className="group text-left p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-healthcare-primary hover:-translate-y-0.5 transition-all shadow-sm"
+            className={cn(
+                'tc-stat-card tc-stat-card-gradient group bg-gradient-to-br text-left text-white hover:-translate-y-0.5',
+                gradient,
+            )}
         >
-            <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-healthcare-primary/10 text-healthcare-primary rounded-xl">{icon}</div>
-                <span className="text-xs font-black text-healthcare-dark dark:text-white">{title}</span>
+            <div className="absolute -bottom-8 -right-8 h-16 w-16 rounded-full bg-white/10" />
+            <div className="relative z-10 flex h-full flex-col justify-between">
+                <div className="tc-stat-card-header">
+                    <h3 className="tc-stat-card-title text-white/90">{title}</h3>
+                    <span className="tc-stat-card-icon bg-white/20">
+                        {icon}
+                    </span>
+                </div>
+                <div className="tc-stat-card-foot">
+                    <div className="min-w-0 flex items-center gap-1.5">
+                        <span className="tc-stat-card-value">
+                            {isCurrency ? `RWF ${value.toLocaleString()}` : value.toLocaleString()}
+                        </span>
+                        {trend !== undefined && (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold">
+                                {trend >= 0 ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
+                                {Math.abs(trend).toFixed(1)}%
+                            </span>
+                        )}
+                    </div>
+                    {actionLabel && (
+                        <span className="shrink-0 rounded-full bg-black/15 px-2 py-0.5 text-[9px] font-semibold">
+                            {actionLabel}
+                        </span>
+                    )}
+                </div>
             </div>
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{subtitle}</p>
         </button>
     );
 };
 
-interface ActionTableProps {
-    title: string;
-    subtitle: string;
-    data: Array<{
-        id: number;
-        name: string;
-        qty: number;
-        meta: string;
-        action: 'order' | 'view';
-    }>;
+const LowStockCard: React.FC<{
     loading?: boolean;
-    onAction: (id: number) => void;
-    onView: () => void;
-}
-
-const ActionTable: React.FC<ActionTableProps> = ({
-    title,
-    subtitle,
-    data,
-    loading,
-    onAction,
-    onView,
-}) => {
+    rows: ReorderSuggestion[];
+    onCreatePO: (item: ReorderSuggestion) => void;
+    onAddStock: (item: ReorderSuggestion) => void;
+}> = ({ loading, rows, onCreatePO, onAddStock }) => {
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        <div className="tc-table-surface">
+            <div className="px-5 py-4 border-b border-[#E5E7EB] dark:border-slate-700 flex justify-between items-center">
                 <div>
-                    <h3 className="text-xs font-bold text-healthcare-dark dark:text-white uppercase tracking-wider">
-                        {title}
-                    </h3>
-                    <p className="text-[9px] text-slate-400 font-medium uppercase mt-0.5">
-                        {subtitle}
-                    </p>
+                    <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Top 5 low stock medicines</h3>
+                    <p className="text-sm text-[#6B7280] dark:text-slate-400 mt-0.5">Items below reorder threshold</p>
                 </div>
-                <button
-                    onClick={onView}
-                    className="text-[10px] font-black text-healthcare-primary hover:underline uppercase"
-                >
-                    View Report
-                </button>
+                <span className="rounded-full bg-[#EFF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#1D4ED8] dark:bg-blue-900/40 dark:text-blue-300">
+                    Immediate actions
+                </span>
             </div>
 
-            <div className="flex-1">
-                {loading ? (
-                    <div className="p-0">
-                        <SkeletonTable
-                            rows={5}
-                            columns={2}
-                            headers={null}
-                            className="border-none shadow-none"
-                        />
-                    </div>
-                ) : data.length > 0 ? (
-                    <div className="divide-y divide-slate-50 dark:divide-slate-800">
-                        {data.map((item) => (
-                            <div
-                                key={item.id}
-                                className="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center font-black text-[10px] text-slate-500">
-                                        {item.qty}
-                                    </div>
-                                    <div>
-                                        <p className="text-xs font-black text-healthcare-dark dark:text-white line-clamp-1">
-                                            {item.name}
-                                        </p>
-                                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tight">
-                                            {item.meta}
-                                        </p>
-                                    </div>
-                                </div>
+            {loading ? (
+                <SkeletonTable rows={5} columns={3} headers={null} className="border-none shadow-none" />
+            ) : rows.length > 0 ? (
+                <div className="divide-y divide-[#E5E7EB] dark:divide-slate-700">
+                    {rows.slice(0, 5).map((item) => (
+                        <div key={item.medicine_id} className="px-5 py-4 flex items-center justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">{item.medicine_name}</p>
+                                <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-0.5">
+                                    Current: {item.current_quantity} | Reorder: {item.reorder_point}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => onAction(item.id)}
-                                    className={cn(
-                                        'px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all opacity-0 group-hover:opacity-100',
-                                        item.action === 'order'
-                                            ? 'bg-healthcare-primary text-white'
-                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600',
-                                    )}
+                                    onClick={() => onAddStock(item)}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#EFF6FF] dark:bg-blue-900/40 text-[#1D4ED8] dark:text-blue-300 hover:bg-[#DBEAFE] dark:hover:bg-blue-900/60"
                                 >
-                                    {item.action === 'order' ? 'Reorder' : 'View'}
+                                    Add Stock
+                                </button>
+                                <button
+                                    onClick={() => onCreatePO(item)}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#10B981] text-white hover:bg-[#059669]"
+                                >
+                                    Create PO
                                 </button>
                             </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="h-32 flex flex-col items-center justify-center text-slate-300">
-                        <Package size={24} className="mb-2 opacity-20" />
-                        <span className="text-[9px] font-bold uppercase tracking-wider">
-                            No critical items
-                        </span>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
-const ExcursionTable: React.FC<{
-    title: string;
-    subtitle: string;
-    data: ColdChainExcursion[];
-    loading?: boolean;
-    loadingId: number | null;
-    onAcknowledge: (id: number) => void;
-    onResolve: (id: number) => void;
-}> = ({ title, subtitle, data, loading, loadingId, onAcknowledge, onResolve }) => {
-    return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                <h3 className="text-xs font-bold text-healthcare-dark dark:text-white uppercase tracking-wider">
-                    {title}
-                </h3>
-                <p className="text-[9px] text-slate-400 font-medium uppercase mt-0.5">{subtitle}</p>
-            </div>
-            <div className="flex-1">
-                {loading ? (
-                    <div className="p-0">
-                        <SkeletonTable rows={5} columns={2} headers={null} className="border-none shadow-none" />
-                    </div>
-                ) : data.length > 0 ? (
-                    <div className="divide-y divide-slate-50 dark:divide-slate-800">
-                        {data.slice(0, 5).map((item) => (
-                            <div key={item.id} className="p-4 space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <p className="text-xs font-black text-healthcare-dark dark:text-white">
-                                        {item.location?.name || `Location #${item.storage_location_id}`}
-                                    </p>
-                                    <span className="text-[9px] font-black uppercase text-rose-600 bg-rose-50 px-2 py-1 rounded-full">
-                                        {item.status}
-                                    </span>
-                                </div>
-                                <div className="text-[10px] text-slate-500 font-semibold uppercase">
-                                    Temp: {item.last_temperature_c.toFixed(1)}°C
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => onAcknowledge(item.id)}
-                                        disabled={loadingId === item.id}
-                                        className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase bg-amber-50 text-amber-700 disabled:opacity-50"
-                                    >
-                                        {loadingId === item.id ? 'Working...' : 'Acknowledge'}
-                                    </button>
-                                    <button
-                                        onClick={() => onResolve(item.id)}
-                                        disabled={loadingId === item.id}
-                                        className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase bg-emerald-50 text-emerald-700 disabled:opacity-50"
-                                    >
-                                        Resolve
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="h-32 flex flex-col items-center justify-center text-slate-300">
-                        <ShieldCheck size={24} className="mb-2 opacity-25" />
-                        <span className="text-[9px] font-bold uppercase tracking-wider">No active excursions</span>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
-const InsightListCard: React.FC<{
-    title: string;
-    subtitle: string;
-    rows: Array<{ id: number; primary: string; secondary: string }>;
-}> = ({ title, subtitle, rows }) => {
-    return (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                <h3 className="text-xs font-bold text-healthcare-dark dark:text-white uppercase tracking-wider">
-                    {title}
-                </h3>
-                <p className="text-[9px] text-slate-400 font-medium uppercase mt-0.5">{subtitle}</p>
-            </div>
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {rows.length > 0 ? (
-                    rows.slice(0, 5).map((row) => (
-                        <div key={row.id} className="px-4 py-3">
-                            <p className="text-xs font-black text-healthcare-dark dark:text-white line-clamp-1">
-                                {row.primary}
-                            </p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
-                                {row.secondary}
-                            </p>
                         </div>
-                    ))
-                ) : (
-                    <div className="px-4 py-10 text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        No records available
-                    </div>
-                )}
-            </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="px-5 py-10 text-center text-sm text-[#6B7280] dark:text-slate-400">
+                    No low stock items
+                </div>
+            )}
         </div>
     );
 };
 
-const PipelineRow: React.FC<{ label: string; value: number; color: 'amber' | 'blue' | 'emerald' }> = ({
-    label,
-    value,
-    color,
-}) => {
-    const colorClass =
-        color === 'amber'
-            ? 'bg-amber-50 text-amber-700'
-            : color === 'blue'
-                ? 'bg-blue-50 text-blue-700'
-                : 'bg-emerald-50 text-emerald-700';
+const CriticalAlertsCard: React.FC<{
+    loading?: boolean;
+    rows: Alert[];
+    onViewAll: () => void;
+}> = ({ loading, rows, onViewAll }) => {
     return (
-        <div className="flex items-center justify-between rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">{label}</span>
-            <span className={cn('text-xs font-black px-2 py-1 rounded-lg', colorClass)}>{value}</span>
+        <div className="bg-[#FFFFFF] dark:bg-slate-900 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#E5E7EB] dark:border-slate-700">
+                <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Critical alerts</h3>
+            </div>
+
+            {loading ? (
+                <SkeletonTable rows={5} columns={2} headers={null} className="border-none shadow-none" />
+            ) : rows.length > 0 ? (
+                <div className="divide-y divide-[#E5E7EB] dark:divide-slate-700">
+                    {rows.slice(0, 5).map((alert) => (
+                        <div key={alert.id} className="px-5 py-4 flex items-start justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-semibold text-[#111827] dark:text-slate-100 line-clamp-1">
+                                    {alert.title || alert.message}
+                                </p>
+                                <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-0.5 line-clamp-1">
+                                    {alert.medicine?.name || alert.message}
+                                </p>
+                            </div>
+                            <span
+                                className={cn(
+                                    'shrink-0 px-2 py-1 rounded-md text-[11px] font-semibold',
+                                    alert.severity === 'critical' || alert.type === 'expired'
+                                        ? 'bg-[#FEE2E2] text-[#991B1B]'
+                                        : 'bg-[#FEF3C7] text-[#92400E]',
+                                )}
+                            >
+                                {alert.severity}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="px-5 py-10 text-center text-sm text-[#6B7280] dark:text-slate-400">No active alerts</div>
+            )}
+
+            <button
+                onClick={onViewAll}
+                className="w-full border-t border-[#E5E7EB] dark:border-slate-700 px-5 py-3 text-center text-sm font-semibold text-[#2563EB] dark:text-blue-300 hover:bg-[#F8FAFC] dark:hover:bg-slate-800"
+            >
+                View All Alerts
+            </button>
         </div>
     );
 };
 
-function formatRelativeDate(dateStr: string): string {
-    try {
-        const d = new Date(dateStr);
-        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    } catch {
-        return dateStr;
-    }
-}
+const TopStockMedicinesCard: React.FC<{
+    loading?: boolean;
+    rows: TopStockMedicine[];
+}> = ({ loading, rows }) => {
+    return (
+        <div className="bg-[#FFFFFF] dark:bg-slate-900 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="px-4 py-4 border-b border-[#E5E7EB] dark:border-slate-700">
+                <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Top stock medicines</h3>
+            </div>
+
+            {loading ? (
+                <SkeletonTable rows={5} columns={3} headers={null} className="border-none shadow-none" />
+            ) : (
+                <div className="divide-y divide-[#E5E7EB] dark:divide-slate-700">
+                    <div className="grid grid-cols-[1.3fr_1fr_0.8fr] gap-2 px-4 py-3 text-xs font-semibold text-[#6B7280] dark:text-slate-400">
+                        <span>Medicine</span>
+                        <span>Category</span>
+                        <span className="text-right">Stock</span>
+                    </div>
+                    {rows.length > 0 ? (
+                        rows.slice(0, 5).map((row) => (
+                            <div key={row.id} className="grid grid-cols-[1.3fr_1fr_0.8fr] gap-2 px-4 py-3 text-sm">
+                                <span className="font-semibold text-[#111827] dark:text-slate-100 truncate">{row.name}</span>
+                                <span className="text-[#6B7280] dark:text-slate-400 truncate">{row.category}</span>
+                                <span className="text-right font-semibold text-[#2563EB] dark:text-blue-300">
+                                    {row.quantity.toLocaleString()}
+                                </span>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="px-4 py-8 text-center text-sm text-[#6B7280] dark:text-slate-400">
+                            No stock data
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const TopSellingMedicinesCard: React.FC<{
+    loading?: boolean;
+    rows: Array<{ name: string; value: number }>;
+}> = ({ loading, rows }) => {
+    return (
+        <div className="bg-[#FFFFFF] dark:bg-slate-900 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#E5E7EB] dark:border-slate-700 flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Top selling medicines</h3>
+            </div>
+
+            {loading ? (
+                <SkeletonTable rows={5} columns={2} headers={null} className="border-none shadow-none" />
+            ) : (
+                <div className="divide-y divide-[#E5E7EB] dark:divide-slate-700">
+                    <div className="grid grid-cols-[1.5fr_0.8fr] gap-2 px-5 py-3 text-xs font-semibold text-[#6B7280] dark:text-slate-400">
+                        <span>Medicine</span>
+                        <span className="text-right">Units sold</span>
+                    </div>
+                    {rows.length > 0 ? (
+                        rows.slice(0, 5).map((item, index) => (
+                            <div key={`${item.name}-${index}`} className="grid grid-cols-[1.5fr_0.8fr] gap-2 px-5 py-3 text-sm">
+                                <span className="font-semibold text-[#111827] dark:text-slate-100 truncate">{item.name}</span>
+                                <span className="text-right font-semibold text-[#10B981] dark:text-emerald-300">
+                                    {Number(item.value || 0).toLocaleString()}
+                                </span>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="px-5 py-8 text-center text-sm text-[#6B7280] dark:text-slate-400">
+                            No selling data
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};

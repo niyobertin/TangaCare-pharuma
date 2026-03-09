@@ -151,21 +151,21 @@ export function ReorderDashboardPage() {
                         title="Critical Reorders"
                         value={Math.max(highUrgency.length, smartCritical.length)}
                         color="text-rose-500"
-                        icon={<AlertCircle size={24} />}
+                        icon={<AlertCircle size={15} />}
                         subtitle="Below min threshold"
                     />
                     <StatCard
                         title="PAR Tasks"
                         value={parTasks.length}
                         color="text-amber-500"
-                        icon={<ClipboardList size={24} />}
+                        icon={<ClipboardList size={15} />}
                         subtitle="Pending replenishment"
                     />
                     <StatCard
                         title="Mobile Urgents"
                         value={mobileBoard?.quick_actions?.urgent_expiry?.length || mediumUrgency.length}
                         color="text-healthcare-primary"
-                        icon={<Smartphone size={24} />}
+                        icon={<Smartphone size={15} />}
                         subtitle="Counter-ready actions"
                     />
                 </div>
@@ -255,7 +255,7 @@ export function ReorderDashboardPage() {
                         />
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
+                            <table className="tc-table w-full text-left text-sm">
                                 <thead className="bg-slate-50 dark:bg-slate-800/80">
                                     <tr>
                                         <th className="px-6 py-4 font-bold text-slate-500 uppercase tracking-widest text-[10px]">
@@ -373,15 +373,15 @@ function StatCard({
     subtitle: string;
 }) {
     return (
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                    {title}
-                </span>
-                <div className={`${color} bg-opacity-10 p-2 rounded-xl`}>{icon}</div>
+        <div className="tc-stat-card tc-stat-card-neutral">
+            <div className="tc-stat-card-header">
+                <span className="tc-stat-card-title">{title}</span>
+                <div className={`tc-stat-card-icon bg-slate-100 dark:bg-slate-800 ${color}`}>{icon}</div>
             </div>
-            <div className={`text-3xl font-black ${color}`}>{value}</div>
-            <div className="text-[10px] text-slate-500 font-medium mt-1">{subtitle}</div>
+            <div className="tc-stat-card-foot">
+                <span className={`tc-stat-card-value ${color}`}>{value}</span>
+                <span className="tc-stat-card-subtitle">{subtitle}</span>
+            </div>
         </div>
     );
 }

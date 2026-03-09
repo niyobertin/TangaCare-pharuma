@@ -74,7 +74,7 @@ export const PatientsPage: React.FC = () => {
                     ) : (
                         <>
                             <div className="overflow-x-auto flex-1">
-                                <table className="w-full text-left border-collapse">
+                                <table className="tc-table w-full text-left border-collapse">
                                     <thead className="bg-slate-50/80 dark:bg-slate-800/80 sticky top-0 z-10 backdrop-blur-sm">
                                         <tr>
                                             <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">

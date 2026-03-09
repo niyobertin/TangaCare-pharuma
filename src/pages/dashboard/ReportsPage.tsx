@@ -479,7 +479,7 @@ function PerformanceReports({
                     </h4>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="tc-table w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-slate-800/50">
                             <tr className="text-[10px] uppercase tracking-wider text-slate-400">
                                 <th className="px-6 py-3 font-semibold">Staff Member</th>
@@ -568,7 +568,7 @@ function LoyaltyReports({ facilityId }: { facilityId?: number }) {
                     </h4>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="tc-table w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-slate-800/50">
                             <tr className="text-[10px] uppercase tracking-wider text-slate-400">
                                 <th className="px-6 py-3 font-semibold">Patient</th>
@@ -805,7 +805,7 @@ function SalesReports({
                         </div>
                     </div>
                     <div className="max-h-56 overflow-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                        <table className="w-full text-xs">
+                        <table className="tc-table w-full text-xs">
                             <thead className="bg-white dark:bg-slate-900 sticky top-0">
                                 <tr className="text-slate-400 uppercase">
                                     <th className="px-3 py-2 text-left">Date</th>
@@ -865,7 +865,7 @@ function SalesReports({
                         </div>
                     </div>
                     <div className="max-h-72 overflow-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                        <table className="w-full text-xs">
+                        <table className="tc-table w-full text-xs">
                             <thead className="bg-white dark:bg-slate-900 sticky top-0">
                                 <tr className="text-slate-400 uppercase">
                                     <th className="px-3 py-2 text-left">Medicine</th>
@@ -905,7 +905,7 @@ function SalesReports({
             </div>
 
             <div className="overflow-x-auto bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <table className="w-full text-left text-sm">
+                <table className="tc-table w-full text-left text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-800/50">
                         <tr className="text-[10px] uppercase tracking-wider text-slate-400">
                             <th className="px-6 py-3 font-semibold">Date</th>
@@ -1524,7 +1524,7 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                     onScroll={(event) => setStockScrollTop(event.currentTarget.scrollTop)}
                     className="overflow-x-auto overflow-y-auto max-h-[560px] border border-slate-200 dark:border-slate-800 rounded-xl"
                 >
-                    <table className="w-full text-left text-sm whitespace-nowrap">
+                    <table className="tc-table w-full text-left text-sm whitespace-nowrap">
                         <thead className="bg-slate-50 dark:bg-slate-800/50">
                             <tr className="text-[10px] uppercase tracking-wider text-slate-400">
                                 <th className="px-4 py-3 font-semibold whitespace-nowrap">Medicine</th>
@@ -1649,28 +1649,37 @@ function StockReports({ facilityId }: { facilityId?: number }) {
 
 function SummaryCard({ title, value, trend, icon, color = 'teal' }: any) {
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm group hover:shadow-lg transition-all min-h-[90px] flex flex-col justify-center">
-            <div className="flex items-center justify-between mb-2">
-                <div
+        <div className="tc-stat-card tc-stat-card-neutral group hover:shadow-lg">
+            <div className="tc-stat-card-header">
+                <p className="tc-stat-card-title">{title}</p>
+                <span
                     className={cn(
-                        'w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110',
+                        'tc-stat-card-icon transition-transform group-hover:scale-110',
                         color === 'teal'
-                            ? 'bg-teal-50 text-teal-600'
+                            ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300'
                             : color === 'amber'
-                                ? 'bg-amber-50 text-amber-600'
-                                : 'bg-rose-50 text-rose-600',
+                                ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300'
+                                : 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300',
                     )}
                 >
                     {icon}
-                </div>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">{trend}</p>
+                </span>
             </div>
-            <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest leading-none">
-                {title}
-            </p>
-            <h3 className="text-lg font-black text-healthcare-dark dark:text-white mt-1.5 tracking-tighter leading-none">
-                {value}
-            </h3>
+            <div className="tc-stat-card-foot">
+                <h3
+                    className={cn(
+                        'tc-stat-card-value text-sm',
+                        color === 'teal'
+                            ? 'text-[#2563EB] dark:text-blue-300'
+                            : color === 'amber'
+                                ? 'text-[#D97706] dark:text-amber-300'
+                                : 'text-[#DC2626] dark:text-rose-300',
+                    )}
+                >
+                    {value}
+                </h3>
+                <p className="tc-stat-card-subtitle">{trend}</p>
+            </div>
         </div>
     );
 }

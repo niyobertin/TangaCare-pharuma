@@ -166,7 +166,7 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                         </h4>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="tc-table w-full">
                             <thead>
                                 <tr className="text-left border-b border-slate-50 dark:border-slate-800">
                                     <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -217,7 +217,7 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                     </h4>
                 </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="tc-table w-full">
                         <thead>
                             <tr className="text-left bg-slate-50/50 dark:bg-slate-800/50">
                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">

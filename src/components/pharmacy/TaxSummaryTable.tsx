@@ -19,7 +19,7 @@ export const TaxSummaryTable = ({ data, totalTaxable, totalVat }: TaxSummaryTabl
                 </h3>
             </div>
             <div className="overflow-x-auto">
-                <table className="w-full text-left">
+                <table className="tc-table w-full text-left">
                     <thead>
                         <tr className="bg-gray-50 dark:bg-slate-800/50">
                             <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">

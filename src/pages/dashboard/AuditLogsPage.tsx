@@ -193,7 +193,7 @@ export function AuditLogsPage() {
                     <>
                         <div className="glass-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
+                                <table className="tc-table w-full text-left border-collapse">
                                     <thead>
                                         <tr className="bg-slate-50 dark:bg-slate-800/50">
                                             <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">

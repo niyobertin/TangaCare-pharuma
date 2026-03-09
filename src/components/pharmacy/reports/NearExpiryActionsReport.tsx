@@ -70,17 +70,24 @@ export function NearExpiryActionsReport({ facilityId }: NearExpiryActionsReportP
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {['markdown', 'transfer', 'vendor_return', 'disposal', 'monitor'].map((actionType) => (
-                    <div key={actionType} className="rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2 bg-white dark:bg-slate-900">
-                        <p className="text-[10px] font-black uppercase text-slate-400">{actionType.replace('_', ' ')}</p>
-                        <p className="text-lg font-black text-slate-700 dark:text-slate-100">
-                            {Number(data?.summary?.[actionType] || 0)}
-                        </p>
+                    <div key={actionType} className="tc-stat-card tc-stat-card-neutral">
+                        <div className="tc-stat-card-header">
+                            <p className="tc-stat-card-title">{actionType.replace('_', ' ')}</p>
+                            <span className="tc-stat-card-icon bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300">
+                                <AlertTriangle size={13} />
+                            </span>
+                        </div>
+                        <div className="tc-stat-card-foot">
+                            <p className="tc-stat-card-value">{Number(data?.summary?.[actionType] || 0).toLocaleString()}</p>
+                            <p className="tc-stat-card-subtitle">Actions</p>
+                        </div>
                     </div>
                 ))}
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                <table className="w-full text-sm">
+            <div className="tc-table-surface">
+                <div className="tc-table-scroll">
+                    <table className="tc-table w-full text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-800/50">
                         <tr className="text-[10px] uppercase tracking-widest text-slate-400">
                             <th className="px-4 py-3 text-left font-black">Medicine</th>
@@ -120,7 +127,8 @@ export function NearExpiryActionsReport({ facilityId }: NearExpiryActionsReportP
                             </tr>
                         )}
                     </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
         </div>
     );

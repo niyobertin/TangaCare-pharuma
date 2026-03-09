@@ -32,12 +32,12 @@ const StatCard = ({ title, value, subtitle, icon, trend, color }: StatCardProps)
     };
 
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm transition-all hover:shadow-md">
-            <div className="flex justify-between items-start mb-4">
-                <div className={`p-2.5 rounded-xl border ${colorMap[color]}`}>{icon}</div>
+        <div className="tc-stat-card tc-stat-card-neutral">
+            <div className="tc-stat-card-header">
+                <div className={`tc-stat-card-icon border ${colorMap[color]}`}>{icon}</div>
                 {trend && (
                     <div
-                        className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${
+                        className={`flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
                             trend.isPositive
                                 ? 'bg-emerald-50 text-emerald-600'
                                 : 'bg-rose-50 text-rose-600'
@@ -48,12 +48,12 @@ const StatCard = ({ title, value, subtitle, icon, trend, color }: StatCardProps)
                     </div>
                 )}
             </div>
-            <div>
-                <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">
-                    {title}
-                </p>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white">{value}</h3>
-                {subtitle && <p className="text-xs text-slate-400 font-medium mt-1">{subtitle}</p>}
+            <div className="tc-stat-card-foot">
+                <div className="min-w-0">
+                    <p className="tc-stat-card-title">{title}</p>
+                    <h3 className="tc-stat-card-value truncate">{value}</h3>
+                </div>
+                {subtitle && <p className="tc-stat-card-subtitle text-right">{subtitle}</p>}
             </div>
         </div>
     );
@@ -68,7 +68,7 @@ export const SummaryStatCards = ({ summary }: { summary: DashboardSummary }) => 
                 title="Today's Sales"
                 value={`RWF ${today.financial.total_revenue.toLocaleString()}`}
                 subtitle="Gross revenue today"
-                icon={<DollarSign size={20} />}
+                icon={<DollarSign size={15} />}
                 color="emerald"
                 trend={{
                     value: today.operational.sales_growth_rate,
@@ -79,35 +79,35 @@ export const SummaryStatCards = ({ summary }: { summary: DashboardSummary }) => 
                 title="Today's Profit"
                 value={`RWF ${today.financial.net_profit.toLocaleString()}`}
                 subtitle={`${today.financial.net_profit_margin.toFixed(1)}% margin`}
-                icon={<Activity size={20} />}
+                icon={<Activity size={15} />}
                 color="indigo"
             />
             <StatCard
                 title="Transactions"
                 value={today.financial.total_transactions}
                 subtitle="Sales count today"
-                icon={<ShoppingCart size={20} />}
+                icon={<ShoppingCart size={15} />}
                 color="blue"
             />
             <StatCard
                 title="Items Sold"
                 value={today.operational.total_sales_volume}
                 subtitle="Total units moved"
-                icon={<Package size={20} />}
+                icon={<Package size={15} />}
                 color="blue"
             />
             <StatCard
                 title="Out of Stock"
                 value={today.inventory.out_of_stock_items}
                 subtitle="Items needing reorder"
-                icon={<AlertTriangle size={20} />}
+                icon={<AlertTriangle size={15} />}
                 color="rose"
             />
             <StatCard
                 title="Expiry Warning"
                 value={expiry_risk.under_90_days.count}
                 subtitle="Expiring < 90 days"
-                icon={<AlertTriangle size={20} />}
+                icon={<AlertTriangle size={15} />}
                 color="amber"
             />
         </div>

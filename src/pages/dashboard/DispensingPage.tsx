@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { pharmacyService } from '../../services/pharmacy.service';
-import type { Medicine, Batch } from '../../types/pharmacy';
+import type { Medicine, Batch, Stock } from '../../types/pharmacy';
 import { useAuth } from '../../context/AuthContext';
 import { useDebounce } from '../../hooks/useDebounce';
 import { SkeletonTable } from '../../components/ui/SkeletonTable';
@@ -78,6 +78,79 @@ export function DispensingPage() {
     });
 
     const hasControlledDrug = cart.some((item) => item.is_controlled_drug);
+
+    const getApiErrorMessage = (error: any): string => {
+        return (
+            error?.response?.data?.message ||
+            error?.response?.data?.error ||
+            error?.message ||
+            'Checkout failed. Please try again.'
+        );
+    };
+
+    const getAvailableQuantity = (stock: Stock & { reserved_quantity?: number; is_frozen?: boolean }): number => {
+        const quantity = Number(stock.quantity || 0);
+        const reserved = Number(stock.reserved_quantity || 0);
+        return Math.max(0, quantity - reserved);
+    };
+
+    const getDispensableStocks = async (medicineId: number): Promise<Array<Stock & { reserved_quantity?: number; is_frozen?: boolean }>> => {
+        const stockResponse = await pharmacyService.getStock({
+            medicine_id: medicineId,
+            ...(user?.facility_id ? { facility_id: user.facility_id } : {}),
+            page: 1,
+            limit: 100,
+        });
+        const now = new Date();
+
+        return (stockResponse.data || [])
+            .filter((stock) => {
+                const candidate = stock as Stock & { reserved_quantity?: number; is_frozen?: boolean };
+                if (candidate.is_frozen) return false;
+                if (!candidate.batch?.expiry_date) return false;
+                const expiry = new Date(candidate.batch.expiry_date);
+                if (Number.isNaN(expiry.getTime()) || expiry <= now) return false;
+                return getAvailableQuantity(candidate) > 0;
+            })
+            .sort(
+                (a, b) =>
+                    new Date(a.batch!.expiry_date).getTime() - new Date(b.batch!.expiry_date).getTime(),
+            );
+    };
+
+    const resolveFefoPreferredStock = (
+        stocks: Array<Stock & { reserved_quantity?: number; is_frozen?: boolean }>,
+    ) => {
+        if (!stocks.length) return undefined;
+        const firstExpiryTs = new Date(stocks[0].batch!.expiry_date).getTime();
+        const sameEarliestExpiry = stocks.filter(
+            (stock) => new Date(stock.batch!.expiry_date).getTime() === firstExpiryTs,
+        );
+        return sameEarliestExpiry.find((stock) => !!stock.location?.name) || sameEarliestExpiry[0];
+    };
+
+    const getFefoViolationMessage = (
+        stocks: Array<Stock & { reserved_quantity?: number; is_frozen?: boolean }>,
+        selectedBatchId: number,
+        requestedQty: number,
+    ): string | null => {
+        const earliestStock = stocks[0];
+        const selectedStock = stocks.find((stock) => Number(stock.batch?.id) === Number(selectedBatchId));
+        if (!earliestStock || !selectedStock || !earliestStock.batch || !selectedStock.batch) return null;
+
+        if (Number(earliestStock.batch.id) === Number(selectedStock.batch.id)) return null;
+
+        const earliestExpiryTs = new Date(earliestStock.batch.expiry_date).getTime();
+        const selectedExpiryTs = new Date(selectedStock.batch.expiry_date).getTime();
+        if (!Number.isFinite(earliestExpiryTs) || !Number.isFinite(selectedExpiryTs)) return null;
+        if (earliestExpiryTs >= selectedExpiryTs) return null;
+
+        if (getAvailableQuantity(earliestStock) >= requestedQty) {
+            return `FEFO rule: use batch ${earliestStock.batch.batch_number} (earlier expiry) before ${selectedStock.batch.batch_number}`;
+        }
+
+        return null;
+    };
 
     useEffect(() => {
         setPage(1);
@@ -230,41 +303,52 @@ export function DispensingPage() {
         }
 
         let bestBatch: Batch | undefined;
+        let bestBatchAvailableQty = 0;
         try {
-            const stockResponse = await pharmacyService.getStock({
-                medicine_id: med.id,
-                ...(user?.facility_id ? { facility_id: user.facility_id } : {}),
-                page: 1,
-                limit: 100,
-            });
-            const now = new Date();
-            const activeStocks = stockResponse.data
-                .filter(
-                    (stock) =>
-                        (stock.quantity || 0) > 0 &&
-                        !!stock.batch?.expiry_date &&
-                        new Date(stock.batch.expiry_date) > now,
-                )
-                .sort(
-                    (a, b) =>
-                        new Date(a.batch!.expiry_date).getTime() -
-                        new Date(b.batch!.expiry_date).getTime(),
-                );
+            const dispensableStocks = await getDispensableStocks(med.id);
+            const bestStock = resolveFefoPreferredStock(dispensableStocks);
 
-            if (activeStocks.length > 0) {
-                const bestStock =
-                    activeStocks.find((stock) => !!stock.location?.name) || activeStocks[0];
-                if (bestStock.batch) {
-                    bestBatch = {
-                        ...bestStock.batch,
-                        current_quantity: bestStock.quantity,
-                        location_id: bestStock.location?.id ?? bestStock.location_id ?? null,
-                        location: bestStock.location || null,
-                    };
+            if (bestStock?.batch) {
+                bestBatchAvailableQty = getAvailableQuantity(bestStock);
+                const violation = getFefoViolationMessage(
+                    dispensableStocks,
+                    bestStock.batch.id,
+                    1,
+                );
+                if (violation) {
+                    toast.error(violation, { duration: 7000 });
+                    return;
                 }
+
+                const existingFefoViolation = cart
+                    .filter((item) => item.id === med.id && !!item.selectedBatch?.id)
+                    .map((item) =>
+                        getFefoViolationMessage(
+                            dispensableStocks,
+                            Number(item.selectedBatch!.id),
+                            Number(item.quantity || 0),
+                        ),
+                    )
+                    .find(Boolean);
+                if (existingFefoViolation) {
+                    toast.error(existingFefoViolation, { duration: 7000 });
+                    return;
+                }
+
+                bestBatch = {
+                    ...bestStock.batch,
+                    current_quantity: bestBatchAvailableQty,
+                    location_id: bestStock.location?.id ?? bestStock.location_id ?? null,
+                    location: bestStock.location || null,
+                };
             }
         } catch (err) {
             console.error('Failed to fetch stock details', err);
+            const message = getApiErrorMessage(err);
+            toast.error(message, {
+                duration: message.toLowerCase().includes('fefo') ? 7000 : 4000,
+            });
+            return;
         }
 
         if (!bestBatch) {
@@ -277,7 +361,7 @@ export function DispensingPage() {
                 (item) => item.id === med.id && item.selectedBatch?.id === bestBatch?.id,
             );
             if (existing) {
-                if (existing.quantity >= bestBatch!.current_quantity) {
+                if (existing.quantity >= bestBatchAvailableQty) {
                     toast.error(`Batch ${bestBatch!.batch_number} stock limit reached`);
                     return prev;
                 }
@@ -361,18 +445,65 @@ export function DispensingPage() {
         }
     };
 
-    const updateQuantity = (id: number, batchId: number, delta: number) => {
+    const updateQuantity = async (id: number, batchId: number, delta: number) => {
+        if (delta > 0) {
+            const targetItem = cart.find((item) => item.id === id && item.selectedBatch?.id === batchId);
+            if (!targetItem?.selectedBatch) return;
+
+            try {
+                const dispensableStocks = await getDispensableStocks(id);
+                const requestedQty = targetItem.quantity + delta;
+                const violation = getFefoViolationMessage(dispensableStocks, batchId, requestedQty);
+                if (violation) {
+                    toast.error(violation, { duration: 7000 });
+                    return;
+                }
+
+                const selectedStock = dispensableStocks.find(
+                    (stock) => Number(stock.batch?.id) === Number(batchId),
+                );
+                if (!selectedStock?.batch) {
+                    toast.error(
+                        `Batch ${targetItem.selectedBatch.batch_number} is no longer available`,
+                    );
+                    return;
+                }
+
+                const availableQty = getAvailableQuantity(selectedStock);
+                if (requestedQty > availableQty) {
+                    toast.error(`Cannot exceed batch stock (${availableQty})`);
+                    return;
+                }
+
+                setCart((prev) =>
+                    prev.map((item) =>
+                        item.id === id && item.selectedBatch?.id === batchId
+                            ? {
+                                ...item,
+                                quantity: requestedQty,
+                                selectedBatch: {
+                                    ...item.selectedBatch!,
+                                    current_quantity: availableQty,
+                                },
+                            }
+                            : item,
+                    ),
+                );
+                return;
+            } catch (error) {
+                console.error('Failed to validate stock details:', error);
+                const message = getApiErrorMessage(error);
+                toast.error(message, {
+                    duration: message.toLowerCase().includes('fefo') ? 7000 : 4000,
+                });
+                return;
+            }
+        }
+
         setCart((prev) =>
             prev.map((item) => {
                 if (item.id === id && item.selectedBatch?.id === batchId) {
-                    const newQty = Math.max(1, item.quantity + delta);
-                    if (newQty > (item.selectedBatch?.current_quantity || 0)) {
-                        toast.error(
-                            `Cannot exceed batch stock (${item.selectedBatch?.current_quantity})`,
-                        );
-                        return item;
-                    }
-                    return { ...item, quantity: newQty };
+                    return { ...item, quantity: Math.max(1, item.quantity + delta) };
                 }
                 return item;
             }),
@@ -462,7 +593,14 @@ export function DispensingPage() {
                 return;
             }
 
-            const response = await pharmacyService.createSale(saleData);
+            const response: any = await pharmacyService.createSale(saleData);
+            if (response?.success === false) {
+                toast.error(
+                    String(response?.message || 'Checkout failed. Please try again.'),
+                    { duration: 7000 },
+                );
+                return;
+            }
 
             setLastSaleId(response.id);
             setShowSuccess(true);
@@ -481,7 +619,10 @@ export function DispensingPage() {
             }, 5000);
         } catch (error) {
             console.error('Checkout failed:', error);
-            toast.error('Checkout failed. Please try again.');
+            const message = getApiErrorMessage(error);
+            toast.error(message, {
+                duration: message.toLowerCase().includes('fefo') ? 7000 : 4000,
+            });
         } finally {
             setProcessing(false);
         }
@@ -797,7 +938,7 @@ export function DispensingPage() {
                         </div>
 
                         <div className="max-h-[420px] overflow-auto">
-                            <table className="w-full text-sm">
+                            <table className="tc-table w-full text-sm">
                                 <thead className="bg-slate-50 dark:bg-slate-800/60 sticky top-0">
                                     <tr className="text-[10px] uppercase tracking-widest text-slate-400">
                                         <th className="px-4 py-3 text-left font-black">Medicine</th>

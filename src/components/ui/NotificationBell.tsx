@@ -131,14 +131,14 @@ export const NotificationBell: React.FC = () => {
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 transition-colors relative"
+                className="p-2 hover:bg-white/20 rounded-lg text-white transition-colors relative"
             >
                 <Bell size={18} />
                 {unreadCount + alertCount > 0 && (
                     <span
                         className={clsx(
                             'absolute top-0 right-0 w-4 h-4 text-[10px] font-bold flex items-center justify-center text-white rounded-full border border-white dark:border-slate-900 shadow-sm z-10',
-                            alertCount > 0 ? 'bg-red-500 animate-pulse' : 'bg-teal-500',
+                            alertCount > 0 ? 'bg-red-500 animate-pulse' : 'bg-emerald-500',
                         )}
                     >
                         {unreadCount + alertCount > 9 ? '9+' : unreadCount + alertCount}

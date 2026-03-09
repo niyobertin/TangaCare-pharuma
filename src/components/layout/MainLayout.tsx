@@ -331,7 +331,7 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
                         'bg-healthcare-primary/10 text-healthcare-primary dark:bg-healthcare-primary dark:text-white shadow-none',
                 }}
                 className={cn(
-                    'flex items-center px-4 py-2.5 text-slate-500 hover:bg-teal-50 dark:hover:bg-teal-900 hover:text-healthcare-primary rounded-lg transition-all group justify-between',
+                    'flex items-center px-4 py-2.5 text-slate-600 hover:bg-blue-50 hover:text-healthcare-primary rounded-lg transition-all group justify-between',
                     isCollapsed ? 'justify-center px-0 mx-auto w-10' : 'gap-3',
                 )}
             >
@@ -356,7 +356,7 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
                 )}
             </Link>
             {!isCollapsed && isOpen && hasChildren && (
-                <div className="ml-9 mt-1 space-y-1 border-l-2 border-slate-100 dark:border-slate-800 pl-2">
+                <div className="ml-9 mt-1 space-y-1 border-l-2 border-blue-100 pl-2">
                     {children.map((child) => (
                         <Link
                             key={child.to}
@@ -364,9 +364,9 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
                             search={{} as any}
                             activeProps={{
                                 className:
-                                    'text-healthcare-primary font-bold bg-teal-50/50 dark:bg-teal-900/20',
+                                    'text-healthcare-primary font-bold bg-blue-50',
                             }}
-                            className="block px-3 py-2 text-sm text-slate-500 hover:text-healthcare-primary hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors whitespace-nowrap"
+                            className="block px-3 py-2 text-sm text-slate-600 hover:text-healthcare-primary hover:bg-blue-50 rounded-md transition-colors whitespace-nowrap"
                         >
                             {child.label}
                         </Link>
@@ -663,10 +663,25 @@ export function MainLayout() {
     const showFacilityNameOnly =
         !isSuperAdminUser && !isOwner && facilities.length <= 1 && organizations.length <= 1;
 
+    const profileFirstName = String(user?.firstName || user?.first_name || '').trim();
+    const profileLastName = String(user?.lastName || user?.last_name || '').trim();
+    const profileName =
+        `${profileFirstName} ${profileLastName}`.trim() ||
+        String(user?.email || '').trim() ||
+        'Account';
+    const profileRoleLabel = String(user?.role || 'User')
+        .replace(/[_\s]+/g, ' ')
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+    const profileInitialsSource = `${profileFirstName[0] || ''}${profileLastName[0] || ''}`.trim();
+    const profileInitials = (profileInitialsSource || profileName.slice(0, 2) || '??')
+        .toUpperCase()
+        .slice(0, 2);
+
     if (isLoading) return <GlobalLoading />;
 
     return (
-        <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300 overflow-hidden">
+        <div className="layout-shell flex h-screen transition-colors duration-300 overflow-hidden">
             {/* Backdrop for mobile */}
             {isMobileMenuOpen && (
                 <div
@@ -677,13 +692,13 @@ export function MainLayout() {
 
             <aside
                 className={cn(
-                    'bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col transition-all duration-300 ease-in-out shadow-lg z-40 lg:z-20 m-3 rounded-2xl h-[calc(100vh-24px)]',
+                    'layout-sidebar border-r flex flex-col transition-all duration-300 ease-in-out z-40 lg:z-20 h-screen',
                     'lg:static fixed top-0 bottom-0 left-0',
                     isCollapsed ? 'lg:w-20' : 'lg:w-72',
                     isMobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0',
                 )}
             >
-                <div className="h-20 flex items-center px-6 border-b border-slate-50 dark:border-slate-800/50">
+                <div className="h-20 flex items-center px-6 border-b border-blue-100">
                     <div className="flex items-center gap-3 w-full">
                         <div className="relative group">
                             <div className="absolute inset-0 bg-healthcare-primary/20 rounded-xl blur-lg group-hover:bg-healthcare-primary/30 transition-all duration-500" />
@@ -710,7 +725,7 @@ export function MainLayout() {
                     <Link
                         to="/"
                         className={cn(
-                            'flex items-center gap-3 px-4 py-2.5 w-full text-left text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900/20 rounded-xl transition-all group font-bold text-sm mb-4 border border-teal-100 dark:border-teal-900/30 shadow-sm',
+                            'flex items-center gap-3 px-4 py-2.5 w-full text-left text-healthcare-primary hover:bg-blue-50 rounded-xl transition-all group font-bold text-sm mb-4 border border-blue-100 shadow-sm',
                             isCollapsed && !isMobileMenuOpen && 'lg:justify-center lg:px-0',
                         )}
                     >
@@ -743,11 +758,11 @@ export function MainLayout() {
                     ))}
                 </nav>
 
-                <div className="p-2 border-t border-slate-200 dark:border-slate-800">
+                <div className="p-2 border-t border-blue-100">
                     <button
                         onClick={handleLogout}
                         className={cn(
-                            'flex items-center gap-3 px-4 py-2.5 w-full text-left text-healthcare-danger hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-all group font-bold text-sm',
+                            'flex items-center gap-3 px-4 py-2.5 w-full text-left text-healthcare-danger hover:bg-red-50 rounded-lg transition-all group font-bold text-sm',
                             isCollapsed && !isMobileMenuOpen && 'lg:justify-center lg:px-0',
                         )}
                     >
@@ -760,8 +775,8 @@ export function MainLayout() {
                 </div>
             </aside>
 
-            <main className="flex-1 flex flex-col overflow-hidden relative p-2 md:p-3 lg:pl-0">
-                <header className="glass-header rounded-xl mb-3 px-3 md:px-5 py-3 flex items-center justify-between shadow-sm">
+            <main className="flex-1 flex flex-col overflow-hidden relative">
+                <header className="layout-topbar px-3 md:px-5 py-3 flex items-center justify-between shadow-sm rounded-none">
                     <div className="flex items-center gap-3 md:gap-5 flex-1 min-w-0">
                         <button
                             onClick={() => {
@@ -771,7 +786,7 @@ export function MainLayout() {
                                     setIsCollapsed(!isCollapsed);
                                 }
                             }}
-                            className="p-1.5 md:p-2 hover:bg-teal-50 dark:hover:bg-teal-900 rounded-lg text-healthcare-primary transition-colors border border-teal-50 dark:border-teal-900 flex-shrink-0"
+                            className="p-1.5 md:p-2 hover:bg-white/20 rounded-lg text-white transition-colors border border-white/20 flex-shrink-0"
                         >
                             <span className="lg:block hidden">
                                 {isCollapsed ? <Menu size={18} /> : <ChevronLeft size={18} />}
@@ -786,7 +801,7 @@ export function MainLayout() {
                             className="relative max-w-sm lg:max-w-md w-full hidden sm:block"
                         >
                             <Search
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
                                 size={16}
                             />
                             <input
@@ -807,10 +822,10 @@ export function MainLayout() {
                                         setGlobalSearchOpen(false);
                                     }
                                 }}
-                                className="w-full pl-9 pr-4 py-1.5 bg-slate-100 dark:bg-slate-900/50 border border-transparent dark:border-slate-700/50 focus:bg-white dark:focus:bg-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-healthcare-primary/10 focus:border-healthcare-primary transition-all text-sm dark:text-white dark:placeholder:text-slate-500"
+                                className="w-full pl-9 pr-4 py-1.5 bg-white/95 border border-white/20 focus:bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all text-sm text-slate-800 placeholder:text-slate-500"
                             />
                             {globalSearchOpen && globalSearchQuery.trim().length >= 2 && (
-                                <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 overflow-hidden">
+                                <div className="absolute top-full mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
                                     {globalSearchLoading ? (
                                         <div className="px-4 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">
                                             Searching...
@@ -838,9 +853,9 @@ export function MainLayout() {
                                                                     onClick={() =>
                                                                         handleGlobalSearchSelect(item)
                                                                     }
-                                                                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                                                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors"
                                                                 >
-                                                                    <p className="text-xs font-black text-healthcare-dark dark:text-white truncate">
+                                                                    <p className="text-xs font-black text-healthcare-dark truncate">
                                                                         {item.label}
                                                                     </p>
                                                                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
@@ -862,9 +877,9 @@ export function MainLayout() {
                     <div className="flex items-center gap-2 md:gap-3 font-sans ml-2">
                         <div className="hidden xs:flex items-center">
                             {showFacilityNameOnly ? (
-                                <div className="px-2 md:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 min-w-0 max-w-[120px] md:max-w-[180px]">
+                                <div className="px-2 md:px-3 py-1.5 rounded-lg bg-white/15 border border-white/25 min-w-0 max-w-[120px] md:max-w-[180px]">
                                     <span
-                                        className="truncate block text-[10px] md:text-xs font-bold text-healthcare-dark dark:text-white"
+                                        className="truncate block text-[10px] md:text-xs font-bold text-white"
                                         title={
                                             currentFacility?.name ??
                                             facilities[0]?.name ??
@@ -884,13 +899,13 @@ export function MainLayout() {
                                         <button
                                             type="button"
                                             onClick={() => setSwitcherOpen(!switcherOpen)}
-                                            className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-left min-w-0 max-w-[120px] md:max-w-[180px]"
+                                            className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-lg bg-white/15 border border-white/25 text-left min-w-0 max-w-[120px] md:max-w-[180px]"
                                         >
                                             <Building2
                                                 size={14}
-                                                className="text-healthcare-primary flex-shrink-0 md:size-4"
+                                                className="text-white flex-shrink-0 md:size-4"
                                             />
-                                            <span className="truncate text-[10px] md:text-xs font-bold text-healthcare-dark dark:text-white">
+                                            <span className="truncate text-[10px] md:text-xs font-bold text-white">
                                                 {facilityId == null
                                                     ? 'All Facilities'
                                                     : switcherLabel}
@@ -906,7 +921,7 @@ export function MainLayout() {
                                                     className="fixed inset-0 z-10"
                                                     onClick={() => setSwitcherOpen(false)}
                                                 />
-                                                <div className="absolute right-0 top-full mt-1 z-20 w-64 py-2 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
+                                                <div className="absolute right-0 top-full mt-1 z-20 w-64 py-2 bg-white rounded-xl shadow-lg border border-slate-200">
                                                     {organizations.length > 1 && (
                                                         <div className="px-3 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
                                                             Organization
@@ -921,13 +936,13 @@ export function MainLayout() {
                                                                 setSwitcherOpen(false);
                                                                 refreshProfile();
                                                             }}
-                                                            className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${organizationId === org.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                            className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 ${organizationId === org.id ? 'text-healthcare-primary bg-blue-50' : 'text-slate-700'}`}
                                                         >
                                                             {org.name} {org.code && `(${org.code})`}
                                                         </button>
                                                     ))}
                                                     {facilities.length > 0 && (
-                                                        <div className="px-3 py-1.5 mt-2 text-xs font-bold text-slate-500 uppercase tracking-wider border-t border-slate-200 dark:border-slate-700">
+                                                        <div className="px-3 py-1.5 mt-2 text-xs font-bold text-slate-500 uppercase tracking-wider border-t border-slate-200">
                                                             Facility
                                                         </div>
                                                     )}
@@ -939,7 +954,7 @@ export function MainLayout() {
                                                                 setSwitcherOpen(false);
                                                                 refreshProfile();
                                                             }}
-                                                            className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId == null ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                            className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 ${facilityId == null ? 'text-healthcare-primary bg-blue-50' : 'text-slate-700'}`}
                                                         >
                                                             🌐 All Facilities{' '}
                                                             {isSuperAdminUser && '(System-Wide)'}
@@ -954,7 +969,7 @@ export function MainLayout() {
                                                                 setSwitcherOpen(false);
                                                                 refreshProfile();
                                                             }}
-                                                            className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 ${facilityId === fac.id ? 'text-healthcare-primary bg-teal-50 dark:bg-teal-900/20' : 'text-slate-700 dark:text-slate-300'}`}
+                                                            className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 ${facilityId === fac.id ? 'text-healthcare-primary bg-blue-50' : 'text-slate-700'}`}
                                                         >
                                                             {fac.name}
                                                         </button>
@@ -972,34 +987,39 @@ export function MainLayout() {
 
                             <button
                                 onClick={toggleTheme}
-                                className="p-1.5 md:p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
+                                className="p-1.5 md:p-2 hover:bg-white/20 rounded-lg text-white transition-colors"
                             >
                                 {isDark ? <Sun size={18} /> : <Moon size={18} />}
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-3 border-l border-slate-200 dark:border-slate-800">
-                            <div className="hidden lg:flex flex-col items-end">
-                                <span className="font-bold text-healthcare-dark dark:text-white text-xs uppercase tracking-tight">
-                                    {user
-                                        ? `${user.firstName || user.first_name} ${user.lastName || user.last_name}`
-                                        : 'Loading...'}
-                                </span>
-                                <span className="text-[9px] text-healthcare-primary font-black uppercase tracking-widest">
-                                    {user?.role || 'User'}
-                                </span>
-                            </div>
-                            <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-healthcare-primary/10 border border-healthcare-primary/20 flex items-center justify-center text-healthcare-primary text-xs font-black shadow-sm uppercase flex-shrink-0">
-                                {user
-                                    ? `${(user.firstName || user.first_name || '?')[0]}${(user.lastName || user.last_name || '?')[0]}`
-                                    : '??'}
+                        <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-3 border-l border-white/25">
+                            <div className="group flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-2.5 py-1.5 hover:bg-white/15 transition-colors max-w-[220px]">
+                                <div className="relative shrink-0">
+                                    <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                        {profileInitials}
+                                    </div>
+                                    <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border border-white/80" />
+                                </div>
+                                <div className="hidden sm:flex flex-col min-w-0">
+                                    <span className="font-semibold text-white text-xs tracking-tight truncate">
+                                        {profileName}
+                                    </span>
+                                    <span className="text-[10px] text-blue-100/95 font-medium truncate">
+                                        {profileRoleLabel}
+                                    </span>
+                                </div>
+                                <ChevronDown
+                                    size={14}
+                                    className="hidden sm:block text-blue-100/90 group-hover:text-white transition-colors shrink-0"
+                                />
                             </div>
                         </div>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-auto rounded-xl">
-                    <div className="max-w-screen-2xl mx-auto h-full px-0.5">
+                <div className="layout-content-panel flex-1 overflow-auto">
+                    <div className="max-w-screen-2xl mx-auto h-full">
                         {needsOnboarding && !window.location.pathname.includes('/onboarding') ? (
                             <>
                                 <FacilityEmptyState

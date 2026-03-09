@@ -245,7 +245,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                 </div>
 
                                 <div className="border rounded-xl overflow-hidden">
-                                    <table className="w-full text-left text-sm">
+                                    <table className="tc-table w-full text-left text-sm">
                                         <thead className="bg-slate-50 text-xs uppercase font-bold text-slate-500">
                                             <tr>
                                                 <th className="px-4 py-3 w-[40%]">Medicine</th>

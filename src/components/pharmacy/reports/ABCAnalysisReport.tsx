@@ -170,7 +170,7 @@ export function ABCAnalysisReport() {
                         </span>
                     </div>
                     <div className="overflow-x-auto flex-1">
-                        <table className="w-full text-left text-sm">
+                        <table className="tc-table w-full text-left text-sm">
                             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                                 <tr>
                                     <th className="px-6 py-4 font-bold text-slate-400 uppercase text-[10px] tracking-wider">

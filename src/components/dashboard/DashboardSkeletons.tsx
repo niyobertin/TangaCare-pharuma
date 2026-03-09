@@ -3,12 +3,15 @@ import { SkeletonTable } from '../ui/SkeletonTable';
 
 export function StatCardSkeleton() {
     return (
-        <div className="glass-card p-4 rounded-2xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 border-2 relative overflow-hidden">
-            <div className="flex justify-between items-start mb-3">
-                <Skeleton className="w-9 h-9 rounded-xl" />
+        <div className="tc-stat-card">
+            <div className="tc-stat-card-header">
+                <Skeleton className="w-16 h-2.5 rounded-md" />
+                <Skeleton className="w-6 h-6 rounded-md" />
             </div>
-            <Skeleton className="h-3 w-2/3 mb-1.5" />
-            <Skeleton className="h-6 w-1/2" />
+            <div className="tc-stat-card-foot">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-2.5 w-12" />
+            </div>
         </div>
     );
 }

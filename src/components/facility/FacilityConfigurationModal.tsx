@@ -330,7 +330,7 @@ export function FacilityConfigurationModal({
 
                             { }
                             <div>
-                                <table className="w-full text-left text-sm">
+                                <table className="tc-table w-full text-left text-sm">
                                     <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
                                         <tr>
                                             <th className="px-4 py-3">Name</th>

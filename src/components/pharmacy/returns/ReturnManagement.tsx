@@ -106,7 +106,7 @@ export const ReturnManagement = ({ facilityId }: { facilityId: number }) => {
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="tc-table w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                             <tr>
                                 <th className="px-6 py-4 font-bold text-slate-500 uppercase text-[10px] tracking-widest">

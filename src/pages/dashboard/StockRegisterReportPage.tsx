@@ -136,7 +136,7 @@ export function StockRegisterReportPage() {
                 ) : (
                     <>
                         <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-                            <table className="w-full text-sm">
+                            <table className="tc-table w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-100 dark:border-slate-800">
                                         <th className="p-4 font-black text-healthcare-dark uppercase text-xs text-left">

@@ -362,7 +362,7 @@ export function StockMovementsPage() {
                             onScroll={(event) => setMovementScrollTop(event.currentTarget.scrollTop)}
                             className="overflow-x-auto overflow-y-auto max-h-[520px] rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900"
                         >
-                            <table className="w-full text-left text-sm">
+                            <table className="tc-table w-full text-left text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-100 dark:border-slate-800">
                                         {movementVisibleColumnSet.has('timestamp') && (

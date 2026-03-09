@@ -338,7 +338,7 @@ export function SettingsPage() {
                         </div>
 
                         <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                            <table className="min-w-full text-sm">
+                            <table className="tc-table min-w-full text-sm">
                                 <thead className="bg-slate-50 dark:bg-slate-800/60">
                                     <tr className="text-left text-slate-500 dark:text-slate-300">
                                         <th className="px-4 py-3 font-black uppercase text-[11px]">Setting</th>

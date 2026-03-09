@@ -639,7 +639,7 @@ export function InsurancePage() {
                             className="border-none shadow-none"
                         />
                     ) : (
-                        <table className="w-full text-left border-collapse">
+                        <table className="tc-table w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-slate-800/50">
                                     {activeTab === 'providers' ? (

@@ -275,64 +275,43 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/30 rounded-2xl p-3.5">
-                    <div className="flex justify-between items-start mb-1.5">
-                        <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center">
-                            <AlertCircle size={16} />
-                        </div>
-                        <span className="text-[9px] font-black text-rose-600 bg-rose-50 dark:bg-rose-900/50 px-2 py-0.5 rounded-full border border-rose-100 dark:border-rose-800">
-                            COMPLIANCE
+                <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#EF4444] to-[#DC2626]">
+                    <div className="tc-stat-card-header">
+                        <p className="tc-stat-card-title text-white/90">Expired items</p>
+                        <span className="tc-stat-card-icon bg-white/20">
+                            <AlertCircle size={15} />
                         </span>
                     </div>
-                    <p className="text-rose-900/60 dark:text-rose-400 text-[9px] font-black uppercase tracking-widest leading-none">
-                        Already Expired
-                    </p>
-                    <h3 className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1.5 tracking-tighter leading-none">
-                        {expiredCount}
-                    </h3>
-                    <p className="text-rose-900/40 dark:text-rose-500 text-[8px] font-bold uppercase mt-1.5 italic tracking-tight">
-                        Quarantine and resolve
-                    </p>
+                    <div className="tc-stat-card-foot">
+                        <p className="tc-stat-card-value">{expiredCount.toLocaleString()}</p>
+                        <p className="tc-stat-card-subtitle">Compliance</p>
+                    </div>
                 </div>
 
-                <div className="bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-2xl p-3.5">
-                    <div className="flex justify-between items-start mb-1.5">
-                        <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center">
-                            <AlertTriangle size={16} />
-                        </div>
-                        <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-900/50 px-2 py-0.5 rounded-full border border-amber-100 dark:border-amber-800">
-                            URGENT
+                <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#F59E0B] to-[#D97706]">
+                    <div className="tc-stat-card-header">
+                        <p className="tc-stat-card-title text-white/90">Critical risk</p>
+                        <span className="tc-stat-card-icon bg-white/20">
+                            <AlertTriangle size={15} />
                         </span>
                     </div>
-                    <p className="text-amber-900/60 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest leading-none">
-                        Critical Risk
-                    </p>
-                    <h3 className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1.5 tracking-tighter leading-none">
-                        {criticalCount}
-                    </h3>
-                    <p className="text-amber-900/40 dark:text-amber-500 text-[8px] font-bold uppercase mt-1.5 italic tracking-tight">
-                        Immediate action required
-                    </p>
+                    <div className="tc-stat-card-foot">
+                        <p className="tc-stat-card-value">{criticalCount.toLocaleString()}</p>
+                        <p className="tc-stat-card-subtitle">Urgent</p>
+                    </div>
                 </div>
 
-                <div className="bg-healthcare-primary/5 dark:bg-teal-900/10 border border-healthcare-primary/10 dark:border-teal-900/30 rounded-2xl p-3.5">
-                    <div className="flex justify-between items-start mb-1.5">
-                        <div className="w-8 h-8 rounded-xl bg-healthcare-primary text-white flex items-center justify-center">
-                            <History size={16} />
-                        </div>
-                        <span className="text-[9px] font-black text-healthcare-primary bg-healthcare-primary/5 dark:bg-teal-900/50 px-2 py-0.5 rounded-full border border-healthcare-primary/20">
-                            WATCHLIST
+                <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#2563EB] to-[#1D4ED8]">
+                    <div className="tc-stat-card-header">
+                        <p className="tc-stat-card-title text-white/90">Total in window</p>
+                        <span className="tc-stat-card-icon bg-white/20">
+                            <History size={15} />
                         </span>
                     </div>
-                    <p className="text-healthcare-primary/60 dark:text-teal-400 text-[9px] font-black uppercase tracking-widest leading-none">
-                        Total In Window
-                    </p>
-                    <h3 className="text-xl font-black text-healthcare-primary mt-1.5 tracking-tighter leading-none">
-                        {allRows.length}
-                    </h3>
-                    <p className="text-healthcare-primary/40 dark:text-teal-500 text-[8px] font-bold uppercase mt-1.5 italic tracking-tight">
-                        Active monitoring
-                    </p>
+                    <div className="tc-stat-card-foot">
+                        <p className="tc-stat-card-value">{allRows.length.toLocaleString()}</p>
+                        <p className="tc-stat-card-subtitle">Monitoring</p>
+                    </div>
                 </div>
             </div>
 
@@ -415,9 +394,9 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                 </div>
             )}
 
-            <div className="bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+            <div className="tc-table-surface">
+                <div className="tc-table-scroll">
+                    <table className="tc-table w-full text-left text-sm">
                         <thead>
                             <tr className="bg-slate-50/50 dark:bg-slate-800/50 text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 dark:border-slate-800">
                                 <th className="px-6 py-4 whitespace-nowrap">Medicine</th>

@@ -299,7 +299,7 @@ export function FacilitiesPage() {
                     ) : (
                         <div className="flex-1 overflow-auto pb-2">
                             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-x-auto">
-                                <table className="w-full min-w-[800px]">
+                                <table className="tc-table w-full min-w-[800px]">
                                     <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">

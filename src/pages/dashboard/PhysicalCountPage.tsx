@@ -13,6 +13,7 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import { SkeletonTable } from '../../components/ui/SkeletonTable';
+import { ConfirmModal } from '../../components/shared/ConfirmModal';
 
 export function PhysicalCountPage() {
     const { user, facilityId } = useAuth();
@@ -118,7 +119,7 @@ export function PhysicalCountPage() {
                     />
                 ) : (
                     <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                        <table className="w-full text-left text-sm">
+                        <table className="tc-table w-full text-left text-sm">
                             <thead className="bg-slate-50 dark:bg-slate-800/50">
                                 <tr>
                                     <th className="px-6 py-4 font-semibold text-slate-500">
@@ -209,6 +210,8 @@ function PhysicalCountDetail({
     const [filter, setFilter] = useState('');
     const [saving, setSaving] = useState<number | null>(null);
     const [approving, setApproving] = useState(false);
+    const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+    const [approveError, setApproveError] = useState<string | null>(null);
 
     const filteredItems = items.filter(
         (item) =>
@@ -235,20 +238,16 @@ function PhysicalCountDetail({
         }
     };
 
-    const handleApprove = async () => {
-        if (
-            !window.confirm(
-                'Are you sure you want to approve this count? This will update stock levels.',
-            )
-        )
-            return;
+    const confirmApprove = async () => {
+        setApproveError(null);
         setApproving(true);
         try {
             await pharmacyService.approvePhysicalCount(count.id);
+            setIsApproveModalOpen(false);
             onUpdate(); // Reload to show approved status
         } catch (error) {
             console.error('Failed to approve', error);
-            alert('Failed to approve count');
+            setApproveError('Failed to approve count. Please try again.');
         } finally {
             setApproving(false);
         }
@@ -278,7 +277,7 @@ function PhysicalCountDetail({
                 </div>
                 {isEditable && (
                     <button
-                        onClick={handleApprove}
+                        onClick={() => setIsApproveModalOpen(true)}
                         disabled={approving}
                         className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-bold hover:bg-emerald-700 transition-colors shadow-lg disabled:opacity-50"
                     >
@@ -309,8 +308,14 @@ function PhysicalCountDetail({
                 </div>
             </div>
 
+            {approveError && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:border-rose-900/40 dark:bg-rose-900/10 dark:text-rose-300">
+                    {approveError}
+                </div>
+            )}
+
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                <table className="w-full text-left text-sm">
+                <table className="tc-table w-full text-left text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-800/50">
                         <tr>
                             <th className="px-6 py-3 font-semibold text-slate-500">
@@ -419,6 +424,18 @@ function PhysicalCountDetail({
                     </tbody>
                 </table>
             </div>
+
+            <ConfirmModal
+                isOpen={isApproveModalOpen}
+                onClose={() => setIsApproveModalOpen(false)}
+                onConfirm={confirmApprove}
+                title="Approve Stock Count"
+                message="Are you sure you want to approve this count? This will update stock levels."
+                confirmText="Approve Count"
+                cancelText="Cancel"
+                loading={approving}
+                variant="warning"
+            />
         </div>
     );
 }

@@ -29,6 +29,7 @@ interface AddStockModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    initialMedicineId?: number | null;
 }
 
 const batchSchema = yup.object({
@@ -62,7 +63,12 @@ interface AddStockFormData {
     }[];
 }
 
-export function AddStockModal({ isOpen, onClose, onSuccess }: AddStockModalProps) {
+export function AddStockModal({
+    isOpen,
+    onClose,
+    onSuccess,
+    initialMedicineId = null,
+}: AddStockModalProps) {
     const { user } = useAuth();
     const facilityId = user?.facility_id;
     const [loading, setLoading] = useState(false);
@@ -95,10 +101,29 @@ export function AddStockModal({ isOpen, onClose, onSuccess }: AddStockModalProps
 
     useEffect(() => {
         if (isOpen) {
+            reset({
+                medicine_id: 0,
+                storage_location_id: undefined,
+                batches: [{ batch_number: '', quantity: 1, expiry_date: '' }],
+            });
+            setSelectedMedicine(null);
+            setSearchQuery('');
+
             const loadMedicines = async () => {
                 try {
                     const res = await pharmacyService.getMedicines({ limit: 100 });
-                    setMedicines(res.data || []);
+                    const fetchedMedicines = res.data || [];
+                    setMedicines(fetchedMedicines);
+
+                    if (initialMedicineId) {
+                        const preselected = fetchedMedicines.find(
+                            (medicine) => medicine.id === initialMedicineId,
+                        );
+                        if (preselected) {
+                            setSelectedMedicine(preselected);
+                            setValue('medicine_id', preselected.id);
+                        }
+                    }
                 } catch (error) {
                     console.error('Failed to load medicines:', error);
                 }
@@ -117,12 +142,8 @@ export function AddStockModal({ isOpen, onClose, onSuccess }: AddStockModalProps
                 }
             };
             loadStorageLocations();
-
-            reset();
-            setSelectedMedicine(null);
-            setSearchQuery('');
         }
-    }, [isOpen, reset]);
+    }, [initialMedicineId, isOpen, reset, setValue]);
 
     const handleMedicineSelect = (med: Medicine) => {
         setSelectedMedicine(med);

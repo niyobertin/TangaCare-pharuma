@@ -158,17 +158,41 @@ export function GoodsReceiptsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Receipts</p>
-                        <p className="text-2xl font-black text-healthcare-dark dark:text-white mt-1">{totalItems}</p>
+                    <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#2563EB] to-[#1D4ED8]">
+                        <div className="tc-stat-card-header">
+                            <p className="tc-stat-card-title text-white/90">Total receipts</p>
+                            <span className="tc-stat-card-icon bg-white/20">
+                                <FileText size={15} />
+                            </span>
+                        </div>
+                        <div className="tc-stat-card-foot">
+                            <p className="tc-stat-card-value">{totalItems.toLocaleString()}</p>
+                            <p className="tc-stat-card-subtitle">All records</p>
+                        </div>
                     </div>
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Units (Current Page)</p>
-                        <p className="text-2xl font-black text-healthcare-dark dark:text-white mt-1">{stats.totalUnits.toLocaleString()}</p>
+                    <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#10B981] to-[#059669]">
+                        <div className="tc-stat-card-header">
+                            <p className="tc-stat-card-title text-white/90">Units</p>
+                            <span className="tc-stat-card-icon bg-white/20">
+                                <PackageCheck size={15} />
+                            </span>
+                        </div>
+                        <div className="tc-stat-card-foot">
+                            <p className="tc-stat-card-value">{stats.totalUnits.toLocaleString()}</p>
+                            <p className="tc-stat-card-subtitle">Current page</p>
+                        </div>
                     </div>
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Value (Current Page)</p>
-                        <p className="text-2xl font-black text-healthcare-primary mt-1">{formatRwf(stats.totalValue)}</p>
+                    <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#F59E0B] to-[#D97706]">
+                        <div className="tc-stat-card-header">
+                            <p className="tc-stat-card-title text-white/90">Receipt value</p>
+                            <span className="tc-stat-card-icon bg-white/20">
+                                <Truck size={15} />
+                            </span>
+                        </div>
+                        <div className="tc-stat-card-foot">
+                            <p className="tc-stat-card-value">{formatRwf(stats.totalValue)}</p>
+                            <p className="tc-stat-card-subtitle">Current page</p>
+                        </div>
                     </div>
                 </div>
 
@@ -198,7 +222,7 @@ export function GoodsReceiptsPage() {
                                 ]}
                             />
                         ) : (
-                            <table className="w-full text-left border-collapse">
+                            <table className="tc-table w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800/50">
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Receipt #</th>

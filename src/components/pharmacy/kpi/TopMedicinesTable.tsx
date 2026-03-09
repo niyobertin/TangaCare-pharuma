@@ -21,7 +21,7 @@ export const TopMedicinesTable = ({ data }: { data: TopRevenueMedicine[] }) => {
             </div>
 
             <div className="flex-1 overflow-auto">
-                <table className="w-full">
+                <table className="tc-table w-full">
                     <thead>
                         <tr className="border-b border-slate-100 dark:border-slate-800">
                             <th className="text-left py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">

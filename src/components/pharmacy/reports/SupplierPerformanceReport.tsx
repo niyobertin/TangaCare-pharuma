@@ -56,7 +56,7 @@ export function SupplierPerformanceReport() {
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                <table className="w-full text-left text-sm">
+                <table className="tc-table w-full text-left text-sm">
                     <thead className="bg-slate-50 dark:bg-slate-800/50">
                         <tr>
                             <th className="px-6 py-3 font-semibold text-slate-500">Supplier</th>

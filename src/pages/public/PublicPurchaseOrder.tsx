@@ -176,7 +176,7 @@ export const PublicPurchaseOrder = () => {
 
                         {/* Items Table */}
                         <div className="rounded-xl border border-slate-200 overflow-hidden mb-8">
-                            <table className="w-full text-sm text-left">
+                            <table className="tc-table w-full text-sm text-left">
                                 <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200">
                                     <tr>
                                         <th className="px-6 py-4">Item Description</th>
