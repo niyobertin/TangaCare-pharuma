@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import toast from 'react-hot-toast';
-import { Pill, X, Save, Info } from 'lucide-react';
+import { Pill, X, Save, Info, Plus, Loader2 } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Medicine, MedicineCategory } from '../../types/pharmacy';
 
@@ -41,37 +41,127 @@ const medicineSchema = yup.object({
 
 export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalProps) {
     const [isLoading, setIsLoading] = useState(false);
+    const [isPrefilling, setIsPrefilling] = useState(false);
     const [categories, setCategories] = useState<MedicineCategory[]>([]);
+    const [showCreateCategory, setShowCreateCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+
+    const buildFormValues = (payload?: Partial<Medicine>) => ({
+        name: payload?.name || '',
+        brand_name: payload?.brand_name || '',
+        code: payload?.code || '',
+        strength: payload?.strength || '',
+        dosage_form: payload?.dosage_form || '',
+        unit: payload?.unit || '',
+        category_id:
+            payload?.category_id ??
+            (payload as any)?.category?.id ??
+            '',
+        selling_price: Number(payload?.selling_price || 0),
+        reorder_point: Number(payload?.reorder_point || 0),
+        min_stock_level: Number(payload?.min_stock_level || 0),
+        is_controlled_drug: Boolean(payload?.is_controlled_drug),
+        allow_partial_sales: Boolean(payload?.allow_partial_sales),
+        units_per_package: payload?.units_per_package ?? undefined,
+        base_unit: payload?.base_unit || '',
+    });
 
     const {
         register,
         handleSubmit,
         watch,
+        setValue,
+        reset,
         formState: { errors },
     } = useForm({
         resolver: yupResolver(medicineSchema) as any,
-        defaultValues: medicine || {
-            is_controlled_drug: false,
-            allow_partial_sales: false,
-            selling_price: 0,
-            reorder_point: 0,
-            min_stock_level: 0,
-        },
+        defaultValues: buildFormValues(medicine),
     });
 
     const allowPartialSales = watch('allow_partial_sales');
 
+    const fetchCategories = async () => {
+        try {
+            const data = await pharmacyService.getCategories();
+            setCategories(data);
+        } catch (error) {
+            console.error('Failed to fetch categories:', error);
+        }
+    };
+
     useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const data = await pharmacyService.getCategories();
-                setCategories(data);
-            } catch (error) {
-                console.error('Failed to fetch categories:', error);
-            }
-        };
         fetchCategories();
     }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const hydrateForEdit = async () => {
+            if (!medicine?.id) {
+                reset(buildFormValues(undefined));
+                return;
+            }
+
+            // Fill quickly from table row, then replace with full record.
+            reset(buildFormValues(medicine));
+            setIsPrefilling(true);
+            try {
+                const fullMedicine = await pharmacyService.getMedicine(medicine.id);
+                if (!isMounted) return;
+                reset(buildFormValues(fullMedicine));
+            } catch (error) {
+                console.error('Failed to fetch full medicine details:', error);
+                // Keep existing row data if details request fails.
+            } finally {
+                if (isMounted) {
+                    setIsPrefilling(false);
+                }
+            }
+        };
+
+        hydrateForEdit();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [medicine, reset]);
+
+    const generateCategoryCode = (name: string): string => {
+        const base = name
+            .toUpperCase()
+            .replace(/[^A-Z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '') || 'CATEGORY';
+        const suffix = Date.now().toString().slice(-6);
+        const safeBase = base.slice(0, Math.max(1, 50 - (suffix.length + 1)));
+        return `${safeBase}_${suffix}`;
+    };
+
+    const handleCreateCategory = async () => {
+        const trimmedName = newCategoryName.trim();
+        if (trimmedName.length < 2) {
+            toast.error('Category name must be at least 2 characters');
+            return;
+        }
+
+        setIsCreatingCategory(true);
+        try {
+            const created = await pharmacyService.createCategory({
+                name: trimmedName,
+                code: generateCategoryCode(trimmedName),
+            });
+            setCategories((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+            setValue('category_id', created.id, { shouldDirty: true, shouldValidate: true });
+            setNewCategoryName('');
+            setShowCreateCategory(false);
+            toast.success('Category created');
+        } catch (error: any) {
+            console.error('Category creation failed:', error);
+            toast.error(error?.response?.data?.message || 'Failed to create category');
+        } finally {
+            setIsCreatingCategory(false);
+        }
+    };
 
     const onSubmit = async (data: any) => {
         setIsLoading(true);
@@ -82,9 +172,15 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                 return Number.isFinite(parsed) ? parsed : undefined;
             };
 
+            const toNumberOrNull = (value: any): number | null => {
+                if (value === '' || value === null || value === undefined) return null;
+                const parsed = Number(value);
+                return Number.isFinite(parsed) ? parsed : null;
+            };
+
             const payload = {
                 ...data,
-                category_id: toNumberOrUndefined(data.category_id),
+                category_id: toNumberOrNull(data.category_id),
                 selling_price: Number(data.selling_price || 0),
                 reorder_point: toNumberOrUndefined(data.reorder_point) ?? 0,
                 min_stock_level: toNumberOrUndefined(data.min_stock_level) ?? 0,
@@ -143,6 +239,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                     </label>
                                     <input
                                         {...register('name')}
+                                        disabled={isPrefilling}
                                         placeholder="e.g. Paracetamol"
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     />
@@ -158,6 +255,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                     </label>
                                     <input
                                         {...register('brand_name')}
+                                        disabled={isPrefilling}
                                         placeholder="e.g. Panadol"
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     />
@@ -168,6 +266,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                     </label>
                                     <input
                                         {...register('code')}
+                                        disabled={isPrefilling}
                                         placeholder="e.g. PARA-500"
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white font-mono uppercase"
                                     />
@@ -178,11 +277,22 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                     )}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
-                                        Category
-                                    </label>
+                                    <div className="mb-1 flex items-center justify-between gap-2">
+                                        <label className="block text-sm font-bold text-slate-700 dark:text-white">
+                                            Category
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowCreateCategory((prev) => !prev)}
+                                            className="inline-flex items-center gap-1 text-xs font-bold text-healthcare-primary hover:text-teal-700 transition-colors"
+                                        >
+                                            <Plus size={14} />
+                                            {showCreateCategory ? 'Close' : 'Add Category'}
+                                        </button>
+                                    </div>
                                     <select
                                         {...register('category_id')}
+                                        disabled={isCreatingCategory || isPrefilling}
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     >
                                         <option value="">Uncategorized</option>
@@ -192,6 +302,44 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                             </option>
                                         ))}
                                     </select>
+                                    {showCreateCategory && (
+                                        <div className="mt-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 p-2">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={newCategoryName}
+                                                    onChange={(event) =>
+                                                        setNewCategoryName(event.target.value)
+                                                    }
+                                                    placeholder="Category name (e.g. Antibiotics)"
+                                                    className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-900 dark:border-slate-700 dark:text-white"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleCreateCategory}
+                                                    disabled={
+                                                        isCreatingCategory || !newCategoryName.trim()
+                                                    }
+                                                    className="min-w-[82px] px-3 py-2 rounded-lg bg-healthcare-primary text-white text-xs font-bold hover:bg-teal-700 disabled:opacity-50 inline-flex items-center justify-center gap-1"
+                                                >
+                                                    {isCreatingCategory ? (
+                                                        <>
+                                                            <Loader2
+                                                                size={14}
+                                                                className="animate-spin"
+                                                            />
+                                                            Saving
+                                                        </>
+                                                    ) : (
+                                                        'Save'
+                                                    )}
+                                                </button>
+                                            </div>
+                                            <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                                                The category code will be generated automatically.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
@@ -199,6 +347,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                     </label>
                                     <input
                                         {...register('strength')}
+                                        disabled={isPrefilling}
                                         placeholder="e.g. 500mg"
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     />
@@ -214,6 +363,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                     </label>
                                     <select
                                         {...register('dosage_form')}
+                                        disabled={isPrefilling}
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     >
                                         <option value="">Select form...</option>
@@ -247,6 +397,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                     </label>
                                     <input
                                         {...register('unit')}
+                                        disabled={isPrefilling}
                                         placeholder="e.g. Box, Bottle"
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     />
@@ -265,6 +416,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                         type="number"
                                         step="0.01"
                                         {...register('selling_price')}
+                                        disabled={isPrefilling}
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     />
                                 </div>
@@ -278,6 +430,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                         step="1"
                                         min="0"
                                         {...register('reorder_point')}
+                                        disabled={isPrefilling}
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     />
                                     <p className="text-[10px] text-slate-500 mt-1">
@@ -294,6 +447,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                         step="1"
                                         min="0"
                                         {...register('min_stock_level')}
+                                        disabled={isPrefilling}
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     />
                                 </div>
@@ -318,6 +472,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                     <input
                                         type="checkbox"
                                         {...register('allow_partial_sales')}
+                                        disabled={isPrefilling}
                                         className="sr-only peer"
                                     />
                                     <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-healthcare-primary"></div>
@@ -333,6 +488,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                         <input
                                             type="number"
                                             {...register('units_per_package')}
+                                            disabled={isPrefilling}
                                             placeholder="e.g. 10"
                                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                         />
@@ -348,6 +504,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                         </label>
                                         <input
                                             {...register('base_unit')}
+                                            disabled={isPrefilling}
                                             placeholder="e.g. tablet, pill, ml"
                                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                         />
@@ -366,6 +523,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                 <input
                                     type="checkbox"
                                     {...register('is_controlled_drug')}
+                                    disabled={isPrefilling}
                                     className="w-4 h-4 rounded border-2 border-slate-300 text-healthcare-primary focus:ring-healthcare-primary transition-all"
                                 />
                                 <span className="text-sm font-bold text-slate-700 dark:text-white">
@@ -386,10 +544,10 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                             </button>
                             <button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isLoading || isPrefilling}
                                 className="flex-[2] py-3 bg-healthcare-primary text-white rounded-xl font-bold hover:bg-teal-700 shadow-lg shadow-teal-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                             >
-                                {isLoading ? (
+                                {isLoading || isPrefilling ? (
                                     <div className="animate-spin w-5 h-5 border-2 border-white/20 border-t-white rounded-full" />
                                 ) : (
                                     <>

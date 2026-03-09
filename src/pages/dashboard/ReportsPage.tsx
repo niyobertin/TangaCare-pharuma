@@ -149,7 +149,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         ? normalizedPreferredSubtab
         : defaultSubtabForGroup(activeGroup);
 
-    const [days, setDays] = useState(30);
+    const [expiryDays, setExpiryDays] = useState(30);
     const routeForSubtab = (tab: string): string => {
         if (tab === 'sales') return '/app/analytics/sales';
         if (tab === 'stock') return '/app/analytics/inventory';
@@ -220,7 +220,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             params.start_date = startDate;
             params.end_date = endDate;
         }
-        if (exportType === 'expiry') params.days = days;
+        if (exportType === 'expiry') params.days = expiryDays;
         if (exportType === 'fast-moving') params.days = 90;
         if (exportType === 'demand-forecast') {
             params.horizon_days = 30;
@@ -327,20 +327,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                 )}
 
                 {/* Date / day pickers (conditionally shown) */}
-                {resolvedTab === 'expiry' && (
-                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm w-fit">
-                        <span className="text-[10px] font-black text-slate-400 uppercase">Days:</span>
-                        <select
-                            value={days}
-                            onChange={(e) => setDays(Number(e.target.value))}
-                            className="bg-transparent text-sm font-bold text-slate-600 dark:text-slate-300 outline-none"
-                        >
-                            <option value={30}>30 Days</option>
-                            <option value={60}>60 Days</option>
-                            <option value={90}>90 Days</option>
-                        </select>
-                    </div>
-                )}
                 {['sales', 'tax', 'performance', 'purchase'].includes(resolvedTab) && (
                     <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 shadow-sm w-fit">
                         <Calendar size={14} className="text-slate-400" />
@@ -390,7 +376,11 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         <ParReplenishmentReport facilityId={effectiveFacilityId} />
                     )}
                     {resolvedTab === 'expiry' && (
-                        <ExpiryReport facilityId={effectiveFacilityId} />
+                        <ExpiryReport
+                            facilityId={effectiveFacilityId}
+                            selectedDays={expiryDays}
+                            onDaysChange={setExpiryDays}
+                        />
                     )}
                     {resolvedTab === 'movement' && (
                         <div className="-mx-6 -my-6">

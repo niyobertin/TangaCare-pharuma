@@ -35,6 +35,8 @@ interface ExpiryRow extends ExpiryItem {
     status: 'expiring_soon' | 'expired';
 }
 
+const DAY_OPTIONS = [30, 60, 90] as const;
+
 const getRiskBadge = (risk: ExpiryRisk) => {
     if (risk === 'expired') {
         return {
@@ -89,8 +91,15 @@ const resolveAction = (item: ExpiryRow): string => {
     return 'Monitor weekly and keep FEFO rotation active.';
 };
 
-export function ExpiryReport({ facilityId }: { facilityId?: number }) {
-    const [days, setDays] = useState(30);
+interface ExpiryReportProps {
+    facilityId?: number;
+    selectedDays?: number;
+    onDaysChange?: (days: number) => void;
+}
+
+export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryReportProps) {
+    const [localDays, setLocalDays] = useState(30);
+    const [reloadKey, setReloadKey] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [data, setData] = useState<ExpiryData | null>(null);
@@ -99,9 +108,25 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
     const [traceBatchId, setTraceBatchId] = useState('');
     const [traceResult, setTraceResult] = useState<any | null>(null);
     const [traceLoading, setTraceLoading] = useState(false);
+    const days = localDays;
+
+    const updateDays = (nextDays: number) => {
+        if (!DAY_OPTIONS.includes(nextDays as (typeof DAY_OPTIONS)[number])) return;
+        setLocalDays(nextDays);
+        onDaysChange?.(nextDays);
+        // Force fresh fetch on every click, including when same day is re-selected.
+        setReloadKey((prev) => prev + 1);
+    };
+
+    useEffect(() => {
+        if (selectedDays != null && selectedDays !== localDays) {
+            setLocalDays(selectedDays);
+        }
+    }, [selectedDays, localDays]);
 
     useEffect(() => {
         if (!facilityId) return;
+        let isCurrent = true;
 
         const load = async () => {
             setLoading(true);
@@ -115,16 +140,22 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                     throw new Error('Invalid response format from server');
                 }
 
+                if (!isCurrent) return;
                 setData(res);
             } catch (err: any) {
+                if (!isCurrent) return;
                 setError(err?.message || 'Failed to connect to reporting service');
             } finally {
+                if (!isCurrent) return;
                 setLoading(false);
             }
         };
 
         load();
-    }, [facilityId, days]);
+        return () => {
+            isCurrent = false;
+        };
+    }, [facilityId, days, reloadKey]);
 
     const handleTrace = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -234,7 +265,7 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                 </h3>
                 <p className="text-rose-700 dark:text-rose-400 text-xs font-bold mt-2 uppercase">{error}</p>
                 <button
-                    onClick={() => setDays(days)}
+                    onClick={() => setReloadKey((prev) => prev + 1)}
                     className="mt-6 px-6 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-500/20"
                 >
                     Retry Connection
@@ -257,10 +288,10 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                 </div>
 
                 <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                    {[30, 60, 90].map((d) => (
+                    {DAY_OPTIONS.map((d) => (
                         <button
                             key={d}
-                            onClick={() => setDays(d)}
+                            onClick={() => updateDays(d)}
                             className={cn(
                                 'px-4 py-1.5 rounded-lg text-xs font-black transition-all uppercase tracking-tight',
                                 days === d

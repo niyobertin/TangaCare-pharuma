@@ -57,7 +57,9 @@ export interface Medicine {
     target_stock_level?: number;
     lead_time_days?: number;
     safety_stock_quantity?: number;
+    organization_id?: number | null;
     category_id?: number;
+    category_name?: string;
     category?: MedicineCategory;
     supplier_name?: string;
     is_controlled_drug: boolean;
@@ -470,11 +472,17 @@ export interface CreateMedicineDto {
     dosage_form: string;
     unit: string;
     selling_price: number;
+    organization_id?: number;
+    category_id?: number | null;
     min_stock_level?: number;
     reorder_point?: number;
     target_stock_level?: number;
     lead_time_days?: number;
     safety_stock_quantity?: number;
+    is_controlled_drug?: boolean;
+    allow_partial_sales?: boolean;
+    units_per_package?: number;
+    base_unit?: string;
 }
 
 export type SaleStatus = 'paid' | 'partially_paid' | 'unpaid' | 'voided';

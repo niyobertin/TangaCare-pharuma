@@ -59,6 +59,9 @@ const INVENTORY_ROLE_DEFAULT_COLUMNS: Record<string, string[]> = {
     AUDITOR: ['medicine', 'category', 'supplier', 'stock', 'threshold', 'updated', 'status', 'actions'],
 };
 
+const ALL_CATEGORIES_FILTER = 'All Categories';
+const UNCATEGORIZED_FILTER = '__UNCATEGORIZED__';
+
 type InventoryQuickPreset =
     | 'all'
     | 'safety_risk'
@@ -227,7 +230,7 @@ export function InventoryPage() {
     const [medicines, setMedicines] = useState<Medicine[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('All Categories');
+    const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES_FILTER);
     const [stockFilter, setStockFilter] = useState<'all' | 'low_stock' | 'out_of_stock' | 'expiring_soon'>(
         'all',
     );
@@ -258,7 +261,7 @@ export function InventoryPage() {
     const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
     const [isMedicineModalOpen, setIsMedicineModalOpen] = useState(false);
     const [editingMedicine, setEditingMedicine] = useState<Medicine | undefined>(undefined);
-    const [categories, setCategories] = useState<string[]>(['All Categories']);
+    const [categories, setCategories] = useState<string[]>([ALL_CATEGORIES_FILTER, UNCATEGORIZED_FILTER]);
     const [quickPreset] = useState<InventoryQuickPreset>('all');
     const [sortBy] = useState<InventorySort>('updated_desc');
     const inventoryTableRef = useRef<HTMLDivElement | null>(null);
@@ -285,7 +288,7 @@ export function InventoryPage() {
                 search: debouncedSearch,
                 start_date: startDate,
                 end_date: endDate,
-                category: selectedCategory !== 'All Categories' ? selectedCategory : undefined,
+                category: selectedCategory !== ALL_CATEGORIES_FILTER ? selectedCategory : undefined,
                 low_stock_only: stockFilter === 'low_stock' ? true : undefined,
                 expiring_soon: stockFilter === 'expiring_soon' ? true : undefined,
                 controlled_only: controlledFilter === 'controlled' ? true : undefined,
@@ -321,8 +324,11 @@ export function InventoryPage() {
         const loadCategories = async () => {
             try {
                 const rows = await pharmacyService.getCategories();
-                const dynamicCategories = rows.map((row) => row.name).filter(Boolean);
-                setCategories(['All Categories', ...dynamicCategories]);
+                const dynamicCategories = rows
+                    .map((row) => String(row.name || '').trim())
+                    .filter(Boolean);
+                const uniqueCategories = Array.from(new Set(dynamicCategories));
+                setCategories([ALL_CATEGORIES_FILTER, UNCATEGORIZED_FILTER, ...uniqueCategories]);
             } catch (error) {
                 console.error('Failed to load categories:', error);
             }
@@ -737,7 +743,7 @@ export function InventoryPage() {
                             setSearchQuery('');
                             setStartDate('');
                             setEndDate('');
-                            setSelectedCategory('All Categories');
+                            setSelectedCategory(ALL_CATEGORIES_FILTER);
                             setStockFilter('all');
                             setControlledFilter('all');
                             setSupplierFilter('All Suppliers');
@@ -768,7 +774,7 @@ export function InventoryPage() {
                                 >
                                     {categories.map((cat) => (
                                         <option key={cat} value={cat}>
-                                            {cat}
+                                            {cat === UNCATEGORIZED_FILTER ? 'Uncategorized' : cat}
                                         </option>
                                     ))}
                                 </select>
