@@ -3,7 +3,6 @@ import { X, CheckCircle2, Loader2, Package } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { ProcurementOrder } from '../../types/pharmacy';
 import toast from 'react-hot-toast';
-import * as yup from 'yup';
 
 interface ReceiveOrderModalProps {
     isOpen: boolean;
@@ -36,7 +35,16 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     id: item.id,
                     medicine_name: item.medicine?.name,
                     quantity_ordered: item.quantity_ordered,
-                    quantity_received: item.quantity_ordered - (item.quantity_received || 0),
+                    quantity_previously_received: item.quantity_received || 0,
+                    quantity_outstanding: Math.max(
+                        0,
+                        Number(item.quantity_ordered || 0) - Number(item.quantity_received || 0),
+                    ),
+                    quantity_received: Math.max(
+                        0,
+                        Number(item.quantity_ordered || 0) - Number(item.quantity_received || 0),
+                    ),
+                    backorder_qty: 0,
                     batch_number: '',
                     expiry_date: '',
                     manufacturing_date: '',
@@ -55,16 +63,25 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
 
     const receivingSummary = useMemo(() => {
         const receivingRows = receivedItems.filter((item) => Number(item.quantity_received || 0) > 0);
+        const actionRows = receivedItems.filter(
+            (item) =>
+                Number(item.quantity_received || 0) > 0 || Number(item.backorder_qty || 0) > 0,
+        );
         const totalUnits = receivingRows.reduce(
             (sum, item) => sum + Number(item.quantity_received || 0),
+            0,
+        );
+        const backorderUnits = receivedItems.reduce(
+            (sum, item) => sum + Number(item.backorder_qty || 0),
             0,
         );
         const missingDetails = receivingRows.filter(
             (item) => !item.batch_number || !item.expiry_date || !item.location_id,
         ).length;
         return {
-            lines: receivingRows.length,
+            actionLines: actionRows.length,
             totalUnits,
+            backorderUnits,
             missingDetails,
         };
     }, [receivedItems]);
@@ -76,13 +93,17 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
     };
 
     const handleClearAll = () => {
-        setReceivedItems((prev) => prev.map((item) => ({ ...item, quantity_received: 0 })));
+        setReceivedItems((prev) =>
+            prev.map((item) => ({ ...item, quantity_received: 0, backorder_qty: 0 })),
+        );
     };
 
     const handleSubmit = async () => {
         const todayStr = new Date().toISOString().split('T')[0];
 
-        const attemptedItems = receivedItems.filter((i) => i.quantity_received > 0);
+        const attemptedItems = receivedItems.filter(
+            (i) => Number(i.quantity_received || 0) > 0 || Number(i.backorder_qty || 0) > 0,
+        );
 
         if (attemptedItems.length === 0) {
             toast.error('Please enter a quantity to receive for at least one item.');
@@ -91,7 +112,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
 
         const duplicateEntryKeys = new Set<string>();
         const duplicateEntries: string[] = [];
-        for (const item of attemptedItems) {
+        for (const item of attemptedItems.filter((entry) => Number(entry.quantity_received || 0) > 0)) {
             const key = `${String(item.id)}::${String(item.batch_number || '').trim().toLowerCase()}`;
             if (duplicateEntryKeys.has(key)) {
                 duplicateEntries.push(`${item.medicine_name} (${item.batch_number || 'NO-BATCH'})`);
@@ -104,37 +125,54 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
             return;
         }
 
-        const itemSchema = yup.object().shape({
-            quantity_received: yup.number(),
-            location_id: yup.number().required('Storage Location is required'),
-            batch_number: yup.string().required('Batch Number is required'),
-            expiry_date: yup
-                .string()
-                .required('Expiry Date is required')
-                .test('is-future', 'Expiry date must be in the future', (val) => {
-                    return !!val && val > todayStr;
-                })
-                .test('after-mfg', 'Expiry date must be after Mfg Date', function (val) {
-                    const { manufacturing_date } = this.parent;
-                    if (!val || !manufacturing_date) return true;
-                    return val > manufacturing_date;
-                }),
-            manufacturing_date: yup.string().nullable().optional(),
-        });
-
         const validItems: any[] = [];
         const skippedItems: any[] = [];
 
         for (const item of attemptedItems) {
-            try {
-                itemSchema.validateSync(item);
-                validItems.push(item);
-            } catch (err: any) {
+            const quantityReceived = Number(item.quantity_received || 0);
+            const backorderQty = Number(item.backorder_qty || 0);
+            const outstandingQty = Math.max(
+                0,
+                Number(item.quantity_ordered || 0) - Number(item.quantity_previously_received || 0),
+            );
+
+            if (quantityReceived < 0 || backorderQty < 0) {
+                skippedItems.push({ ...item, reason: 'Negative quantities are not allowed' });
+                continue;
+            }
+
+            if (quantityReceived + backorderQty > outstandingQty) {
                 skippedItems.push({
                     ...item,
-                    reason: err.message,
+                    reason: `Received + backorder cannot exceed outstanding quantity (${outstandingQty})`,
                 });
+                continue;
             }
+
+            if (quantityReceived > 0) {
+                if (!item.location_id) {
+                    skippedItems.push({ ...item, reason: 'Storage Location is required' });
+                    continue;
+                }
+                if (!String(item.batch_number || '').trim()) {
+                    skippedItems.push({ ...item, reason: 'Batch Number is required' });
+                    continue;
+                }
+                if (!item.expiry_date) {
+                    skippedItems.push({ ...item, reason: 'Expiry Date is required' });
+                    continue;
+                }
+                if (item.expiry_date <= todayStr) {
+                    skippedItems.push({ ...item, reason: 'Expiry date must be in the future' });
+                    continue;
+                }
+                if (item.manufacturing_date && item.expiry_date <= item.manufacturing_date) {
+                    skippedItems.push({ ...item, reason: 'Expiry date must be after Mfg Date' });
+                    continue;
+                }
+            }
+
+            validItems.push(item);
         }
 
         if (validItems.length === 0) {
@@ -152,6 +190,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
         }
 
         const nearExpiryCount = validItems.filter((item) => {
+            if (Number(item.quantity_received || 0) <= 0) return false;
             const expiry = new Date(item.expiry_date);
             const now = new Date();
             const diffDays = Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -170,6 +209,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                 received_items: validItems.map((i) => ({
                     item_id: i.id,
                     quantity_received: Number(i.quantity_received),
+                    backorder_qty: Number(i.backorder_qty || 0),
                     batch_number: i.batch_number,
                     expiry_date: i.expiry_date,
                     manufacturing_date: i.manufacturing_date || undefined,
@@ -236,7 +276,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-6">
                         <span className="font-bold flex items-center gap-2">
                             <CheckCircle2 size={14} />
-                            Only items with a quantity &gt; 0 will be received.
+                            Enter received and/or backorder quantities per item.
                         </span>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span className="font-black uppercase text-[10px] text-slate-500">Apply to all:</span>
@@ -258,7 +298,8 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            Preview: {receivingSummary.lines} lines • {receivingSummary.totalUnits} units
+                            Preview: {receivingSummary.actionLines} lines • {receivingSummary.totalUnits}{' '}
+                            units received • {receivingSummary.backorderUnits} units backordered
                             {receivingSummary.missingDetails > 0 &&
                                 ` • ${receivingSummary.missingDetails} missing details`}
                         </div>
@@ -275,6 +316,11 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     <div className="space-y-3 lg:hidden">
                         {receivedItems.map((item, idx) => {
                             const isReceiving = item.quantity_received > 0;
+                            const outstandingQty = Math.max(
+                                0,
+                                Number(item.quantity_ordered || 0) -
+                                    Number(item.quantity_previously_received || 0),
+                            );
                             const isMissingInfo =
                                 isReceiving && (!item.batch_number || !item.expiry_date || !item.location_id);
 
@@ -289,7 +335,9 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                 {item.medicine_name}
                                             </p>
                                             <p className="text-[10px] uppercase tracking-wider text-slate-500 font-black">
-                                                Ordered: {item.quantity_ordered}
+                                                Ordered: {item.quantity_ordered} • Previously Received:{' '}
+                                                {item.quantity_previously_received || 0} • Outstanding:{' '}
+                                                {outstandingQty}
                                             </p>
                                             {isMissingInfo && (
                                                 <span className="text-[10px] text-red-500 font-bold">
@@ -308,6 +356,24 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                     handleItemChange(
                                                         idx,
                                                         'quantity_received',
+                                                        Number(e.target.value),
+                                                    )
+                                                }
+                                                className="h-10 w-full px-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                                            />
+                                        </div>
+                                        <div className="min-w-[84px]">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase">
+                                                Backorder
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={item.backorder_qty || 0}
+                                                onChange={(e) =>
+                                                    handleItemChange(
+                                                        idx,
+                                                        'backorder_qty',
                                                         Number(e.target.value),
                                                     )
                                                 }
@@ -417,6 +483,11 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                             <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                                 {receivedItems.map((item, idx) => {
                                     const isReceiving = item.quantity_received > 0;
+                                    const outstandingQty = Math.max(
+                                        0,
+                                        Number(item.quantity_ordered || 0) -
+                                            Number(item.quantity_previously_received || 0),
+                                    );
                                     const isMissingInfo =
                                         isReceiving &&
                                         (!item.batch_number || !item.expiry_date || !item.location_id);
@@ -435,23 +506,53 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                         Missing details
                                                     </span>
                                                 )}
+                                                <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 mt-1">
+                                                    Previously Received: {item.quantity_previously_received || 0} •
+                                                    Outstanding: {outstandingQty}
+                                                </div>
                                             </td>
                                             <td className="py-4 px-2 text-center text-sm font-black text-slate-400">
                                                 {item.quantity_ordered}
                                             </td>
                                             <td className="py-4 px-2">
-                                                <input
-                                                    type="number"
-                                                    value={item.quantity_received}
-                                                    onChange={(e) =>
-                                                        handleItemChange(
-                                                            idx,
-                                                            'quantity_received',
-                                                            Number(e.target.value),
-                                                        )
-                                                    }
-                                                    className="w-20 px-2 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
-                                                />
+                                                <div className="space-y-2">
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                            Receive
+                                                        </span>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={item.quantity_received}
+                                                            onChange={(e) =>
+                                                                handleItemChange(
+                                                                    idx,
+                                                                    'quantity_received',
+                                                                    Number(e.target.value),
+                                                                )
+                                                            }
+                                                            className="w-24 px-2 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                            Backorder
+                                                        </span>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={item.backorder_qty || 0}
+                                                            onChange={(e) =>
+                                                                handleItemChange(
+                                                                    idx,
+                                                                    'backorder_qty',
+                                                                    Number(e.target.value),
+                                                                )
+                                                            }
+                                                            className="w-24 px-2 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                                                        />
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="py-4 px-2 space-y-2">
                                                 <input

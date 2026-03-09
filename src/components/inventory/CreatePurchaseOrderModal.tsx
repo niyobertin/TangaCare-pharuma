@@ -30,10 +30,20 @@ const poSchema = yup.object({
         .number()
         .positive('Please select a supplier')
         .required('Please select a supplier'),
+    expected_delivery_date: yup.string().optional(),
     items: yup.array().of(poItemSchema).min(1, 'Please add at least one item').required(),
 });
 
-type POFormData = yup.InferType<typeof poSchema>;
+type POFormData = {
+    supplier_id: number;
+    expected_delivery_date?: string;
+    items: Array<{
+        medicine_id: number;
+        medicine_name: string;
+        quantity: number;
+        unit_price: number;
+    }>;
+};
 
 export function CreatePurchaseOrderModal({
     isOpen,
@@ -54,9 +64,10 @@ export function CreatePurchaseOrderModal({
         reset,
         formState: { errors },
     } = useForm<POFormData>({
-        resolver: yupResolver(poSchema),
+        resolver: yupResolver(poSchema) as any,
         defaultValues: {
             supplier_id: 0,
+            expected_delivery_date: '',
             items: [],
         },
     });
@@ -89,6 +100,7 @@ export function CreatePurchaseOrderModal({
 
                         reset({
                             supplier_id: 0,
+                            expected_delivery_date: '',
                             items: [
                                 {
                                     medicine_id: initialItem.medicine_id,
@@ -99,7 +111,7 @@ export function CreatePurchaseOrderModal({
                             ],
                         });
                     } else {
-                        reset({ supplier_id: 0, items: [] });
+                        reset({ supplier_id: 0, expected_delivery_date: '', items: [] });
                     }
                 } catch (error) {
                     console.error('Failed to load PO data:', error);
@@ -130,6 +142,7 @@ export function CreatePurchaseOrderModal({
         try {
             await pharmacyService.createProcurementOrder({
                 supplier_id: data.supplier_id,
+                expected_delivery_date: data.expected_delivery_date || undefined,
                 items: data.items.map((i) => ({
                     medicine_id: i.medicine_id,
                     quantity_ordered: i.quantity,
@@ -212,6 +225,17 @@ export function CreatePurchaseOrderModal({
                                     {errors.supplier_id.message}
                                 </p>
                             )}
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                                Expected Delivery (Optional)
+                            </label>
+                            <input
+                                type="date"
+                                {...register('expected_delivery_date')}
+                                className="w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-teal-500/20 focus:bg-white dark:focus:bg-slate-800 rounded-2xl outline-none transition-all font-bold text-sm"
+                            />
                         </div>
 
                         <div className="space-y-3">

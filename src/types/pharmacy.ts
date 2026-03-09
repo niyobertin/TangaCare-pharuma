@@ -337,10 +337,31 @@ export interface ProcurementOrderItem {
     medicine_id: number;
     quantity_ordered: number;
     quantity_received?: number;
+    backorder_qty?: number;
+    remaining_qty?: number;
     unit_price: number;
     total_price: number;
     medicine?: Medicine;
 }
+
+export type ProcurementOrderStatus =
+    | 'draft'
+    | 'pending'
+    | 'approved'
+    | 'confirmed'
+    | 'partially_received'
+    | 'backordered'
+    | 'received'
+    | 'cancelled'
+    // Legacy/UI compatibility
+    | 'DRAFT'
+    | 'PENDING'
+    | 'APPROVED'
+    | 'CONFIRMED'
+    | 'RECEIVED'
+    | 'CANCELLED'
+    | 'ORDERED'
+    | 'PARTIAL';
 
 export interface ProcurementOrder {
     id: number;
@@ -351,7 +372,7 @@ export interface ProcurementOrder {
     order_date: string;
     expected_delivery_date?: string;
     received_date?: string;
-    status: 'DRAFT' | 'PENDING' | 'APPROVED' | 'ORDERED' | 'RECEIVED' | 'PARTIAL' | 'CANCELLED';
+    status: ProcurementOrderStatus;
     subtotal_amount: number;
     discount_percent: number;
     discount_amount: number;
@@ -365,6 +386,36 @@ export interface ProcurementOrder {
     created_by?: User;
     items?: ProcurementOrderItem[];
     activities?: PurchaseOrderActivity[];
+}
+
+export interface GoodsReceiptItem {
+    id: number;
+    goods_receipt_id: number;
+    purchase_order_item_id: number;
+    medicine_id: number;
+    batch_id: number;
+    quantity_received: number;
+    unit_cost: number;
+    batch_number?: string;
+    expiry_date?: string;
+    medicine?: Medicine;
+    batch?: Batch;
+}
+
+export interface GoodsReceipt {
+    id: number;
+    receipt_number: string;
+    facility_id: number;
+    organization_id?: number;
+    purchase_order_id: number;
+    received_by_id: number;
+    received_date: string;
+    notes?: string;
+    created_at?: string;
+    updated_at?: string;
+    purchase_order?: ProcurementOrder;
+    received_by?: User;
+    items?: GoodsReceiptItem[];
 }
 
 export interface PurchaseOrderActivity {

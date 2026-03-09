@@ -7,7 +7,6 @@ import {
     Truck,
     User,
     Hash,
-    ShoppingCart,
     ArrowLeft,
 } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -16,6 +15,7 @@ import { useSocket } from '../../context/SocketContext';
 import toast from 'react-hot-toast';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import tangaLogo from '../../assets/tanga-logo.png';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -126,8 +126,8 @@ export function ViewOrderPage() {
                     <div className="flex justify-between items-start mb-16">
                         <div>
                             <div className="flex items-center gap-3 mb-8">
-                                <div className="w-14 h-14 bg-healthcare-primary rounded-2xl flex items-center justify-center text-white shadow-xl shadow-teal-500/20">
-                                    <ShoppingCart size={28} />
+                                <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center p-2">
+                                    <img src={tangaLogo} alt="TangaCare logo" className="max-w-full max-h-full object-contain" />
                                 </div>
                                 <div>
                                     <h1 className="text-2xl font-black text-healthcare-dark tracking-tight uppercase">
@@ -441,9 +441,12 @@ export function ViewOrderPage() {
                 </div>
 
                 { }
-                <div className="p-8 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 text-center print:hidden">
+                <div className="print-footer p-8 bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 text-center">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
                         Generated via TangaCare Pharmacy ERP Management System
+                    </p>
+                    <p className="mt-2 text-[11px] font-semibold text-slate-500">
+                        Powered by Tanghub services https://www.tangahubservice.com/
                     </p>
                 </div>
             </div>
@@ -462,7 +465,10 @@ export function ViewOrderPage() {
                     .rounded-3xl, .rounded-2xl { border-radius: 0 !important; }
                     .border { border: none !important; }
                     .bg-slate-50 { background: white !important; }
-                    table { border: 1px solid #f1f5f9 !important; }
+                    table { border: 1px solid #f1f5f9 !important; border-collapse: collapse !important; table-layout: fixed !important; }
+                    th, td { word-wrap: break-word !important; vertical-align: top !important; }
+                    tr { break-inside: avoid !important; page-break-inside: avoid !important; }
+                    .print-footer { border-top: 1px solid #e2e8f0 !important; margin-top: 16px !important; padding-top: 12px !important; }
                 }
             `,
                 }}

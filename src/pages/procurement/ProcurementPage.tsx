@@ -48,7 +48,6 @@ const ACTIVE_ORDER_STATUSES = [
 ] as const;
 
 const RECEIVING_ORDER_STATUSES = new Set([
-    'pending',
     'approved',
     'confirmed',
     'partially_received',
@@ -56,7 +55,6 @@ const RECEIVING_ORDER_STATUSES = new Set([
 ]);
 
 const RECEIVABLE_ORDER_STATUSES = new Set([
-    'ordered',
     'approved',
     'confirmed',
     'partial',
@@ -655,7 +653,7 @@ export function ProcurementPage() {
     useEffect(() => {
         setPage(1);
         if (activeTab === 'receiving' && statusFilter === 'all') {
-            setStatusFilter('pending');
+            setStatusFilter('approved');
         }
     }, [activeTab, statusFilter]);
 
@@ -840,6 +838,7 @@ export function ProcurementPage() {
         .toUpperCase()
         .replace(/[\s_]+/g, '');
     const isProcurementAuditor = normalizedUserRole === 'AUDITOR';
+    const canApproveOrders = normalizedUserRole === 'FACILITYADMIN';
 
     useEffect(() => {
         const isTypingTarget = (target: EventTarget | null) => {
@@ -980,6 +979,20 @@ export function ProcurementPage() {
                                     )}
                                 >
                                     Receiving
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        navigate({
+                                            to: '/app/procurement/receipts' as any,
+                                            search: {} as any,
+                                        })
+                                    }
+                                    className={cn(
+                                        'px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
+                                        'text-slate-500 hover:text-healthcare-primary',
+                                    )}
+                                >
+                                    Receipts
                                 </button>
                             </div>
                         </div>
@@ -1344,10 +1357,7 @@ export function ProcurementPage() {
                                                                         <XCircle size={12} />
                                                                     )}
                                                                     {toLabelCase(
-                                                                        order.status.toUpperCase() ===
-                                                                            'CONFIRMED'
-                                                                            ? 'ordered'
-                                                                            : order.status,
+                                                                        order.status,
                                                                     )}
                                                                 </div>
                                                             </td>
@@ -1374,13 +1384,27 @@ export function ProcurementPage() {
                                                                                     Submit
                                                                                 </button>
                                                                             )}
+                                                                            {order.status.toUpperCase() ===
+                                                                                'PENDING' &&
+                                                                                canApproveOrders && (
+                                                                                    <button
+                                                                                        onClick={() =>
+                                                                                            handleAction(
+                                                                                                order.id,
+                                                                                                'approve',
+                                                                                            )
+                                                                                        }
+                                                                                        className="h-9 px-3 bg-blue-600 text-white rounded-lg text-[10px] font-black hover:bg-blue-700 transition-colors shadow-sm touch-manipulation"
+                                                                                    >
+                                                                                        Approve
+                                                                                    </button>
+                                                                                )}
                                                                             {[
                                                                                 'APPROVED',
                                                                                 'CONFIRMED',
                                                                                 'PARTIAL',
                                                                                 'PARTIALLY_RECEIVED',
                                                                                 'BACKORDERED',
-                                                                                'ORDERED',
                                                                             ].includes(
                                                                                 order.status.toUpperCase(),
                                                                             ) && (
