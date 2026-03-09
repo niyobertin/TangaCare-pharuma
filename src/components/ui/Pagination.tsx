@@ -33,6 +33,9 @@ interface PaginationProps {
     totalItems: number;
     pageSize: number;
     onPageChange: (page: number) => void;
+    onPageSizeChange?: (size: number) => void;
+    pageSizeOptions?: number[];
+    pageSizeLabel?: string;
     loading?: boolean;
     className?: string;
 }
@@ -43,6 +46,9 @@ export function Pagination({
     totalItems,
     pageSize,
     onPageChange,
+    onPageSizeChange,
+    pageSizeOptions,
+    pageSizeLabel = 'Show',
     loading = false,
     className,
 }: PaginationProps) {
@@ -57,14 +63,34 @@ export function Pagination({
     return (
         <div
             className={cn(
-                'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm',
+                'flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm',
                 className,
             )}
         >
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                Showing {from} to {to} of {totalItems}
-            </span>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                    Showing {from} to {to} of {totalItems}
+                </span>
+                {onPageSizeChange && pageSizeOptions && pageSizeOptions.length > 0 && (
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                            {pageSizeLabel}
+                        </span>
+                        <select
+                            value={pageSize}
+                            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+                            className="h-10 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 shadow-sm hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+                        >
+                            {pageSizeOptions.map((size) => (
+                                <option key={size} value={size}>
+                                    {size}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+            </div>
+            <div className="flex items-center gap-2 lg:justify-end">
                 <button
                     onClick={() => onPageChange(Math.max(safePage - 1, 1))}
                     disabled={disablePrev}
@@ -109,4 +135,3 @@ export function Pagination({
         </div>
     );
 }
-

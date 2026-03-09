@@ -9,6 +9,7 @@ import {
     History,
     ArrowDownWideNarrow,
     AlertCircle,
+    ShieldAlert,
 } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
@@ -204,22 +205,38 @@ export function BatchStockPage() {
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {filteredBatches.length > 0 ? (
-                                        filteredBatches.map((batch) => (
-                                            <tr
-                                                key={batch.id}
-                                                className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
-                                            >
+                                        filteredBatches.map((batch) => {
+                                            const medicineName = String(
+                                                (batch as any).medicine?.name || `Med ID: ${batch.medicine_id}`,
+                                            );
+                                            const isControlled = Boolean(
+                                                (batch as any).medicine?.is_controlled_drug ||
+                                                    (batch as any).medicine?.controlled_flag ||
+                                                    (batch as any).medicine?.drug_schedule?.includes('controlled'),
+                                            );
+
+                                            return (
+                                                <tr
+                                                    key={batch.id}
+                                                    className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                                >
                                                 <td className="px-6 py-4 font-mono text-xs text-slate-500">
                                                     #{batch.id}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-col">
                                                         <span className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
-                                                            Med ID: {batch.medicine_id}
+                                                            {medicineName}
                                                         </span>
                                                         <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                                                            Batch: {batch.batch_number}
+                                                            Med ID: {batch.medicine_id} • Batch: {batch.batch_number}
                                                         </span>
+                                                        {isControlled && (
+                                                            <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-100 rounded-full px-2 py-0.5 mt-1 w-fit">
+                                                                <ShieldAlert size={10} />
+                                                                Controlled
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
@@ -272,8 +289,9 @@ export function BatchStockPage() {
                                                         </button>
                                                     </div>
                                                 </td>
-                                            </tr>
-                                        ))
+                                                </tr>
+                                            );
+                                        })
                                     ) : (
                                         <tr>
                                             <td colSpan={5} className="px-6 py-10 text-center">

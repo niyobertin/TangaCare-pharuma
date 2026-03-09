@@ -1,14 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
     Search,
     Plus,
     Filter,
-    MoreVertical,
     AlertCircle,
     Download,
     Pill,
-    ChevronLeft,
-    ChevronRight,
     ArrowRightLeft,
     Upload,
     Loader2,
@@ -16,9 +13,12 @@ import {
     XCircle,
     FileText,
     Copy,
-    Calendar,
     PackagePlus,
+    Pencil,
+    Eye,
+    ShieldAlert,
 } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import type { Medicine } from '../../types/pharmacy';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -30,10 +30,48 @@ import { StockTransferModal } from '../../components/inventory/StockTransferModa
 import { AddStockModal } from '../../components/inventory/AddStockModal';
 import { toast } from 'react-hot-toast';
 import { toSentenceCase } from '../../lib/text';
+import { MedicineModal } from '../../components/inventory/MedicineModal';
+import { Pagination } from '../../components/ui/Pagination';
+import { TableToolbar } from '../../components/ui/table/TableToolbar';
+import { useTableViewState, type TableViewColumn } from '../../hooks/useTableViewState';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
+
+const INVENTORY_TABLE_COLUMNS: TableViewColumn[] = [
+    { key: 'select', label: 'Select', hideable: false },
+    { key: 'medicine', label: 'Medicine', hideable: false },
+    { key: 'category', label: 'Category' },
+    { key: 'dosage_form', label: 'Dosage Form' },
+    { key: 'supplier', label: 'Supplier' },
+    { key: 'stock', label: 'Current Stock' },
+    { key: 'threshold', label: 'Min / Reorder' },
+    { key: 'expiry', label: 'Expiry Risk' },
+    { key: 'updated', label: 'Last Updated' },
+    { key: 'status', label: 'Status' },
+    { key: 'actions', label: 'Actions', hideable: false },
+];
+
+const INVENTORY_ROLE_DEFAULT_COLUMNS: Record<string, string[]> = {
+    OWNER: ['medicine', 'category', 'supplier', 'stock', 'threshold', 'expiry', 'status', 'actions'],
+    PHARMACIST: ['medicine', 'dosage_form', 'stock', 'threshold', 'expiry', 'status', 'actions'],
+    STOREMANAGER: ['medicine', 'category', 'supplier', 'stock', 'threshold', 'status', 'actions'],
+    AUDITOR: ['medicine', 'category', 'supplier', 'stock', 'threshold', 'updated', 'status', 'actions'],
+};
+
+type InventoryQuickPreset =
+    | 'all'
+    | 'safety_risk'
+    | 'controlled'
+    | 'reorder_needed';
+
+type InventorySort =
+    | 'name_asc'
+    | 'name_desc'
+    | 'stock_desc'
+    | 'stock_asc'
+    | 'updated_desc';
 
 const MedicineImportPreviewModal = ({
     isOpen,
@@ -186,10 +224,18 @@ const MedicineImportPreviewModal = ({
 
 export function InventoryPage() {
     const { user, facilityId } = useAuth();
+    const navigate = useNavigate();
     const [medicines, setMedicines] = useState<Medicine[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All Categories');
+    const [stockFilter, setStockFilter] = useState<'all' | 'low_stock' | 'out_of_stock' | 'expiring_soon'>(
+        'all',
+    );
+    const [controlledFilter, setControlledFilter] = useState<'all' | 'controlled' | 'non_controlled'>(
+        'all',
+    );
+    const [supplierFilter, setSupplierFilter] = useState('All Suppliers');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
@@ -211,6 +257,22 @@ export function InventoryPage() {
         expired: 0,
     });
     const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
+    const [isMedicineModalOpen, setIsMedicineModalOpen] = useState(false);
+    const [editingMedicine, setEditingMedicine] = useState<Medicine | undefined>(undefined);
+    const [categories, setCategories] = useState<string[]>(['All Categories']);
+    const [quickPreset] = useState<InventoryQuickPreset>('all');
+    const [sortBy] = useState<InventorySort>('updated_desc');
+    const inventoryTableRef = useRef<HTMLDivElement | null>(null);
+    const [inventoryScrollTop, setInventoryScrollTop] = useState(0);
+    const [inventoryViewportHeight, setInventoryViewportHeight] = useState(0);
+    const { visibleColumnSet: inventoryVisibleColumnSet } = useTableViewState(
+        'inventory-medicines',
+        INVENTORY_TABLE_COLUMNS,
+        {
+        role: String(user?.role || ''),
+        roleDefaultColumns: INVENTORY_ROLE_DEFAULT_COLUMNS,
+    },
+    );
 
     const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -223,6 +285,11 @@ export function InventoryPage() {
                 search: debouncedSearch,
                 start_date: startDate,
                 end_date: endDate,
+                category: selectedCategory !== 'All Categories' ? selectedCategory : undefined,
+                low_stock_only: stockFilter === 'low_stock' ? true : undefined,
+                expiring_soon: stockFilter === 'expiring_soon' ? true : undefined,
+                controlled_only: controlledFilter === 'controlled' ? true : undefined,
+                supplier_name: supplierFilter !== 'All Suppliers' ? supplierFilter : undefined,
                 ...(user?.facility_id ? { facility_id: user.facility_id } : {}),
             });
             setMedicines(response?.data || []);
@@ -251,14 +318,45 @@ export function InventoryPage() {
     }, [facilityId]);
 
     useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const rows = await pharmacyService.getCategories();
+                const dynamicCategories = rows.map((row) => row.name).filter(Boolean);
+                setCategories(['All Categories', ...dynamicCategories]);
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        };
+        loadCategories();
+    }, []);
+
+    useEffect(() => {
         setPage(1);
-    }, [debouncedSearch, selectedCategory, limit, startDate, endDate]);
+    }, [debouncedSearch, selectedCategory, stockFilter, controlledFilter, supplierFilter, limit, startDate, endDate]);
 
     useEffect(() => {
         if (facilityId) {
             fetchMedicines();
         }
-    }, [page, debouncedSearch, selectedCategory, limit, startDate, endDate, facilityId]);
+    }, [page, debouncedSearch, selectedCategory, stockFilter, controlledFilter, limit, startDate, endDate, facilityId]);
+
+    useEffect(() => {
+        const updateViewport = () => {
+            if (inventoryTableRef.current) {
+                setInventoryViewportHeight(inventoryTableRef.current.clientHeight);
+            }
+        };
+        updateViewport();
+        window.addEventListener('resize', updateViewport);
+        return () => window.removeEventListener('resize', updateViewport);
+    }, [inventoryTableRef]);
+
+    useEffect(() => {
+        setInventoryScrollTop(0);
+        if (inventoryTableRef.current) {
+            inventoryTableRef.current.scrollTop = 0;
+        }
+    }, [page, limit, stockFilter, controlledFilter, supplierFilter, quickPreset, sortBy, searchQuery]);
 
     const handleImportFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -324,20 +422,103 @@ export function InventoryPage() {
         }
     };
 
-    const categories = [
-        'All Categories',
-        'Antibiotics',
-        'Pain Relief',
-        'Anti-Diabetic',
-        'Supplements',
-        'Cardiovascular',
-    ];
+    const supplierOptions = useMemo(() => {
+        const names = medicines
+            .map((med) => String((med as any).supplier_name || (med as any).supplier?.name || '').trim())
+            .filter(Boolean);
+        return ['All Suppliers', ...Array.from(new Set(names))];
+    }, [medicines]);
+
+    const visibleMedicines = useMemo(() => {
+        const now = new Date();
+        const in90Days = new Date();
+        in90Days.setDate(now.getDate() + 90);
+        const filtered = medicines.filter((med) => {
+            const quantity = Number(med.stock_quantity || 0);
+            const reorderPoint = Number(med.reorder_point ?? med.min_stock_level ?? 0);
+            const expiryDate = med.expiry_date ? new Date(med.expiry_date) : null;
+            const isExpired = !!expiryDate && expiryDate < now;
+            const isExpiringSoon = !!expiryDate && expiryDate >= now && expiryDate <= in90Days;
+            const isOutOfStock = quantity <= 0;
+            const isLowStock = reorderPoint > 0 ? quantity <= reorderPoint : quantity <= Number(med.min_stock_level || 0);
+            const supplierName = String((med as any).supplier_name || (med as any).supplier?.name || '');
+            const isControlled = Boolean(
+                (med as any).is_controlled_drug ||
+                    (med as any).controlled_flag ||
+                    (med as any).drug_schedule?.includes('controlled'),
+            );
+
+            if (stockFilter === 'out_of_stock' && !isOutOfStock) return false;
+            if (stockFilter === 'low_stock' && (isOutOfStock || !isLowStock)) return false;
+            if (stockFilter === 'expiring_soon' && (isExpired || !isExpiringSoon)) return false;
+            if (controlledFilter === 'controlled' && !isControlled) return false;
+            if (controlledFilter === 'non_controlled' && isControlled) return false;
+            if (supplierFilter !== 'All Suppliers' && supplierName !== supplierFilter) return false;
+
+            if (quickPreset === 'safety_risk' && !(isExpired || isExpiringSoon || isLowStock || isOutOfStock)) {
+                return false;
+            }
+            if (quickPreset === 'controlled' && !isControlled) return false;
+            if (quickPreset === 'reorder_needed' && !(isLowStock || isOutOfStock)) return false;
+            return true;
+        });
+
+        return filtered.sort((a, b) => {
+            switch (sortBy) {
+                case 'name_asc':
+                    return String(a.name || '').localeCompare(String(b.name || ''));
+                case 'name_desc':
+                    return String(b.name || '').localeCompare(String(a.name || ''));
+                case 'stock_asc':
+                    return Number(a.stock_quantity || 0) - Number(b.stock_quantity || 0);
+                case 'stock_desc':
+                    return Number(b.stock_quantity || 0) - Number(a.stock_quantity || 0);
+                case 'updated_desc':
+                default: {
+                    const left = new Date((a as any).updated_at || a.created_at || 0).getTime();
+                    const right = new Date((b as any).updated_at || b.created_at || 0).getTime();
+                    return right - left;
+                }
+            }
+        });
+    }, [controlledFilter, medicines, stockFilter, supplierFilter, quickPreset, sortBy]);
+
+    const inventoryVisibleColumnCount = useMemo(
+        () =>
+            INVENTORY_TABLE_COLUMNS.filter((column) => inventoryVisibleColumnSet.has(column.key))
+                .length,
+        [inventoryVisibleColumnSet],
+    );
+
+    const shouldVirtualizeInventory = visibleMedicines.length >= 80;
+    const inventoryRowHeight = 96;
+    const inventoryOverscan = 4;
+    const inventoryStartIndex = shouldVirtualizeInventory
+        ? Math.max(0, Math.floor(inventoryScrollTop / inventoryRowHeight) - inventoryOverscan)
+        : 0;
+    const inventoryVisibleRowCount = shouldVirtualizeInventory
+        ? Math.ceil((inventoryViewportHeight || 560) / inventoryRowHeight) + inventoryOverscan * 2
+        : visibleMedicines.length;
+    const inventoryEndIndex = shouldVirtualizeInventory
+        ? Math.min(visibleMedicines.length, inventoryStartIndex + inventoryVisibleRowCount)
+        : visibleMedicines.length;
+    const renderedMedicines = shouldVirtualizeInventory
+        ? visibleMedicines.slice(inventoryStartIndex, inventoryEndIndex)
+        : visibleMedicines;
+    const inventoryTopSpacerHeight = shouldVirtualizeInventory
+        ? inventoryStartIndex * inventoryRowHeight
+        : 0;
+    const inventoryBottomSpacerHeight = shouldVirtualizeInventory
+        ? Math.max(0, (visibleMedicines.length - inventoryEndIndex) * inventoryRowHeight)
+        : 0;
 
     const toggleSelectAll = () => {
-        if (selectedIds.length === medicines.length) {
+        const visibleIds = visibleMedicines.map((m) => m.id);
+        const allVisibleSelected = visibleIds.every((id) => selectedIds.includes(id));
+        if (allVisibleSelected) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(medicines.map((m) => m.id));
+            setSelectedIds(visibleIds);
         }
     };
 
@@ -370,6 +551,58 @@ export function InventoryPage() {
             toast.error('Failed to export inventory');
         }
     };
+
+    const openCreateMedicine = () => {
+        setEditingMedicine(undefined);
+        setIsMedicineModalOpen(true);
+    };
+
+    const openEditMedicine = (medicine: Medicine) => {
+        setEditingMedicine(medicine);
+        setIsMedicineModalOpen(true);
+    };
+
+    useEffect(() => {
+        const isTypingTarget = (target: EventTarget | null) => {
+            const el = target as HTMLElement | null;
+            if (!el) return false;
+            const tag = el.tagName?.toLowerCase();
+            return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
+        };
+
+        const handleShortcuts = (event: KeyboardEvent) => {
+            if (!event.altKey || event.ctrlKey || event.metaKey || isTypingTarget(event.target)) return;
+
+            const key = event.key.toLowerCase();
+            if (key === 'a') {
+                event.preventDefault();
+                navigate({ to: '/app/stock' as any, search: {} as any });
+                return;
+            }
+
+            if (user?.role?.toString() === 'auditor') return;
+
+            if (key === 's') {
+                event.preventDefault();
+                setIsAddStockModalOpen(true);
+                return;
+            }
+            if (key === 't') {
+                event.preventDefault();
+                if (facilityId && visibleMedicines.length > 0) {
+                    setSelectedMedForTransfer(visibleMedicines[0]);
+                }
+                return;
+            }
+            if (key === 'm') {
+                event.preventDefault();
+                openCreateMedicine();
+            }
+        };
+
+        window.addEventListener('keydown', handleShortcuts);
+        return () => window.removeEventListener('keydown', handleShortcuts);
+    }, [facilityId, navigate, user?.role, visibleMedicines]);
 
     return (
         <ProtectedRoute
@@ -428,7 +661,10 @@ export function InventoryPage() {
                             >
                                 <PackagePlus size={16} /> Add Stock
                             </button>
-                            <button className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md shadow-teal-500/10">
+                            <button
+                                onClick={openCreateMedicine}
+                                className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md shadow-teal-500/10"
+                            >
                                 <Plus size={16} /> Add Medicine
                             </button>
                         </div>
@@ -508,62 +744,90 @@ export function InventoryPage() {
 
                 { }
                 <div className="flex flex-col gap-4">
-                    <div className="flex flex-col md:flex-row gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border-2 border-slate-200/60 dark:border-slate-800/60 shadow-sm">
-                        <div className="flex-1 relative group">
-                            <Search
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-healthcare-primary transition-colors"
-                                size={18}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Search by code, generic or brand name..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-sm font-bold text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-healthcare-primary focus:bg-white transition-all shadow-inner"
-                            />
-                        </div>
-                        <div className="flex flex-wrap gap-2 items-center">
-                            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border-2 border-slate-100 dark:border-slate-800">
-                                <Calendar size={14} className="text-slate-400" />
+                    <TableToolbar
+                        layout="stacked"
+                        searchValue={searchQuery}
+                        onSearchChange={setSearchQuery}
+                        searchPlaceholder="Search by code, generic or brand name..."
+                        onReset={() => {
+                            setSearchQuery('');
+                            setStartDate('');
+                            setEndDate('');
+                            setSelectedCategory('All Categories');
+                            setStockFilter('all');
+                            setControlledFilter('all');
+                            setSupplierFilter('All Suppliers');
+                            setLimit(10);
+                            setPage(1);
+                        }}
+                        filters={
+                            <>
                                 <input
                                     type="date"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
-                                    className="bg-transparent text-[10px] font-black text-slate-700 dark:text-white focus:outline-none"
+                                    className="h-11 sm:h-10 px-3 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none focus:border-healthcare-primary"
                                 />
-                                <span className="text-slate-300">/</span>
+                                <span className="h-11 sm:h-10 inline-flex items-center px-1 text-slate-400 font-black text-[10px] shrink-0 uppercase tracking-widest">
+                                    To
+                                </span>
                                 <input
                                     type="date"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
-                                    className="bg-transparent text-[10px] font-black text-slate-700 dark:text-white focus:outline-none"
+                                    className="h-11 sm:h-10 px-3 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none focus:border-healthcare-primary"
                                 />
-                            </div>
-                            <select
-                                value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
-                                className="px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-700 dark:text-slate-300 focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
-                            >
-                                {categories.map((cat) => (
-                                    <option key={cat} value={cat}>
-                                        {cat}
-                                    </option>
-                                ))}
-                            </select>
-                            {user?.role?.toString() !== 'auditor' && (
-                                <button
-                                    onClick={handleExport}
-                                    className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all shadow-sm"
+                                <select
+                                    value={selectedCategory}
+                                    onChange={(e) => setSelectedCategory(e.target.value)}
+                                    className="h-11 sm:h-10 px-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-700 dark:text-slate-300 focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
                                 >
-                                    <Download size={16} /> Export
-                                </button>
-                            )}
-                        </div>
-                    </div>
+                                    {categories.map((cat) => (
+                                        <option key={cat} value={cat}>
+                                            {cat}
+                                        </option>
+                                    ))}
+                                </select>
+                                <select
+                                    value={stockFilter}
+                                    onChange={(e) => setStockFilter(e.target.value as any)}
+                                    className="h-11 sm:h-10 px-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-700 dark:text-slate-300 focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
+                                >
+                                    <option value="all">All stock levels</option>
+                                    <option value="low_stock">Low stock</option>
+                                    <option value="out_of_stock">Out of stock</option>
+                                    <option value="expiring_soon">Expiring soon</option>
+                                </select>
+                                <select
+                                    value={supplierFilter}
+                                    onChange={(e) => setSupplierFilter(e.target.value)}
+                                    className="h-11 sm:h-10 px-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-700 dark:text-slate-300 focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
+                                >
+                                    {supplierOptions.map((supplier) => (
+                                        <option key={supplier} value={supplier}>
+                                            {supplier}
+                                        </option>
+                                    ))}
+                                </select>
+                            </>
+                        }
+                        actions={
+                            <>
+                                {user?.role?.toString() !== 'auditor' ? (
+                                    <button
+                                        onClick={handleExport}
+                                        className="h-11 sm:h-10 flex items-center gap-2 px-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all shadow-sm touch-manipulation"
+                                    >
+                                        <Download size={16} /> Export
+                                    </button>
+                                ) : null}
+                            </>
+                        }
+                    />
 
                     {selectedIds.length > 0 && (
-                        <div className="flex items-center justify-between px-4 py-3 bg-healthcare-primary/10 border-2 border-healthcare-primary/20 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
-                            <div className="flex items-center gap-3">
+                        <div className="sticky bottom-3 z-20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-2 border-healthcare-primary/20 rounded-xl shadow-md animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex items-center gap-3 min-w-0">
                                 <div className="p-2 bg-healthcare-primary text-white rounded-lg">
                                     <CheckCircle2 size={16} />
                                 </div>
@@ -573,7 +837,7 @@ export function InventoryPage() {
                             </div>
                             <button
                                 onClick={copySelectedIds}
-                                className="flex items-center gap-2 px-4 py-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md"
+                                className="h-11 px-4 w-full sm:w-auto flex items-center justify-center gap-2 bg-healthcare-primary text-white rounded-lg text-sm font-black hover:bg-teal-700 transition-all shadow-md touch-manipulation"
                             >
                                 <Copy size={16} /> Copy Codes for PO
                             </button>
@@ -583,68 +847,93 @@ export function InventoryPage() {
 
                 { }
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div
+                        ref={inventoryTableRef}
+                        onScroll={(event) => setInventoryScrollTop(event.currentTarget.scrollTop)}
+                        className="overflow-x-auto overflow-y-auto max-h-[560px]"
+                    >
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b-2 border-slate-200 dark:border-slate-800">
-                                    <th className="px-4 py-4 w-10">
-                                        <input
-                                            type="checkbox"
-                                            checked={
-                                                selectedIds.length === medicines.length &&
-                                                medicines.length > 0
-                                            }
-                                            onChange={toggleSelectAll}
-                                            className="w-4 h-4 rounded border-2 border-slate-300 text-healthcare-primary focus:ring-healthcare-primary transition-all"
-                                        />
-                                    </th>
-                                    <th className="px-4 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest whitespace-nowrap">
-                                        ID
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest whitespace-nowrap">
-                                        Medicine Details
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
-                                        Dosage Form
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right whitespace-nowrap">
-                                        Selling Price
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right whitespace-nowrap">
-                                        Cost Price
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right whitespace-nowrap">
-                                        Total Stock
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
-                                        Expiry Date
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
-                                        Location
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
-                                        Date Added
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right whitespace-nowrap">
-                                        Actions
-                                    </th>
+                                    {inventoryVisibleColumnSet.has('select') && (
+                                        <th className="px-4 py-4 w-10">
+                                            <input
+                                                type="checkbox"
+                                                checked={
+                                                    visibleMedicines.length > 0 &&
+                                                    visibleMedicines.every((med) =>
+                                                        selectedIds.includes(med.id),
+                                                    )
+                                                }
+                                                onChange={toggleSelectAll}
+                                                className="w-4 h-4 rounded border-2 border-slate-300 text-healthcare-primary focus:ring-healthcare-primary transition-all"
+                                            />
+                                        </th>
+                                    )}
+                                    {inventoryVisibleColumnSet.has('medicine') && (
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest whitespace-nowrap">
+                                            Medicine Details
+                                        </th>
+                                    )}
+                                    {inventoryVisibleColumnSet.has('category') && (
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest whitespace-nowrap">
+                                            Category
+                                        </th>
+                                    )}
+                                    {inventoryVisibleColumnSet.has('dosage_form') && (
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
+                                            Dosage Form
+                                        </th>
+                                    )}
+                                    {inventoryVisibleColumnSet.has('supplier') && (
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest whitespace-nowrap">
+                                            Supplier
+                                        </th>
+                                    )}
+                                    {inventoryVisibleColumnSet.has('stock') && (
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right whitespace-nowrap">
+                                            Current Stock
+                                        </th>
+                                    )}
+                                    {inventoryVisibleColumnSet.has('threshold') && (
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right whitespace-nowrap">
+                                            Min / Reorder
+                                        </th>
+                                    )}
+                                    {inventoryVisibleColumnSet.has('expiry') && (
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
+                                            Expiry Risk
+                                        </th>
+                                    )}
+                                    {inventoryVisibleColumnSet.has('updated') && (
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
+                                            Last Updated
+                                        </th>
+                                    )}
+                                    {inventoryVisibleColumnSet.has('status') && (
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center whitespace-nowrap">
+                                            Status
+                                        </th>
+                                    )}
+                                    {inventoryVisibleColumnSet.has('actions') && (
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right whitespace-nowrap">
+                                            Actions
+                                        </th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {loading ? (
                                     Array.from({ length: 5 }).map((_, rowIdx) => (
                                         <tr key={`skeleton-${rowIdx}`} className="animate-pulse">
-                                            {Array.from({ length: 12 }).map((__, colIdx) => (
+                                            {Array.from({ length: inventoryVisibleColumnCount }).map((__, colIdx) => (
                                                 <td key={`skeleton-${rowIdx}-${colIdx}`} className="px-4 py-4">
                                                     <div
                                                         className={cn(
                                                             'h-3 rounded bg-slate-200 dark:bg-slate-700',
                                                             colIdx === 0
                                                                 ? 'w-4'
-                                                                : colIdx === 2
+                                                                : colIdx === 1
                                                                     ? 'w-36'
                                                                     : 'w-20',
                                                         )}
@@ -653,9 +942,9 @@ export function InventoryPage() {
                                             ))}
                                         </tr>
                                     ))
-                                ) : medicines.length === 0 ? (
+                                ) : visibleMedicines.length === 0 ? (
                                     <tr>
-                                        <td colSpan={12} className="px-6 py-20 text-center">
+                                        <td colSpan={inventoryVisibleColumnCount} className="px-6 py-20 text-center">
                                             <div className="flex flex-col items-center justify-center space-y-3">
                                                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full">
                                                     <Search size={32} className="text-slate-300" />
@@ -667,140 +956,268 @@ export function InventoryPage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    medicines.map((med) => (
-                                        <tr
-                                            key={med.id}
-                                            className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group"
-                                        >
-                                            <td className="px-4 py-4">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedIds.includes(med.id)}
-                                                    onChange={() => toggleSelect(med.id)}
-                                                    className="w-4 h-4 rounded border-2 border-slate-300 text-healthcare-primary focus:ring-healthcare-primary transition-all"
+                                    <>
+                                        {shouldVirtualizeInventory && inventoryTopSpacerHeight > 0 && (
+                                            <tr>
+                                                <td
+                                                    colSpan={inventoryVisibleColumnCount}
+                                                    style={{ height: `${inventoryTopSpacerHeight}px` }}
                                                 />
-                                            </td>
-                                            <td className="px-4 py-4">
-                                                <span className="text-[10px] font-black text-slate-400">
-                                                    #{med.id}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 bg-healthcare-primary/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                        <Pill
-                                                            className="text-healthcare-primary"
-                                                            size={20}
+                                            </tr>
+                                        )}
+                                        {renderedMedicines.map((med) => {
+                                        const quantity = Number(med.stock_quantity || 0);
+                                        const reorderPoint = Number(med.reorder_point ?? med.min_stock_level ?? 0);
+                                        const minLevel = Number(med.min_stock_level || 0);
+                                        const expiryDate = med.expiry_date ? new Date(med.expiry_date) : null;
+                                        const now = new Date();
+                                        const in90Days = new Date();
+                                        in90Days.setDate(now.getDate() + 90);
+                                        const isExpired = !!expiryDate && expiryDate < now;
+                                        const isExpiringSoon = !!expiryDate && expiryDate >= now && expiryDate <= in90Days;
+                                        const isOutOfStock = quantity <= 0;
+                                        const isLowStock = reorderPoint > 0 ? quantity <= reorderPoint : quantity <= minLevel;
+                                        const isControlled = Boolean(
+                                            (med as any).is_controlled_drug ||
+                                                (med as any).controlled_flag ||
+                                                (med as any).drug_schedule?.includes('controlled'),
+                                        );
+                                        const supplierName = String(
+                                            (med as any).supplier_name ||
+                                                (med as any).supplier?.name ||
+                                                'Unassigned',
+                                        );
+                                        const genericName = String((med as any).generic_name || '');
+                                        const manufacturerName = String((med as any).manufacturer || '');
+                                        const updatedAt = (med as any).updated_at || med.created_at;
+
+                                        return (
+                                            <tr
+                                                key={med.id}
+                                                className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group"
+                                            >
+                                                {inventoryVisibleColumnSet.has('select') && (
+                                                    <td className="px-4 py-4">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedIds.includes(med.id)}
+                                                            onChange={() => toggleSelect(med.id)}
+                                                            className="w-4 h-4 rounded border-2 border-slate-300 text-healthcare-primary focus:ring-healthcare-primary transition-all"
                                                         />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">
-                                                            {med.name}
-                                                        </p>
-                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">
-                                                            {med.code} • {med.brand_name || 'N/A'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                <span className="text-xs font-bold text-slate-500">
-                                                    {toSentenceCase(med.dosage_form)}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                <span className="text-sm font-black text-emerald-700">
-                                                    RWF {Number(med.selling_price || 0).toLocaleString()}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                <span className="text-sm font-black text-blue-700">
-                                                    RWF {Number(med.cost_price || 0).toLocaleString()}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-sm font-black text-slate-800 dark:text-white">
-                                                        {med.stock_quantity || 0}
-                                                    </span>
-                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                        {toSentenceCase(med.unit)}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                <span
-                                                    className={cn(
-                                                        'text-xs font-bold',
-                                                        med.expiry_date &&
-                                                            new Date(med.expiry_date) < new Date()
-                                                            ? 'text-red-500'
-                                                            : 'text-slate-500',
-                                                    )}
-                                                >
-                                                    {med.expiry_date
-                                                        ? new Date(
-                                                            med.expiry_date,
-                                                        ).toLocaleDateString()
-                                                        : 'N/A'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                <span className="text-xs font-bold text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">
-                                                    {toSentenceCase((med as any).storage_location?.name || (med as any).location?.name || 'N/A')}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                <span className="text-xs font-bold text-slate-500">
-                                                    {med.created_at
-                                                        ? new Date(
-                                                            med.created_at,
-                                                        ).toLocaleDateString()
-                                                        : 'N/A'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                <span
-                                                    className={cn(
-                                                        'px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider',
-                                                        med.expiry_date && new Date(med.expiry_date) < new Date()
-                                                            ? 'bg-rose-50 text-rose-600 border-rose-100'
-                                                            : (med.stock_quantity || 0) === 0
-                                                                ? 'bg-red-50 text-red-600 border-red-100'
-                                                                : (med.stock_quantity || 0) <= 20
-                                                                    ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                                                    : 'bg-teal-50 text-teal-600 border-teal-100',
-                                                    )}
-                                                >
-                                                    {med.expiry_date && new Date(med.expiry_date) < new Date()
-                                                        ? 'Expired'
-                                                        : (med.stock_quantity || 0) === 0
-                                                            ? 'Out of Stock'
-                                                            : (med.stock_quantity || 0) <= 20
-                                                                ? 'Low Stock'
-                                                                : 'In Stock'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center justify-end gap-2 transition-all">
-                                                    {user?.role?.toString() !== 'auditor' && (
-                                                        <button
-                                                            onClick={() =>
-                                                                setSelectedMedForTransfer(med)
-                                                            }
-                                                            title="Transfer Stock"
-                                                            className="p-2 text-blue-600 hover:bg-blue-50 bg-blue-50/10 rounded-lg transition-colors"
+                                                    </td>
+                                                )}
+                                                {inventoryVisibleColumnSet.has('medicine') && (
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="h-10 w-10 bg-healthcare-primary/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                                <Pill className="text-healthcare-primary" size={20} />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">
+                                                                    {med.name}
+                                                                </p>
+                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">
+                                                                    {med.code} • {med.brand_name || 'N/A'}
+                                                                </p>
+                                                                {(genericName || manufacturerName) && (
+                                                                    <p className="text-[10px] font-bold text-slate-500 mt-0.5">
+                                                                        {[genericName, manufacturerName]
+                                                                            .filter(Boolean)
+                                                                            .join(' • ')}
+                                                                    </p>
+                                                                )}
+                                                                {isControlled && (
+                                                                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-100 rounded-full px-2 py-0.5 mt-1">
+                                                                        <ShieldAlert size={10} />
+                                                                        Controlled
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                )}
+                                                {inventoryVisibleColumnSet.has('category') && (
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className="text-xs font-bold text-slate-500">
+                                                            {String(
+                                                                (med as any).category?.name ||
+                                                                    (med as any).category_name ||
+                                                                    'Uncategorized',
+                                                            )}
+                                                        </span>
+                                                    </td>
+                                                )}
+                                                {inventoryVisibleColumnSet.has('dosage_form') && (
+                                                    <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                        <span className="text-xs font-bold text-slate-500">
+                                                            {toSentenceCase(med.dosage_form)}
+                                                        </span>
+                                                    </td>
+                                                )}
+                                                {inventoryVisibleColumnSet.has('supplier') && (
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className="text-xs font-bold text-slate-500">
+                                                            {supplierName}
+                                                        </span>
+                                                    </td>
+                                                )}
+                                                {inventoryVisibleColumnSet.has('stock') && (
+                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                        <div className="flex flex-col items-end">
+                                                            <span className="text-sm font-black text-slate-800 dark:text-white">
+                                                                {quantity}
+                                                            </span>
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                                {toSentenceCase(med.unit)}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                )}
+                                                {inventoryVisibleColumnSet.has('threshold') && (
+                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                        <div className="flex flex-col items-end">
+                                                            <span className="text-sm font-black text-slate-800 dark:text-white">
+                                                                {reorderPoint.toLocaleString()}
+                                                            </span>
+                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                                min {minLevel.toLocaleString()}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                )}
+                                                {inventoryVisibleColumnSet.has('expiry') && (
+                                                    <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                        <span
+                                                            className={cn(
+                                                                'text-xs font-bold',
+                                                                isExpired
+                                                                    ? 'text-red-500'
+                                                                    : isExpiringSoon
+                                                                      ? 'text-amber-600'
+                                                                      : 'text-slate-500',
+                                                            )}
                                                         >
-                                                            <ArrowRightLeft size={16} />
-                                                        </button>
-                                                    )}
-                                                    <button className="p-2 text-slate-400 hover:bg-slate-100 bg-slate-50/30 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                                                        <MoreVertical size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
+                                                            {expiryDate ? expiryDate.toLocaleDateString() : 'N/A'}
+                                                        </span>
+                                                    </td>
+                                                )}
+                                                {inventoryVisibleColumnSet.has('updated') && (
+                                                    <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                        <span className="text-xs font-bold text-slate-500">
+                                                            {updatedAt
+                                                                ? new Date(updatedAt).toLocaleDateString()
+                                                                : 'N/A'}
+                                                        </span>
+                                                    </td>
+                                                )}
+                                                {inventoryVisibleColumnSet.has('status') && (
+                                                    <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                        <span
+                                                            className={cn(
+                                                                'px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider',
+                                                                isExpired
+                                                                    ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                                                    : isOutOfStock
+                                                                      ? 'bg-red-50 text-red-600 border-red-100'
+                                                                      : isLowStock
+                                                                        ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                                                        : 'bg-teal-50 text-teal-600 border-teal-100',
+                                                            )}
+                                                        >
+                                                            {isExpired
+                                                                ? 'Expired'
+                                                                : isOutOfStock
+                                                                  ? 'Out of Stock'
+                                                                  : isLowStock
+                                                                    ? 'Low Stock'
+                                                                    : 'In Stock'}
+                                                        </span>
+                                                    </td>
+                                                )}
+                                                {inventoryVisibleColumnSet.has('actions') && (
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center justify-end gap-2 transition-all">
+                                                            {user?.role?.toString() !== 'auditor' && (
+                                                                <button
+                                                                    onClick={() => setIsAddStockModalOpen(true)}
+                                                                    title="Add Stock"
+                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-teal-600 hover:bg-teal-50 bg-teal-50/10 rounded-lg transition-colors touch-manipulation"
+                                                                >
+                                                                    <PackagePlus size={16} />
+                                                                </button>
+                                                            )}
+                                                            {user?.role?.toString() !== 'auditor' && (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        navigate({
+                                                                            to: '/app/stock' as any,
+                                                                            search: {} as any,
+                                                                        })
+                                                                    }
+                                                                    title="View Batches"
+                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-indigo-600 hover:bg-indigo-50 bg-indigo-50/10 rounded-lg transition-colors touch-manipulation"
+                                                                >
+                                                                    <FileText size={16} />
+                                                                </button>
+                                                            )}
+                                                            {user?.role?.toString() !== 'auditor' && (
+                                                                <button
+                                                                    onClick={() =>
+                                                                        navigate({
+                                                                            to: '/app/stock' as any,
+                                                                            search: {} as any,
+                                                                        })
+                                                                    }
+                                                                    title="Adjust Stock"
+                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-amber-600 hover:bg-amber-50 bg-amber-50/10 rounded-lg transition-colors touch-manipulation"
+                                                                >
+                                                                    <AlertCircle size={16} />
+                                                                </button>
+                                                            )}
+                                                            {user?.role?.toString() !== 'auditor' && (
+                                                                <button
+                                                                    onClick={() => setSelectedMedForTransfer(med)}
+                                                                    title="Transfer Stock"
+                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-blue-600 hover:bg-blue-50 bg-blue-50/10 rounded-lg transition-colors touch-manipulation"
+                                                                >
+                                                                    <ArrowRightLeft size={16} />
+                                                                </button>
+                                                            )}
+                                                            {user?.role?.toString() !== 'auditor' && (
+                                                                <button
+                                                                    onClick={() => openEditMedicine(med)}
+                                                                    title="Edit Medicine"
+                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-emerald-600 hover:bg-emerald-50 bg-emerald-50/10 rounded-lg transition-colors touch-manipulation"
+                                                                >
+                                                                    <Pencil size={16} />
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() =>
+                                                                    navigate({
+                                                                        to: `/app/inventory/${med.id}` as any,
+                                                                    })
+                                                                }
+                                                                title="View details"
+                                                                className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-slate-400 hover:bg-slate-100 bg-slate-50/30 dark:hover:bg-slate-800 rounded-lg transition-colors touch-manipulation"
+                                                            >
+                                                                <Eye size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        );
+                                    })}
+                                        {shouldVirtualizeInventory && inventoryBottomSpacerHeight > 0 && (
+                                            <tr>
+                                                <td
+                                                    colSpan={inventoryVisibleColumnCount}
+                                                    style={{ height: `${inventoryBottomSpacerHeight}px` }}
+                                                />
+                                            </tr>
+                                        )}
+                                    </>
                                 )}
                             </tbody>
                         </table>
@@ -808,59 +1225,21 @@ export function InventoryPage() {
 
                     { }
                     <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-between items-center">
-                        <div className="flex items-center gap-6">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                Showing {medicines.length} of {totalItems} items
-                            </p>
-                            <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-6">
-                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                    Show
-                                </span>
-                                <select
-                                    value={limit}
-                                    onChange={(e) => setLimit(Number(e.target.value))}
-                                    className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1 text-[10px] font-black text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
-                                >
-                                    {[10, 25, 50, 100].map((l) => (
-                                        <option key={l} value={l}>
-                                            {l} items
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setPage(page - 1)}
-                                disabled={page === 1}
-                                className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-50 transition-all shadow-sm border border-slate-200 dark:border-slate-700"
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-                            <div className="flex items-center gap-1">
-                                {[...Array(totalPages)].map((_, i) => (
-                                    <button
-                                        key={i + 1}
-                                        onClick={() => setPage(i + 1)}
-                                        className={cn(
-                                            'w-8 h-8 rounded-lg text-xs font-black transition-all border-2',
-                                            page === i + 1
-                                                ? 'bg-healthcare-primary border-healthcare-primary text-white shadow-md shadow-teal-500/20'
-                                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700',
-                                        )}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                ))}
-                            </div>
-                            <button
-                                onClick={() => setPage(page + 1)}
-                                disabled={page === totalPages}
-                                className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg disabled:opacity-50 transition-all shadow-sm border border-slate-200 dark:border-slate-700"
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                        </div>
+                        <Pagination
+                            page={page}
+                            totalPages={totalPages}
+                            totalItems={totalItems}
+                            pageSize={limit}
+                            onPageChange={setPage}
+                            onPageSizeChange={(size) => {
+                                setLimit(size);
+                                setPage(1);
+                            }}
+                            pageSizeOptions={[10, 25, 50, 100]}
+                            pageSizeLabel="Items/Page"
+                            loading={loading}
+                            className="w-full border-none shadow-none bg-transparent p-0"
+                        />
                     </div>
                 </div>
 
@@ -900,6 +1279,20 @@ export function InventoryPage() {
                         fetchStats();
                     }}
                 />
+
+                {isMedicineModalOpen && (
+                    <MedicineModal
+                        medicine={editingMedicine}
+                        onClose={() => {
+                            setIsMedicineModalOpen(false);
+                            setEditingMedicine(undefined);
+                        }}
+                        onSuccess={() => {
+                            fetchMedicines();
+                            fetchStats();
+                        }}
+                    />
+                )}
             </div>
         </ProtectedRoute >
     );

@@ -21,6 +21,13 @@ export function DashboardPage() {
 
     const userRole = user?.role?.toUpperCase() || '';
     const isOwnerView = ownerRoles.some((role) => role.toUpperCase() === userRole);
+    const operationalRouteByRole: Record<string, string> = {
+        PHARMACIST: '/app/dispensing',
+        CASHIER: '/app/dispensing',
+        AUDITOR: '/app/stock-movements',
+        DOCTOR: '/app/inventory',
+    };
+    const operationalRoute = operationalRouteByRole[userRole] || '/app/inventory';
 
     if (userRole === 'USER' || userRole === 'user') {
         return <Navigate to="/app/onboarding" />;
@@ -67,18 +74,7 @@ export function DashboardPage() {
                     </div>
                 )
             ) : (
-                <div className="p-10 flex flex-col items-center justify-center min-h-[60vh] text-center">
-                    <div className="w-20 h-20 bg-healthcare-primary/10 rounded-full flex items-center justify-center mb-6">
-                        <span className="text-4xl text-healthcare-primary font-black">!</span>
-                    </div>
-                    <h2 className="text-2xl font-black text-healthcare-dark dark:text-white uppercase tracking-tight">
-                        Access Restricted
-                    </h2>
-                    <p className="text-slate-500 max-w-sm mt-2 font-bold uppercase text-xs tracking-widest">
-                        Detailed analytics are currently reserved for management and administrative
-                        roles.
-                    </p>
-                </div>
+                <Navigate to={operationalRoute as any} search={{} as any} />
             )}
         </ProtectedRoute>
     );

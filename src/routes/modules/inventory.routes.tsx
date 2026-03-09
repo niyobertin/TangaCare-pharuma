@@ -1,10 +1,14 @@
-import { createRoute } from '@tanstack/react-router';
+import { createRoute, Navigate } from '@tanstack/react-router';
 import { RequirePermission } from '../../components/auth/RequirePermission';
 import { PERMISSIONS } from '../../types/auth';
 import { lazyNamed, withRouteSuspense } from '../lazy';
 // import React from 'react';
 
 const InventoryPage = lazyNamed(() => import('../../pages/dashboard/InventoryPage'), 'InventoryPage');
+const MedicineDetailsPage = lazyNamed(
+    () => import('../../pages/dashboard/MedicineDetailsPage'),
+    'MedicineDetailsPage',
+);
 const BatchStockPage = lazyNamed(() => import('../../pages/dashboard/BatchStockPage'), 'BatchStockPage');
 const StockMovementsPage = lazyNamed(
     () => import('../../pages/dashboard/StockMovementsPage'),
@@ -19,10 +23,6 @@ const BatchRecallPage = lazyNamed(() => import('../../pages/dashboard/BatchRecal
 const ReorderDashboardPage = lazyNamed(
     () => import('../../pages/dashboard/ReorderDashboardPage'),
     'ReorderDashboardPage',
-);
-const StockRegisterReportPage = lazyNamed(
-    () => import('../../pages/dashboard/StockRegisterReportPage'),
-    'StockRegisterReportPage',
 );
 
 // This will be attached to the appLayoutRoute in the main router
@@ -46,6 +46,18 @@ export const createInventoryRoutes = (parentRoute: any) => {
             withRouteSuspense(
                 <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
                     <BatchStockPage />
+                </RequirePermission>,
+            )
+        ),
+    });
+
+    const medicineDetailsRoute = createRoute({
+        getParentRoute: () => parentRoute,
+        path: 'inventory/$medicineId',
+        component: () => (
+            withRouteSuspense(
+                <RequirePermission permission={PERMISSIONS.INVENTORY_READ}>
+                    <MedicineDetailsPage />
                 </RequirePermission>,
             )
         ),
@@ -114,17 +126,12 @@ export const createInventoryRoutes = (parentRoute: any) => {
     const stockRegisterRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'stock-register',
-        component: () => (
-            withRouteSuspense(
-                <RequirePermission permission={PERMISSIONS.REPORTS_READ}>
-                    <StockRegisterReportPage />
-                </RequirePermission>,
-            )
-        ),
+        component: () => <Navigate to={"/app/stock-movements" as any} search={{} as any} />,
     });
 
     return [
         inventoryRoute,
+        medicineDetailsRoute,
         stockRoute,
         stockMovementsRoute,
         stocktakingRoute,

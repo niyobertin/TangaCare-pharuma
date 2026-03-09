@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -22,7 +22,9 @@ interface StockAdjustmentModalProps {
 
 type UiAdjustmentType = 'increase' | 'decrease' | 'damage' | 'expired' | 'return';
 
-const reasonByType: Record<UiAdjustmentType, 'correction' | 'damage' | 'expiry' | 'customer_return'> = {
+type UiAdjustmentReason = 'correction' | 'damage' | 'expiry' | 'loss' | 'customer_return';
+
+const reasonByType: Record<UiAdjustmentType, UiAdjustmentReason> = {
     increase: 'correction',
     decrease: 'correction',
     damage: 'damage',
@@ -32,6 +34,10 @@ const reasonByType: Record<UiAdjustmentType, 'correction' | 'damage' | 'expiry' 
 
 const adjustmentSchema = yup.object({
     type: yup.string().oneOf(['increase', 'decrease', 'damage', 'expired', 'return']).required(),
+    reason: yup
+        .string()
+        .oneOf(['correction', 'damage', 'expiry', 'loss', 'customer_return'])
+        .required('Reason is required'),
     quantity: yup.number().min(1, 'Quantity must be at least 1').required('Required'),
     notes: yup.string().required('Notes are required').min(5, 'Notes must be detailed'),
 });
@@ -39,23 +45,60 @@ const adjustmentSchema = yup.object({
 export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustmentModalProps) {
     const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
+    const [highRiskConfirmed, setHighRiskConfirmed] = useState(false);
 
     const {
         register,
         handleSubmit,
         watch,
+        setValue,
         formState: { errors },
     } = useForm({
         resolver: yupResolver(adjustmentSchema),
         defaultValues: {
             type: 'decrease',
+            reason: 'correction',
             quantity: 1,
         },
     });
 
     const adjustmentType = watch('type');
+    const quantity = Number(watch('quantity') || 0);
 
-    const onSubmit = async (data: { type: UiAdjustmentType; quantity: number; notes: string }) => {
+    useEffect(() => {
+        const defaultReason = reasonByType[adjustmentType as UiAdjustmentType];
+        if (defaultReason) {
+            setValue('reason', defaultReason);
+        }
+        setHighRiskConfirmed(false);
+    }, [adjustmentType, setValue]);
+
+    const stockPreview = useMemo(() => {
+        const decreasesStock = ['decrease', 'damage', 'expired'].includes(adjustmentType);
+        const projected = decreasesStock
+            ? batch.current_quantity - quantity
+            : batch.current_quantity + quantity;
+        return {
+            projected,
+            delta: decreasesStock ? -quantity : quantity,
+            decreasesStock,
+        };
+    }, [adjustmentType, batch.current_quantity, quantity]);
+
+    const isHighRiskAdjustment = useMemo(() => {
+        if (!stockPreview.decreasesStock) return false;
+        if (quantity <= 0) return false;
+        if (quantity >= Math.max(10, Math.ceil(batch.current_quantity * 0.2))) return true;
+        if (['damage', 'expired'].includes(adjustmentType)) return true;
+        return false;
+    }, [adjustmentType, batch.current_quantity, quantity, stockPreview.decreasesStock]);
+
+    const onSubmit = async (data: {
+        type: UiAdjustmentType;
+        reason: UiAdjustmentReason;
+        quantity: number;
+        notes: string;
+    }) => {
         if (!user?.facility_id) {
             toast.error('User facility not found');
             return;
@@ -67,6 +110,10 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                 return;
             }
         }
+        if (isHighRiskAdjustment && !highRiskConfirmed) {
+            toast.error('Confirm high-risk adjustment before saving');
+            return;
+        }
 
         setIsLoading(true);
         try {
@@ -75,7 +122,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                 batch_id: batch.id,
                 type: data.type,
                 quantity: data.quantity,
-                reason: reasonByType[data.type],
+                reason: data.reason,
                 notes: data.notes,
             });
             toast.success('Stock adjusted successfully');
@@ -103,33 +150,31 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-            <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-                {}
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
-                    <div>
-                        <h2 className="text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
-                            <ArrowDownWideNarrow size={20} className="text-healthcare-primary" />
-                            Adjust Stock
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
+            <div className="w-full max-w-md max-h-[100dvh] sm:max-h-[90vh] bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+                <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
+                    <div className="min-w-0">
+                        <h2 className="text-lg sm:text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
+                            <ArrowDownWideNarrow size={20} className="text-healthcare-primary shrink-0" />
+                            <span className="truncate">Adjust Stock</span>
                         </h2>
-                        <p className="text-sm text-slate-500 mt-1">
+                        <p className="text-xs sm:text-sm text-slate-500 mt-1">
                             Batch:{' '}
-                            <span className="font-mono bg-slate-100 px-1 rounded">
+                            <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1 rounded">
                                 {batch.batch_number}
                             </span>
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                        className="h-10 w-10 inline-flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
-                <div className="p-6">
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        {}
+                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col min-h-0 flex-1">
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                         <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm flex justify-between items-center">
                             <span className="text-slate-500 font-bold">Current Quantity</span>
                             <span className="text-xl font-black text-healthcare-dark dark:text-white">
@@ -137,7 +182,25 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             </span>
                         </div>
 
-                        {}
+                        <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-sm flex justify-between items-center">
+                            <span className="text-slate-500 font-bold">Projected Quantity</span>
+                            <div className="text-right">
+                                <span
+                                    className={`text-xl font-black ${
+                                        stockPreview.projected < 0
+                                            ? 'text-rose-600'
+                                            : 'text-healthcare-dark dark:text-white'
+                                    }`}
+                                >
+                                    {stockPreview.projected}
+                                </span>
+                                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                    {stockPreview.delta >= 0 ? '+' : ''}
+                                    {stockPreview.delta} change
+                                </p>
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                 Adjustment Type
@@ -145,7 +208,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             <div className="relative">
                                 <select
                                     {...register('type')}
-                                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white appearance-none"
+                                    className="w-full h-11 pl-10 pr-4 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white appearance-none"
                                 >
                                     <option value="decrease">Standard Decrease (Correction)</option>
                                     <option value="increase">Standard Increase (Correction)</option>
@@ -159,7 +222,27 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             </div>
                         </div>
 
-                        {}
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
+                                Reason
+                            </label>
+                            <select
+                                {...register('reason')}
+                                className="w-full h-11 px-4 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-medium bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                            >
+                                <option value="correction">Inventory Correction</option>
+                                <option value="damage">Damaged Stock</option>
+                                <option value="expiry">Expired Stock</option>
+                                <option value="loss">Loss / Shrinkage</option>
+                                <option value="customer_return">Customer Return</option>
+                            </select>
+                            {errors.reason && (
+                                <p className="text-red-500 text-xs mt-1">
+                                    {errors.reason.message as string}
+                                </p>
+                            )}
+                        </div>
+
                         <div>
                             <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                 Quantity
@@ -167,16 +250,13 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             <input
                                 type="number"
                                 {...register('quantity')}
-                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                className="w-full h-11 px-4 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                             />
                             {errors.quantity && (
-                                <p className="text-red-500 text-xs mt-1">
-                                    {errors.quantity.message}
-                                </p>
+                                <p className="text-red-500 text-xs mt-1">{errors.quantity.message}</p>
                             )}
                         </div>
 
-                        {}
                         <div>
                             <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                 Notes
@@ -184,7 +264,7 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             <textarea
                                 {...register('notes')}
                                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                                rows={2}
+                                rows={3}
                                 placeholder="Explain why this adjustment is being made..."
                             />
                             {errors.notes && (
@@ -192,10 +272,38 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                             )}
                         </div>
 
+                        {isHighRiskAdjustment && (
+                            <label className="flex items-start gap-2 p-3 rounded-xl border border-rose-200 bg-rose-50 text-rose-700">
+                                <input
+                                    type="checkbox"
+                                    checked={highRiskConfirmed}
+                                    onChange={(e) => setHighRiskConfirmed(e.target.checked)}
+                                    className="mt-0.5"
+                                />
+                                <span className="text-xs font-bold leading-relaxed">
+                                    This is a high-risk adjustment. I confirm the quantity and reason are
+                                    correct and should be permanently audited.
+                                </span>
+                            </label>
+                        )}
+                    </div>
+
+                    <div className="sticky bottom-0 border-t border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur p-4 sm:p-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="h-11 px-4 w-full sm:w-auto border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors touch-manipulation"
+                        >
+                            Cancel
+                        </button>
                         <button
                             type="submit"
-                            disabled={isLoading}
-                            className="w-full py-3 bg-healthcare-primary text-white rounded-xl font-bold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                            disabled={
+                                isLoading ||
+                                stockPreview.projected < 0 ||
+                                (isHighRiskAdjustment && !highRiskConfirmed)
+                            }
+                            className="h-11 px-5 w-full sm:w-auto bg-healthcare-primary text-white rounded-xl font-bold hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 touch-manipulation"
                         >
                             {isLoading ? (
                                 <div className="animate-spin w-5 h-5 border-2 border-white/20 border-t-white rounded-full" />
@@ -203,8 +311,8 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                                 <span>Save Adjustment</span>
                             )}
                         </button>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     );

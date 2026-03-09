@@ -6,6 +6,7 @@ import { reportService } from './report.service';
 import { facilityService } from './facility.service';
 import { patientService } from './patient.service';
 import { insuranceService } from './insurance.service';
+import { settingsService } from './settings.service';
 
 /**
  * Pharmacy Service Facade
@@ -37,6 +38,9 @@ export const pharmacyService = {
 
     // Insurance Service
     ...insuranceService,
+
+    // Settings Service
+    ...settingsService,
 };
 
 export default pharmacyService;

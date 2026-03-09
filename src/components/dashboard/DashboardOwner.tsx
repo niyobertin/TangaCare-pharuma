@@ -11,6 +11,7 @@ import {
     Building2,
     Snowflake,
     ShieldCheck,
+    Users,
 } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../../context/AuthContext';
@@ -47,6 +48,10 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     const [nearExpiry, setNearExpiry] = useState<Alert[]>([]);
     const [coldChainOverview, setColdChainOverview] = useState<ColdChainOverview | null>(null);
     const [excursionActionLoading, setExcursionActionLoading] = useState<number | null>(null);
+    const [topSelling, setTopSelling] = useState<Array<{ name: string; value: number }>>([]);
+    const [recentMovements, setRecentMovements] = useState<any[]>([]);
+    const [supplierCount, setSupplierCount] = useState(0);
+    const [poPipeline, setPoPipeline] = useState({ pending: 0, active: 0, received: 0 });
 
     const [facilityComparison, setFacilityComparison] = useState<import('../../types/pharmacy').MultiLocationData | null>(null);
 
@@ -105,30 +110,73 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     useEffect(() => {
         const loadInitialData = async () => {
             try {
+                const [reorderData, alertsData, topSellingRows, suppliersData] = await Promise.all([
+                    pharmacyService.getReorderSuggestions(facilityId as any),
+                    pharmacyService.getAlerts({
+                        facility_id: facilityId || undefined,
+                        status: 'active',
+                    }),
+                    pharmacyService.getTopSellingMedicines('DESC'),
+                    pharmacyService.getSuppliers({ page: 1, limit: 1 }),
+                ]);
+
                 // Fetch real-time low stock suggestions
-                const reorderData = await pharmacyService.getReorderSuggestions(facilityId as any);
                 setLowStock(reorderData.slice(0, 5));
 
                 // Fetch real-time expiry alerts
-                const alertsData = await pharmacyService.getAlerts({
-                    facility_id: facilityId || undefined,
-                    status: 'active',
-                });
                 setNearExpiry(
                     alertsData.data
                         .filter((a) => a.type === 'expiry_soon' || a.type === 'expiry')
                         .slice(0, 5),
                 );
+                setTopSelling(Array.isArray(topSellingRows) ? topSellingRows.slice(0, 5) : []);
+                setSupplierCount(Number(suppliersData?.meta?.total || 0));
 
                 // Fetch facility comparison if in global view
                 if (facilityId === null) {
                     const comparison = await pharmacyService.getMultiLocationComparison('revenue');
                     setFacilityComparison(comparison);
                     setColdChainOverview(null);
+                    setRecentMovements([]);
+                    setPoPipeline({ pending: 0, active: 0, received: 0 });
                 } else {
                     setFacilityComparison(null);
-                    const coldChainData = await pharmacyService.getColdChainOverview();
+                    const [coldChainData, movementData, pendingPOs, receivedPOs] = await Promise.all([
+                        pharmacyService.getColdChainOverview(),
+                        pharmacyService.getStockMovements({
+                            facilityId,
+                            page: 1,
+                            limit: 5,
+                        }),
+                        pharmacyService.getProcurementOrders({
+                            page: 1,
+                            limit: 1,
+                            status: 'pending',
+                        }),
+                        pharmacyService.getProcurementOrders({
+                            page: 1,
+                            limit: 1,
+                            status: 'received',
+                        }),
+                    ]);
                     setColdChainOverview(coldChainData);
+                    setRecentMovements(Array.isArray(movementData.data) ? movementData.data : []);
+                    let activeCount = 0;
+                    try {
+                        const activePOs = await pharmacyService.getProcurementOrders({
+                            page: 1,
+                            limit: 1,
+                            status: 'approved,confirmed,partially_received,backordered',
+                        });
+                        activeCount = Number(activePOs.meta?.total || 0);
+                    } catch (error) {
+                        activeCount = 0;
+                    }
+                    setPoPipeline({
+                        pending: Number(pendingPOs.meta?.total || 0),
+                        active: activeCount,
+                        received: Number(receivedPOs.meta?.total || 0),
+                    });
                 }
             } catch (error) {
                 console.error('Failed to load initial dashboard data:', error);
@@ -264,9 +312,9 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
             </div>
 
             {/* SECTION 1: TOP KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                 {loading ? (
-                    Array(5)
+                    Array(6)
                         .fill(0)
                         .map((_, i) => <StatCardSkeleton key={i} />)
                 ) : (
@@ -311,6 +359,15 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             icon={<DollarSign size={16} />}
                             color="bg-teal-600"
                             onClick={() => navigate({ to: '/app/analytics/inventory' as any, search: {} as any })}
+                        />
+                        <KPICard
+                            title="Suppliers"
+                            value={supplierCount}
+                            icon={<Users size={16} />}
+                            color="bg-violet-600"
+                            onClick={() =>
+                                navigate({ to: '/app/procurement/suppliers' as any, search: {} as any })
+                            }
                         />
                     </>
                 )}
@@ -535,6 +592,41 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                     onResolve={handleResolveExcursion}
                     loadingId={excursionActionLoading}
                 />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <InsightListCard
+                    title="Top Selling Medicines"
+                    subtitle="Dispensing velocity this period"
+                    rows={topSelling.map((item, index) => ({
+                        id: index,
+                        primary: item.name,
+                        secondary: `${Number(item.value || 0).toLocaleString()} units sold`,
+                    }))}
+                />
+                <InsightListCard
+                    title="Recent Stock Movements"
+                    subtitle="Latest inventory audit entries"
+                    rows={recentMovements.map((row) => ({
+                        id: row.id,
+                        primary:
+                            row.medicine_name || row.medicine?.name || row.reference || 'Stock movement',
+                        secondary: `${String(row.movement_subtype || row.movement_type || 'movement').toUpperCase()} • ${row.created_at ? formatRelativeDate(row.created_at) : 'now'}`,
+                    }))}
+                />
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+                    <h3 className="text-xs font-bold text-healthcare-dark dark:text-white uppercase tracking-wider">
+                        Purchase Order Pipeline
+                    </h3>
+                    <p className="text-[9px] text-slate-400 font-medium uppercase mt-0.5">
+                        Pending, active and received orders
+                    </p>
+                    <div className="mt-4 space-y-2">
+                        <PipelineRow label="Pending" value={poPipeline.pending} color="amber" />
+                        <PipelineRow label="Active" value={poPipeline.active} color="blue" />
+                        <PipelineRow label="Received" value={poPipeline.received} color="emerald" />
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -802,6 +894,60 @@ const ExcursionTable: React.FC<{
                     </div>
                 )}
             </div>
+        </div>
+    );
+};
+
+const InsightListCard: React.FC<{
+    title: string;
+    subtitle: string;
+    rows: Array<{ id: number; primary: string; secondary: string }>;
+}> = ({ title, subtitle, rows }) => {
+    return (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="text-xs font-bold text-healthcare-dark dark:text-white uppercase tracking-wider">
+                    {title}
+                </h3>
+                <p className="text-[9px] text-slate-400 font-medium uppercase mt-0.5">{subtitle}</p>
+            </div>
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {rows.length > 0 ? (
+                    rows.slice(0, 5).map((row) => (
+                        <div key={row.id} className="px-4 py-3">
+                            <p className="text-xs font-black text-healthcare-dark dark:text-white line-clamp-1">
+                                {row.primary}
+                            </p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">
+                                {row.secondary}
+                            </p>
+                        </div>
+                    ))
+                ) : (
+                    <div className="px-4 py-10 text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        No records available
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const PipelineRow: React.FC<{ label: string; value: number; color: 'amber' | 'blue' | 'emerald' }> = ({
+    label,
+    value,
+    color,
+}) => {
+    const colorClass =
+        color === 'amber'
+            ? 'bg-amber-50 text-amber-700'
+            : color === 'blue'
+                ? 'bg-blue-50 text-blue-700'
+                : 'bg-emerald-50 text-emerald-700';
+    return (
+        <div className="flex items-center justify-between rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">{label}</span>
+            <span className={cn('text-xs font-black px-2 py-1 rounded-lg', colorClass)}>{value}</span>
         </div>
     );
 };

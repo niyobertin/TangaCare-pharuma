@@ -1,4 +1,4 @@
-import { createRoute } from '@tanstack/react-router';
+import { createRoute, Navigate } from '@tanstack/react-router';
 import { RequirePermission } from '../../components/auth/RequirePermission';
 import { PERMISSIONS } from '../../types/auth';
 import { lazyNamed, withRouteSuspense } from '../lazy';
@@ -25,7 +25,7 @@ export const createProcurementRoutes = (parentRoute: any) => {
     const procurementIndexRoute = createRoute({
         getParentRoute: () => procurementRoute,
         path: '/',
-        component: () => withRouteSuspense(<ProcurementPage />),
+        component: () => <Navigate to={"/app/procurement/orders" as any} search={{} as any} />,
     });
 
     const ordersRoute = createRoute({
@@ -40,6 +40,12 @@ export const createProcurementRoutes = (parentRoute: any) => {
         component: () => withRouteSuspense(<ProcurementPage />),
     });
 
+    const receivingRoute = createRoute({
+        getParentRoute: () => procurementRoute,
+        path: 'receiving',
+        component: () => withRouteSuspense(<ProcurementPage />),
+    });
+
     const viewOrderRoute = createRoute({
         getParentRoute: () => procurementRoute,
         path: 'orders/$orderId',
@@ -51,6 +57,7 @@ export const createProcurementRoutes = (parentRoute: any) => {
             procurementIndexRoute,
             ordersRoute,
             suppliersRoute,
+            receivingRoute,
             viewOrderRoute,
         ]),
     ];

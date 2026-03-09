@@ -13,15 +13,7 @@ import { Link } from '@tanstack/react-router';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
-
-const MOVEMENT_LABELS: Record<string, string> = {
-    dispense: 'Dispense',
-    receive: 'Receive',
-    transfer: 'Transfer',
-    adjustment: 'Adjustment',
-    create: 'Create',
-    update: 'Update',
-};
+import { getStockMovementLabel } from '../../lib/stockMovement';
 
 export function StockRegisterReportPage() {
     const { user, facilityId } = useAuth();
@@ -204,8 +196,7 @@ export function StockRegisterReportPage() {
                                                             className="text-indigo-500"
                                                         />
                                                     )}
-                                                    {MOVEMENT_LABELS[row.movement_type] ||
-                                                        row.movement_type}
+                                                    {getStockMovementLabel(row.movement_type)}
                                                 </span>
                                             </td>
                                             <td className="p-4 font-medium text-healthcare-dark">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     Plus,
     ShoppingCart,
@@ -12,16 +12,13 @@ import {
     Upload,
     Download,
     Loader2,
-    Calendar,
-    Search as SearchIcon,
-    RefreshCw,
     Trash2,
     Phone,
     Mail,
     MapPin,
     Edit,
 } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { toast } from 'react-hot-toast';
@@ -34,8 +31,10 @@ import { CreatePurchaseOrderModal } from '../../components/inventory/CreatePurch
 import { ReceiveOrderModal } from '../../components/inventory/ReceiveOrderModal';
 import { StatsSkeleton } from '../../components/shared/Skeleton';
 import { Pagination } from '../../components/ui/Pagination';
+import { TableToolbar } from '../../components/ui/table/TableToolbar';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { useTableViewState, type TableViewColumn } from '../../hooks/useTableViewState';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -47,6 +46,54 @@ const ACTIVE_ORDER_STATUSES = [
     'partially_received',
     'backordered',
 ] as const;
+
+const RECEIVING_ORDER_STATUSES = new Set([
+    'pending',
+    'approved',
+    'confirmed',
+    'partially_received',
+    'backordered',
+]);
+
+const RECEIVABLE_ORDER_STATUSES = new Set([
+    'ordered',
+    'approved',
+    'confirmed',
+    'partial',
+    'partially_received',
+    'backordered',
+]);
+
+const PROCUREMENT_ORDER_TABLE_COLUMNS: TableViewColumn[] = [
+    { key: 'order_id', label: 'Order #', hideable: false },
+    { key: 'supplier', label: 'Supplier', hideable: false },
+    { key: 'amount', label: 'Amount' },
+    { key: 'expected_delivery', label: 'Expected Delivery' },
+    { key: 'status', label: 'Status', hideable: false },
+    { key: 'actions', label: 'Actions', hideable: false },
+];
+
+const PROCUREMENT_ROLE_DEFAULT_COLUMNS: Record<string, string[]> = {
+    OWNER: ['order_id', 'supplier', 'amount', 'expected_delivery', 'status', 'actions'],
+    FACILITYADMIN: ['order_id', 'supplier', 'amount', 'expected_delivery', 'status', 'actions'],
+    STOREMANAGER: ['order_id', 'supplier', 'amount', 'expected_delivery', 'status', 'actions'],
+    PHARMACIST: ['order_id', 'supplier', 'expected_delivery', 'status', 'actions'],
+    AUDITOR: ['order_id', 'supplier', 'amount', 'expected_delivery', 'status', 'actions'],
+};
+
+type ProcurementQuickPreset =
+    | 'all'
+    | 'pending'
+    | 'receiving_due'
+    | 'overdue'
+    | 'received';
+
+type ProcurementSort =
+    | 'order_date_desc'
+    | 'order_date_asc'
+    | 'amount_desc'
+    | 'amount_asc'
+    | 'expected_asc';
 
 const formatRwfCompact = (value: number): string => {
     const amount = Number(value || 0);
@@ -266,60 +313,43 @@ const SuppliersTab = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
-                <div className="relative flex-1 max-w-lg">
-                    <SearchIcon
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                        size={18}
-                    />
-                    <input
-                        type="text"
-                        placeholder="Search by supplier name or contact..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-transparent focus:bg-white focus:border-healthcare-primary rounded-xl text-sm font-bold text-slate-900 dark:text-white transition-all outline-none"
-                    />
-                </div>
-                <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap">
-                        Show
-                    </span>
-                    <select
-                        value={limit}
-                        onChange={(e) => {
-                            setLimit(Number(e.target.value));
-                            setPage(1);
-                        }}
-                        className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-2 py-1 text-[10px] font-black text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary"
-                    >
-                        {[10, 25, 50, 100].map((l) => (
-                            <option key={l} value={l}>
-                                {l}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value as any)}
-                        className="bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
-                    >
-                        <option value="all">All Status</option>
-                        <option value="active">Active Partners</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                    {user?.role?.toString()?.toLowerCase() !== 'auditor' && (
+            <TableToolbar
+                searchValue={searchQuery}
+                onSearchChange={setSearchQuery}
+                searchPlaceholder="Search by supplier name or contact..."
+                onReset={() => {
+                    setSearchQuery('');
+                    setStatusFilter('all');
+                    setLimit(10);
+                    setPage(1);
+                }}
+                filters={
+                    <>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                            className="h-11 sm:h-10 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-4 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
+                        >
+                            <option value="all">All Status</option>
+                            <option value="active">Active Partners</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </>
+                }
+                actions={
+                    user?.role?.toString()?.toLowerCase() !== 'auditor' ? (
                         <button
                             onClick={() => {
                                 setSelectedSupplier(null);
                                 setIsModalOpen(true);
                             }}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98]"
+                            className="h-11 sm:h-10 flex items-center gap-2 px-4 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] touch-manipulation"
                         >
-                            <Plus size={18} /> Add Supplier
+                            <Plus size={16} /> Add Supplier
                         </button>
-                    )}
-                </div>
-            </div>
+                    ) : null
+                }
+            />
 
             <div className="glass-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
@@ -399,7 +429,7 @@ const SuppliersTab = () => {
                                                                         setSelectedSupplier(supplier);
                                                                         setIsModalOpen(true);
                                                                     }}
-                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-all"
+                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-all touch-manipulation"
                                                                 >
                                                                     <Edit size={16} />
                                                                 </button>
@@ -408,7 +438,7 @@ const SuppliersTab = () => {
                                                                         setSupplierToDelete(supplier.id);
                                                                         setIsConfirmOpen(true);
                                                                     }}
-                                                                    className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-all"
+                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-all touch-manipulation"
                                                                 >
                                                                     <Trash2 size={16} />
                                                                 </button>
@@ -439,6 +469,12 @@ const SuppliersTab = () => {
                 totalItems={totalItems}
                 pageSize={limit}
                 onPageChange={setPage}
+                onPageSizeChange={(size) => {
+                    setLimit(size);
+                    setPage(1);
+                }}
+                pageSizeOptions={[10, 25, 50, 100]}
+                pageSizeLabel="Rows/Page"
                 loading={loading}
             />
 
@@ -484,6 +520,7 @@ const SuppliersTab = () => {
 export function ProcurementPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [orders, setOrders] = useState<ProcurementOrder[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<
@@ -502,10 +539,9 @@ export function ProcurementPage() {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [selectedSupplierId, setSelectedSupplierId] = useState<number | null>(null);
     const [isPOModalOpen, setIsPOModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<'orders' | 'suppliers'>('orders');
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
-    const [limit] = useState(10);
+    const [limit, setLimit] = useState(10);
     const [procurementStats, setProcurementStats] = useState({
         pending: 0,
         active: 0,
@@ -520,12 +556,28 @@ export function ProcurementPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [quickPreset, setQuickPreset] = useState<ProcurementQuickPreset>('all');
+    const [sortBy, setSortBy] = useState<ProcurementSort>('order_date_desc');
 
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [previewData, setPreviewData] = useState<{ items: any[]; total_amount: number } | null>(
         null,
     );
     const [pendingFile, setPendingFile] = useState<File | null>(null);
+    const activeTab: 'orders' | 'suppliers' | 'receiving' = location.pathname.includes('/suppliers')
+        ? 'suppliers'
+        : location.pathname.includes('/receiving')
+          ? 'receiving'
+          : 'orders';
+    const isOrderWorkflowTab = activeTab === 'orders' || activeTab === 'receiving';
+    const { visibleColumnSet: procurementVisibleColumnSet } = useTableViewState(
+        'procurement-orders',
+        PROCUREMENT_ORDER_TABLE_COLUMNS,
+        {
+        role: String(user?.role || ''),
+        roleDefaultColumns: PROCUREMENT_ROLE_DEFAULT_COLUMNS,
+    },
+    );
 
     const fetchOrders = async () => {
         setLoading(true);
@@ -542,48 +594,38 @@ export function ProcurementPage() {
                 status: statusFilter === 'all' ? undefined : statusFilter,
             };
 
-            const activeRequests = ACTIVE_ORDER_STATUSES.map((status) =>
-                pharmacyService.getProcurementOrders({
-                    ...sharedParams,
-                    page: 1,
-                    limit: 1,
-                    status,
-                }),
-            );
-
-            const [response, allOrdersStats, pendingStats, ...activeStats] = await Promise.all([
+            const [response, pendingStats, activeStats] = await Promise.all([
                 pharmacyService.getProcurementOrders(params),
-                pharmacyService.getProcurementOrders({
-                    ...sharedParams,
-                    page: 1,
-                    limit: 1,
-                    status: undefined,
-                }),
                 pharmacyService.getProcurementOrders({
                     ...sharedParams,
                     page: 1,
                     limit: 1,
                     status: 'pending',
                 }),
-                ...activeRequests,
+                pharmacyService.getProcurementOrders({
+                    ...sharedParams,
+                    page: 1,
+                    limit: 1,
+                    status: ACTIVE_ORDER_STATUSES.join(','),
+                }),
             ]);
 
-            const activeCount = activeStats.reduce(
-                (sum, stat) => sum + Number(stat.meta?.total || 0),
-                0,
+            const responseRows = Array.isArray(response.data) ? response.data : [];
+            const activeCount = Number(
+                activeStats.meta?.total ||
+                    responseRows.filter((order) =>
+                        ACTIVE_ORDER_STATUSES.includes(order.status.toLowerCase() as any),
+                    ).length,
             );
 
-            setOrders(Array.isArray(response.data) ? response.data : []);
+            setOrders(responseRows);
             setTotalPages(response.meta?.totalPages || 1);
             setTotalItems(response.meta?.total || 0);
             setProcurementStats({
                 pending: pendingStats.meta?.total || 0,
                 active: activeCount,
-                totalOrders: allOrdersStats.meta?.total || 0,
-                totalValue:
-                    allOrdersStats.meta?.totalValue ??
-                    response.meta?.totalValue ??
-                    0,
+                totalOrders: response.meta?.total || 0,
+                totalValue: response.meta?.totalValue ?? 0,
             });
         } catch (error) {
             console.error('Failed to fetch procurement orders:', error);
@@ -602,13 +644,20 @@ export function ProcurementPage() {
     };
 
     useEffect(() => {
-        if (activeTab === 'orders') {
+        if (isOrderWorkflowTab) {
             const timer = setTimeout(() => {
                 fetchOrders();
             }, 500);
             return () => clearTimeout(timer);
         }
-    }, [statusFilter, searchTerm, startDate, endDate, page, activeTab]);
+    }, [statusFilter, searchTerm, startDate, endDate, page, limit, isOrderWorkflowTab]);
+
+    useEffect(() => {
+        setPage(1);
+        if (activeTab === 'receiving' && statusFilter === 'all') {
+            setStatusFilter('pending');
+        }
+    }, [activeTab, statusFilter]);
 
     useEffect(() => {
         fetchSuppliers();
@@ -737,6 +786,125 @@ export function ProcurementPage() {
         },
     ];
 
+    const visibleOrders = useMemo(() => {
+        const now = new Date();
+        const baseRows =
+            activeTab === 'receiving'
+                ? orders.filter((order) =>
+                      RECEIVING_ORDER_STATUSES.has(String(order.status || '').toLowerCase()),
+                  )
+                : orders;
+
+        const filteredRows = baseRows.filter((order) => {
+            const orderStatus = String(order.status || '').toLowerCase();
+            const expectedDelivery = order.expected_delivery_date
+                ? new Date(order.expected_delivery_date)
+                : null;
+            const isOverdue =
+                !!expectedDelivery &&
+                expectedDelivery < now &&
+                !['received', 'cancelled'].includes(orderStatus);
+
+            if (quickPreset === 'pending') return orderStatus === 'pending';
+            if (quickPreset === 'receiving_due') {
+                return RECEIVING_ORDER_STATUSES.has(orderStatus);
+            }
+            if (quickPreset === 'overdue') return isOverdue;
+            if (quickPreset === 'received') return orderStatus === 'received';
+            return true;
+        });
+
+        return filteredRows.sort((a, b) => {
+            const orderDateA = new Date(a.order_date || 0).getTime();
+            const orderDateB = new Date(b.order_date || 0).getTime();
+            const expectedA = new Date(a.expected_delivery_date || 0).getTime();
+            const expectedB = new Date(b.expected_delivery_date || 0).getTime();
+
+            switch (sortBy) {
+                case 'order_date_asc':
+                    return orderDateA - orderDateB;
+                case 'amount_desc':
+                    return Number(b.total_amount || 0) - Number(a.total_amount || 0);
+                case 'amount_asc':
+                    return Number(a.total_amount || 0) - Number(b.total_amount || 0);
+                case 'expected_asc':
+                    return expectedA - expectedB;
+                case 'order_date_desc':
+                default:
+                    return orderDateB - orderDateA;
+            }
+        });
+    }, [activeTab, orders, quickPreset, sortBy]);
+
+    const normalizedUserRole = String(user?.role || '')
+        .toUpperCase()
+        .replace(/[\s_]+/g, '');
+    const isProcurementAuditor = normalizedUserRole === 'AUDITOR';
+
+    useEffect(() => {
+        const isTypingTarget = (target: EventTarget | null) => {
+            const el = target as HTMLElement | null;
+            if (!el) return false;
+            const tag = el.tagName?.toLowerCase();
+            return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
+        };
+
+        const handleShortcuts = (event: KeyboardEvent) => {
+            if (
+                !event.altKey ||
+                event.ctrlKey ||
+                event.metaKey ||
+                isTypingTarget(event.target) ||
+                isPOModalOpen ||
+                isReceiveModalOpen ||
+                isPreviewOpen
+            ) {
+                return;
+            }
+
+            if (isProcurementAuditor) return;
+
+            const key = event.key.toLowerCase();
+            if (key === 'p' && activeTab === 'orders') {
+                event.preventDefault();
+                setIsPOModalOpen(true);
+                return;
+            }
+
+            if (key === 'r' && isOrderWorkflowTab) {
+                event.preventDefault();
+                const receivableOrder = visibleOrders.find((order) =>
+                    RECEIVABLE_ORDER_STATUSES.has(String(order.status || '').toLowerCase()),
+                );
+                if (!receivableOrder) {
+                    toast('No receivable orders available in current filters');
+                    return;
+                }
+                setSelectedOrder(receivableOrder);
+                setIsReceiveModalOpen(true);
+            }
+        };
+
+        window.addEventListener('keydown', handleShortcuts);
+        return () => window.removeEventListener('keydown', handleShortcuts);
+    }, [
+        activeTab,
+        isOrderWorkflowTab,
+        isPOModalOpen,
+        isPreviewOpen,
+        isProcurementAuditor,
+        isReceiveModalOpen,
+        visibleOrders,
+    ]);
+
+    const visibleProcurementColumnCount = useMemo(
+        () =>
+            PROCUREMENT_ORDER_TABLE_COLUMNS.filter((column) =>
+                procurementVisibleColumnSet.has(column.key),
+            ).length,
+        [procurementVisibleColumnSet],
+    );
+
     return (
         <ProtectedRoute
             allowedRoles={[
@@ -758,11 +926,20 @@ export function ProcurementPage() {
                     <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                         <div className="space-y-2">
                             <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
-                                Procurement & Orders
+                                {activeTab === 'suppliers'
+                                    ? 'Suppliers'
+                                    : activeTab === 'receiving'
+                                      ? 'Stock Receiving'
+                                      : 'Procurement & Orders'}
                             </h2>
                             <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
                                 <button
-                                    onClick={() => setActiveTab('orders')}
+                                    onClick={() =>
+                                        navigate({
+                                            to: '/app/procurement/orders' as any,
+                                            search: {} as any,
+                                        })
+                                    }
                                     className={cn(
                                         'px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
                                         activeTab === 'orders'
@@ -773,7 +950,12 @@ export function ProcurementPage() {
                                     Purchase orders
                                 </button>
                                 <button
-                                    onClick={() => setActiveTab('suppliers')}
+                                    onClick={() =>
+                                        navigate({
+                                            to: '/app/procurement/suppliers' as any,
+                                            search: {} as any,
+                                        })
+                                    }
                                     className={cn(
                                         'px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
                                         activeTab === 'suppliers'
@@ -782,6 +964,22 @@ export function ProcurementPage() {
                                     )}
                                 >
                                     Suppliers
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        navigate({
+                                            to: '/app/procurement/receiving' as any,
+                                            search: {} as any,
+                                        })
+                                    }
+                                    className={cn(
+                                        'px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
+                                        activeTab === 'receiving'
+                                            ? 'bg-healthcare-primary text-white shadow-lg shadow-teal-500/20'
+                                            : 'text-slate-500 hover:text-healthcare-primary',
+                                    )}
+                                >
+                                    Receiving
                                 </button>
                             </div>
                         </div>
@@ -833,7 +1031,7 @@ export function ProcurementPage() {
                     </div>
                 </div>
 
-                {activeTab === 'orders' ? (
+                {activeTab !== 'suppliers' ? (
                     <>
                         { }
                         {loading ? (
@@ -869,24 +1067,22 @@ export function ProcurementPage() {
 
                         { }
                         <div className="space-y-4">
-                            <div className="flex flex-col xl:flex-row xl:items-center gap-3 bg-white dark:bg-slate-900 p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
-                                <div className="relative flex-1 w-full xl:min-w-[340px]">
-                                    <SearchIcon
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                                        size={14}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Search PO#, Supplier..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full h-10 pl-9 pr-4 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-xs font-bold text-slate-900 dark:text-white transition-all outline-none"
-                                    />
-                                </div>
-
-                                <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap mr-1">
+                            <TableToolbar
+                                layout="stacked"
+                                searchValue={searchTerm}
+                                onSearchChange={setSearchTerm}
+                                searchPlaceholder="Search PO#, Supplier..."
+                                onReset={() => {
+                                    setSearchTerm('');
+                                    setStartDate('');
+                                    setEndDate('');
+                                    setStatusFilter('all');
+                                    setLimit(10);
+                                    setPage(1);
+                                }}
+                                filters={
+                                    <>
+                                        <span className="h-11 sm:h-10 inline-flex items-center text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap mr-1">
                                             Status
                                         </span>
                                         <select
@@ -895,7 +1091,7 @@ export function ProcurementPage() {
                                                 setStatusFilter(e.target.value as typeof statusFilter);
                                                 setPage(1);
                                             }}
-                                            className="h-10 min-w-[150px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
+                                            className="h-11 sm:h-10 min-w-[150px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
                                         >
                                             <option value="all">All status</option>
                                             <option value="draft">Draft</option>
@@ -907,52 +1103,48 @@ export function ProcurementPage() {
                                             <option value="received">Received</option>
                                             <option value="cancelled">Cancelled</option>
                                         </select>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                                        <div className="relative flex-1 sm:flex-none">
-                                            <Calendar
-                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                                                size={14}
-                                            />
-                                            <input
-                                                type="date"
-                                                value={startDate}
-                                                onChange={(e) => setStartDate(e.target.value)}
-                                                className="w-full sm:w-auto h-10 pl-9 pr-3 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
-                                            />
-                                        </div>
-                                        <span className="text-slate-400 font-black text-[10px] shrink-0">
-                                            TO
+                                        <input
+                                            type="date"
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                            className="h-11 sm:h-10 px-3 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
+                                        />
+                                        <span className="h-11 sm:h-10 inline-flex items-center px-1 text-slate-400 font-black text-[10px] shrink-0 uppercase tracking-widest">
+                                            To
                                         </span>
-                                        <div className="relative flex-1 sm:flex-none">
-                                            <Calendar
-                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                                                size={14}
-                                            />
-                                            <input
-                                                type="date"
-                                                value={endDate}
-                                                onChange={(e) => setEndDate(e.target.value)}
-                                                className="w-full sm:w-auto h-10 pl-9 pr-3 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => {
-                                            setSearchTerm('');
-                                            setStartDate('');
-                                            setEndDate('');
-                                            setStatusFilter('all');
-                                        }}
-                                        className="h-10 w-10 inline-flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 transition-colors"
-                                        title="Reset Filters"
-                                    >
-                                        <RefreshCw size={18} />
-                                    </button>
-                                </div>
-                            </div>
+                                        <input
+                                            type="date"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                            className="h-11 sm:h-10 px-3 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
+                                        />
+                                        <select
+                                            value={quickPreset}
+                                            onChange={(e) =>
+                                                setQuickPreset(e.target.value as ProcurementQuickPreset)
+                                            }
+                                            className="h-11 sm:h-10 min-w-[150px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
+                                        >
+                                            <option value="all">All</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="receiving_due">Receiving due</option>
+                                            <option value="overdue">Overdue</option>
+                                            <option value="received">Received</option>
+                                        </select>
+                                        <select
+                                            value={sortBy}
+                                            onChange={(e) => setSortBy(e.target.value as ProcurementSort)}
+                                            className="h-11 sm:h-10 min-w-[170px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
+                                        >
+                                            <option value="order_date_desc">Newest orders</option>
+                                            <option value="order_date_asc">Oldest orders</option>
+                                            <option value="amount_desc">Amount high-low</option>
+                                            <option value="amount_asc">Amount low-high</option>
+                                            <option value="expected_asc">Earliest delivery</option>
+                                        </select>
+                                    </>
+                                }
+                            />
                         </div>
 
                         { }
@@ -961,168 +1153,227 @@ export function ProcurementPage() {
                                 {loading ? (
                                     <SkeletonTable
                                         rows={5}
-                                        columns={5}
-                                        headers={['Order ID', 'Supplier', 'Amount', 'Status', 'Actions']}
-                                        columnAligns={['left', 'left', 'left', 'left', 'right']}
+                                        columns={visibleProcurementColumnCount}
+                                        headers={PROCUREMENT_ORDER_TABLE_COLUMNS.filter((column) =>
+                                            procurementVisibleColumnSet.has(column.key),
+                                        ).map((column) => column.label)}
+                                        columnAligns={PROCUREMENT_ORDER_TABLE_COLUMNS.filter((column) =>
+                                            procurementVisibleColumnSet.has(column.key),
+                                        ).map((column) =>
+                                            column.key === 'actions' ? 'right' : 'left',
+                                        ) as any}
                                         className="border-none shadow-none"
                                     />
                                 ) : (
                                     <table className="w-full text-left border-collapse">
                                         <thead>
                                             <tr className="bg-slate-50 dark:bg-slate-800/50">
-                                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                    Order ID
-                                                </th>
-                                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                    Supplier
-                                                </th>
-                                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                    Amount
-                                                </th>
-                                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                    Status
-                                                </th>
-                                                <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
-                                                    Actions
-                                                </th>
+                                                {procurementVisibleColumnSet.has('order_id') && (
+                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                        Order ID
+                                                    </th>
+                                                )}
+                                                {procurementVisibleColumnSet.has('supplier') && (
+                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                        Supplier
+                                                    </th>
+                                                )}
+                                                {procurementVisibleColumnSet.has('amount') && (
+                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                        Amount
+                                                    </th>
+                                                )}
+                                                {procurementVisibleColumnSet.has('expected_delivery') && (
+                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                        Expected Delivery
+                                                    </th>
+                                                )}
+                                                {procurementVisibleColumnSet.has('status') && (
+                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                        Status
+                                                    </th>
+                                                )}
+                                                {procurementVisibleColumnSet.has('actions') && (
+                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
+                                                        Actions
+                                                    </th>
+                                                )}
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                            {orders.length > 0 ? (
-                                                orders.map((order) => (
+                                            {visibleOrders.length > 0 ? (
+                                                visibleOrders.map((order) => (
                                                     <tr
                                                         key={order.id}
                                                         className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                                                     >
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex flex-col">
-                                                                <span className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
-                                                                    PO-
-                                                                    {order.id
-                                                                        .toString()
-                                                                        .padStart(4, '0')}
-                                                                </span>
-                                                                <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                                                                    Date:{' '}
-                                                                    {new Date(
-                                                                        order.order_date,
-                                                                    ).toLocaleDateString()}{' '}
-                                                                    • {order.items_count} Items
-                                                                </span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-slate-800 text-healthcare-primary border border-teal-100 dark:border-slate-700">
-                                                                    <Truck size={14} />
+                                                        {procurementVisibleColumnSet.has('order_id') && (
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
+                                                                        PO-
+                                                                        {order.id
+                                                                            .toString()
+                                                                            .padStart(4, '0')}
+                                                                    </span>
+                                                                    <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">
+                                                                        Date:{' '}
+                                                                        {new Date(
+                                                                            order.order_date,
+                                                                        ).toLocaleDateString()}{' '}
+                                                                        • {order.items_count} Items
+                                                                    </span>
                                                                 </div>
-                                                                <span className="text-xs font-bold text-healthcare-dark dark:text-white">
-                                                                    {order.supplier?.name ||
-                                                                        'Unknown Supplier'}
+                                                            </td>
+                                                        )}
+                                                        {procurementVisibleColumnSet.has('supplier') && (
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-slate-800 text-healthcare-primary border border-teal-100 dark:border-slate-700">
+                                                                        <Truck size={14} />
+                                                                    </div>
+                                                                    <span className="text-xs font-bold text-healthcare-dark dark:text-white">
+                                                                        {order.supplier?.name ||
+                                                                            'Unknown Supplier'}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+                                                        )}
+                                                        {procurementVisibleColumnSet.has('amount') && (
+                                                            <td className="px-6 py-4">
+                                                                <span className="text-sm font-black text-healthcare-dark dark:text-white">
+                                                                    RWF{' '}
+                                                                    {order.total_amount.toLocaleString()}
                                                                 </span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <span className="text-sm font-black text-healthcare-dark dark:text-white">
-                                                                RWF{' '}
-                                                                {order.total_amount.toLocaleString()}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div
-                                                                className={cn(
-                                                                    'w-fit px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5',
-                                                                    order.status.toUpperCase() ===
-                                                                        'RECEIVED'
-                                                                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                                    : [
-                                                                            'ORDERED',
-                                                                            'APPROVED',
-                                                                            'CONFIRMED',
-                                                                        ].includes(
-                                                                            order.status.toUpperCase(),
-                                                                        )
-                                                                            ? 'bg-teal-50 text-teal-600 border border-teal-100'
-                                                                            : order.status.toUpperCase() ===
-                                                                                'PENDING'
-                                                                                ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                                                : [
-                                                                                    'PARTIAL',
-                                                                                    'PARTIALLY_RECEIVED',
-                                                                                    'BACKORDERED',
-                                                                                ].includes(
+                                                            </td>
+                                                        )}
+                                                        {procurementVisibleColumnSet.has(
+                                                            'expected_delivery',
+                                                        ) && (
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <span
+                                                                    className={cn(
+                                                                        'text-xs font-bold',
+                                                                        order.expected_delivery_date &&
+                                                                            new Date(
+                                                                                order.expected_delivery_date,
+                                                                            ) < new Date() &&
+                                                                            ![
+                                                                                'RECEIVED',
+                                                                                'CANCELLED',
+                                                                            ].includes(
+                                                                                order.status.toUpperCase(),
+                                                                            )
+                                                                            ? 'text-rose-600'
+                                                                            : 'text-slate-500',
+                                                                    )}
+                                                                >
+                                                                    {order.expected_delivery_date
+                                                                        ? new Date(
+                                                                            order.expected_delivery_date,
+                                                                        ).toLocaleDateString()
+                                                                        : 'Not set'}
+                                                                </span>
+                                                            </td>
+                                                        )}
+                                                        {procurementVisibleColumnSet.has('status') && (
+                                                            <td className="px-6 py-4">
+                                                                <div
+                                                                    className={cn(
+                                                                        'w-fit px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5',
+                                                                        order.status.toUpperCase() ===
+                                                                            'RECEIVED'
+                                                                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                                            : [
+                                                                                  'ORDERED',
+                                                                                  'APPROVED',
+                                                                                  'CONFIRMED',
+                                                                              ].includes(
                                                                                     order.status.toUpperCase(),
                                                                                 )
-                                                                                    ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-                                                                                    : order.status.toUpperCase() ===
-                                                                                        'DRAFT'
-                                                                                        ? 'bg-slate-100 text-slate-500 border border-slate-200'
-                                                                                        : 'bg-red-50 text-red-600 border border-red-100',
-                                                                )}
-                                                            >
-                                                                {order.status.toUpperCase() ===
+                                                                              ? 'bg-teal-50 text-teal-600 border border-teal-100'
+                                                                              : order.status.toUpperCase() ===
+                                                                                  'PENDING'
+                                                                                ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                                : [
+                                                                                      'PARTIAL',
+                                                                                      'PARTIALLY_RECEIVED',
+                                                                                      'BACKORDERED',
+                                                                                  ].includes(
+                                                                                        order.status.toUpperCase(),
+                                                                                    )
+                                                                                  ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                                                                  : order.status.toUpperCase() ===
+                                                                                      'DRAFT'
+                                                                                    ? 'bg-slate-100 text-slate-500 border border-slate-200'
+                                                                                    : 'bg-red-50 text-red-600 border border-red-100',
+                                                                    )}
+                                                                >
+                                                                    {order.status.toUpperCase() ===
                                                                     'RECEIVED' ? (
-                                                                    <CheckCircle2 size={12} />
-                                                                ) : order.status.toUpperCase() ===
-                                                                    'PENDING' ? (
-                                                                    <Clock size={12} />
-                                                                ) : [
-                                                                    'ORDERED',
-                                                                    'APPROVED',
-                                                                    'CONFIRMED',
-                                                                ].includes(
-                                                                    order.status.toUpperCase(),
-                                                                ) ? (
-                                                                    <CheckCircle2
-                                                                        size={12}
-                                                                        className="text-teal-500"
-                                                                    />
-                                                                ) : [
-                                                                    'PARTIAL',
-                                                                    'PARTIALLY_RECEIVED',
-                                                                    'BACKORDERED',
-                                                                ].includes(
-                                                                    order.status.toUpperCase(),
-                                                                ) ? (
-                                                                    <Truck
-                                                                        size={12}
-                                                                        className="text-indigo-500"
-                                                                    />
-                                                                ) : order.status.toUpperCase() ===
-                                                                    'DRAFT' ? (
-                                                                    <FileText size={12} />
-                                                                ) : (
-                                                                    <XCircle size={12} />
-                                                                )}
-                                                                {toLabelCase(
-                                                                    order.status.toUpperCase() ===
-                                                                        'CONFIRMED'
-                                                                        ? 'ordered'
-                                                                        : order.status,
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-right">
-                                                            <div className="flex items-center justify-end gap-2">
-                                                                {user?.role
-                                                                    ?.toString()
-                                                                    ?.toLowerCase() !== 'auditor' && (
+                                                                        <CheckCircle2 size={12} />
+                                                                    ) : order.status.toUpperCase() ===
+                                                                      'PENDING' ? (
+                                                                        <Clock size={12} />
+                                                                    ) : [
+                                                                          'ORDERED',
+                                                                          'APPROVED',
+                                                                          'CONFIRMED',
+                                                                      ].includes(
+                                                                            order.status.toUpperCase(),
+                                                                        ) ? (
+                                                                        <CheckCircle2
+                                                                            size={12}
+                                                                            className="text-teal-500"
+                                                                        />
+                                                                    ) : [
+                                                                          'PARTIAL',
+                                                                          'PARTIALLY_RECEIVED',
+                                                                          'BACKORDERED',
+                                                                      ].includes(
+                                                                            order.status.toUpperCase(),
+                                                                        ) ? (
+                                                                        <Truck
+                                                                            size={12}
+                                                                            className="text-indigo-500"
+                                                                        />
+                                                                    ) : order.status.toUpperCase() ===
+                                                                      'DRAFT' ? (
+                                                                        <FileText size={12} />
+                                                                    ) : (
+                                                                        <XCircle size={12} />
+                                                                    )}
+                                                                    {toLabelCase(
+                                                                        order.status.toUpperCase() ===
+                                                                            'CONFIRMED'
+                                                                            ? 'ordered'
+                                                                            : order.status,
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        )}
+                                                        {procurementVisibleColumnSet.has('actions') && (
+                                                            <td className="px-6 py-4 text-right">
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    {user?.role
+                                                                        ?.toString()
+                                                                        ?.toLowerCase() !==
+                                                                        'auditor' && (
                                                                         <>
                                                                             {order.status.toUpperCase() ===
                                                                                 'DRAFT' && (
-                                                                                    <button
-                                                                                        onClick={() =>
-                                                                                            handleAction(
-                                                                                                order.id,
-                                                                                                'submit',
-                                                                                            )
-                                                                                        }
-                                                                                        className="px-3 py-1 bg-teal-500 text-white rounded-lg text-[10px] font-black hover:bg-teal-600 transition-colors shadow-sm"
-                                                                                    >
-                                                                                        Submit
-                                                                                    </button>
-                                                                                )}
-                                                                            {/* Internal approval removed as per new flow. Only supplier approves. */}
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        handleAction(
+                                                                                            order.id,
+                                                                                            'submit',
+                                                                                        )
+                                                                                    }
+                                                                                    className="h-9 px-3 bg-teal-500 text-white rounded-lg text-[10px] font-black hover:bg-teal-600 transition-colors shadow-sm touch-manipulation"
+                                                                                >
+                                                                                    Submit
+                                                                                </button>
+                                                                            )}
                                                                             {[
                                                                                 'APPROVED',
                                                                                 'CONFIRMED',
@@ -1133,17 +1384,17 @@ export function ProcurementPage() {
                                                                             ].includes(
                                                                                 order.status.toUpperCase(),
                                                                             ) && (
-                                                                                    <button
-                                                                                        onClick={() =>
-                                                                                            handleReceiveClick(
-                                                                                                order,
-                                                                                            )
-                                                                                        }
-                                                                                        className="px-3 py-1 bg-amber-500 text-white rounded-lg text-[10px] font-black hover:bg-amber-600 transition-colors shadow-sm"
-                                                                                    >
-                                                                                        Receive
-                                                                                    </button>
-                                                                                )}
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        handleReceiveClick(
+                                                                                            order,
+                                                                                        )
+                                                                                    }
+                                                                                    className="h-9 px-3 bg-amber-500 text-white rounded-lg text-[10px] font-black hover:bg-amber-600 transition-colors shadow-sm touch-manipulation"
+                                                                                >
+                                                                                    Receive
+                                                                                </button>
+                                                                            )}
                                                                             {[
                                                                                 'DRAFT',
                                                                                 'PENDING',
@@ -1151,57 +1402,60 @@ export function ProcurementPage() {
                                                                             ].includes(
                                                                                 order.status.toUpperCase(),
                                                                             ) && (
-                                                                                    <button
-                                                                                        onClick={() =>
-                                                                                            handleAction(
-                                                                                                order.id,
-                                                                                                'cancel',
-                                                                                            )
-                                                                                        }
-                                                                                        className="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
-                                                                                        title="Cancel PO"
-                                                                                    >
-                                                                                        <XCircle size={16} />
-                                                                                    </button>
-                                                                                )}
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        handleAction(
+                                                                                            order.id,
+                                                                                            'cancel',
+                                                                                        )
+                                                                                    }
+                                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors touch-manipulation"
+                                                                                    title="Cancel PO"
+                                                                                >
+                                                                                    <XCircle size={16} />
+                                                                                </button>
+                                                                            )}
                                                                         </>
                                                                     )}
-                                                                <button
-                                                                    onClick={() =>
-                                                                        pharmacyService.exportProcurementOrder(
-                                                                            order.id,
-                                                                        )
-                                                                    }
-                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
-                                                                    title="Export PO to Excel"
-                                                                >
-                                                                    <Download size={16} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() =>
-                                                                        navigate({
-                                                                            to: `/app/procurement/orders/${order.id}`,
-                                                                        })
-                                                                    }
-                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
-                                                                    title="View Details"
-                                                                >
-                                                                    <ArrowUpRight size={16} />
-                                                                </button>
-                                                            </div>
-                                                        </td>
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            pharmacyService.exportProcurementOrder(
+                                                                                order.id,
+                                                                            )
+                                                                        }
+                                                                        className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors touch-manipulation"
+                                                                        title="Export PO to Excel"
+                                                                    >
+                                                                        <Download size={16} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            navigate({
+                                                                                to: `/app/procurement/orders/${order.id}`,
+                                                                            })
+                                                                        }
+                                                                        className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors touch-manipulation"
+                                                                        title="View Details"
+                                                                    >
+                                                                        <ArrowUpRight size={16} />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        )}
                                                     </tr>
                                                 ))
                                             ) : (
                                                 <tr>
-                                                    <td colSpan={5} className="px-6 py-10 text-center">
+                                                    <td colSpan={visibleProcurementColumnCount} className="px-6 py-10 text-center">
                                                         <div className="flex flex-col items-center gap-2">
                                                             <AlertCircle
                                                                 size={32}
                                                                 className="text-slate-300"
                                                             />
                                                             <span className="text-slate-500 font-bold italic">
-                                                                No procurement orders found
+                                                                {activeTab === 'receiving'
+                                                                    ? 'No orders currently require receiving'
+                                                                    : 'No procurement orders found'}
                                                             </span>
                                                         </div>
                                                     </td>
@@ -1219,6 +1473,12 @@ export function ProcurementPage() {
                             totalItems={totalItems}
                             pageSize={limit}
                             onPageChange={setPage}
+                            onPageSizeChange={(size) => {
+                                setLimit(size);
+                                setPage(1);
+                            }}
+                            pageSizeOptions={[10, 25, 50, 100]}
+                            pageSizeLabel="Rows/Page"
                             loading={loading}
                         />
                     </>

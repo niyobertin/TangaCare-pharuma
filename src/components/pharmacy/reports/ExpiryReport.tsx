@@ -425,6 +425,7 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                                 <th className="px-6 py-4 whitespace-nowrap">Expiry</th>
                                 <th className="px-6 py-4 whitespace-nowrap">Days Left</th>
                                 <th className="px-6 py-4 text-right whitespace-nowrap">Quantity</th>
+                                <th className="px-6 py-4 whitespace-nowrap">Supplier</th>
                                 <th className="px-6 py-4 whitespace-nowrap">Risk</th>
                                 <th className="px-6 py-4 whitespace-nowrap">Recommended Action</th>
                                 <th className="px-6 py-4 text-right whitespace-nowrap">Trace</th>
@@ -476,6 +477,11 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                                                     {item.quantity.toLocaleString()}
                                                 </span>
                                             </td>
+                                            <td className="px-6 py-5 whitespace-nowrap">
+                                                <span className="text-xs font-bold text-slate-500">
+                                                    {String((item as any).supplier_name || (item as any).supplier?.name || 'N/A')}
+                                                </span>
+                                            </td>
                                             <td className="px-6 py-5">
                                                 <span
                                                     className={cn(
@@ -509,7 +515,7 @@ export function ExpiryReport({ facilityId }: { facilityId?: number }) {
                                 })
                             ) : (
                                 <tr>
-                                    <td colSpan={8} className="px-8 py-20 text-center">
+                                    <td colSpan={9} className="px-8 py-20 text-center">
                                         <div className="max-w-xs mx-auto">
                                             <div className="w-16 h-16 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-6 opacity-40">
                                                 <CheckCircle size={32} className="text-healthcare-primary" />

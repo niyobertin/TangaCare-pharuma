@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../../../context/AuthContext';
 import { pharmacyService } from '../../../services/pharmacy.service';
 import { SkeletonTable } from '../../ui/SkeletonTable';
@@ -23,6 +24,7 @@ const getRecommendedAction = (item: ReorderSuggestion): string => {
 };
 
 export function ReorderSuggestions() {
+    const navigate = useNavigate();
     const { user, facilityId } = useAuth();
     const effectiveFacilityId = facilityId ?? user?.facility_id;
     const [suggestions, setSuggestions] = useState<ReorderSuggestion[]>([]);
@@ -141,12 +143,13 @@ export function ReorderSuggestions() {
                     columns={6}
                     headers={[
                         'Medicine & ID',
+                        'Supplier',
                         'Stock Status',
                         'Daily Run-rate',
                         'Coverage',
                         'Recommended Action',
                     ]}
-                    columnAligns={['left', 'right', 'right', 'right', 'left']}
+                    columnAligns={['left', 'left', 'right', 'right', 'right', 'left']}
                     actions
                     className="border-none shadow-none"
                 />
@@ -174,6 +177,9 @@ export function ReorderSuggestions() {
                                     </th>
                                     <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-right">
                                         Stock Status
+                                    </th>
+                                    <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest">
+                                        Supplier
                                     </th>
                                     <th className="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-right">
                                         Daily Run-rate
@@ -226,9 +232,14 @@ export function ReorderSuggestions() {
                                                         {item.current_quantity}
                                                     </span>
                                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                        Point: {item.reorder_point}
+                                                        Min: {item.min_stock_level ?? item.reorder_point} • Reorder: {item.reorder_point}
                                                     </span>
                                                 </div>
+                                            </td>
+                                            <td className="px-6 py-5 whitespace-nowrap">
+                                                <span className="text-xs font-bold text-slate-500">
+                                                    {String((item as any).supplier_name || (item as any).supplier?.name || 'N/A')}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-5 text-right text-slate-500 whitespace-nowrap">
                                                 <span className="font-bold text-sm tracking-tight bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
@@ -261,16 +272,40 @@ export function ReorderSuggestions() {
                                                 </p>
                                             </td>
                                             <td className="px-6 py-5 text-right whitespace-nowrap">
-                                                <button
-                                                    onClick={() => handleOrder(item)}
-                                                    className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
-                                                        isCritical
-                                                            ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-200 dark:shadow-rose-900/20'
-                                                            : 'bg-healthcare-primary text-white hover:bg-teal-700 shadow-lg shadow-teal-200 dark:shadow-teal-900/20'
-                                                    }`}
-                                                >
-                                                    Order Now
-                                                </button>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => handleOrder(item)}
+                                                        className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${
+                                                            isCritical
+                                                                ? 'bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-200 dark:shadow-rose-900/20'
+                                                                : 'bg-healthcare-primary text-white hover:bg-teal-700 shadow-lg shadow-teal-200 dark:shadow-teal-900/20'
+                                                        }`}
+                                                    >
+                                                        Create PO
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            navigate({
+                                                                to: '/app/inventory' as any,
+                                                                search: { search: item.medicine_name } as any,
+                                                            })
+                                                        }
+                                                        className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                                    >
+                                                        Adjust
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            navigate({
+                                                                to: '/app/inventory' as any,
+                                                                search: { search: item.medicine_name } as any,
+                                                            })
+                                                        }
+                                                        className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                                    >
+                                                        Transfer
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     );

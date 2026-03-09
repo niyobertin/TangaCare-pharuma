@@ -126,6 +126,7 @@ export const reportService = {
             batch_id: number;
             batch_number: string;
             medicine_name: string;
+            supplier_name?: string;
             expiry_date: string;
             days_until_expiry: number;
             quantity: number;
@@ -136,6 +137,7 @@ export const reportService = {
             batch_id: number;
             batch_number: string;
             medicine_name: string;
+            supplier_name?: string;
             expiry_date: string;
             quantity: number;
             risk_level?: 'expired';
@@ -167,6 +169,9 @@ export const reportService = {
         facilityId: number;
         start_date?: string;
         end_date?: string;
+        movement_type?: string;
+        search?: string;
+        user_name?: string;
         page?: number;
         limit?: number;
     }): Promise<{ data: any[]; total: number; page: number; limit: number }> {

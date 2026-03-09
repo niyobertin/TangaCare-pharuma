@@ -1,82 +1,192 @@
+import type { ComponentType } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
     BookOpen,
     ClipboardCheck,
     Package,
+    Database,
     ShoppingCart,
+    Truck,
+    Zap,
+    Bell,
     ShieldAlert,
     BarChart3,
     Users,
+    Settings,
+    CheckCircle2,
     ArrowUpRight,
 } from 'lucide-react';
 
-const sections = [
+interface DocSection {
+    id: string;
+    title: string;
+    icon: ComponentType<{ size?: number; className?: string }>;
+    summary: string;
+    steps: string[];
+}
+
+const quickStart = [
+    'Open Dashboard and resolve critical low-stock/expiry alerts first.',
+    'Use Inventory search to find medicines before any manual edits.',
+    'Receive pending purchase orders before dispensing high-demand medicines.',
+    'Use stock movements to trace quantity changes before adjustments.',
+    'Run end-of-day reports and export for manager/auditor review.',
+];
+
+const sections: DocSection[] = [
     {
         id: 'setup',
         title: '1. Initial Setup',
         icon: ClipboardCheck,
-        points: [
-            'Create organization and facility profile.',
-            'Configure storage locations and temperature type.',
-            'Invite users and assign role-based permissions.',
-            'Define key thresholds: min stock, reorder points, and alert windows.',
+        summary: 'Configure master settings correctly before daily operations start.',
+        steps: [
+            'Create organization and branch records.',
+            'Invite users and assign roles with least-privilege permissions.',
+            'Set medicine-level reorder points and minimum stock levels.',
+            'Confirm tax, pricing, and dispensing defaults in settings.',
         ],
     },
     {
-        id: 'inventory',
-        title: '2. Medicines and Inventory',
+        id: 'navigation',
+        title: '2. Navigation Model',
+        icon: BookOpen,
+        summary: 'Use the same workflow sequence every day for consistency.',
+        steps: [
+            'Dashboard for operational awareness.',
+            'Inventory for medicines, batches, and stock integrity.',
+            'Procurement for suppliers, purchase orders, and receiving.',
+            'Sales/Dispensing for transactions and stock deduction.',
+            'Reports and Management for compliance and oversight.',
+        ],
+    },
+    {
+        id: 'dashboard',
+        title: '3. Dashboard Usage',
+        icon: BarChart3,
+        summary: 'Treat the dashboard as your control center, not just charts.',
+        steps: [
+            'Review today sales and inventory value.',
+            'Check low stock, out-of-stock, expiring soon, and expired alerts.',
+            'Prioritize urgent items before routine tasks.',
+            'Use quick links to jump into corrective workflows.',
+        ],
+    },
+    {
+        id: 'medicines',
+        title: '4. Medicines Management',
         icon: Package,
-        points: [
-            'Add medicines with code/barcode, dosage, and selling price.',
-            'Receive stock using batch number, expiry date, and unit cost.',
-            'Use FEFO discipline: earliest expiry must be dispensed first.',
-            'Run physical counts and approve variances to keep stock accurate.',
+        summary: 'Accurate medicine master data improves safety and speed.',
+        steps: [
+            'Create medicine with code, brand/generic details, strength, and dosage form.',
+            'Set selling price, reorder threshold, and minimum level.',
+            'Mark controlled medicines explicitly.',
+            'Update records through a single workflow to avoid duplicates.',
         ],
     },
     {
-        id: 'dispensing',
-        title: '3. Dispensing Workflow',
-        icon: ShieldAlert,
-        points: [
-            'Search or scan medicine barcode from the dispensing screen.',
-            'Select patient and verify controlled-drug requirements.',
-            'Record payments and complete sale to auto-adjust inventory.',
-            'Use receipt and transaction history for traceability.',
+        id: 'batches',
+        title: '5. Batch and Expiry Control',
+        icon: Database,
+        summary: 'Batch traceability is mandatory for pharmacy operations.',
+        steps: [
+            'Capture batch number, expiry date, quantity, and supplier on receiving.',
+            'Follow FEFO when dispensing and transfers.',
+            'Use expiry monitoring daily for risk visibility.',
+            'Quarantine and remove expired batches immediately.',
         ],
     },
     {
         id: 'procurement',
-        title: '4. Procurement and Reorder',
+        title: '6. Procurement and Purchase Orders',
         icon: ShoppingCart,
-        points: [
-            'Review reorder suggestions daily.',
-            'Create purchase orders directly from low-stock signals.',
-            'Track supplier performance by lead time and fulfillment.',
-            'Receive deliveries and reconcile quantity variances on arrival.',
+        summary: 'Keep ordering and receiving connected for auditability.',
+        steps: [
+            'Create PO from low-stock needs and supplier terms.',
+            'Track statuses: pending, partially received, received, cancelled.',
+            'Include expected delivery for planning and follow-up.',
+            'Use row actions for quick view, receive, or cancel.',
         ],
     },
     {
-        id: 'safety',
-        title: '5. Safety and Compliance',
-        icon: Users,
-        points: [
-            'Use recalls to freeze affected batch stock immediately.',
-            'Keep audit logs enabled for adjustments and sensitive actions.',
-            'Maintain role separation for inventory edits and approvals.',
-            'Review alerts for expiry risk, stockout risk, and controlled variance.',
+        id: 'receiving',
+        title: '7. Receiving Workflow',
+        icon: Truck,
+        summary: 'Receiving must validate quality and quantity before posting stock.',
+        steps: [
+            'Match supplier shipment to PO lines when PO exists.',
+            'Validate expiry and duplicate batch warnings before submit.',
+            'Confirm quantity and cost values carefully.',
+            'Submit receipt and verify resulting stock updates.',
+        ],
+    },
+    {
+        id: 'dispensing',
+        title: '8. Sales and Dispensing',
+        icon: Zap,
+        summary: 'Dispensing flow must remain fast and clinically safe.',
+        steps: [
+            'Search medicine by name, code, or barcode.',
+            'Confirm dosage and controlled-drug requirements.',
+            'Complete sale to auto-record stock movements.',
+            'Use history to review, reconcile, or investigate transactions.',
+        ],
+    },
+    {
+        id: 'alerts',
+        title: '9. Alerts and Safety Indicators',
+        icon: Bell,
+        summary: 'Alerts are operational tasks and should never be ignored.',
+        steps: [
+            'Monitor low stock and out-of-stock indicators continuously.',
+            'Review near-expiry and expired alerts daily.',
+            'Escalate controlled medicine anomalies immediately.',
+            'Use clear color semantics for safe/attention/critical states.',
+        ],
+    },
+    {
+        id: 'movements',
+        title: '10. Stock Movements and Adjustments',
+        icon: ShieldAlert,
+        summary: 'Manual stock changes require strict control and reasons.',
+        steps: [
+            'Filter stock movements by type, medicine, user, and date.',
+            'Use adjustments only for damage, expiry removal, or correction.',
+            'Always provide reason notes for every adjustment.',
+            'Review movement history before and after high-risk changes.',
         ],
     },
     {
         id: 'reports',
-        title: '6. Reports and KPIs',
+        title: '11. Reports and Exports',
         icon: BarChart3,
-        points: [
-            'Track inventory turnover, days on hand, and stock value.',
-            'Monitor inventory accuracy from latest physical counts.',
-            'Use movement history for investigation and audit support.',
-            'Export reports for management, finance, and inspections.',
+        summary: 'Reports support operations, management, and compliance.',
+        steps: [
+            'Use inventory reports for valuation, low stock, and expiry risk.',
+            'Use sales reports for trend and top-selling analysis.',
+            'Use purchasing reports for supplier and lead-time performance.',
+            'Export PDF/Excel and archive by policy.',
         ],
     },
+    {
+        id: 'roles',
+        title: '12. Roles, Permissions, and Settings',
+        icon: Users,
+        summary: 'Role-based UX protects safety-critical actions.',
+        steps: [
+            'Owner/admin handles users, branches, and policy settings.',
+            'Pharmacist and technician focus on dispensing/inventory operations.',
+            'Cashier uses sales flows with restricted stock mutation.',
+            'Auditor uses read-focused audit and report surfaces.',
+        ],
+    },
+];
+
+const dailyChecklist = [
+    'Resolve all unresolved critical alerts.',
+    'Verify received stock is posted with valid batch and expiry details.',
+    'Review unusual stock adjustments and confirm reasons.',
+    'Reconcile dispensing totals against stock movements.',
+    'Export required daily management reports.',
 ];
 
 export function DocsPage() {
@@ -86,7 +196,9 @@ export function DocsPage() {
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
                     <Link to="/" className="flex items-center gap-3">
                         <img src="/logo.png" alt="TangaCare" className="w-9 h-9 object-contain" />
-                        <span className="text-lg font-black text-slate-900 dark:text-white">TangaCare Docs</span>
+                        <span className="text-lg font-black text-slate-900 dark:text-white">
+                            TangaCare Docs
+                        </span>
                     </Link>
                     <div className="flex items-center gap-2">
                         <Link
@@ -115,17 +227,32 @@ export function DocsPage() {
                         </div>
                         <div>
                             <h1 className="text-3xl font-black text-healthcare-dark dark:text-white">
-                                How To Use TangaCare
+                                Complete System Documentation
                             </h1>
                             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 max-w-3xl">
-                                Practical guide for owners, pharmacists, and store teams to run setup, inventory, dispensing,
-                                procurement, and compliance workflows correctly.
+                                Full workflow guide for pharmacy operations across setup, inventory, procurement, dispensing, safety, reporting, and multi-role governance.
                             </p>
                         </div>
                     </div>
                 </section>
 
-                <section className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+                    <h2 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">
+                        Daily Quick Start
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+                        {quickStart.map((item) => (
+                            <div
+                                key={item}
+                                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-3"
+                            >
+                                <p className="text-sm text-slate-700 dark:text-slate-200">{item}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                     {sections.map((section) => (
                         <a
                             key={section.id}
@@ -150,27 +277,43 @@ export function DocsPage() {
                                     <Icon size={18} className="text-healthcare-primary" />
                                     {section.title}
                                 </h2>
-                                <ul className="mt-3 space-y-2">
-                                    {section.points.map((point) => (
-                                        <li key={point} className="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-2">
-                                            <span className="mt-1 h-1.5 w-1.5 rounded-full bg-healthcare-primary" />
-                                            <span>{point}</span>
+                                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                                    {section.summary}
+                                </p>
+                                <ol className="mt-3 space-y-2">
+                                    {section.steps.map((step, idx) => (
+                                        <li
+                                            key={step}
+                                            className="text-sm text-slate-700 dark:text-slate-200 flex items-start gap-2"
+                                        >
+                                            <span className="mt-0.5 h-5 min-w-5 rounded-full bg-healthcare-primary/10 text-healthcare-primary text-[11px] font-black flex items-center justify-center">
+                                                {idx + 1}
+                                            </span>
+                                            <span>{step}</span>
                                         </li>
                                     ))}
-                                </ul>
+                                </ol>
                             </article>
                         );
                     })}
                 </section>
 
-                <section className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <h3 className="text-base font-black text-teal-800 dark:text-teal-200">
-                            Need team onboarding?
+                <section
+                    id="daily-checklist"
+                    className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-2xl p-5 flex flex-wrap items-start justify-between gap-4"
+                >
+                    <div className="space-y-2">
+                        <h3 className="text-base font-black text-teal-800 dark:text-teal-200 flex items-center gap-2">
+                            <CheckCircle2 size={16} />
+                            End-of-Day Checklist
                         </h3>
-                        <p className="text-sm text-teal-700 dark:text-teal-300">
-                            Use this page as your SOP baseline and train every new user before access is granted.
-                        </p>
+                        <ul className="space-y-1.5">
+                            {dailyChecklist.map((item) => (
+                                <li key={item} className="text-sm text-teal-700 dark:text-teal-300">
+                                    {item}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
                     <a
                         href="#top"
@@ -180,7 +323,19 @@ export function DocsPage() {
                         <ArrowUpRight size={14} />
                     </a>
                 </section>
+
+                <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+                    <h3 className="text-sm font-black text-slate-700 dark:text-slate-100 flex items-center gap-2 uppercase tracking-widest">
+                        <Settings size={16} className="text-healthcare-primary" />
+                        Documentation Notes
+                    </h3>
+                    <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                        This documentation is hosted on the marketing web side (`/docs`) and is intended as the primary training and reference manual for all teams.
+                    </p>
+                </section>
             </main>
         </div>
     );
 }
+
+export default DocsPage;

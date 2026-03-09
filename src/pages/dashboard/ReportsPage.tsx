@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     TrendingUp,
     Calendar,
@@ -1045,6 +1045,9 @@ function StockReports({ facilityId }: { facilityId?: number }) {
     const [expiryWindowDays, setExpiryWindowDays] = useState(90);
     const [sortBy, setSortBy] = useState<SortOption>('name_asc');
     const [rowLimit, setRowLimit] = useState(50);
+    const stockTableRef = useRef<HTMLDivElement | null>(null);
+    const [stockScrollTop, setStockScrollTop] = useState(0);
+    const [stockViewportHeight, setStockViewportHeight] = useState(0);
 
     useEffect(() => {
         if (!facilityId) return;
@@ -1219,6 +1222,45 @@ function StockReports({ facilityId }: { facilityId?: number }) {
         () => filteredRows.slice(0, Math.max(1, rowLimit)),
         [filteredRows, rowLimit],
     );
+
+    const shouldVirtualizeRows = visibleRows.length >= 80;
+    const stockRowHeight = 54;
+    const stockOverscan = 6;
+    const stockStartIndex = shouldVirtualizeRows
+        ? Math.max(0, Math.floor(stockScrollTop / stockRowHeight) - stockOverscan)
+        : 0;
+    const stockVisibleRowCount = shouldVirtualizeRows
+        ? Math.ceil((stockViewportHeight || 560) / stockRowHeight) + stockOverscan * 2
+        : visibleRows.length;
+    const stockEndIndex = shouldVirtualizeRows
+        ? Math.min(visibleRows.length, stockStartIndex + stockVisibleRowCount)
+        : visibleRows.length;
+    const renderedRows = shouldVirtualizeRows
+        ? visibleRows.slice(stockStartIndex, stockEndIndex)
+        : visibleRows;
+    const stockTopSpacerHeight = shouldVirtualizeRows ? stockStartIndex * stockRowHeight : 0;
+    const stockBottomSpacerHeight = shouldVirtualizeRows
+        ? Math.max(0, (visibleRows.length - stockEndIndex) * stockRowHeight)
+        : 0;
+
+    useEffect(() => {
+        const updateViewport = () => {
+            if (stockTableRef.current) {
+                setStockViewportHeight(stockTableRef.current.clientHeight);
+            }
+        };
+
+        updateViewport();
+        window.addEventListener('resize', updateViewport);
+        return () => window.removeEventListener('resize', updateViewport);
+    }, [stockTableRef]);
+
+    useEffect(() => {
+        setStockScrollTop(0);
+        if (stockTableRef.current) {
+            stockTableRef.current.scrollTop = 0;
+        }
+    }, [searchQuery, statusFilter, dosageFormFilter, expiryWindowDays, sortBy, rowLimit]);
 
     const statusCounts = useMemo(() => {
         return detailedRows.reduce<Record<InventoryStatus, number>>(
@@ -1459,6 +1501,7 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                             <option value="50">50 rows</option>
                             <option value="100">100 rows</option>
                             <option value="200">200 rows</option>
+                            <option value="500">500 rows</option>
                         </select>
                         <button
                             onClick={() => {
@@ -1476,7 +1519,11 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+                <div
+                    ref={stockTableRef}
+                    onScroll={(event) => setStockScrollTop(event.currentTarget.scrollTop)}
+                    className="overflow-x-auto overflow-y-auto max-h-[560px] border border-slate-200 dark:border-slate-800 rounded-xl"
+                >
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead className="bg-slate-50 dark:bg-slate-800/50">
                             <tr className="text-[10px] uppercase tracking-wider text-slate-400">
@@ -1502,66 +1549,81 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                                     </td>
                                 </tr>
                             ) : (
-                                visibleRows.map((row) => (
-                                    <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                                        <td className="px-4 py-3 whitespace-nowrap">
-                                            <div className="font-black text-slate-800 dark:text-white">
-                                                {row.name}
-                                            </div>
-                                            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">
-                                                {row.brand_name || 'N/A'}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
-                                            {row.code}
-                                        </td>
-                                        <td className="px-4 py-3 text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
-                                            {row.dosage_form || 'N/A'}
-                                        </td>
-                                        <td className="px-4 py-3 text-right font-black text-slate-800 dark:text-white whitespace-nowrap">
-                                            {Number(row.stock_quantity || 0).toLocaleString()}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
-                                            RWF {Number(row.cost_price || 0).toLocaleString()}
-                                        </td>
-                                        <td className="px-4 py-3 text-right font-black text-healthcare-primary whitespace-nowrap">
-                                            RWF {Number(row.inventory_value || 0).toLocaleString()}
-                                        </td>
-                                        <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
-                                            {row.expiry_date
-                                                ? new Date(row.expiry_date).toLocaleDateString()
-                                                : 'N/A'}
-                                        </td>
-                                        <td className="px-4 py-3 text-center font-semibold whitespace-nowrap">
-                                            {row.days_to_expiry === null ? (
-                                                <span className="text-slate-400">—</span>
-                                            ) : row.days_to_expiry < 0 ? (
-                                                <span className="text-rose-600">
-                                                    {Math.abs(row.days_to_expiry)}d overdue
-                                                </span>
-                                            ) : (
-                                                <span className="text-slate-700 dark:text-slate-200">
-                                                    {row.days_to_expiry}d
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3 text-center whitespace-nowrap">
-                                            <span
-                                                className={cn(
-                                                    'px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider whitespace-nowrap',
-                                                    statusClassName[row.status],
+                                <>
+                                    {shouldVirtualizeRows && stockTopSpacerHeight > 0 && (
+                                        <tr>
+                                            <td colSpan={10} style={{ height: `${stockTopSpacerHeight}px` }} />
+                                        </tr>
+                                    )}
+                                    {renderedRows.map((row) => (
+                                        <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                                            <td className="px-4 py-3 whitespace-nowrap">
+                                                <div className="font-black text-slate-800 dark:text-white">
+                                                    {row.name}
+                                                </div>
+                                                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide whitespace-nowrap">
+                                                    {row.brand_name || 'N/A'}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                                                {row.code}
+                                            </td>
+                                            <td className="px-4 py-3 text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
+                                                {row.dosage_form || 'N/A'}
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-black text-slate-800 dark:text-white whitespace-nowrap">
+                                                {Number(row.stock_quantity || 0).toLocaleString()}
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
+                                                RWF {Number(row.cost_price || 0).toLocaleString()}
+                                            </td>
+                                            <td className="px-4 py-3 text-right font-black text-healthcare-primary whitespace-nowrap">
+                                                RWF {Number(row.inventory_value || 0).toLocaleString()}
+                                            </td>
+                                            <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
+                                                {row.expiry_date
+                                                    ? new Date(row.expiry_date).toLocaleDateString()
+                                                    : 'N/A'}
+                                            </td>
+                                            <td className="px-4 py-3 text-center font-semibold whitespace-nowrap">
+                                                {row.days_to_expiry === null ? (
+                                                    <span className="text-slate-400">—</span>
+                                                ) : row.days_to_expiry < 0 ? (
+                                                    <span className="text-rose-600">
+                                                        {Math.abs(row.days_to_expiry)}d overdue
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-slate-700 dark:text-slate-200">
+                                                        {row.days_to_expiry}d
+                                                    </span>
                                                 )}
-                                            >
-                                                {statusLabel[row.status]}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-center text-slate-500 dark:text-slate-400 text-xs font-semibold whitespace-nowrap">
-                                            {row.created_at
-                                                ? new Date(row.created_at).toLocaleDateString()
-                                                : 'N/A'}
-                                        </td>
-                                    </tr>
-                                ))
+                                            </td>
+                                            <td className="px-4 py-3 text-center whitespace-nowrap">
+                                                <span
+                                                    className={cn(
+                                                        'px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider whitespace-nowrap',
+                                                        statusClassName[row.status],
+                                                    )}
+                                                >
+                                                    {statusLabel[row.status]}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-center text-slate-500 dark:text-slate-400 text-xs font-semibold whitespace-nowrap">
+                                                {row.created_at
+                                                    ? new Date(row.created_at).toLocaleDateString()
+                                                    : 'N/A'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {shouldVirtualizeRows && stockBottomSpacerHeight > 0 && (
+                                        <tr>
+                                            <td
+                                                colSpan={10}
+                                                style={{ height: `${stockBottomSpacerHeight}px` }}
+                                            />
+                                        </tr>
+                                    )}
+                                </>
                             )}
                         </tbody>
                     </table>

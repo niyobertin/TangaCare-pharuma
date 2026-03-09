@@ -43,6 +43,8 @@ export interface Medicine {
     code: string;
     barcode?: string;
     name: string;
+    generic_name?: string;
+    manufacturer?: string;
     brand_name?: string;
     strength: string;
     dosage_form: string;
@@ -50,13 +52,22 @@ export interface Medicine {
     selling_price: number;
     cost_price?: number;
     markup_percent?: number;
+    min_stock_level?: number;
+    reorder_point?: number;
+    target_stock_level?: number;
+    lead_time_days?: number;
+    safety_stock_quantity?: number;
     category_id?: number;
     category?: MedicineCategory;
+    supplier_name?: string;
     is_controlled_drug: boolean;
+    controlled_flag?: boolean;
     drug_schedule?: 'unclassified' | 'prescription_only' | 'controlled_substance_sch_ii' | 'controlled_substance_sch_iii' | 'controlled_substance_sch_iv' | 'pharmacist_only';
     stock_quantity?: number;
     expiry_date?: string;
     created_at?: string;
+    updated_at?: string;
+    last_updated?: string;
     allow_partial_sales?: boolean;
     units_per_package?: number;
     base_unit?: string;
@@ -171,6 +182,8 @@ export interface Batch {
     current_quantity: number;
     unit_cost: number;
     status: 'active' | 'expired' | 'depleted' | 'quarantined';
+    supplier_name?: string;
+    received_date?: string;
     location_id?: number | null;
     location?: StorageLocation | null;
 }
@@ -405,6 +418,11 @@ export interface CreateMedicineDto {
     dosage_form: string;
     unit: string;
     selling_price: number;
+    min_stock_level?: number;
+    reorder_point?: number;
+    target_stock_level?: number;
+    lead_time_days?: number;
+    safety_stock_quantity?: number;
 }
 
 export type SaleStatus = 'paid' | 'partially_paid' | 'unpaid' | 'voided';
@@ -588,6 +606,7 @@ export interface ReorderSuggestion {
     days_of_cover?: number;
     deficit_quantity?: number;
     recommended_action?: string;
+    supplier_name?: string;
     urgency: 'low' | 'medium' | 'high';
 }
 
@@ -847,6 +866,21 @@ export interface DashboardSummary {
     payments: PaymentBreakdown[];
     expiry_risk: ExpiryRiskBuckets;
     sales_trend?: Array<{ date: string; sales: number }>;
+}
+
+export interface GlobalSearchResultItem {
+    id: string;
+    label: string;
+    meta: string;
+    to: string;
+}
+
+export interface GlobalSearchResults {
+    medicines: GlobalSearchResultItem[];
+    batches: GlobalSearchResultItem[];
+    suppliers: GlobalSearchResultItem[];
+    purchaseOrders: GlobalSearchResultItem[];
+    stockMovements: GlobalSearchResultItem[];
 }
 
 // Batch Recall Types

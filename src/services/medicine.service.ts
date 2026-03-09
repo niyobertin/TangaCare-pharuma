@@ -17,6 +17,11 @@ export const medicineService = {
         end_date?: string;
         sort_by?: string;
         min_stock?: number;
+        category?: string;
+        low_stock_only?: boolean;
+        expiring_soon?: boolean;
+        controlled_only?: boolean;
+        supplier_name?: string;
     }): Promise<PaginatedResponse<Medicine>> {
         const response = await api.get<any>('/pharmacy/medicines', { params });
         return normalizePaginatedResponse<Medicine>(response.data);

@@ -161,32 +161,32 @@ export function CreatePurchaseOrderModal({
     });
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-teal-900/20 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl border border-teal-500/10 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-teal-900/20 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[100dvh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-teal-500/10 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
                 { }
-                <div className="bg-teal-500/5 p-6 flex justify-between items-center border-b border-teal-500/10">
-                    <div className="flex items-center gap-3">
+                <div className="bg-teal-500/5 p-4 sm:p-6 flex justify-between items-center border-b border-teal-500/10">
+                    <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20">
                             <ShoppingCart className="text-white" size={20} />
                         </div>
-                        <div>
-                            <h3 className="text-lg font-black text-healthcare-dark">
+                        <div className="min-w-0">
+                            <h3 className="text-base sm:text-lg font-black text-healthcare-dark truncate">
                                 New Purchase Order
                             </h3>
-                            <p className="text-[10px] text-teal-600 font-black uppercase tracking-widest">
+                            <p className="text-[10px] text-teal-600 font-black uppercase tracking-widest truncate">
                                 Inventory Replenishment
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-healthcare-primary transition-all"
+                        className="h-10 w-10 inline-flex items-center justify-center hover:bg-white dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-healthcare-primary transition-all"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 pb-24 sm:pb-6">
                     { }
                     <div className="space-y-6">
                         <div className="space-y-1.5">
@@ -195,7 +195,7 @@ export function CreatePurchaseOrderModal({
                             </label>
                             <select
                                 {...register('supplier_id')}
-                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 rounded-2xl outline-none transition-all font-bold text-sm ${errors.supplier_id
+                                className={`w-full h-11 px-4 bg-slate-50 dark:bg-slate-800/50 border-2 rounded-2xl outline-none transition-all font-bold text-sm ${errors.supplier_id
                                     ? 'border-red-500 focus:ring-red-500/10'
                                     : 'border-transparent focus:border-teal-500/20 focus:bg-white dark:focus:bg-slate-800'
                                     }`}
@@ -228,10 +228,10 @@ export function CreatePurchaseOrderModal({
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Search by name or code..."
-                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-teal-500/20 focus:bg-white dark:focus:bg-slate-800 rounded-2xl outline-none transition-all font-bold text-sm"
+                                    className="w-full h-11 pl-11 pr-4 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-teal-500/20 focus:bg-white dark:focus:bg-slate-800 rounded-2xl outline-none transition-all font-bold text-sm"
                                 />
                             </div>
-                            <div className="bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 h-[300px] overflow-y-auto p-2 space-y-1">
+                            <div className="bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 h-[220px] sm:h-[300px] overflow-y-auto p-2 space-y-1">
                                 {filteredMedicines.map((med) => (
                                     <button
                                         key={med.id}
@@ -287,15 +287,16 @@ export function CreatePurchaseOrderModal({
                                     return (
                                         <div
                                             key={field.id}
-                                            className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-2"
+                                        className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-2"
                                         >
                                             <div className="flex justify-between items-start">
                                                 <p className="text-xs font-black text-healthcare-dark">
                                                     {field.medicine_name}
                                                 </p>
                                                 <button
+                                                    type="button"
                                                     onClick={() => remove(index)}
-                                                    className="text-slate-300 hover:text-red-500 transition-colors"
+                                                    className="h-8 w-8 inline-flex items-center justify-center rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors touch-manipulation"
                                                 >
                                                     <X size={14} />
                                                 </button>
@@ -323,7 +324,7 @@ export function CreatePurchaseOrderModal({
                                                         type="number"
                                                         min="1"
                                                         {...register(`items.${index}.quantity`)}
-                                                        className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.quantity
+                                                        className={`w-full h-10 px-2 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.quantity
                                                             ? 'border-red-500'
                                                             : 'focus:border-teal-500 font-bold'
                                                             }`}
@@ -337,7 +338,7 @@ export function CreatePurchaseOrderModal({
                                                         type="number"
                                                         min="0"
                                                         {...register(`items.${index}.unit_price`)}
-                                                        className={`w-full px-2 py-1 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.unit_price
+                                                        className={`w-full h-10 px-2 bg-slate-50 dark:bg-slate-800 border rounded-lg text-xs font-bold transition-all ${errors.items?.[index]?.unit_price
                                                             ? 'border-red-500'
                                                             : 'focus:border-teal-500 font-bold'
                                                             }`}
@@ -355,30 +356,42 @@ export function CreatePurchaseOrderModal({
                             </p>
                         )}
 
-                        { }
-                        <div className="bg-teal-500/5 p-4 rounded-2xl border border-teal-500/10 space-y-4">
-                            <div className="flex justify-between items-center">
-                                <span className="text-[10px] font-black uppercase text-teal-600 tracking-widest">
-                                    Total Amount
-                                </span>
-                                <span className="text-lg font-black text-healthcare-dark underline decoration-teal-500/30 decoration-4">
-                                    RWF {totalAmount.toLocaleString()}
-                                </span>
-                            </div>
-                            <button
-                                onClick={handleSubmit(onSubmit)}
-                                disabled={loading || fields.length === 0 || hasCostAboveSelling}
-                                className="w-full flex items-center justify-center gap-2 py-3 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/20 disabled:opacity-50 active:scale-[0.98]"
-                            >
-                                {loading ? <Loader2 className="animate-spin" size={18} /> : null}
-                                Generate Purchase Order
-                            </button>
-                            {hasCostAboveSelling && (
+                        {hasCostAboveSelling && (
+                            <div className="bg-red-50 p-3 rounded-xl border border-red-200">
                                 <p className="text-[10px] font-black text-red-600 text-center">
                                     Fix items where Unit Cost is above Selling Price before creating PO.
                                 </p>
-                            )}
-                        </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="sticky bottom-0 border-t border-teal-500/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur p-4 sm:p-6 flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-3">
+                    <div className="flex items-center justify-between sm:justify-start gap-2">
+                        <span className="text-[10px] font-black uppercase text-teal-600 tracking-widest">
+                            Total Amount
+                        </span>
+                        <span className="text-base sm:text-lg font-black text-healthcare-dark dark:text-white">
+                            RWF {totalAmount.toLocaleString()}
+                        </span>
+                    </div>
+                    <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="h-11 px-4 w-full sm:w-auto border border-slate-200 dark:border-slate-700 rounded-xl font-black text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all touch-manipulation"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleSubmit(onSubmit)}
+                            disabled={loading || fields.length === 0 || hasCostAboveSelling}
+                            className="h-11 px-5 w-full sm:w-auto flex items-center justify-center gap-2 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/20 disabled:opacity-50 active:scale-[0.98] touch-manipulation"
+                        >
+                            {loading ? <Loader2 className="animate-spin" size={18} /> : null}
+                            Generate Purchase Order
+                        </button>
                     </div>
                 </div>
             </div>

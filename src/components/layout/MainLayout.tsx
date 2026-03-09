@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Outlet, Link, useNavigate } from '@tanstack/react-router';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Outlet, Link, useNavigate, useLocation } from '@tanstack/react-router';
 import {
     BarChart3,
     Package,
@@ -26,6 +26,7 @@ import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
 import { GlobalLoading } from '../ui/GlobalLoading';
 import { isSuperAdmin } from '../../types/auth';
+import type { GlobalSearchResultItem, GlobalSearchResults } from '../../types/pharmacy';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useTheme } from '../../context/ThemeContext';
@@ -34,6 +35,7 @@ import { FacilityEmptyState } from '../facility/FacilityEmptyState';
 import { CreateFacilityModal } from '../facility/CreateFacilityModal';
 import { SetupPharmacyModal } from '../facility/SetupPharmacyModal';
 import { JoinOrganizationModal } from '../facility/JoinOrganizationModal';
+import { pharmacyService } from '../../services/pharmacy.service';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -48,195 +50,237 @@ interface NavItem {
     children?: NavItem[];
 }
 
-const NAV_ITEMS: NavItem[] = [
+interface NavSection {
+    id: string;
+    label: string;
+    items: NavItem[];
+}
+
+type GlobalSearchGroupKey =
+    | 'medicines'
+    | 'batches'
+    | 'suppliers'
+    | 'purchaseOrders'
+    | 'stockMovements';
+
+const EMPTY_GLOBAL_SEARCH_RESULTS: GlobalSearchResults = {
+    medicines: [],
+    batches: [],
+    suppliers: [],
+    purchaseOrders: [],
+    stockMovements: [],
+};
+
+const GLOBAL_SEARCH_GROUPS: Array<{ key: GlobalSearchGroupKey; label: string }> = [
+    { key: 'medicines', label: 'Medicines' },
+    { key: 'batches', label: 'Batches' },
+    { key: 'suppliers', label: 'Suppliers' },
+    { key: 'purchaseOrders', label: 'Purchase Orders' },
+    { key: 'stockMovements', label: 'Stock Movements' },
+];
+
+const NAV_SECTIONS: NavSection[] = [
     {
-        to: '/app',
-        icon: BarChart3,
+        id: 'dashboard',
         label: 'Dashboard',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'SUPER ADMIN',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'OWNER',
-            'CASHIER',
-            'PHARMACIST',
-            'STORE_MANAGER',
-            'STORE MANAGER',
-            'AUDITOR',
-            'ADMIN',
+        items: [
+            {
+                to: '/app',
+                icon: BarChart3,
+                label: 'Dashboard',
+                allowedRoles: [
+                    'SUPER_ADMIN',
+                    'SUPER ADMIN',
+                    'FACILITY_ADMIN',
+                    'FACILITY ADMIN',
+                    'OWNER',
+                    'CASHIER',
+                    'PHARMACIST',
+                    'STORE_MANAGER',
+                    'STORE MANAGER',
+                    'AUDITOR',
+                    'ADMIN',
+                ],
+            },
+            {
+                to: '/app/alerts',
+                icon: Bell,
+                label: 'Alerts',
+                allowedRoles: [
+                    'SUPER_ADMIN',
+                    'FACILITY_ADMIN',
+                    'FACILITY ADMIN',
+                    'OWNER',
+                    'STORE_MANAGER',
+                    'STORE MANAGER',
+                    'PHARMACIST',
+                    'AUDITOR',
+                    'ADMIN',
+                ],
+            },
         ],
     },
     {
-        to: '/app/organizations',
-        icon: Building2,
-        label: 'Organizations',
-        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN'],
-        allowedPermissions: ['organization:manage'],
-    },
-    {
-        to: '/app/users',
-        icon: Users,
-        label: 'Users',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'SUPER ADMIN',
-            'OWNER',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'AUDITOR',
+        id: 'inventory',
+        label: 'Inventory',
+        items: [
+            {
+                to: '/app/inventory',
+                icon: Package,
+                label: 'Inventory',
+                allowedRoles: [
+                    'SUPER_ADMIN',
+                    'FACILITY_ADMIN',
+                    'FACILITY ADMIN',
+                    'OWNER',
+                    'CASHIER',
+                    'STORE_MANAGER',
+                    'STORE MANAGER',
+                    'PHARMACIST',
+                    'AUDITOR',
+                    'ADMIN',
+                    'DOCTOR',
+                ],
+                children: [
+                    { to: '/app/inventory', icon: Package, label: 'Medicines' },
+                    { to: '/app/stock', icon: Database, label: 'Batches' },
+                    { to: '/app/analytics/recall', icon: Bell, label: 'Expiry Monitoring' },
+                    { to: '/app/analytics/low-stock', icon: Bell, label: 'Low Stock' },
+                    { to: '/app/stocktaking', icon: Database, label: 'Stock Adjustments' },
+                    { to: '/app/stock-movements', icon: Database, label: 'Stock Movements' },
+                ],
+            },
         ],
-        allowedPermissions: ['users:read', 'users:manage'],
     },
     {
-        to: '/app/facilities',
-        icon: Factory,
-        label: 'Facilities',
-        allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER', 'AUDITOR'],
-        allowedPermissions: ['facility:read', 'facility:manage'],
-    },
-    {
-        to: '/app/procurement',
-        icon: ShoppingCart,
+        id: 'procurement',
         label: 'Procurement',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'OWNER',
-            'STORE_MANAGER',
-            'STORE MANAGER',
-            'AUDITOR',
-            'ADMIN',
+        items: [
+            {
+                to: '/app/procurement/orders',
+                icon: ShoppingCart,
+                label: 'Procurement',
+                allowedRoles: [
+                    'SUPER_ADMIN',
+                    'FACILITY_ADMIN',
+                    'FACILITY ADMIN',
+                    'OWNER',
+                    'STORE_MANAGER',
+                    'STORE MANAGER',
+                    'AUDITOR',
+                    'ADMIN',
+                ],
+                children: [
+                    { to: '/app/procurement/suppliers', icon: Factory, label: 'Suppliers' },
+                    { to: '/app/procurement/orders', icon: ShoppingCart, label: 'Purchase Orders' },
+                    { to: '/app/procurement/receiving', icon: Database, label: 'Receiving' },
+                ],
+            },
         ],
     },
     {
-        to: '/app/dispensing',
-        icon: Zap,
-        label: 'Dispensing',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'OWNER',
-            'CASHIER',
-            'PHARMACIST',
-            'AUDITOR',
-            'ADMIN',
+        id: 'sales',
+        label: 'Sales / Dispensing',
+        items: [
+            {
+                to: '/app/dispensing',
+                icon: Zap,
+                label: 'Sales & Dispensing',
+                allowedRoles: [
+                    'SUPER_ADMIN',
+                    'FACILITY_ADMIN',
+                    'FACILITY ADMIN',
+                    'OWNER',
+                    'CASHIER',
+                    'PHARMACIST',
+                    'STORE_MANAGER',
+                    'STORE MANAGER',
+                    'AUDITOR',
+                    'ADMIN',
+                ],
+                children: [
+                    { to: '/app/dispensing', icon: Zap, label: 'Dispensing' },
+                    { to: '/app/patients', icon: Users, label: 'Customers' },
+                    { to: '/app/insurance', icon: ShieldCheck, label: 'Insurance' },
+                ],
+            },
         ],
     },
     {
-        to: '/app/inventory',
-        icon: Package,
-        label: 'Medicines',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'OWNER',
-            'CASHIER',
-            'STORE_MANAGER',
-            'STORE MANAGER',
-            'PHARMACIST',
-            'AUDITOR',
-            'ADMIN',
-            'DOCTOR',
-        ],
-    },
-    {
-        to: '/app/stock',
-        icon: Database,
-        label: 'Stock & Batches',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'OWNER',
-            'STORE_MANAGER',
-            'STORE MANAGER',
-            'PHARMACIST',
-            'AUDITOR',
-            'ADMIN',
-        ],
-    },
-    {
-        to: '/app/alerts',
-        icon: Bell,
-        label: 'Alerts',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'OWNER',
-            'STORE_MANAGER',
-            'STORE MANAGER',
-            'PHARMACIST',
-            'AUDITOR',
-            'ADMIN',
-        ],
-    },
-    {
-        to: '/app/patients',
-        icon: Users,
-        label: 'Customers',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'OWNER',
-            'PHARMACIST',
-            'AUDITOR',
-            'ADMIN',
-        ],
-    },
-    {
-        to: '/app/insurance',
-        icon: ShieldCheck,
-        label: 'Insurance',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'FACILITY_ADMIN',
-            'OWNER',
-            'ADMIN',
-            'PHARMACIST',
-            'AUDITOR',
-        ],
-    },
-    {
-        to: '/app/analytics',
-        icon: FileText,
+        id: 'reports',
         label: 'Reports',
-        allowedRoles: [
-            'SUPER_ADMIN',
-            'SUPER ADMIN',
-            'FACILITY_ADMIN',
-            'FACILITY ADMIN',
-            'OWNER',
-            'STORE_MANAGER',
-            'STORE MANAGER',
-            'AUDITOR',
-            'ADMIN',
-        ],
-        allowedPermissions: ['reports:read'],
-        children: [
-            { to: '/app/analytics/operations', icon: FileText, label: 'Operations' },
+        items: [
             {
-                to: '/app/analytics/intelligence',
+                to: '/app/analytics/operations',
                 icon: FileText,
-                label: 'Inventory Intelligence',
-            },
-            {
-                to: '/app/analytics/compliance',
-                icon: FileText,
-                label: 'Business & Compliance',
+                label: 'Reports',
+                allowedRoles: [
+                    'SUPER_ADMIN',
+                    'SUPER ADMIN',
+                    'FACILITY_ADMIN',
+                    'FACILITY ADMIN',
+                    'OWNER',
+                    'STORE_MANAGER',
+                    'STORE MANAGER',
+                    'AUDITOR',
+                    'ADMIN',
+                ],
+                allowedPermissions: ['reports:read'],
+                children: [
+                    { to: '/app/analytics/operations', icon: FileText, label: 'Operations' },
+                    {
+                        to: '/app/analytics/intelligence',
+                        icon: FileText,
+                        label: 'Inventory Intelligence',
+                    },
+                    {
+                        to: '/app/analytics/compliance',
+                        icon: FileText,
+                        label: 'Business & Compliance',
+                    },
+                ],
             },
         ],
     },
     {
-        to: '/app/settings',
-        icon: Settings,
-        label: 'Settings',
-        allowedRoles: ['SUPER_ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'OWNER', 'ADMIN'],
+        id: 'management',
+        label: 'Management',
+        items: [
+            {
+                to: '/app/organizations',
+                icon: Building2,
+                label: 'Organizations',
+                allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN'],
+                allowedPermissions: ['organization:manage'],
+            },
+            {
+                to: '/app/facilities',
+                icon: Factory,
+                label: 'Branches',
+                allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER', 'AUDITOR'],
+                allowedPermissions: ['facility:read', 'facility:manage'],
+            },
+            {
+                to: '/app/users',
+                icon: Users,
+                label: 'Users',
+                allowedRoles: [
+                    'SUPER_ADMIN',
+                    'SUPER ADMIN',
+                    'OWNER',
+                    'FACILITY_ADMIN',
+                    'FACILITY ADMIN',
+                    'AUDITOR',
+                ],
+                allowedPermissions: ['users:read', 'users:manage'],
+            },
+            {
+                to: '/app/settings',
+                icon: Settings,
+                label: 'Settings',
+                allowedRoles: ['SUPER_ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'OWNER', 'ADMIN'],
+            },
+        ],
     },
 ];
 
@@ -246,11 +290,28 @@ interface SidebarLinkProps {
     label: string;
     isCollapsed: boolean;
     children?: NavItem[];
+    currentPath: string;
 }
 
-const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label, isCollapsed, children }) => {
-    const [isOpen, setIsOpen] = useState(false);
+const SidebarLink: React.FC<SidebarLinkProps> = ({
+    to,
+    icon,
+    label,
+    isCollapsed,
+    children,
+    currentPath,
+}) => {
     const hasChildren = children && children.length > 0;
+    const shouldBeOpen =
+        !!hasChildren &&
+        (currentPath === to || currentPath.startsWith(`${to}/`) || children.some((child) => currentPath.startsWith(child.to)));
+    const [isOpen, setIsOpen] = useState(shouldBeOpen);
+
+    React.useEffect(() => {
+        if (!isCollapsed) {
+            setIsOpen(shouldBeOpen);
+        }
+    }, [isCollapsed, shouldBeOpen]);
 
     const handleClick = (e: React.MouseEvent) => {
         if (hasChildren) {
@@ -341,8 +402,18 @@ export function MainLayout() {
     const [showSetupModal, setShowSetupModal] = useState(false);
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [globalSearchQuery, setGlobalSearchQuery] = useState('');
+    const [globalSearchLoading, setGlobalSearchLoading] = useState(false);
+    const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+    const [globalSearchResults, setGlobalSearchResults] = useState<GlobalSearchResults>(
+        EMPTY_GLOBAL_SEARCH_RESULTS,
+    );
+    const globalSearchRef = useRef<HTMLDivElement | null>(null);
 
-    const filteredNavItems = NAV_ITEMS.filter((item) => {
+    const location = useLocation();
+    const effectiveFacilityId = facilityId ?? user?.facility_id ?? undefined;
+
+    const isItemAllowed = (item: NavItem): boolean => {
         if (
             item.allowedPermissions &&
             !item.allowedPermissions.some((perm) => user?.permissions?.includes(perm))
@@ -361,7 +432,25 @@ export function MainLayout() {
         }
 
         return true;
-    });
+    };
+
+    const filteredSections = useMemo(() => {
+        return NAV_SECTIONS.map((section) => {
+            const items = section.items
+                .filter(isItemAllowed)
+                .map((item) => {
+                    const filteredChildren = item.children?.filter((child) => isItemAllowed(child));
+                    return {
+                        ...item,
+                        children: filteredChildren,
+                    };
+                });
+            return {
+                ...section,
+                items,
+            };
+        }).filter((section) => section.items.length > 0);
+    }, [user?.permissions, user?.role]);
 
     const handleLogout = () => {
         logout();
@@ -398,6 +487,175 @@ export function MainLayout() {
             navigate({ to: '/app/facilities' as any, replace: true, search: {} as any } as any);
         }
     }, [needsOnboarding, isUnassignedAdmin, navigate]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                globalSearchRef.current &&
+                !globalSearchRef.current.contains(event.target as Node)
+            ) {
+                setGlobalSearchOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    useEffect(() => {
+        const query = globalSearchQuery.trim();
+        if (query.length < 2) {
+            setGlobalSearchResults(EMPTY_GLOBAL_SEARCH_RESULTS);
+            setGlobalSearchLoading(false);
+            return;
+        }
+
+        let cancelled = false;
+        const timer = setTimeout(async () => {
+            setGlobalSearchLoading(true);
+            try {
+                const [medicinesResponse, suppliersResponse, purchaseOrdersResponse, movementsResponse] =
+                    await Promise.all([
+                        pharmacyService.getMedicines({
+                            search: query,
+                            limit: 5,
+                            ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
+                        }),
+                        pharmacyService.getSuppliers({
+                            search: query,
+                            limit: 5,
+                        }),
+                        pharmacyService.getProcurementOrders({
+                            search: query,
+                            limit: 5,
+                            ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
+                        }),
+                        effectiveFacilityId
+                            ? pharmacyService.getStockMovements({
+                                  facilityId: effectiveFacilityId,
+                                  search: query,
+                                  limit: 8,
+                                  page: 1,
+                              })
+                            : Promise.resolve({ data: [] as any[] }),
+                    ]);
+
+                if (cancelled) return;
+
+                const movementRows = Array.isArray((movementsResponse as any).data)
+                    ? (movementsResponse as any).data
+                    : [];
+                const lowerQuery = query.toLowerCase();
+                const batchMap = new Map<string, GlobalSearchResultItem>(
+                    movementRows
+                        .filter((row: any) =>
+                            String(row.batch_number || row.batch?.batch_number || row.batch_code || '')
+                                .toLowerCase()
+                                .includes(lowerQuery),
+                        )
+                        .map((row: any) => {
+                            const batchNumber = String(
+                                row.batch_number || row.batch?.batch_number || row.batch_code || '',
+                            );
+                            return [
+                                batchNumber,
+                                {
+                                    id: batchNumber,
+                                    label: batchNumber,
+                                    meta: String(
+                                        row.medicine_name || row.medicine?.name || 'Batch result',
+                                    ),
+                                    to: '/app/stock',
+                                },
+                            ] as [string, GlobalSearchResultItem];
+                        }),
+                );
+                const uniqueBatches = Array.from(batchMap.values()).slice(0, 5);
+
+                setGlobalSearchResults({
+                    medicines: (medicinesResponse.data || []).slice(0, 5).map((medicine: any) => ({
+                        id: String(medicine.id),
+                        label: String(medicine.name || 'Unknown medicine'),
+                        meta: String(
+                            medicine.generic_name ||
+                                medicine.code ||
+                                medicine.category?.name ||
+                                'Medicine',
+                        ),
+                        to: `/app/inventory/${medicine.id}`,
+                    })),
+                    batches: uniqueBatches,
+                    suppliers: (suppliersResponse.data || []).slice(0, 5).map((supplier: any) => ({
+                        id: String(supplier.id),
+                        label: String(supplier.name || 'Unknown supplier'),
+                        meta: String(supplier.contact_person || supplier.phone || 'Supplier'),
+                        to: '/app/procurement/suppliers',
+                    })),
+                    purchaseOrders: (purchaseOrdersResponse.data || [])
+                        .slice(0, 5)
+                        .map((order: any) => ({
+                            id: String(order.id),
+                            label: `PO-${String(order.id).padStart(4, '0')}`,
+                            meta: String(
+                                order.supplier?.name ||
+                                    order.status ||
+                                    order.order_number ||
+                                    'Purchase order',
+                            ),
+                            to: `/app/procurement/orders/${order.id}`,
+                        })),
+                    stockMovements: movementRows.slice(0, 5).map((movement: any) => ({
+                        id: String(movement.id),
+                        label: String(
+                            movement.medicine_name ||
+                                movement.medicine?.name ||
+                                movement.reference ||
+                                'Stock movement',
+                        ),
+                        meta: String(
+                            movement.movement_subtype ||
+                                movement.movement_type ||
+                                movement.reference ||
+                                'Movement',
+                        ),
+                        to: '/app/stock-movements',
+                    })),
+                });
+                setGlobalSearchOpen(true);
+            } catch (error) {
+                if (!cancelled) {
+                    setGlobalSearchResults(EMPTY_GLOBAL_SEARCH_RESULTS);
+                }
+            } finally {
+                if (!cancelled) setGlobalSearchLoading(false);
+            }
+        }, 250);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [globalSearchQuery, effectiveFacilityId]);
+
+    const globalSearchResultCount = useMemo(
+        () =>
+            Object.values(globalSearchResults).reduce(
+                (count, items) => count + (Array.isArray(items) ? items.length : 0),
+                0,
+            ),
+        [globalSearchResults],
+    );
+
+    const flattenedGlobalSearchResults = useMemo(
+        () => GLOBAL_SEARCH_GROUPS.flatMap((group) => globalSearchResults[group.key]),
+        [globalSearchResults],
+    );
+
+    const handleGlobalSearchSelect = (item: GlobalSearchResultItem) => {
+        setGlobalSearchOpen(false);
+        setGlobalSearchQuery('');
+        navigate({ to: item.to as any, search: {} as any });
+    };
 
     const showAllFacilitiesOption = ['OWNER', 'SUPER_ADMIN', 'SUPER ADMIN'].includes(
         user?.role || '',
@@ -462,15 +720,25 @@ export function MainLayout() {
                         {(!isCollapsed || isMobileMenuOpen) && <span>Back to Website</span>}
                     </Link>
 
-                    {filteredNavItems.map((item) => (
-                        <SidebarLink
-                            key={item.to}
-                            to={item.to}
-                            icon={<item.icon size={18} />}
-                            label={item.label}
-                            isCollapsed={isCollapsed && !isMobileMenuOpen}
-                            children={item.children}
-                        />
+                    {filteredSections.map((section) => (
+                        <div key={section.id} className="space-y-1.5">
+                            {(!isCollapsed || isMobileMenuOpen) && (
+                                <p className="px-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                    {section.label}
+                                </p>
+                            )}
+                            {section.items.map((item) => (
+                                <SidebarLink
+                                    key={item.to}
+                                    to={item.to}
+                                    icon={<item.icon size={18} />}
+                                    label={item.label}
+                                    isCollapsed={isCollapsed && !isMobileMenuOpen}
+                                    children={item.children}
+                                    currentPath={location.pathname}
+                                />
+                            ))}
+                        </div>
                     ))}
                 </nav>
 
@@ -512,16 +780,81 @@ export function MainLayout() {
                             </span>
                         </button>
 
-                        <div className="relative max-w-sm lg:max-w-md w-full hidden sm:block">
+                        <div
+                            ref={globalSearchRef}
+                            className="relative max-w-sm lg:max-w-md w-full hidden sm:block"
+                        >
                             <Search
                                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                                 size={16}
                             />
                             <input
                                 type="text"
-                                placeholder="Search..."
+                                placeholder="Search medicine, batch, supplier, PO, movement..."
+                                value={globalSearchQuery}
+                                onFocus={() => setGlobalSearchOpen(true)}
+                                onChange={(e) => setGlobalSearchQuery(e.target.value)}
+                                onKeyDown={(event) => {
+                                    if (
+                                        event.key === 'Enter' &&
+                                        flattenedGlobalSearchResults.length > 0
+                                    ) {
+                                        event.preventDefault();
+                                        handleGlobalSearchSelect(flattenedGlobalSearchResults[0]);
+                                    }
+                                    if (event.key === 'Escape') {
+                                        setGlobalSearchOpen(false);
+                                    }
+                                }}
                                 className="w-full pl-9 pr-4 py-1.5 bg-slate-100 dark:bg-slate-900/50 border border-transparent dark:border-slate-700/50 focus:bg-white dark:focus:bg-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-healthcare-primary/10 focus:border-healthcare-primary transition-all text-sm dark:text-white dark:placeholder:text-slate-500"
                             />
+                            {globalSearchOpen && globalSearchQuery.trim().length >= 2 && (
+                                <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 overflow-hidden">
+                                    {globalSearchLoading ? (
+                                        <div className="px-4 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+                                            Searching...
+                                        </div>
+                                    ) : globalSearchResultCount === 0 ? (
+                                        <div className="px-4 py-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+                                            No results found
+                                        </div>
+                                    ) : (
+                                        <div className="max-h-[360px] overflow-y-auto p-2">
+                                            {GLOBAL_SEARCH_GROUPS.map((group) => {
+                                                const items = globalSearchResults[group.key];
+                                                if (!items || items.length === 0) return null;
+
+                                                return (
+                                                    <div key={group.key} className="mb-2 last:mb-0">
+                                                        <p className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                            {group.label}
+                                                        </p>
+                                                        <div className="space-y-1">
+                                                            {items.map((item) => (
+                                                                <button
+                                                                    key={`${group.key}-${item.id}`}
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        handleGlobalSearchSelect(item)
+                                                                    }
+                                                                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                                                >
+                                                                    <p className="text-xs font-black text-healthcare-dark dark:text-white truncate">
+                                                                        {item.label}
+                                                                    </p>
+                                                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
+                                                                        {item.meta}
+                                                                    </p>
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 

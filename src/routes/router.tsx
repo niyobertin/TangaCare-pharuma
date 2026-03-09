@@ -33,7 +33,6 @@ const TermsOfUsePage = lazyNamed(() => import('../pages/marketing/TermsOfUsePage
 const PublicPurchaseOrder = lazyNamed(() => import('../pages/public/PublicPurchaseOrder'), 'PublicPurchaseOrder');
 const OnboardingPage = lazyNamed(() => import('../pages/auth/OnboardingPage'), 'OnboardingPage');
 const AlertsPage = lazyNamed(() => import('../pages/dashboard/AlertsPage'), 'AlertsPage');
-const UsersPage = lazyNamed(() => import('../pages/dashboard/UsersPage'), 'UsersPage');
 const SettingsPage = lazyNamed(() => import('../pages/dashboard/SettingsPage'), 'SettingsPage');
 
 const RootComponent = () => (
@@ -125,13 +124,7 @@ const alertsRoute = createRoute({
 const employeeRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'employees',
-    component: () => (
-        withRouteSuspense(
-            <RequirePermission permissions={[PERMISSIONS.USERS_READ, PERMISSIONS.USERS_MANAGE]}>
-                <UsersPage />
-            </RequirePermission>,
-        )
-    ),
+    component: () => <Navigate to={"/app/users" as any} search={{} as any} />,
 });
 
 const settingsRoute = createRoute({

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X, CheckCircle2, Loader2, Package } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { ProcurementOrder } from '../../types/pharmacy';
@@ -16,19 +16,15 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
     const [loading, setLoading] = useState(false);
     const [receivedItems, setReceivedItems] = useState<any[]>([]);
     const [locations, setLocations] = useState<any[]>([]);
-    const [locationsLoading, setLocationsLoading] = useState(false);
     const [globalLocationId, setGlobalLocationId] = useState<number | null>(null);
 
     const fetchLocations = async () => {
         if (!order?.facility_id) return;
-        setLocationsLoading(true);
         try {
             const data = await pharmacyService.getStorageLocations({ facility_id: order.facility_id });
             setLocations(data.filter((l: any) => l.is_active));
         } catch (error) {
             console.error('Failed to fetch locations:', error);
-        } finally {
-            setLocationsLoading(false);
         }
     };
 
@@ -57,6 +53,22 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
 
     if (!isOpen || !order) return null;
 
+    const receivingSummary = useMemo(() => {
+        const receivingRows = receivedItems.filter((item) => Number(item.quantity_received || 0) > 0);
+        const totalUnits = receivingRows.reduce(
+            (sum, item) => sum + Number(item.quantity_received || 0),
+            0,
+        );
+        const missingDetails = receivingRows.filter(
+            (item) => !item.batch_number || !item.expiry_date || !item.location_id,
+        ).length;
+        return {
+            lines: receivingRows.length,
+            totalUnits,
+            missingDetails,
+        };
+    }, [receivedItems]);
+
     const handleItemChange = (index: number, field: string, value: any) => {
         const updated = [...receivedItems];
         updated[index] = { ...updated[index], [field]: value };
@@ -74,6 +86,21 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
 
         if (attemptedItems.length === 0) {
             toast.error('Please enter a quantity to receive for at least one item.');
+            return;
+        }
+
+        const duplicateEntryKeys = new Set<string>();
+        const duplicateEntries: string[] = [];
+        for (const item of attemptedItems) {
+            const key = `${String(item.id)}::${String(item.batch_number || '').trim().toLowerCase()}`;
+            if (duplicateEntryKeys.has(key)) {
+                duplicateEntries.push(`${item.medicine_name} (${item.batch_number || 'NO-BATCH'})`);
+            } else {
+                duplicateEntryKeys.add(key);
+            }
+        }
+        if (duplicateEntries.length > 0) {
+            toast.error(`Duplicate entry detected: ${duplicateEntries.slice(0, 2).join(', ')}`);
             return;
         }
 
@@ -124,6 +151,19 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
             });
         }
 
+        const nearExpiryCount = validItems.filter((item) => {
+            const expiry = new Date(item.expiry_date);
+            const now = new Date();
+            const diffDays = Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            return diffDays >= 0 && diffDays <= 30;
+        }).length;
+        if (nearExpiryCount > 0) {
+            toast(`Warning: ${nearExpiryCount} item(s) expire in 30 days or less.`, {
+                icon: '⚠️',
+                duration: 5000,
+            });
+        }
+
         setLoading(true);
         try {
             const response = await pharmacyService.receiveProcurementOrder(order.id, {
@@ -168,104 +208,99 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
-                <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-5xl max-h-[100dvh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+                <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 shrink-0">
                             <Package size={20} />
                         </div>
-                        <div>
-                            <h3 className="text-xl font-black text-healthcare-dark dark:text-white">
+                        <div className="min-w-0">
+                            <h3 className="text-lg sm:text-xl font-black text-healthcare-dark dark:text-white truncate">
                                 Receive Inventory
                             </h3>
-                            <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                            <p className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider truncate">
                                 Record goods receipt for PO-{order.id}
                             </p>
                         </div>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
+                        className="h-10 w-10 inline-flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
                     >
-                        <X size={24} className="text-slate-400" />
+                        <X size={22} className="text-slate-400" />
                     </button>
                 </div>
 
-                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-b border-amber-100 dark:border-amber-800/30 text-xs flex flex-wrap gap-4 justify-between items-center px-6">
-                    <div className="flex items-center gap-6">
+                <div className="p-3 sm:p-4 bg-amber-50 dark:bg-amber-900/20 text-amber-700 border-b border-amber-100 dark:border-amber-800/30 text-xs px-4 sm:px-6 space-y-2">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-6">
                         <span className="font-bold flex items-center gap-2">
                             <CheckCircle2 size={14} />
                             Only items with a quantity &gt; 0 will be received.
                         </span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                             <span className="font-black uppercase text-[10px] text-slate-500">Apply to all:</span>
                             <select
                                 value={globalLocationId || ''}
-                                onChange={(e) => applyGlobalLocation(e.target.value ? parseInt(e.target.value) : null)}
-                                className="px-3 py-1 bg-white dark:bg-slate-800 border-2 border-amber-200 rounded-lg text-[10px] font-black outline-none focus:border-amber-500"
+                                onChange={(e) =>
+                                    applyGlobalLocation(e.target.value ? parseInt(e.target.value) : null)
+                                }
+                                className="h-10 px-3 bg-white dark:bg-slate-800 border-2 border-amber-200 rounded-lg text-[10px] font-black outline-none focus:border-amber-500"
                             >
                                 <option value="">Select Global Location...</option>
-                                {locations.map(loc => (
-                                    <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
+                                {locations.map((loc) => (
+                                    <option key={loc.id} value={loc.id}>
+                                        {loc.name} ({loc.code})
+                                    </option>
                                 ))}
                             </select>
                         </div>
                     </div>
-                    <button
-                        onClick={handleClearAll}
-                        className="text-[10px] font-black uppercase bg-white dark:bg-slate-800 px-3 py-1 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors"
-                    >
-                        Clear All Quantities
-                    </button>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                            Preview: {receivingSummary.lines} lines • {receivingSummary.totalUnits} units
+                            {receivingSummary.missingDetails > 0 &&
+                                ` • ${receivingSummary.missingDetails} missing details`}
+                        </div>
+                        <button
+                            onClick={handleClearAll}
+                            className="h-10 w-full sm:w-auto text-[10px] font-black uppercase bg-white dark:bg-slate-800 px-3 rounded-lg border border-amber-200 hover:bg-amber-50 transition-colors touch-manipulation"
+                        >
+                            Clear All Quantities
+                        </button>
+                    </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b-2 border-slate-100 dark:border-slate-800">
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">
-                                    Medicine
-                                </th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center px-2">
-                                    Ordered
-                                </th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center px-2">
-                                    Receiving
-                                </th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">
-                                    Batch Details
-                                </th>
-                                <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">
-                                    Dates
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                            {receivedItems.map((item, idx) => {
-                                const isReceiving = item.quantity_received > 0;
-                                const isMissingInfo =
-                                    isReceiving && (!item.batch_number || !item.expiry_date || !item.location_id);
+                <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-3">
+                    <div className="space-y-3 lg:hidden">
+                        {receivedItems.map((item, idx) => {
+                            const isReceiving = item.quantity_received > 0;
+                            const isMissingInfo =
+                                isReceiving && (!item.batch_number || !item.expiry_date || !item.location_id);
 
-                                return (
-                                    <tr
-                                        key={idx}
-                                        className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors align-top ${isMissingInfo ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}
-                                    >
-                                        <td className="py-4 px-2">
-                                            <div className="font-bold text-healthcare-dark dark:text-white text-sm">
+                            return (
+                                <div
+                                    key={idx}
+                                    className={`rounded-xl border p-3 bg-white dark:bg-slate-900 space-y-3 ${isMissingInfo ? 'border-red-300 dark:border-red-800 bg-red-50/40 dark:bg-red-900/10' : 'border-slate-200 dark:border-slate-800'}`}
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-sm font-black text-healthcare-dark dark:text-white">
                                                 {item.medicine_name}
-                                            </div>
+                                            </p>
+                                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-black">
+                                                Ordered: {item.quantity_ordered}
+                                            </p>
                                             {isMissingInfo && (
-                                                <span className="text-[10px] text-red-500 font-bold animate-pulse">
+                                                <span className="text-[10px] text-red-500 font-bold">
                                                     Missing details
                                                 </span>
                                             )}
-                                        </td>
-                                        <td className="py-4 px-2 text-center text-sm font-black text-slate-400">
-                                            {item.quantity_ordered}
-                                        </td>
-                                        <td className="py-4 px-2">
+                                        </div>
+                                        <div className="min-w-[84px]">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase">
+                                                Receiving
+                                            </label>
                                             <input
                                                 type="number"
                                                 value={item.quantity_received}
@@ -276,101 +311,246 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                         Number(e.target.value),
                                                     )
                                                 }
-                                                className="w-20 px-2 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                                                className="h-10 w-full px-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                                             />
-                                        </td>
-                                        <td className="py-4 px-2 space-y-2">
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                Batch Number
+                                            </span>
                                             <input
                                                 type="text"
                                                 placeholder="Batch Number"
                                                 value={item.batch_number}
                                                 onChange={(e) =>
+                                                    handleItemChange(idx, 'batch_number', e.target.value)
+                                                }
+                                                className={`h-10 w-full px-3 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo && !item.batch_number ? 'border-red-300 dark:border-red-800' : 'border-slate-200 dark:border-slate-700'}`}
+                                                required={item.quantity_received > 0}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                Storage Location
+                                            </span>
+                                            <select
+                                                value={item.location_id || ''}
+                                                onChange={(e) =>
                                                     handleItemChange(
                                                         idx,
-                                                        'batch_number',
+                                                        'location_id',
+                                                        e.target.value ? parseInt(e.target.value) : null,
+                                                    )
+                                                }
+                                                className={`h-10 w-full px-3 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo && !item.location_id ? 'border-red-300 dark:border-red-800' : 'border-slate-200 dark:border-slate-700'}`}
+                                                required={item.quantity_received > 0}
+                                            >
+                                                <option value="">Select Location...</option>
+                                                {locations.map((loc) => (
+                                                    <option key={loc.id} value={loc.id}>
+                                                        {loc.name} ({loc.code})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                Expiry Date
+                                            </span>
+                                            <input
+                                                type="date"
+                                                value={item.expiry_date}
+                                                onChange={(e) =>
+                                                    handleItemChange(idx, 'expiry_date', e.target.value)
+                                                }
+                                                className={`h-10 w-full px-2 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo && !item.expiry_date ? 'border-red-300 dark:border-red-800' : 'border-slate-200 dark:border-slate-700'}`}
+                                                required={item.quantity_received > 0}
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                Mfg Date (Optional)
+                                            </span>
+                                            <input
+                                                type="date"
+                                                value={item.manufacturing_date}
+                                                onChange={(e) =>
+                                                    handleItemChange(
+                                                        idx,
+                                                        'manufacturing_date',
                                                         e.target.value,
                                                     )
                                                 }
-                                                className={`w-full px-3 py-1.5 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 mb-2 ${isMissingInfo && !item.batch_number ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
-                                                required={item.quantity_received > 0}
+                                                className="h-10 w-full px-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                                             />
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-[9px] font-black text-slate-400 uppercase">
-                                                    Storage Location
-                                                </span>
-                                                <select
-                                                    value={item.location_id || ''}
-                                                    onChange={(e) => handleItemChange(idx, 'location_id', e.target.value ? parseInt(e.target.value) : null)}
-                                                    className={`w-full px-3 py-1.5 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo && !item.location_id ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
-                                                    required={item.quantity_received > 0}
-                                                >
-                                                    <option value="">Select Location...</option>
-                                                    {locations.map(loc => (
-                                                        <option key={loc.id} value={loc.id}>{loc.name} ({loc.code})</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-2 space-y-2">
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-[9px] font-black text-slate-400 uppercase">
-                                                    Expiry Date
-                                                </span>
-                                                <input
-                                                    type="date"
-                                                    value={item.expiry_date}
-                                                    onChange={(e) =>
-                                                        handleItemChange(
-                                                            idx,
-                                                            'expiry_date',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className={`px-2 py-1 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
-                                                    required={item.quantity_received > 0}
-                                                />
-                                            </div>
-                                            {locationsLoading && (
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                    <Loader2 size={16} className="animate-spin text-healthcare-primary" />
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="hidden lg:block overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b-2 border-slate-100 dark:border-slate-800">
+                                    <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">
+                                        Medicine
+                                    </th>
+                                    <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center px-2">
+                                        Ordered
+                                    </th>
+                                    <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center px-2">
+                                        Receiving
+                                    </th>
+                                    <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">
+                                        Batch Details
+                                    </th>
+                                    <th className="pb-4 text-[10px] font-black uppercase text-slate-400 tracking-widest px-2">
+                                        Dates
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                                {receivedItems.map((item, idx) => {
+                                    const isReceiving = item.quantity_received > 0;
+                                    const isMissingInfo =
+                                        isReceiving &&
+                                        (!item.batch_number || !item.expiry_date || !item.location_id);
+
+                                    return (
+                                        <tr
+                                            key={idx}
+                                            className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors align-top ${isMissingInfo ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}
+                                        >
+                                            <td className="py-4 px-2">
+                                                <div className="font-bold text-healthcare-dark dark:text-white text-sm">
+                                                    {item.medicine_name}
                                                 </div>
-                                            )}
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-[9px] font-black text-slate-400 uppercase">
-                                                    Mfg Date (Optional)
-                                                </span>
+                                                {isMissingInfo && (
+                                                    <span className="text-[10px] text-red-500 font-bold animate-pulse">
+                                                        Missing details
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="py-4 px-2 text-center text-sm font-black text-slate-400">
+                                                {item.quantity_ordered}
+                                            </td>
+                                            <td className="py-4 px-2">
                                                 <input
-                                                    type="date"
-                                                    value={item.manufacturing_date}
+                                                    type="number"
+                                                    value={item.quantity_received}
                                                     onChange={(e) =>
                                                         handleItemChange(
                                                             idx,
-                                                            'manufacturing_date',
+                                                            'quantity_received',
+                                                            Number(e.target.value),
+                                                        )
+                                                    }
+                                                    className="w-20 px-2 py-1.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                                                />
+                                            </td>
+                                            <td className="py-4 px-2 space-y-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Batch Number"
+                                                    value={item.batch_number}
+                                                    onChange={(e) =>
+                                                        handleItemChange(
+                                                            idx,
+                                                            'batch_number',
                                                             e.target.value,
                                                         )
                                                     }
-                                                    className="px-2 py-1 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                                                    className={`w-full px-3 py-1.5 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 mb-2 ${isMissingInfo && !item.batch_number ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
+                                                    required={item.quantity_received > 0}
                                                 />
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                        Storage Location
+                                                    </span>
+                                                    <select
+                                                        value={item.location_id || ''}
+                                                        onChange={(e) =>
+                                                            handleItemChange(
+                                                                idx,
+                                                                'location_id',
+                                                                e.target.value
+                                                                    ? parseInt(e.target.value)
+                                                                    : null,
+                                                            )
+                                                        }
+                                                        className={`w-full px-3 py-1.5 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo && !item.location_id ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
+                                                        required={item.quantity_received > 0}
+                                                    >
+                                                        <option value="">Select Location...</option>
+                                                        {locations.map((loc) => (
+                                                            <option key={loc.id} value={loc.id}>
+                                                                {loc.name} ({loc.code})
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-2 space-y-2">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                        Expiry Date
+                                                    </span>
+                                                    <input
+                                                        type="date"
+                                                        value={item.expiry_date}
+                                                        onChange={(e) =>
+                                                            handleItemChange(
+                                                                idx,
+                                                                'expiry_date',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className={`px-2 py-1 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo ? 'border-red-300 dark:border-red-800' : 'border-slate-100 dark:border-slate-700'}`}
+                                                        required={item.quantity_received > 0}
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase">
+                                                        Mfg Date (Optional)
+                                                    </span>
+                                                    <input
+                                                        type="date"
+                                                        value={item.manufacturing_date}
+                                                        onChange={(e) =>
+                                                            handleItemChange(
+                                                                idx,
+                                                                'manufacturing_date',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="px-2 py-1 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                                                    />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-end gap-3">
+                <div className="sticky bottom-0 p-4 sm:p-6 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-xs text-slate-500 hover:bg-slate-50 transition-all uppercase tracking-widest"
+                        className="h-11 px-6 w-full sm:w-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-xs text-slate-500 hover:bg-slate-50 transition-all uppercase tracking-widest touch-manipulation"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="px-8 py-2.5 bg-emerald-500 text-white rounded-xl font-black text-xs hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center gap-2 uppercase tracking-widest"
+                        className="h-11 px-8 w-full sm:w-auto bg-emerald-500 text-white rounded-xl font-black text-xs hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2 uppercase tracking-widest touch-manipulation"
                     >
                         {loading ? (
                             <Loader2 className="animate-spin" size={16} />

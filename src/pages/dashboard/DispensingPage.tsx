@@ -21,11 +21,11 @@ import { PaymentModal } from '../../components/dispensing/PaymentModal';
 import { PatientSummaryPanel } from '../../components/dispensing/PatientSummaryPanel';
 import type { CartItem } from '../../types/pharmacy';
 import { toast } from 'react-hot-toast';
-import { APP_CONFIG } from '../../lib/config';
 import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { db } from '../../lib/indexeddb';
 import { toSentenceCase } from '../../lib/text';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
+import { settingsService } from '../../services/settings.service';
 
 const WALK_IN_PATIENT = {
     id: null,
@@ -72,6 +72,10 @@ export function DispensingPage() {
         alternatives: SubstitutionAlternative[];
     } | null>(null);
     const shownExpiryWarningsRef = useRef<Set<number>>(new Set());
+    const [runtimeConfig, setRuntimeConfig] = useState<{ currency: string; vatRate: number }>({
+        currency: 'RWF',
+        vatRate: 0.18,
+    });
 
     const hasControlledDrug = cart.some((item) => item.is_controlled_drug);
 
@@ -155,6 +159,42 @@ export function DispensingPage() {
     useEffect(() => {
         fetchMedicines();
     }, [debouncedSearch, page]);
+
+    useEffect(() => {
+        let active = true;
+        const loadRuntimeConfig = async () => {
+            try {
+                const tenantId = Number(user?.organization_id ?? 0) || undefined;
+                const activeBranchId = Number(user?.facility_id ?? 0) || undefined;
+                const activeUserId = Number(user?.id ?? 0) || undefined;
+
+                const effective = await settingsService.getEffective({
+                    tenantId,
+                    branchId: activeBranchId,
+                    userId: activeUserId,
+                });
+
+                const values = effective?.values || {};
+                const vatEnabled = values['tax_fiscal.vat_enabled'] !== false;
+                const vatRate = Number(values['tax_fiscal.default_vat_rate'] ?? 0.18);
+                const currency = String(values['currency_pricing.base_currency'] || 'RWF');
+
+                if (active) {
+                    setRuntimeConfig({
+                        currency,
+                        vatRate: vatEnabled && Number.isFinite(vatRate) ? vatRate : 0,
+                    });
+                }
+            } catch {
+                // Keep defaults if settings endpoint is not reachable
+            }
+        };
+
+        void loadRuntimeConfig();
+        return () => {
+            active = false;
+        };
+    }, [user?.organization_id, user?.facility_id, user?.id]);
 
     useBarcodeScanner(
         (barcode) => {
@@ -346,7 +386,7 @@ export function DispensingPage() {
     };
 
     const subtotal = cart.reduce((acc, item) => acc + item.selling_price * item.quantity, 0);
-    const tax = subtotal * APP_CONFIG.VAT_RATE;
+    const tax = subtotal * runtimeConfig.vatRate;
     const total = subtotal + tax;
 
     const handleCheckout = () => {
@@ -386,7 +426,7 @@ export function DispensingPage() {
         const saleData: any = {
             patient_id: selectedPatient.id,
             dispense_type: 'otc' as const,
-            vat_rate: APP_CONFIG.VAT_RATE,
+            vat_rate: runtimeConfig.vatRate,
             items: cart
                 .filter((i) => !!i.selectedBatch)
                 .map((i) => ({
@@ -777,7 +817,7 @@ export function DispensingPage() {
                                                 {alternative.total_stock.toLocaleString()}
                                             </td>
                                             <td className="px-4 py-3 text-right font-bold text-slate-600 dark:text-slate-300">
-                                                RWF {alternative.selling_price.toLocaleString()}
+                                                {runtimeConfig.currency} {alternative.selling_price.toLocaleString()}
                                             </td>
                                             <td className="px-4 py-3 text-xs text-slate-500">
                                                 {alternative.reason}

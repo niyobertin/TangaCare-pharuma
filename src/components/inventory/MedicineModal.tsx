@@ -22,6 +22,8 @@ const medicineSchema = yup.object({
     unit: yup.string().required('Unit is required'),
     category_id: yup.number().optional(),
     selling_price: yup.number().min(0, 'Cannot be negative').required('Required'),
+    reorder_point: yup.number().min(0, 'Cannot be negative').optional().default(0),
+    min_stock_level: yup.number().min(0, 'Cannot be negative').optional().default(0),
     is_controlled_drug: yup.boolean().default(false),
     allow_partial_sales: yup.boolean().default(false),
     units_per_package: yup.number().when('allow_partial_sales', {
@@ -52,6 +54,8 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
             is_controlled_drug: false,
             allow_partial_sales: false,
             selling_price: 0,
+            reorder_point: 0,
+            min_stock_level: 0,
         },
     });
 
@@ -72,11 +76,27 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
     const onSubmit = async (data: any) => {
         setIsLoading(true);
         try {
+            const toNumberOrUndefined = (value: any): number | undefined => {
+                if (value === '' || value === null || value === undefined) return undefined;
+                const parsed = Number(value);
+                return Number.isFinite(parsed) ? parsed : undefined;
+            };
+
+            const payload = {
+                ...data,
+                category_id: toNumberOrUndefined(data.category_id),
+                selling_price: Number(data.selling_price || 0),
+                reorder_point: toNumberOrUndefined(data.reorder_point) ?? 0,
+                min_stock_level: toNumberOrUndefined(data.min_stock_level) ?? 0,
+                units_per_package: data.allow_partial_sales ? toNumberOrUndefined(data.units_per_package) : undefined,
+                base_unit: data.allow_partial_sales ? data.base_unit : undefined,
+            };
+
             if (medicine?.id) {
-                await pharmacyService.updateMedicine(medicine.id, data);
+                await pharmacyService.updateMedicine(medicine.id, payload);
                 toast.success('Medicine updated successfully');
             } else {
-                await pharmacyService.createMedicine(data);
+                await pharmacyService.createMedicine(payload);
                 toast.success('Medicine created successfully');
             }
             onSuccess();
@@ -90,9 +110,9 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
-            <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl my-8 animate-in zoom-in-95 duration-200">
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start sticky top-0 bg-white dark:bg-slate-900 z-10 rounded-t-2xl">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="w-full max-w-3xl max-h-[100dvh] sm:max-h-[88vh] bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col">
+                <div className="shrink-0 p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start bg-white dark:bg-slate-900">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
                             <Pill size={24} className="text-healthcare-primary" />
@@ -110,9 +130,9 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                     </button>
                 </div>
 
-                <div className="p-6">
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                        <section className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="flex flex-1 min-h-0 flex-col">
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                        <section className="space-y-4 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 bg-white dark:bg-slate-900">
                             <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 Basic Information
                             </h3>
@@ -197,16 +217,15 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     >
                                         <option value="">Select form...</option>
-                                        <option value="Tablet">Tablet</option>
-                                        <option value="Capsule">Capsule</option>
-                                        <option value="Syrup">Syrup</option>
-                                        <option value="Injection">Injection</option>
-                                        <option value="Cream">Cream</option>
-                                        <option value="Ointment">Ointment</option>
-                                        <option value="Drops">Drops</option>
-                                        <option value="Inhaler">Inhaler</option>
-                                        <option value="Suppository">Suppository</option>
-                                        <option value="Other">Other</option>
+                                        <option value="tablet">Tablet</option>
+                                        <option value="capsule">Capsule</option>
+                                        <option value="syrup">Syrup</option>
+                                        <option value="injection">Injection</option>
+                                        <option value="ointment">Ointment</option>
+                                        <option value="drops">Drops</option>
+                                        <option value="inhaler">Inhaler</option>
+                                        <option value="patch">Patch</option>
+                                        <option value="other">Other</option>
                                     </select>
                                     {errors.dosage_form && (
                                         <p className="text-red-500 text-xs mt-1">
@@ -217,7 +236,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                             </div>
                         </section>
 
-                        <section className="space-y-4">
+                        <section className="space-y-4 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 bg-white dark:bg-slate-900">
                             <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 Pricing & Packaging
                             </h3>
@@ -249,10 +268,39 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     />
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
+                                        Reorder Threshold
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="1"
+                                        min="0"
+                                        {...register('reorder_point')}
+                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                    />
+                                    <p className="text-[10px] text-slate-500 mt-1">
+                                        Alert and reorder suggestion will trigger below this quantity.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
+                                        Minimum Stock Level
+                                    </label>
+                                    <input
+                                        type="number"
+                                        step="1"
+                                        min="0"
+                                        {...register('min_stock_level')}
+                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                    />
+                                </div>
                             </div>
                         </section>
 
-                        <section className="space-y-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                        <section className="space-y-4 p-4 sm:p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <h3 className="text-sm font-black text-healthcare-primary uppercase tracking-widest">
@@ -313,7 +361,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                             )}
                         </section>
 
-                        <div className="flex items-center gap-4 pt-4">
+                        <section className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-5 bg-white dark:bg-slate-900">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="checkbox"
@@ -324,9 +372,11 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                     Controlled Drug
                                 </span>
                             </label>
-                        </div>
+                        </section>
+                    </div>
 
-                        <div className="flex gap-3 pt-6">
+                    <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 p-4 sm:p-5 bg-white dark:bg-slate-900">
+                        <div className="flex gap-3">
                             <button
                                 type="button"
                                 onClick={onClose}
@@ -351,8 +401,8 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                 )}
                             </button>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     );
