@@ -15,6 +15,7 @@ interface DispensingCartProps {
     prescriptionId?: string;
     setPrescriptionId?: (id: string) => void;
     prescriptionRequired?: boolean;
+    readOnly?: boolean;
 }
 
 export const DispensingCart: React.FC<DispensingCartProps> = ({
@@ -29,6 +30,7 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
     prescriptionId,
     setPrescriptionId,
     prescriptionRequired,
+    readOnly = false,
 }) => {
     if (cart.length === 0) {
         return (
@@ -60,69 +62,71 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                                 </p>
                             </div>
                             <div>
-                        {item.selectedBatch?.id && (
-                            <div className="flex justify-center mt-0.5">
-                                <span className="px-2 py-0.5 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700 text-[10px] font-bold text-slate-500 uppercase">
-                                    {toSentenceCase(item.selectedBatch.location?.name || 'Main Shelf')}
-                                </span>
-                            </div>
-                        )}
+                                {item.selectedBatch?.id && (
+                                    <div className="flex justify-center mt-0.5">
+                                        <span className="px-2 py-0.5 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700 text-[10px] font-bold text-slate-500 uppercase">
+                                            {toSentenceCase(item.selectedBatch.location?.name || 'Main Shelf')}
+                                        </span>
+                                    </div>
+                                )}
 
-                        {item.is_controlled_drug && (
-                            <div className="flex justify-center">
-                                <span className="px-2 py-0.5 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-100 dark:border-orange-800 w-fit text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase">
-                                    Controlled Drug
-                                </span>
-                            </div>
-                        )}
+                                {item.is_controlled_drug && (
+                                    <div className="flex justify-center">
+                                        <span className="px-2 py-0.5 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-100 dark:border-orange-800 w-fit text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase">
+                                            Controlled Drug
+                                        </span>
+                                    </div>
+                                )}
 
-                        <div className="grid grid-cols-3 items-center mt-0.5">
-                            <div />
-                            <div className="justify-self-center flex items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-lg p-1">
-                                <button
-                                    onClick={() =>
-                                        updateQuantity(
-                                            item.id,
-                                            item.selectedBatch?.id || 0,
-                                            -1,
-                                            item.selectedBatch?.stock_id,
-                                        )
-                                    }
-                                    className="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 shadow-sm text-slate-600 dark:text-slate-400 hover:text-healthcare-primary disabled:opacity-50"
-                                    disabled={item.quantity <= 1}
-                                >
-                                    <Minus size={12} />
-                                </button>
-                                <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
-                                <button
-                                    onClick={() =>
-                                        updateQuantity(
-                                            item.id,
-                                            item.selectedBatch?.id || 0,
-                                            1,
-                                            item.selectedBatch?.stock_id,
-                                        )
-                                    }
-                                    className="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 shadow-sm text-slate-600 dark:text-slate-400 hover:text-healthcare-primary"
-                                >
-                                    <Plus size={12} />
-                                </button>
-                            </div>
+                                <div className="grid grid-cols-3 items-center mt-0.5">
+                                    <div />
+                                    <div className="justify-self-center flex items-center gap-3 bg-slate-50 dark:bg-slate-900 rounded-lg p-1">
+                                        <button
+                                            onClick={() =>
+                                                updateQuantity(
+                                                    item.id,
+                                                    item.selectedBatch?.id || 0,
+                                                    -1,
+                                                    item.selectedBatch?.stock_id,
+                                                )
+                                            }
+                                            className="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 shadow-sm text-slate-600 dark:text-slate-400 hover:text-healthcare-primary disabled:opacity-50"
+                                            disabled={readOnly || item.quantity <= 1}
+                                        >
+                                            <Minus size={12} />
+                                        </button>
+                                        <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
+                                        <button
+                                            onClick={() =>
+                                                updateQuantity(
+                                                    item.id,
+                                                    item.selectedBatch?.id || 0,
+                                                    1,
+                                                    item.selectedBatch?.stock_id,
+                                                )
+                                            }
+                                            className="w-6 h-6 flex items-center justify-center rounded-md bg-white dark:bg-slate-800 shadow-sm text-slate-600 dark:text-slate-400 hover:text-healthcare-primary disabled:opacity-50"
+                                            disabled={readOnly}
+                                        >
+                                            <Plus size={12} />
+                                        </button>
+                                    </div>
 
-                            <button
-                                onClick={() =>
-                                    removeFromCart(
-                                        item.id,
-                                        item.selectedBatch?.id || 0,
-                                        item.selectedBatch?.stock_id,
-                                    )
-                                }
-                                className="justify-self-end p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                            >
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                        </div>
+                                    <button
+                                        onClick={() =>
+                                            removeFromCart(
+                                                item.id,
+                                                item.selectedBatch?.id || 0,
+                                                item.selectedBatch?.stock_id,
+                                            )
+                                        }
+                                        disabled={readOnly}
+                                        className="justify-self-end p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -162,10 +166,10 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                 <div className="pt-2">
                     <button
                         onClick={onCheckout}
-                        disabled={isProcessing || (prescriptionRequired && !prescriptionId)}
+                        disabled={readOnly || isProcessing || (prescriptionRequired && !prescriptionId)}
                         className="w-full py-3 bg-healthcare-primary hover:bg-healthcare-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg shadow-healthcare-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                     >
-                        {isProcessing ? 'Processing...' : 'Proceed to Payment'}
+                        {isProcessing ? 'Processing...' : readOnly ? 'View Only Mode' : 'Proceed to Payment'}
                     </button>
                     {prescriptionRequired && !prescriptionId && (
                         <p className="text-[10px] text-center text-orange-500 font-bold mt-2">

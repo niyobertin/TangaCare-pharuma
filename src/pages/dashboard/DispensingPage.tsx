@@ -77,6 +77,7 @@ export function DispensingPage() {
         vatRate: 0.18,
     });
 
+    const isReadOnly = user?.role?.toString()?.toLowerCase() === 'auditor';
     const hasControlledDrug = cart.some((item) => item.is_controlled_drug);
 
     const getApiErrorMessage = (error: any): string => {
@@ -297,6 +298,7 @@ export function DispensingPage() {
     );
 
     const addToCart = async (med: Medicine) => {
+        if (isReadOnly) return;
         if ((med.stock_quantity || 0) <= 0) {
             toast.error('Out of stock');
             return;
@@ -435,6 +437,7 @@ export function DispensingPage() {
     };
 
     const useAlternative = async (alternative: SubstitutionAlternative) => {
+        if (isReadOnly) return;
         try {
             const existingMedicine = medicines.find((medicine) => medicine.id === alternative.id);
             if (existingMedicine) {
@@ -729,6 +732,7 @@ export function DispensingPage() {
                                         onAddToCart={addToCart}
                                         onFindAlternatives={handleFindAlternatives}
                                         isFindingAlternatives={substitutionLoadingMedicineId === med.id}
+                                        readOnly={isReadOnly}
                                     />
                                 ))}
                             </div>
@@ -917,6 +921,7 @@ export function DispensingPage() {
                             prescriptionId={prescriptionId}
                             setPrescriptionId={setPrescriptionId}
                             prescriptionRequired={hasControlledDrug}
+                            readOnly={isReadOnly}
                         />
                     </div>
 

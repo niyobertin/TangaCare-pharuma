@@ -10,6 +10,7 @@ interface MedicineCardProps {
     onAddToCart: (medicine: Medicine) => void;
     onFindAlternatives?: (medicine: Medicine) => void;
     isFindingAlternatives?: boolean;
+    readOnly?: boolean;
 }
 
 export const MedicineCard: React.FC<MedicineCardProps> = ({
@@ -17,6 +18,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
     onAddToCart,
     onFindAlternatives,
     isFindingAlternatives = false,
+    readOnly = false,
 }) => {
     const { nearestExpiry, isLoading } = useMedicineStock(medicine.id);
     const sellingPrice = Number(medicine.selling_price || 0);
@@ -114,10 +116,10 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
             <div className="p-3 bg-slate-50/50 dark:bg-slate-800/50">
                 <button
                     onClick={() => onAddToCart(medicine)}
-                    disabled={!medicine.stock_quantity || medicine.stock_quantity <= 0 || isExpired}
+                    disabled={readOnly || !medicine.stock_quantity || medicine.stock_quantity <= 0 || isExpired}
                     className={clsx(
                         "w-full py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2",
-                        !medicine.stock_quantity || medicine.stock_quantity <= 0 || isExpired
+                        readOnly || !medicine.stock_quantity || medicine.stock_quantity <= 0 || isExpired
                             ? "bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600"
                             : "bg-healthcare-primary text-white hover:bg-healthcare-primary/90 dark:bg-healthcare-primary dark:text-white"
                     )}
@@ -138,7 +140,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
                 {onFindAlternatives && (
                     <button
                         onClick={() => onFindAlternatives(medicine)}
-                        disabled={isFindingAlternatives}
+                        disabled={readOnly || isFindingAlternatives}
                         className="mt-2 w-full py-2 rounded-xl text-[11px] font-black uppercase tracking-wide border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {isFindingAlternatives ? 'Checking alternatives...' : 'Find Alternatives'}
