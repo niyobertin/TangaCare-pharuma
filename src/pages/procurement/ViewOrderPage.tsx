@@ -10,6 +10,7 @@ import {
     ArrowLeft,
 } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { procurementService } from '../../services/procurement.service';
 import type { ProcurementOrder } from '../../types/pharmacy';
 import { useSocket } from '../../context/SocketContext';
 import toast from 'react-hot-toast';
@@ -27,11 +28,23 @@ export function ViewOrderPage() {
     const { socket } = useSocket();
     const [order, setOrder] = useState<ProcurementOrder | null>(null);
     const [loading, setLoading] = useState(true);
+    const [reviewing, setReviewing] = useState(false);
+    const [reviewData, setReviewData] = useState<any[]>([]);
+    const [actionLoading, setActionLoading] = useState(false);
 
     const fetchOrder = async () => {
         try {
             const data = await pharmacyService.getProcurementOrder(Number(orderId));
             setOrder(data);
+            
+            if (data.items) {
+                setReviewData(data.items.map((item: any) => ({
+                    medicine_id: item.medicine_id,
+                    accepted_unit_price: item.accepted_unit_price || item.quoted_unit_price || item.unit_price,
+                    selling_price: item.selling_price || item.unit_price * 1.3, // Suggest 30% markup if not set
+                    status: item.status || 'accepted'
+                })));
+            }
         } catch (error) {
             console.error('Failed to fetch order details', error);
             toast.error('Failed to load order details');
@@ -61,6 +74,30 @@ export function ViewOrderPage() {
             socket.off('po_updated', handlePOUpdate);
         };
     }, [socket, orderId]);
+
+    const handleReviewSubmit = async (finalStatus: 'accepted' | 'rejected') => {
+        setActionLoading(true);
+        try {
+            const itemsToSubmit = reviewData.map(item => ({
+                ...item,
+                status: finalStatus === 'rejected' ? 'rejected' : item.status
+            }));
+            await procurementService.reviewQuotation(Number(orderId), itemsToSubmit);
+            toast.success(`Order ${finalStatus} successfully`);
+            setReviewing(false);
+            fetchOrder();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Failed to submit review');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleReviewChange = (medicineId: number, field: string, value: any) => {
+        setReviewData(prev => prev.map(item => 
+            item.medicine_id === medicineId ? { ...item, [field]: value } : item
+        ));
+    };
 
     const handlePrint = () => {
         window.print();
@@ -101,6 +138,18 @@ export function ViewOrderPage() {
                         PO-{order.id.toString().padStart(4, '0')}
                     </h2>
                     <div className="flex items-center gap-3">
+                        {['QUOTED', 'PARTIALLY_QUOTED', 'SUBMITTED'].includes(order.status.toUpperCase()) && (
+                            <button
+                                onClick={() => setReviewing(!reviewing)}
+                                className={cn(
+                                    "flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-colors shadow-sm",
+                                    reviewing ? "bg-red-500 text-white" : "bg-teal-600 text-white hover:bg-teal-700"
+                                )}
+                            >
+                                <FileText size={18} />
+                                {reviewing ? 'Cancel Review' : 'Review Quotation'}
+                            </button>
+                        )}
                         <button
                             onClick={handlePrint}
                             className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-600 hover:bg-slate-50 transition-colors shadow-sm"
@@ -321,46 +370,140 @@ export function ViewOrderPage() {
                                         <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider text-right">
                                             Total
                                         </th>
+                                        {reviewing && (
+                                            <th className="px-6 py-5 text-[10px] font-black uppercase text-slate-400 tracking-wider text-right">
+                                                Review Actions
+                                            </th>
+                                        )}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                    {order.items?.map((item) => (
-                                        <tr
-                                            key={item.id}
-                                            className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
-                                        >
-                                            <td className="px-6 py-5">
-                                                <div className="flex flex-col">
-                                                    <span className="font-black text-healthcare-dark dark:text-white text-sm uppercase tracking-tight">
-                                                        {item.medicine?.name}
+                                    {order.items?.map((item) => {
+                                        const reviewItem = reviewData.find(r => r.medicine_id === item.medicine_id);
+                                        return (
+                                            <tr
+                                                key={item.id}
+                                                className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                            >
+                                                <td className="px-6 py-5">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-black text-healthcare-dark dark:text-white text-sm uppercase tracking-tight">
+                                                            {item.medicine?.name}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">
+                                                            {item.medicine?.strength} •{' '}
+                                                            {item.medicine?.dosage_form}
+                                                        </span>
+                                                        {item.notes && (
+                                                            <span className="mt-1 text-xs text-amber-600 font-medium italic">
+                                                                Supplier Note: {item.notes}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5 text-right">
+                                                    <div className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-healthcare-dark dark:text-white">
+                                                        {item.quantity_ordered}
+                                                    </div>
+                                                    {item.quantity_available !== undefined && item.quantity_available !== item.quantity_ordered && (
+                                                        <div className="text-[10px] text-red-500 font-bold mt-1">
+                                                            Available: {item.quantity_available}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-5 text-right">
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-sm font-bold text-slate-500 tracking-tight">
+                                                            Req: RWF {Number(item.unit_price).toLocaleString()}
+                                                        </span>
+                                                        {item.quoted_unit_price && (
+                                                            <span className="text-xs font-black text-teal-600">
+                                                                Quoted: RWF {Number(item.quoted_unit_price).toLocaleString()}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-5 text-right">
+                                                    <span className="text-sm font-black text-healthcare-dark dark:text-white tracking-tight">
+                                                        RWF {Number(item.total_price).toLocaleString()}
                                                     </span>
-                                                    <span className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">
-                                                        {item.medicine?.strength} •{' '}
-                                                        {item.medicine?.dosage_form}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-5 text-right">
-                                                <div className="inline-flex items-center justify-center min-w-[32px] px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-black text-healthcare-dark dark:text-white">
-                                                    {item.quantity_ordered}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-5 text-right">
-                                                <span className="text-sm font-bold text-slate-500 tracking-tight">
-                                                    RWF {Number(item.unit_price).toLocaleString()}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-5 text-right">
-                                                <span className="text-sm font-black text-healthcare-dark dark:text-white tracking-tight">
-                                                    RWF {Number(item.total_price).toLocaleString()}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                </td>
+                                                {reviewing && reviewItem && (
+                                                    <td className="px-6 py-5 text-right bg-slate-50/50">
+                                                        <div className="flex flex-col gap-2">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <span className="text-[9px] font-black uppercase text-slate-400">Accepted Price</span>
+                                                                <input 
+                                                                    type="number"
+                                                                    value={reviewItem.accepted_unit_price}
+                                                                    onChange={(e) => handleReviewChange(item.medicine_id, 'accepted_unit_price', Number(e.target.value))}
+                                                                    className="w-24 px-2 py-1 text-xs border rounded-lg focus:ring-1 focus:ring-teal-500 outline-none font-bold"
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <span className="text-[9px] font-black uppercase text-slate-400">Selling Price</span>
+                                                                <input 
+                                                                    type="number"
+                                                                    value={reviewItem.selling_price}
+                                                                    onChange={(e) => handleReviewChange(item.medicine_id, 'selling_price', Number(e.target.value))}
+                                                                    className="w-24 px-2 py-1 text-xs border rounded-lg focus:ring-1 focus:ring-healthcare-primary outline-none font-bold text-healthcare-primary"
+                                                                />
+                                                            </div>
+                                                            <div className="flex justify-end gap-2 mt-1">
+                                                                <button 
+                                                                    onClick={() => handleReviewChange(item.medicine_id, 'status', 'accepted')}
+                                                                    className={cn(
+                                                                        "px-2 py-1 text-[9px] font-black uppercase rounded-md border",
+                                                                        reviewItem.status === 'accepted' ? "bg-teal-500 text-white border-teal-500" : "bg-white text-slate-400 border-slate-200"
+                                                                    )}
+                                                                >
+                                                                    Accept
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleReviewChange(item.medicine_id, 'status', 'rejected')}
+                                                                    className={cn(
+                                                                        "px-2 py-1 text-[9px] font-black uppercase rounded-md border",
+                                                                        reviewItem.status === 'rejected' ? "bg-red-500 text-white border-red-500" : "bg-white text-slate-400 border-slate-200"
+                                                                    )}
+                                                                >
+                                                                    Reject
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
+                    {reviewing && (
+                        <div className="mb-16 p-6 bg-teal-50 dark:bg-slate-800/50 rounded-2xl border border-teal-100 dark:border-teal-900 shadow-lg flex flex-col sm:flex-row justify-between items-center gap-6 animate-in slide-in-from-bottom duration-300">
+                            <div>
+                                <h4 className="text-lg font-black text-teal-800 dark:text-teal-400 uppercase tracking-tight">Financial Review Summary</h4>
+                                <p className="text-sm text-teal-600 font-medium">Review the quoted prices above and set the final selling prices before accepting.</p>
+                            </div>
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => handleReviewSubmit('rejected')}
+                                    disabled={actionLoading}
+                                    className="px-6 py-3 bg-white text-red-600 border border-red-200 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-red-50 transition-colors disabled:opacity-50"
+                                >
+                                    Reject Order
+                                </button>
+                                <button
+                                    onClick={() => handleReviewSubmit('accepted')}
+                                    disabled={actionLoading}
+                                    className="px-8 py-3 bg-teal-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-teal-700 shadow-lg shadow-teal-500/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50"
+                                >
+                                    {actionLoading ? 'Processing...' : 'Approve & Finalize PO'}
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {order.notes && (
                         <div className="mb-16">

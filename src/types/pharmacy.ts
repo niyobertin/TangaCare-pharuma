@@ -337,29 +337,44 @@ export interface Supplier {
 
 export interface ProcurementOrderItem {
     id: number;
+    purchase_order_id: number;
     medicine_id: number;
     quantity_ordered: number;
     quantity_received?: number;
     backorder_qty?: number;
     remaining_qty?: number;
-    unit_price: number;
+    quantity_available?: number; // Quantity available from supplier
+    unit_price: number; // Requested price
+    quoted_unit_price?: number; // Supplier price
+    accepted_unit_price?: number; // Pharmacy agreed price
+    selling_price?: number; // Determined selling price
     total_price: number;
+    status?: string;
+    notes?: string;
     medicine?: Medicine;
 }
 
 export type ProcurementOrderStatus =
     | 'draft'
-    | 'pending'
-    | 'approved'
+    | 'submitted'
+    | 'quoted'
+    | 'partially_quoted'
+    | 'accepted'
+    | 'partially_accepted'
+    | 'rejected'
     | 'confirmed'
     | 'partially_received'
     | 'backordered'
     | 'received'
     | 'cancelled'
-    // Legacy/UI compatibility
+    // Legacy uppercase/UI compatibility
     | 'DRAFT'
-    | 'PENDING'
-    | 'APPROVED'
+    | 'SUBMITTED'
+    | 'QUOTED'
+    | 'PARTIALLY_QUOTED'
+    | 'ACCEPTED'
+    | 'PARTIALLY_ACCEPTED'
+    | 'REJECTED'
     | 'CONFIRMED'
     | 'RECEIVED'
     | 'CANCELLED'
@@ -376,6 +391,9 @@ export interface ProcurementOrder {
     expected_delivery_date?: string;
     received_date?: string;
     status: ProcurementOrderStatus;
+    submitted_at?: string;
+    quoted_at?: string;
+    accepted_at?: string;
     subtotal_amount: number;
     discount_percent: number;
     discount_amount: number;

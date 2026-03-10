@@ -118,4 +118,21 @@ export const procurementService = {
         link.click();
         link.remove();
     },
+
+    async quoteProcurementOrder(id: number, items: any[]): Promise<ProcurementOrder> {
+        const response = await api.patch<{ data: ProcurementOrder }>(`/pharmacy/procurement/${id}/quote`, { items });
+        return response.data.data;
+    },
+
+    async reviewQuotation(id: number, items: any[]): Promise<ProcurementOrder> {
+        const response = await api.patch<{ data: ProcurementOrder }>(`/pharmacy/procurement/${id}/review`, { items });
+        return response.data.data;
+    },
+
+    async getPriceSuggestions(supplierId: number, medicineId: number): Promise<any> {
+        const response = await api.get('/pharmacy/procurement/price-suggestions', {
+            params: { supplier_id: supplierId, medicine_id: medicineId }
+        });
+        return response.data.data;
+    },
 };

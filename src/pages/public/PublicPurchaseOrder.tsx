@@ -7,12 +7,18 @@ import api from '../../lib/api';
 // Define types locally for now, or import if available
 interface PurchaseOrderItem {
     id: number;
+    medicine_id: number;
     medicine: {
+        id?: number;
         name: string;
         code: string;
     };
     quantity_ordered: number;
     unit_price: number;
+    quoted_unit_price?: number;
+    backorder_qty?: number;
+    quantity_available?: number;
+    notes?: string;
     total_price: number;
 }
 
@@ -50,6 +56,8 @@ export const PublicPurchaseOrder = () => {
     const [actionLoading, setActionLoading] = useState(false);
     const [showClarification, setShowClarification] = useState(false);
     const [clarificationMessage, setClarificationMessage] = useState('');
+    const [quotedItems, setQuotedItems] = useState<any[]>([]);
+    const [isQuoting, setIsQuoting] = useState(false);
 
     useEffect(() => {
         const fetchOrder = async () => {
@@ -59,7 +67,18 @@ export const PublicPurchaseOrder = () => {
                 // We might need a separate axios instance or ensure the endpoint is public.
                 // Assuming /api/public/po/:token is open.
                 const response = await api.get(`/public/po/${token}`);
-                setOrder(response.data.data);
+                const orderData = response.data.data;
+                setOrder(orderData);
+                
+                // Initialize quoted items from current order items
+                if (orderData.items) {
+                    setQuotedItems(orderData.items.map((item: any) => ({
+                        medicine_id: item.medicine_id || item.medicine?.id,
+                        quoted_unit_price: item.quoted_unit_price || item.unit_price,
+                        quantity_available: item.quantity_available !== undefined ? item.quantity_available : item.quantity_ordered,
+                        notes: item.notes || ''
+                    })));
+                }
             } catch (error: any) {
                 toast.error(error.response?.data?.message || 'Failed to load purchase order');
             } finally {
@@ -72,14 +91,18 @@ export const PublicPurchaseOrder = () => {
         }
     }, [token]);
 
-    const handleAction = async (action: 'approve' | 'confirm' | 'clarification' | 'reject' | 'delivered') => {
+    const handleAction = async (action: 'approve' | 'confirm' | 'clarification' | 'reject' | 'delivered' | 'quote') => {
         if (!order) return;
 
         setActionLoading(true);
         try {
             const response = await api.post(`/public/po/${token}/action`, {
                 action,
-                data: action === 'clarification' ? { message: clarificationMessage } : undefined
+                data: action === 'clarification' 
+                    ? { message: clarificationMessage } 
+                    : action === 'quote'
+                        ? { items: quotedItems }
+                        : undefined
             });
 
             // Update local state immediately with the returned updated order
@@ -97,7 +120,14 @@ export const PublicPurchaseOrder = () => {
             toast.error(error.response?.data?.message || `Failed to ${action} order`);
         } finally {
             setActionLoading(false);
+            setIsQuoting(false);
         }
+    };
+
+    const handleQuoteChange = (medicineId: number, field: string, value: any) => {
+        setQuotedItems(prev => prev.map(item => 
+            item.medicine_id === medicineId ? { ...item, [field]: value } : item
+        ));
     };
 
     if (loading) {
@@ -155,6 +185,14 @@ export const PublicPurchaseOrder = () => {
                                 }`}></span>
                             {order.status.replace(/_/g, ' ')}
                         </div>
+                        {order.status.toUpperCase() === 'SUBMITTED' && !isQuoting && (
+                            <button 
+                                onClick={() => setIsQuoting(true)}
+                                className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-sm font-bold shadow-sm"
+                            >
+                                Submit Quotation
+                            </button>
+                        )}
                     </div>
 
                     <div className="p-8">
@@ -191,15 +229,43 @@ export const PublicPurchaseOrder = () => {
                                             <td className="px-6 py-4">
                                                 <div className="font-bold text-slate-700">{item.medicine.name}</div>
                                                 <div className="text-xs text-slate-400 font-medium">{item.medicine.code}</div>
+                                                {isQuoting && (
+                                                    <input 
+                                                        type="text"
+                                                        placeholder="Notes/Remarks"
+                                                        value={quotedItems.find(i => i.medicine_id === item.medicine_id)?.notes || ''}
+                                                        onChange={(e) => handleQuoteChange(item.medicine_id, 'notes', e.target.value)}
+                                                        className="mt-2 w-full px-2 py-1 text-xs border rounded outline-none focus:ring-1 focus:ring-teal-500"
+                                                    />
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 text-center text-slate-600 font-medium bg-slate-50/30">
-                                                {item.quantity_ordered}
+                                                {isQuoting ? (
+                                                    <input 
+                                                        type="number"
+                                                        value={quotedItems.find(i => i.medicine_id === item.medicine_id)?.quantity_available || 0}
+                                                        onChange={(e) => handleQuoteChange(item.medicine_id, 'quantity_available', Number(e.target.value))}
+                                                        className="w-16 px-1 py-1 text-center border rounded outline-none focus:ring-1 focus:ring-teal-500"
+                                                    />
+                                                ) : item.quantity_ordered}
                                             </td>
                                             <td className="px-6 py-4 text-right text-slate-600 tabular-nums">
-                                                {item.unit_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                {isQuoting ? (
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <span className="text-xs text-slate-400">RWF</span>
+                                                        <input 
+                                                            type="number"
+                                                            value={quotedItems.find(i => i.medicine_id === item.medicine_id)?.quoted_unit_price || 0}
+                                                            onChange={(e) => handleQuoteChange(item.medicine_id, 'quoted_unit_price', Number(e.target.value))}
+                                                            className="w-24 px-1 py-1 text-right border rounded outline-none focus:ring-1 focus:ring-teal-500 font-bold"
+                                                        />
+                                                    </div>
+                                                ) : (item.quoted_unit_price || item.unit_price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </td>
                                             <td className="px-6 py-4 text-right font-bold text-slate-800 tabular-nums bg-slate-50/30">
-                                                {item.total_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                {isQuoting 
+                                                    ? ((quotedItems.find(i => i.medicine_id === item.medicine_id)?.quoted_unit_price || 0) * (item.quantity_ordered)).toLocaleString(undefined, { minimumFractionDigits: 2 })
+                                                    : item.total_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </td>
                                         </tr>
                                     ))}
@@ -216,36 +282,79 @@ export const PublicPurchaseOrder = () => {
                         </div>
 
                         {/* Actions Area */}
-                        {['PENDING', 'ORDERED', 'SUBMITTED', 'DRAFT'].includes(order.status.toUpperCase()) ? (
+                        {['PENDING', 'ORDERED', 'SUBMITTED', 'DRAFT', 'QUOTED', 'PARTIALLY_QUOTED'].includes(order.status.toUpperCase()) ? (
                             <div className="flex flex-col gap-4">
                                 <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-amber-800 text-sm flex gap-3 items-start">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                     </svg>
-                                    <p>Please review the order details above. You can accept to fulfill this order or reject it if you cannot meet the requirements.</p>
+                                    <p>
+                                        {order.status.toUpperCase() === 'QUOTED' 
+                                            ? 'Quotation submitted. Waiting for pharmacy review.' 
+                                            : isQuoting 
+                                                ? 'Update the unit prices and availability for each item above then submit your quotation.'
+                                                : 'Please review the order details above. You can accept to fulfill this order or reject it if you cannot meet the requirements.'}
+                                    </p>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                                    <button
-                                        onClick={() => handleAction('approve')}
-                                        disabled={actionLoading}
-                                        className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg shadow-teal-600/20 hover:shadow-xl hover:shadow-teal-600/30 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none disabled:shadow-none"
-                                    >
-                                        {actionLoading ? 'Processing...' : 'Acccept & Approve Order'}
-                                    </button>
-                                    <button
-                                        onClick={() => handleAction('reject')}
-                                        disabled={actionLoading}
-                                        className="sm:flex-none bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 px-6 py-3.5 rounded-xl font-bold hover:text-red-600 hover:border-red-100 transition-colors disabled:opacity-50"
-                                    >
-                                        Reject
-                                    </button>
-                                    <button
-                                        onClick={() => setShowClarification(true)}
-                                        disabled={actionLoading}
-                                        className="sm:flex-none text-slate-500 hover:text-teal-600 px-4 py-3.5 font-bold text-sm transition-colors"
-                                    >
-                                        Ask Question
-                                    </button>
+                                    {isQuoting ? (
+                                        <>
+                                            <button
+                                                onClick={() => handleAction('quote')}
+                                                disabled={actionLoading}
+                                                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg shadow-teal-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50"
+                                            >
+                                                {actionLoading ? 'Submitting...' : 'Submit Quotation'}
+                                            </button>
+                                            <button
+                                                onClick={() => setIsQuoting(false)}
+                                                disabled={actionLoading}
+                                                className="px-6 py-3.5 bg-white text-slate-500 border rounded-xl font-bold"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </>
+                                    ) : order.status.toUpperCase() === 'QUOTED' ? (
+                                        <button
+                                            onClick={() => setIsQuoting(true)}
+                                            className="flex-1 bg-teal-100 text-teal-700 px-6 py-3.5 rounded-xl font-bold hover:bg-teal-200 transition-colors"
+                                        >
+                                            Update Quotation
+                                        </button>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => handleAction('approve')}
+                                                disabled={actionLoading}
+                                                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg shadow-teal-600/20 hover:shadow-xl transition-all disabled:opacity-50"
+                                            >
+                                                {actionLoading ? 'Processing...' : 'Accept & Approve Order'}
+                                            </button>
+                                            <button
+                                                onClick={() => setIsQuoting(true)}
+                                                disabled={actionLoading}
+                                                className="flex-1 bg-white hover:bg-teal-50 text-teal-600 border border-teal-200 px-6 py-3.5 rounded-xl font-bold transition-all"
+                                            >
+                                                Submit Quotation
+                                            </button>
+                                            <button
+                                                onClick={() => handleAction('reject')}
+                                                disabled={actionLoading}
+                                                className="bg-white hover:bg-red-50 text-slate-600 border border-slate-200 px-6 py-3.5 rounded-xl font-bold hover:text-red-600 transition-colors disabled:opacity-50"
+                                            >
+                                                Reject
+                                            </button>
+                                        </>
+                                    )}
+                                    {!isQuoting && (
+                                        <button
+                                            onClick={() => setShowClarification(true)}
+                                            disabled={actionLoading}
+                                            className="sm:flex-none text-slate-500 hover:text-teal-600 px-4 py-3.5 font-bold text-sm transition-colors"
+                                        >
+                                            Ask Question
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ) : (
