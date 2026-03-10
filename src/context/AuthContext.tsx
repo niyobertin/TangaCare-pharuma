@@ -145,7 +145,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const oid = profile.organization_id || orgs?.[0]?.id;
                 if (oid) {
                     try {
-                        const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
+                        localStorage.setItem(ORG_KEY, String(oid));
+                        setOrganizationIdState(oid);
+                        const facsBody = await pharmacyService.getFacilities({ limit: 100 });
                         setFacilities(facsBody.data || []);
                     } catch (e) {
                         console.error('Failed to fetch facilities during checkAuth:', e);
@@ -204,7 +206,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const oid = u?.organization_id || orgs[0]?.id;
             if (oid) {
                 try {
-                    const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
+                    localStorage.setItem(ORG_KEY, String(oid));
+                    setOrganizationIdState(oid);
+                    const facsBody = await pharmacyService.getFacilities({ limit: 100 });
                     setFacilities(facsBody.data || []);
                 } catch (e) {
                     console.error('Failed to fetch facilities during login:', e);
@@ -269,7 +273,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const oid = profile.organization_id || orgs?.[0]?.id;
         if (oid) {
             try {
-                const facsBody = await pharmacyService.getFacilities({ organization_id: oid, limit: 100 });
+                localStorage.setItem(ORG_KEY, String(oid));
+                setOrganizationIdState(oid);
+                const facsBody = await pharmacyService.getFacilities({ limit: 100 });
                 setFacilities(facsBody.data || []);
             } catch (e) {
                 console.error('Failed to fetch facilities during refreshProfile:', e);

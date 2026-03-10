@@ -97,10 +97,8 @@ export const medicineService = {
         link.remove();
     },
 
-    async getCategories(params?: {
-        organization_id?: number;
-    }): Promise<MedicineCategory[]> {
-        const response = await api.get<any>('/pharmacy/categories', { params });
+    async getCategories(): Promise<MedicineCategory[]> {
+        const response = await api.get<any>('/pharmacy/categories');
         const data = (response.data as any).data ?? response.data;
         return Array.isArray(data) ? data : [];
     },
@@ -109,7 +107,6 @@ export const medicineService = {
         name: string;
         code: string;
         default_markup_percent?: number;
-        organization_id?: number;
     }): Promise<MedicineCategory> {
         const response = await api.post<any>('/pharmacy/categories', data);
         return (response.data as any).data ?? response.data;
