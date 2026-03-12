@@ -29,8 +29,14 @@ const PrivacyPolicyPage = lazyNamed(
     () => import('../pages/marketing/PrivacyPolicyPage'),
     'PrivacyPolicyPage',
 );
-const TermsOfUsePage = lazyNamed(() => import('../pages/marketing/TermsOfUsePage'), 'TermsOfUsePage');
-const PublicPurchaseOrder = lazyNamed(() => import('../pages/public/PublicPurchaseOrder'), 'PublicPurchaseOrder');
+const TermsOfUsePage = lazyNamed(
+    () => import('../pages/marketing/TermsOfUsePage'),
+    'TermsOfUsePage',
+);
+const PublicPurchaseOrder = lazyNamed(
+    () => import('../pages/public/PublicPurchaseOrder'),
+    'PublicPurchaseOrder',
+);
 const OnboardingPage = lazyNamed(() => import('../pages/auth/OnboardingPage'), 'OnboardingPage');
 const AlertsPage = lazyNamed(() => import('../pages/dashboard/AlertsPage'), 'AlertsPage');
 const SettingsPage = lazyNamed(() => import('../pages/dashboard/SettingsPage'), 'SettingsPage');
@@ -47,7 +53,9 @@ const rootRoute = createRootRoute({
         <div className="h-screen w-full flex items-center justify-center bg-healthcare-surface p-10">
             <div className="glass-card p-10 max-w-md w-full text-center space-y-4 rounded-2xl border-2">
                 <h2 className="text-xl font-black text-healthcare-dark">404 - Not Found</h2>
-                <p className="text-slate-500 text-sm">The page you are looking for does not exist.</p>
+                <p className="text-slate-500 text-sm">
+                    The page you are looking for does not exist.
+                </p>
                 <button
                     onClick={() => (window.location.href = '/')}
                     className="px-6 py-2 bg-healthcare-primary text-white rounded-lg text-xs font-black hover:bg-teal-700 transition-all shadow-md"
@@ -86,7 +94,7 @@ const termsOfUseRoute = createRoute({
 const loginFallbackRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/login',
-    component: () => <Navigate to={"/auth/login" as any} search={{} as any} />,
+    component: () => <Navigate to={'/auth/login' as any} search={{} as any} />,
 });
 
 // App Layout
@@ -105,26 +113,27 @@ const indexRoute = createRoute({
 const alertsRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'alerts',
-    component: () => (
+    component: () =>
         withRouteSuspense(
             <RequirePermission permission={PERMISSIONS.ALERTS_READ}>
                 <AlertsPage />
             </RequirePermission>,
-        )
-    ),
+        ),
     validateSearch: (search: Record<string, unknown>) => {
-        return z.object({
-            search: z.string().optional(),
-            type: z.enum(['all', 'low_stock', 'expiry']).optional(),
-            status: z.enum(['active', 'resolved']).optional(),
-        }).parse(search);
+        return z
+            .object({
+                search: z.string().optional(),
+                type: z.enum(['all', 'low_stock', 'expiry']).optional(),
+                status: z.enum(['active', 'resolved']).optional(),
+            })
+            .parse(search);
     },
 });
 
 const employeeRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'employees',
-    component: () => <Navigate to={"/app/users" as any} search={{} as any} />,
+    component: () => <Navigate to={'/app/users' as any} search={{} as any} />,
 });
 
 const settingsRoute = createRoute({

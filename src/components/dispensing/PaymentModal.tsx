@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, CreditCard, Banknote, Smartphone, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
+import {
+    X,
+    Plus,
+    CreditCard,
+    Banknote,
+    Smartphone,
+    CheckCircle2,
+    AlertCircle,
+    ShieldCheck,
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import type { SalePaymentMethod, InsuranceProvider } from '../../types/pharmacy';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -20,7 +29,7 @@ interface PaymentModalProps {
         patientIdType?: string,
         patientIdNumber?: string,
         insuranceProviderId?: number,
-        patientInsuranceNumber?: string
+        patientInsuranceNumber?: string,
     ) => void;
     isProcessing?: boolean;
 }
@@ -33,14 +42,22 @@ const PAYMENT_METHODS: { id: SalePaymentMethod; label: string; icon: any }[] = [
     { id: 'bank', label: 'Bank Transfer', icon: Banknote },
 ];
 
-export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfirm, isProcessing }: PaymentModalProps) {
+export function PaymentModal({
+    totalAmount,
+    hasControlledDrugs,
+    onClose,
+    onConfirm,
+    isProcessing,
+}: PaymentModalProps) {
     const [payments, setPayments] = useState<Payment[]>([
         { id: '1', method: 'cash', amount: totalAmount },
     ]);
     const [patientIdType, setPatientIdType] = useState('National ID');
     const [patientIdNumber, setPatientIdNumber] = useState('');
     const [insuranceProviders, setInsuranceProviders] = useState<InsuranceProvider[]>([]);
-    const [selectedInsuranceProviderId, setSelectedInsuranceProviderId] = useState<number | undefined>();
+    const [selectedInsuranceProviderId, setSelectedInsuranceProviderId] = useState<
+        number | undefined
+    >();
     const [patientInsuranceNumber, setPatientInsuranceNumber] = useState('');
 
     useEffect(() => {
@@ -57,14 +74,17 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
 
     // Handle insurance calculation logic
     useEffect(() => {
-        const insurancePayment = payments.find(p => p.method === 'insurance');
+        const insurancePayment = payments.find((p) => p.method === 'insurance');
         if (insurancePayment && selectedInsuranceProviderId) {
-            const provider = insuranceProviders.find(p => p.id === selectedInsuranceProviderId);
+            const provider = insuranceProviders.find((p) => p.id === selectedInsuranceProviderId);
             if (provider) {
                 const coveragePercent = Number(provider.coverage_percentage);
                 let CalculatedInsuranceAmount = (totalAmount * coveragePercent) / 100;
 
-                if (provider.max_coverage_limit && CalculatedInsuranceAmount > Number(provider.max_coverage_limit)) {
+                if (
+                    provider.max_coverage_limit &&
+                    CalculatedInsuranceAmount > Number(provider.max_coverage_limit)
+                ) {
                     CalculatedInsuranceAmount = Number(provider.max_coverage_limit);
                 }
 
@@ -74,7 +94,11 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
                 // Update payments: Ensure we have insurance and co-pay (cash)
                 setPayments([
                     { id: insurancePayment.id, method: 'insurance', amount: roundedInsurance },
-                    { id: 'copay-' + Math.random().toString(36).substr(2, 4), method: 'cash', amount: copayAmount }
+                    {
+                        id: 'copay-' + Math.random().toString(36).substr(2, 4),
+                        method: 'cash',
+                        amount: copayAmount,
+                    },
                 ]);
             }
         }
@@ -98,9 +122,7 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
     };
 
     const updatePayment = (id: string, field: keyof Payment, value: any) => {
-        setPayments(
-            payments.map((p) => (p.id === id ? { ...p, [field]: value } : p))
-        );
+        setPayments(payments.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
     };
 
     const handleConfirm = () => {
@@ -113,7 +135,7 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
             return;
         }
 
-        const hasInsurance = payments.some(p => p.method === 'insurance');
+        const hasInsurance = payments.some((p) => p.method === 'insurance');
         if (hasInsurance && !selectedInsuranceProviderId) {
             toast.error('Insurance provider is required');
             return;
@@ -124,7 +146,7 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
             hasControlledDrugs ? patientIdType : undefined,
             hasControlledDrugs ? patientIdNumber : undefined,
             hasInsurance ? selectedInsuranceProviderId : undefined,
-            hasInsurance ? patientInsuranceNumber : undefined
+            hasInsurance ? patientInsuranceNumber : undefined,
         );
     };
 
@@ -138,7 +160,10 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
                             Process Payment
                         </h3>
                         <p className="text-xs text-slate-500 font-bold">
-                            Total Due: <span className="text-healthcare-primary text-sm">{totalAmount.toLocaleString()} RWF</span>
+                            Total Due:{' '}
+                            <span className="text-healthcare-primary text-sm">
+                                {totalAmount.toLocaleString()} RWF
+                            </span>
                         </p>
                     </div>
                     <button
@@ -167,7 +192,13 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
                                         <div className="relative">
                                             <select
                                                 value={payment.method}
-                                                onChange={(e) => updatePayment(payment.id, 'method', e.target.value)}
+                                                onChange={(e) =>
+                                                    updatePayment(
+                                                        payment.id,
+                                                        'method',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none appearance-none font-bold text-healthcare-dark dark:text-white"
                                             >
                                                 {PAYMENT_METHODS.map((m) => (
@@ -178,7 +209,10 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
                                             </select>
                                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                                                 {(() => {
-                                                    const Icon = PAYMENT_METHODS.find(m => m.id === payment.method)?.icon || Banknote;
+                                                    const Icon =
+                                                        PAYMENT_METHODS.find(
+                                                            (m) => m.id === payment.method,
+                                                        )?.icon || Banknote;
                                                     return <Icon size={14} />;
                                                 })()}
                                             </div>
@@ -192,13 +226,21 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
                                             type="number"
                                             value={payment.amount}
                                             disabled={payment.method === 'insurance'}
-                                            onChange={(e) => updatePayment(payment.id, 'amount', Number(e.target.value))}
+                                            onChange={(e) =>
+                                                updatePayment(
+                                                    payment.id,
+                                                    'amount',
+                                                    Number(e.target.value),
+                                                )
+                                            }
                                             className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none font-bold text-right text-healthcare-dark dark:text-white disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-slate-900"
                                         />
                                     </div>
                                 </div>
 
-                                {(payment.method === 'mobile_money' || payment.method === 'card' || payment.method === 'bank') && (
+                                {(payment.method === 'mobile_money' ||
+                                    payment.method === 'card' ||
+                                    payment.method === 'bank') && (
                                     <div className="space-y-1">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
                                             Reference / Transaction ID
@@ -207,7 +249,13 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
                                             type="text"
                                             placeholder="Enter reference number..."
                                             value={payment.reference || ''}
-                                            onChange={(e) => updatePayment(payment.id, 'reference', e.target.value)}
+                                            onChange={(e) =>
+                                                updatePayment(
+                                                    payment.id,
+                                                    'reference',
+                                                    e.target.value,
+                                                )
+                                            }
                                             className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none text-healthcare-dark dark:text-white"
                                         />
                                     </div>
@@ -221,7 +269,11 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
                                             </label>
                                             <select
                                                 value={selectedInsuranceProviderId}
-                                                onChange={(e) => setSelectedInsuranceProviderId(Number(e.target.value))}
+                                                onChange={(e) =>
+                                                    setSelectedInsuranceProviderId(
+                                                        Number(e.target.value),
+                                                    )
+                                                }
                                                 className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none font-bold text-healthcare-dark dark:text-white"
                                             >
                                                 <option value="">Select Provider...</option>
@@ -240,7 +292,9 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
                                                 type="text"
                                                 placeholder="Enter insurance number..."
                                                 value={patientInsuranceNumber}
-                                                onChange={(e) => setPatientInsuranceNumber(e.target.value)}
+                                                onChange={(e) =>
+                                                    setPatientInsuranceNumber(e.target.value)
+                                                }
                                                 className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-healthcare-primary outline-none text-healthcare-dark dark:text-white"
                                             />
                                         </div>
@@ -314,11 +368,15 @@ export function PaymentModal({ totalAmount, hasControlledDrugs, onClose, onConfi
                 <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 space-y-4">
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-500 font-bold">Paid</span>
-                        <span className="font-black text-healthcare-dark dark:text-white">{totalPaid.toLocaleString()}</span>
+                        <span className="font-black text-healthcare-dark dark:text-white">
+                            {totalPaid.toLocaleString()}
+                        </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-500 font-bold">Balance</span>
-                        <span className={`font-black ${balance === 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                        <span
+                            className={`font-black ${balance === 0 ? 'text-emerald-500' : 'text-red-500'}`}
+                        >
                             {balance.toLocaleString()}
                         </span>
                     </div>

@@ -13,7 +13,6 @@ export const UserRole = {
     USER: 'user',
 } as const;
 
-
 export const SUPER_ADMIN_ROLE = 'super_admin';
 
 export function isSuperAdmin(role?: string): boolean {

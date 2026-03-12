@@ -131,7 +131,7 @@ export function FacilityConfigurationModal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <div className="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-                { }
+                {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start shrink-0">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark">Manage Facility</h2>
@@ -150,14 +150,15 @@ export function FacilityConfigurationModal({
                     </button>
                 </div>
 
-                { }
+                {}
                 <div className="flex border-b border-slate-100 dark:border-slate-800 px-6 shrink-0">
                     <button
                         onClick={() => setActiveTab('config')}
-                        className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'config'
-                            ? 'border-healthcare-primary text-healthcare-primary'
-                            : 'border-transparent text-slate-500 hover:text-slate-700'
-                            }`}
+                        className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${
+                            activeTab === 'config'
+                                ? 'border-healthcare-primary text-healthcare-primary'
+                                : 'border-transparent text-slate-500 hover:text-slate-700'
+                        }`}
                     >
                         <div className="flex items-center gap-2">
                             <Settings size={16} /> Configuration
@@ -166,10 +167,11 @@ export function FacilityConfigurationModal({
                     {isHospital && (
                         <button
                             onClick={() => setActiveTab('departments')}
-                            className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'departments'
-                                ? 'border-healthcare-primary text-healthcare-primary'
-                                : 'border-transparent text-slate-500 hover:text-slate-700'
-                                }`}
+                            className={`py-3 px-4 text-sm font-bold border-b-2 transition-colors ${
+                                activeTab === 'departments'
+                                    ? 'border-healthcare-primary text-healthcare-primary'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                            }`}
                         >
                             <div className="flex items-center gap-2">
                                 <Building2 size={16} /> Departments
@@ -178,7 +180,7 @@ export function FacilityConfigurationModal({
                     )}
                 </div>
 
-                { }
+                {}
                 <div className="p-6 overflow-y-auto">
                     {activeTab === 'config' ? (
                         <form
@@ -294,7 +296,7 @@ export function FacilityConfigurationModal({
                         </form>
                     ) : (
                         <div className="space-y-6">
-                            { }
+                            {}
                             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                                 <h3 className="text-sm font-bold text-slate-700 mb-3">
                                     Add New Department
@@ -328,7 +330,7 @@ export function FacilityConfigurationModal({
                                 </div>
                             </div>
 
-                            { }
+                            {}
                             <div>
                                 <table className="tc-table w-full text-left text-sm">
                                     <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs">

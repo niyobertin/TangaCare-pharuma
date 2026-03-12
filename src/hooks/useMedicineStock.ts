@@ -24,7 +24,7 @@ export const useMedicineStock = (medicineId: number): MedicineStockInfo => {
 
         const fetchStockDetails = async () => {
             try {
-                setInfo(prev => ({ ...prev, isLoading: true }));
+                setInfo((prev) => ({ ...prev, isLoading: true }));
 
                 const stockResponse = await pharmacyService.getStock({
                     medicine_id: medicineId,
@@ -49,7 +49,8 @@ export const useMedicineStock = (medicineId: number): MedicineStockInfo => {
                 const nearestStock =
                     validStockRows.find((stock) => !!stock.location?.name) || validStockRows[0];
                 const nearestExpiry = nearestStock?.batch?.expiry_date || null;
-                const storageLocation = nearestStock?.location?.name || (nearestStock ? 'Main Shelf' : null);
+                const storageLocation =
+                    nearestStock?.location?.name || (nearestStock ? 'Main Shelf' : null);
 
                 setInfo({
                     nearestExpiry,
@@ -57,10 +58,9 @@ export const useMedicineStock = (medicineId: number): MedicineStockInfo => {
                     isLoading: false,
                     error: null,
                 });
-
             } catch (err) {
                 if (isMounted) {
-                    setInfo(prev => ({ ...prev, isLoading: false, error: err }));
+                    setInfo((prev) => ({ ...prev, isLoading: false, error: err }));
                 }
             }
         };

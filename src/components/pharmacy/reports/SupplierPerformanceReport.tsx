@@ -110,12 +110,13 @@ export function SupplierPerformanceReport() {
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     <span
-                                        className={`font-bold ${item.on_time_delivery_rate > 90
+                                        className={`font-bold ${
+                                            item.on_time_delivery_rate > 90
                                                 ? 'text-emerald-600'
                                                 : item.on_time_delivery_rate > 75
-                                                    ? 'text-amber-600'
-                                                    : 'text-rose-600'
-                                            }`}
+                                                  ? 'text-amber-600'
+                                                  : 'text-rose-600'
+                                        }`}
                                     >
                                         {item.on_time_delivery_rate}%
                                     </span>

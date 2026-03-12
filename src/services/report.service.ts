@@ -325,9 +325,7 @@ export const reportService = {
     },
 
     async getAdvancedKPIs(): Promise<AdvancedKPIs> {
-        const response = await api.get<{ data: AdvancedKPIs }>(
-            '/pharmacy/analytics/kpis',
-        );
+        const response = await api.get<{ data: AdvancedKPIs }>('/pharmacy/analytics/kpis');
         return (response.data as any).data ?? response.data;
     },
 
@@ -338,17 +336,12 @@ export const reportService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async getExpiryHeatMap(params: {
-        start: string;
-        end: string;
-    }): Promise<ExpiryHeatMapData> {
+    async getExpiryHeatMap(params: { start: string; end: string }): Promise<ExpiryHeatMapData> {
         const response = await api.get<any>('/pharmacy/analytics/expiry-heatmap', { params });
         return (response.data as any).data ?? response.data;
     },
 
-    async getFEFOCompliance(
-        days?: number,
-    ): Promise<FEFOComplianceData> {
+    async getFEFOCompliance(days?: number): Promise<FEFOComplianceData> {
         const response = await api.get<any>('/pharmacy/analytics/fefo-compliance', {
             params: { days },
         });
@@ -362,9 +355,7 @@ export const reportService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async getMultiLocationComparison(
-        metric: string,
-    ): Promise<MultiLocationData> {
+    async getMultiLocationComparison(metric: string): Promise<MultiLocationData> {
         const response = await api.get<any>('/pharmacy/analytics/multi-location', {
             params: { metric },
         });
@@ -407,7 +398,9 @@ export const reportService = {
     },
 
     async getVelocitySegmentation(params?: { days?: number; facilityId?: number }): Promise<any> {
-        const response = await api.get<any>('/pharmacy/analytics/velocity-segmentation', { params });
+        const response = await api.get<any>('/pharmacy/analytics/velocity-segmentation', {
+            params,
+        });
         return (response.data as any).data ?? response.data;
     },
 
@@ -416,7 +409,9 @@ export const reportService = {
         end_date?: string;
         facilityId?: number;
     }): Promise<any> {
-        const response = await api.get<any>('/pharmacy/analytics/supplier-intelligence', { params });
+        const response = await api.get<any>('/pharmacy/analytics/supplier-intelligence', {
+            params,
+        });
         return (response.data as any).data ?? response.data;
     },
 
@@ -457,12 +452,19 @@ export const reportService = {
         organizationId?: number;
         lookback_days?: number;
     }): Promise<any> {
-        const response = await api.get<any>('/pharmacy/analytics/multi-branch-transfer', { params });
+        const response = await api.get<any>('/pharmacy/analytics/multi-branch-transfer', {
+            params,
+        });
         return (response.data as any).data ?? response.data;
     },
 
-    async getMobileWorkflowBoard(params?: { facilityId?: number; organizationId?: number }): Promise<any> {
-        const response = await api.get<any>('/pharmacy/analytics/mobile-workflow-board', { params });
+    async getMobileWorkflowBoard(params?: {
+        facilityId?: number;
+        organizationId?: number;
+    }): Promise<any> {
+        const response = await api.get<any>('/pharmacy/analytics/mobile-workflow-board', {
+            params,
+        });
         return (response.data as any).data ?? response.data;
     },
 
@@ -481,12 +483,16 @@ export const reportService = {
             is_active?: boolean;
         }>,
     ): Promise<any> {
-        const response = await api.put<any>(`/pharmacy/par/levels/department/${departmentId}`, { levels });
+        const response = await api.put<any>(`/pharmacy/par/levels/department/${departmentId}`, {
+            levels,
+        });
         return (response.data as any).data ?? response.data;
     },
 
     async generateParTasks(facilityId: number, department_id?: number): Promise<any> {
-        const response = await api.post<any>(`/pharmacy/par/tasks/generate/${facilityId}`, { department_id });
+        const response = await api.post<any>(`/pharmacy/par/tasks/generate/${facilityId}`, {
+            department_id,
+        });
         return (response.data as any).data ?? response.data;
     },
 
@@ -503,13 +509,14 @@ export const reportService = {
         facilityId: number,
         payload: { status: 'pending' | 'in_progress' | 'completed' | 'cancelled'; notes?: string },
     ): Promise<any> {
-        const response = await api.patch<any>(`/pharmacy/par/tasks/${taskId}/status/${facilityId}`, payload);
+        const response = await api.patch<any>(
+            `/pharmacy/par/tasks/${taskId}/status/${facilityId}`,
+            payload,
+        );
         return (response.data as any).data ?? response.data;
     },
 
-    async getBatchTraceability(
-        batchId: number,
-    ): Promise<BatchTraceabilityReport> {
+    async getBatchTraceability(batchId: number): Promise<BatchTraceabilityReport> {
         const response = await api.get<any>(`/pharmacy/reports/batch-traceability/${batchId}`);
         return (response.data as any).data ?? response.data;
     },
@@ -632,9 +639,7 @@ export const reportService = {
     },
 
     async getDashboardSummary(facilityId: number | null): Promise<DashboardSummary> {
-        const url = facilityId
-            ? `/pharmacy/kpis/summary/${facilityId}`
-            : '/pharmacy/kpis/summary';
+        const url = facilityId ? `/pharmacy/kpis/summary/${facilityId}` : '/pharmacy/kpis/summary';
         const response = await api.get<any>(url);
         return (response.data as any).data ?? response.data;
     },

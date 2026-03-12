@@ -23,7 +23,10 @@ export function ParReplenishmentReport({ facilityId }: ParReplenishmentReportPro
         try {
             const [dashboardResult, taskResult] = await Promise.all([
                 pharmacyService.getParDashboard(facilityId),
-                pharmacyService.getParTasks(facilityId, statusFilter === 'all' ? undefined : { status: statusFilter }),
+                pharmacyService.getParTasks(
+                    facilityId,
+                    statusFilter === 'all' ? undefined : { status: statusFilter },
+                ),
             ]);
             setDashboard(dashboardResult);
             setTasks(Array.isArray(taskResult) ? taskResult : []);
@@ -41,7 +44,9 @@ export function ParReplenishmentReport({ facilityId }: ParReplenishmentReportPro
         setGenerating(true);
         try {
             const result = await pharmacyService.generateParTasks(facilityId);
-            toast.success(`PAR tasks generated: ${Number(result?.created || 0)} new, ${Number(result?.updated || 0)} refreshed`);
+            toast.success(
+                `PAR tasks generated: ${Number(result?.created || 0)} new, ${Number(result?.updated || 0)} refreshed`,
+            );
             await load();
         } catch (error) {
             console.error('Failed to generate PAR tasks:', error);
@@ -84,7 +89,16 @@ export function ParReplenishmentReport({ facilityId }: ParReplenishmentReportPro
             <SkeletonTable
                 rows={8}
                 columns={8}
-                headers={['Medicine', 'Department', 'Current', 'Target', 'Suggested', 'Priority', 'Status', 'Actions']}
+                headers={[
+                    'Medicine',
+                    'Department',
+                    'Current',
+                    'Target',
+                    'Suggested',
+                    'Priority',
+                    'Status',
+                    'Actions',
+                ]}
                 className="border-none shadow-none"
             />
         );
@@ -153,8 +167,12 @@ export function ParReplenishmentReport({ facilityId }: ParReplenishmentReportPro
                                 <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                                     {task.department?.name || `Dept #${task.department_id}`}
                                 </td>
-                                <td className="px-4 py-3 text-right">{Number(task.current_quantity || 0).toLocaleString()}</td>
-                                <td className="px-4 py-3 text-right">{Number(task.target_quantity || 0).toLocaleString()}</td>
+                                <td className="px-4 py-3 text-right">
+                                    {Number(task.current_quantity || 0).toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                    {Number(task.target_quantity || 0).toLocaleString()}
+                                </td>
                                 <td className="px-4 py-3 text-right font-black text-healthcare-primary">
                                     {Number(task.suggested_quantity || 0).toLocaleString()}
                                 </td>
@@ -204,7 +222,9 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
     return (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2">
             <p className="text-[10px] font-black uppercase text-slate-400">{label}</p>
-            <p className="text-lg font-black text-slate-700 dark:text-slate-100">{Number(value || 0).toLocaleString()}</p>
+            <p className="text-lg font-black text-slate-700 dark:text-slate-100">
+                {Number(value || 0).toLocaleString()}
+            </p>
         </div>
     );
 }

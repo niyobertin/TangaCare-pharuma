@@ -230,7 +230,9 @@ export function DocsPage() {
                                 Complete System Documentation
                             </h1>
                             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 max-w-3xl">
-                                Full workflow guide for pharmacy operations across setup, inventory, procurement, dispensing, safety, reporting, and multi-role governance.
+                                Full workflow guide for pharmacy operations across setup, inventory,
+                                procurement, dispensing, safety, reporting, and multi-role
+                                governance.
                             </p>
                         </div>
                     </div>
@@ -330,7 +332,8 @@ export function DocsPage() {
                         Documentation Notes
                     </h3>
                     <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                        This documentation is hosted on the marketing web side (`/docs`) and is intended as the primary training and reference manual for all teams.
+                        This documentation is hosted on the marketing web side (`/docs`) and is
+                        intended as the primary training and reference manual for all teams.
                     </p>
                 </section>
             </main>

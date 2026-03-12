@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react';
-import {
-    Clock,
-    User,
-    Download,
-    Eye,
-    Search,
-    ChevronLeft,
-    ChevronRight,
-} from 'lucide-react';
+import { Clock, User, Download, Eye, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -19,7 +11,6 @@ import { SkeletonTable } from '../../components/ui/SkeletonTable';
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
-
 
 const ENTITY_TYPE_LABELS: Record<string, string> = {
     facility: 'Facilities',
@@ -92,8 +83,8 @@ export function AuditLogsPage() {
         if (!searchQuery) return true;
         const userLabel = log.user
             ? `${(log.user as any).first_name || ''} ${(log.user as any).last_name || ''}`.trim() ||
-            (log.user as any).email ||
-            ''
+              (log.user as any).email ||
+              ''
             : '';
         const details = log.description || log.entity_name || '';
         return (
@@ -223,14 +214,19 @@ export function AuditLogsPage() {
                                         {filteredLogs.map((log) => {
                                             const userLabel = log.user
                                                 ? `${(log.user as any).first_name || ''} ${(log.user as any).last_name || ''}`.trim() ||
-                                                (log.user as any).email ||
-                                                '—'
+                                                  (log.user as any).email ||
+                                                  '—'
                                                 : '—';
                                             const roleLabel = (log.user as any)?.role
-                                                ? String((log.user as any).role || '').replace(/_/g, ' ')
+                                                ? String((log.user as any).role || '').replace(
+                                                      /_/g,
+                                                      ' ',
+                                                  )
                                                 : '—';
                                             const moduleLabel =
-                                                ENTITY_TYPE_LABELS[log.entity_type] || log.entity_type || '—';
+                                                ENTITY_TYPE_LABELS[log.entity_type] ||
+                                                log.entity_type ||
+                                                '—';
                                             const impact = formatImpact(log.action);
                                             return (
                                                 <tr
@@ -239,16 +235,23 @@ export function AuditLogsPage() {
                                                 >
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="flex items-center gap-2 text-slate-500">
-                                                            <Clock size={14} className="text-slate-400" />
+                                                            <Clock
+                                                                size={14}
+                                                                className="text-slate-400"
+                                                            />
                                                             <div className="flex flex-col">
                                                                 <span className="text-xs font-bold text-healthcare-dark">
                                                                     {log.created_at
-                                                                        ? new Date(log.created_at).toLocaleDateString()
+                                                                        ? new Date(
+                                                                              log.created_at,
+                                                                          ).toLocaleDateString()
                                                                         : '—'}
                                                                 </span>
                                                                 <span className="text-[10px] font-medium text-slate-400">
                                                                     {log.created_at
-                                                                        ? new Date(log.created_at).toLocaleTimeString()
+                                                                        ? new Date(
+                                                                              log.created_at,
+                                                                          ).toLocaleTimeString()
                                                                         : ''}
                                                                 </span>
                                                             </div>
@@ -281,13 +284,15 @@ export function AuditLogsPage() {
                                                                     'w-2 h-2 rounded-full',
                                                                     moduleLabel === 'Facilities'
                                                                         ? 'bg-blue-500'
-                                                                        : moduleLabel === 'Dispensing'
-                                                                            ? 'bg-teal-500'
-                                                                            : moduleLabel === 'Stock'
-                                                                                ? 'bg-indigo-500'
-                                                                                : moduleLabel === 'Procurement'
-                                                                                    ? 'bg-amber-500'
-                                                                                    : 'bg-rose-500',
+                                                                        : moduleLabel ===
+                                                                            'Dispensing'
+                                                                          ? 'bg-teal-500'
+                                                                          : moduleLabel === 'Stock'
+                                                                            ? 'bg-indigo-500'
+                                                                            : moduleLabel ===
+                                                                                'Procurement'
+                                                                              ? 'bg-amber-500'
+                                                                              : 'bg-rose-500',
                                                                 )}
                                                             />
                                                             <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
@@ -296,7 +301,12 @@ export function AuditLogsPage() {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <p className="text-xs text-slate-500 font-medium max-w-xs truncate" title={log.description || log.entity_name}>
+                                                        <p
+                                                            className="text-xs text-slate-500 font-medium max-w-xs truncate"
+                                                            title={
+                                                                log.description || log.entity_name
+                                                            }
+                                                        >
                                                             {log.description ||
                                                                 log.entity_name ||
                                                                 `Entity #${log.entity_id}`}
@@ -309,8 +319,8 @@ export function AuditLogsPage() {
                                                                 impact === 'High'
                                                                     ? 'bg-rose-50 text-rose-600'
                                                                     : impact === 'Medium'
-                                                                        ? 'bg-amber-50 text-amber-600'
-                                                                        : 'bg-teal-50 text-teal-600',
+                                                                      ? 'bg-amber-50 text-amber-600'
+                                                                      : 'bg-teal-50 text-teal-600',
                                                             )}
                                                         >
                                                             {impact}
@@ -347,9 +357,13 @@ export function AuditLogsPage() {
                                         <ChevronLeft size={16} />
                                     </button>
                                     <div className="flex items-center gap-1 mx-2">
-                                        <span className="text-xs font-black text-healthcare-dark">{page}</span>
+                                        <span className="text-xs font-black text-healthcare-dark">
+                                            {page}
+                                        </span>
                                         <span className="text-xs text-slate-400">/</span>
-                                        <span className="text-xs font-bold text-slate-500">{totalPages}</span>
+                                        <span className="text-xs font-bold text-slate-500">
+                                            {totalPages}
+                                        </span>
                                     </div>
                                     <button
                                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}

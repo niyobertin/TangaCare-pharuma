@@ -105,17 +105,17 @@ export const useFEFOSelection = (
     // Compute expiry metadata
     const daysUntilExpiry = selectedStock?.batch?.expiry_date
         ? Math.floor(
-            (new Date(selectedStock.batch.expiry_date).getTime() - Date.now()) /
-            (1000 * 60 * 60 * 24),
-        )
+              (new Date(selectedStock.batch.expiry_date).getTime() - Date.now()) /
+                  (1000 * 60 * 60 * 24),
+          )
         : null;
 
     const expiryLabel = selectedStock?.batch?.expiry_date
         ? `Exp ${new Date(selectedStock.batch.expiry_date).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        })}${daysUntilExpiry !== null ? ` (${daysUntilExpiry > 0 ? `${daysUntilExpiry} days` : 'TODAY'})` : ''}`
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+          })}${daysUntilExpiry !== null ? ` (${daysUntilExpiry > 0 ? `${daysUntilExpiry} days` : 'TODAY'})` : ''}`
         : null;
 
     const isNearExpiry = daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry <= 30;

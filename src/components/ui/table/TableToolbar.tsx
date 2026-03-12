@@ -37,7 +37,10 @@ export function TableToolbar({
                 !isStacked && 'xl:min-w-[340px] xl:max-w-[560px] xl:flex-[1_1_420px]',
             )}
         >
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+            <Search
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                size={15}
+            />
             <input
                 type="text"
                 value={searchValue}
@@ -61,8 +64,8 @@ export function TableToolbar({
         <div
             className={cn(
                 isStacked
-                    ? 'flex flex-col gap-3 bg-gradient-to-br from-white via-white to-slate-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 p-3 sm:p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_10px_30px_-18px_rgba(15,23,42,0.45)]'
-                    : 'flex flex-col xl:flex-row xl:flex-nowrap xl:items-center gap-3 bg-gradient-to-br from-white via-white to-slate-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 p-3 sm:p-4 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_10px_30px_-18px_rgba(15,23,42,0.45)]',
+                    ? 'flex flex-col gap-3 bg-gradient-to-br from-white via-white to-slate-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 p-3 sm:p-4 border border-slate-200 dark:border-slate-800 rounded-2xl '
+                    : 'flex flex-col xl:flex-row xl:flex-nowrap xl:items-center gap-3 bg-gradient-to-br from-white via-white to-slate-50/70 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 p-3 sm:p-4 border border-slate-200 dark:border-slate-800 rounded-2xl ',
                 className,
             )}
         >

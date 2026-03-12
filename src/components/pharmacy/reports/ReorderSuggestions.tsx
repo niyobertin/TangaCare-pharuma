@@ -222,12 +222,15 @@ export function ReorderSuggestions() {
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {suggestions.map((item) => {
-                                    const daysRemaining = Number(item.days_of_cover ?? item.days_remaining ?? 0);
+                                    const daysRemaining = Number(
+                                        item.days_of_cover ?? item.days_remaining ?? 0,
+                                    );
                                     const averageDailyUsage = Number(
                                         item.average_daily_usage ?? item.avg_daily_consumption ?? 0,
                                     );
                                     const deficitQty = Number(item.deficit_quantity ?? 0);
-                                    const isCritical = daysRemaining < 3 || item.current_quantity === 0;
+                                    const isCritical =
+                                        daysRemaining < 3 || item.current_quantity === 0;
                                     const isWarning = daysRemaining >= 3 && daysRemaining < 7;
 
                                     return (
@@ -257,13 +260,19 @@ export function ReorderSuggestions() {
                                                         {item.current_quantity}
                                                     </span>
                                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                        Min: {item.min_stock_level ?? item.reorder_point} • Reorder: {item.reorder_point}
+                                                        Min:{' '}
+                                                        {item.min_stock_level ?? item.reorder_point}{' '}
+                                                        • Reorder: {item.reorder_point}
                                                     </span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 whitespace-nowrap">
                                                 <span className="text-xs font-bold text-slate-500">
-                                                    {String((item as any).supplier_name || (item as any).supplier?.name || 'N/A')}
+                                                    {String(
+                                                        (item as any).supplier_name ||
+                                                            (item as any).supplier?.name ||
+                                                            'N/A',
+                                                    )}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5 text-right text-slate-500 whitespace-nowrap">
@@ -316,12 +325,17 @@ export function ReorderSuggestions() {
                                                     </button>
                                                     <button
                                                         onClick={() => handleTransfer(item)}
-                                                        disabled={transferLoadingId === item.medicine_id}
+                                                        disabled={
+                                                            transferLoadingId === item.medicine_id
+                                                        }
                                                         className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-60"
                                                     >
                                                         {transferLoadingId === item.medicine_id ? (
                                                             <span className="inline-flex items-center gap-1">
-                                                                <Loader2 size={12} className="animate-spin" />
+                                                                <Loader2
+                                                                    size={12}
+                                                                    className="animate-spin"
+                                                                />
                                                                 Opening
                                                             </span>
                                                         ) : (

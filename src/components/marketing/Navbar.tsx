@@ -62,7 +62,7 @@ export function Navbar() {
 
                 {/* Desktop Nav */}
                 <nav className="hidden md:flex items-center gap-2">
-                    {navLinks.map((link) => (
+                    {navLinks.map((link) =>
                         link.to ? (
                             <Link
                                 key={link.name}
@@ -80,15 +80,15 @@ export function Navbar() {
                             >
                                 {link.name}
                             </a>
-                        )
-                    ))}
+                        ),
+                    )}
                 </nav>
 
                 {/* Desktop Actions */}
                 <div className="hidden md:flex items-center gap-3">
                     {user ? (
                         <>
-                            <Link to={"/app" as any} search={{} as any}>
+                            <Link to={'/app' as any} search={{} as any}>
                                 <Button
                                     variant="outline"
                                     className="font-bold border-teal-600/50 text-teal-600 hover:bg-teal-50 dark:border-teal-400/30 dark:text-teal-400 dark:hover:bg-teal-900/20 rounded-full px-5 h-9 text-xs transition-all shadow-sm"
@@ -106,7 +106,7 @@ export function Navbar() {
                         </>
                     ) : (
                         <>
-                            <Link to={"/auth/login" as any} search={{} as any}>
+                            <Link to={'/auth/login' as any} search={{} as any}>
                                 <Button
                                     variant="ghost"
                                     className="font-bold text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-full px-4 h-9 text-xs transition-all"
@@ -114,7 +114,7 @@ export function Navbar() {
                                     Log in
                                 </Button>
                             </Link>
-                            <Link to={"/auth/register" as any} search={{} as any}>
+                            <Link to={'/auth/register' as any} search={{} as any}>
                                 <Button className="shadow-xl shadow-teal-600/20 bg-teal-600 hover:bg-teal-700 text-white rounded-full px-6 font-bold h-9 text-xs transition-all hover:scale-105 active:scale-95">
                                     Get Started
                                 </Button>
@@ -148,7 +148,7 @@ export function Navbar() {
                             className="absolute top-0 left-0 w-full h-screen bg-white dark:bg-black border-b border-slate-200 dark:border-zinc-800 shadow-2xl p-6 flex flex-col pt-32 md:hidden"
                         >
                             <nav className="flex flex-col gap-2">
-                                {navLinks.map((link) => (
+                                {navLinks.map((link) =>
                                     link.to ? (
                                         <Link
                                             key={link.name}
@@ -168,14 +168,14 @@ export function Navbar() {
                                         >
                                             {link.name}
                                         </a>
-                                    )
-                                ))}
+                                    ),
+                                )}
                             </nav>
                             <div className="mt-auto space-y-4 mb-10">
                                 {user ? (
                                     <>
                                         <Link
-                                            to={"/app" as any}
+                                            to={'/app' as any}
                                             search={{} as any}
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className="block w-full"
@@ -198,7 +198,8 @@ export function Navbar() {
                                 ) : (
                                     <>
                                         <Link
-                                            to={"/auth/login" as any} search={{} as any}
+                                            to={'/auth/login' as any}
+                                            search={{} as any}
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className="block w-full"
                                         >
@@ -210,7 +211,8 @@ export function Navbar() {
                                             </Button>
                                         </Link>
                                         <Link
-                                            to={"/auth/register" as any} search={{} as any}
+                                            to={'/auth/register' as any}
+                                            search={{} as any}
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className="block w-full"
                                         >

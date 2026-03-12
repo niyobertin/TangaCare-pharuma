@@ -32,7 +32,14 @@ export function ABCAnalysisReport() {
     };
 
     if (loading)
-        return <SkeletonTable rows={5} columns={2} headers={null} className="border-none shadow-none" />;
+        return (
+            <SkeletonTable
+                rows={5}
+                columns={2}
+                headers={null}
+                className="border-none shadow-none"
+            />
+        );
     if (!data) return null;
 
     const summary = data.summary;

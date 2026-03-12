@@ -10,14 +10,20 @@ const ForgotPasswordPage = lazyNamed(
     'ForgotPasswordPage',
 );
 const VerifyOtpPage = lazyNamed(() => import('../../pages/auth/VerifyOtpPage'), 'VerifyOtpPage');
-const ResetPasswordPage = lazyNamed(() => import('../../pages/auth/ResetPasswordPage'), 'ResetPasswordPage');
-const SetPasswordPage = lazyNamed(() => import('../../pages/auth/SetPasswordPage'), 'SetPasswordPage');
+const ResetPasswordPage = lazyNamed(
+    () => import('../../pages/auth/ResetPasswordPage'),
+    'ResetPasswordPage',
+);
+const SetPasswordPage = lazyNamed(
+    () => import('../../pages/auth/SetPasswordPage'),
+    'SetPasswordPage',
+);
 
 export const createAuthRoutes = (parentRoute: any, _rootRoute: any) => {
     const authIndexRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: '/',
-        component: () => <Navigate to={"/auth/login" as any} search={{} as any} />,
+        component: () => <Navigate to={'/auth/login' as any} search={{} as any} />,
     });
 
     const loginRoute = createRoute({

@@ -31,7 +31,7 @@ export function StockTransferModal({
     onClose,
     onSuccess,
 }: StockTransferModalProps) {
-    const { } = useAuth();
+    const {} = useAuth();
     const [batches, setBatches] = useState<Batch[]>([]);
     const [departments, setDepartments] = useState<Department[]>([]);
     const [storageLocations, setStorageLocations] = useState<StorageLocation[]>([]);
@@ -119,7 +119,7 @@ export function StockTransferModal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
-                { }
+                {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
@@ -148,7 +148,7 @@ export function StockTransferModal({
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                            { }
+                            {}
                             <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 text-sm">
                                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
                                     From
@@ -158,7 +158,7 @@ export function StockTransferModal({
                                 </div>
                             </div>
 
-                            { }
+                            {}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Select Batch
@@ -182,7 +182,7 @@ export function StockTransferModal({
                                 )}
                             </div>
 
-                            { }
+                            {}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Source Location (Optional)
@@ -200,7 +200,7 @@ export function StockTransferModal({
                                 </select>
                             </div>
 
-                            { }
+                            {}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Destination Department
@@ -223,7 +223,7 @@ export function StockTransferModal({
                                 )}
                             </div>
 
-                            { }
+                            {}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Destination Location (Optional)
@@ -241,7 +241,7 @@ export function StockTransferModal({
                                 </select>
                             </div>
 
-                            { }
+                            {}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Quantity to Transfer
@@ -264,7 +264,7 @@ export function StockTransferModal({
                                 )}
                             </div>
 
-                            { }
+                            {}
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 dark:text-white mb-1">
                                     Notes (Optional)

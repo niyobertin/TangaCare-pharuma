@@ -140,7 +140,11 @@ export function ResetPasswordPage() {
                 <button
                     type="button"
                     onClick={() =>
-                        navigate({ to: '/auth/verify-otp' as any, search: { email, otp } as any, params: {} as any })
+                        navigate({
+                            to: '/auth/verify-otp' as any,
+                            search: { email, otp } as any,
+                            params: {} as any,
+                        })
                     }
                     className="text-xs font-bold text-healthcare-primary hover:underline flex items-center justify-center mx-auto gap-1"
                 >

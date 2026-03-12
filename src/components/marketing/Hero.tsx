@@ -59,8 +59,9 @@ export function Hero() {
                         </h1>
 
                         <p className="mx-auto mt-6 max-w-2xl text-base text-slate-600 dark:text-zinc-400 sm:text-lg leading-relaxed">
-                            Unify inventory, dispensing, procurement, and audit compliance in one fast workflow.
-                            Cut expiry loss, detect stock risk early, and keep every decision measurable.
+                            Unify inventory, dispensing, procurement, and audit compliance in one
+                            fast workflow. Cut expiry loss, detect stock risk early, and keep every
+                            decision measurable.
                         </p>
 
                         <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
@@ -70,8 +71,14 @@ export function Hero() {
                         </div>
 
                         <div className="mt-8 flex flex-wrap items-center justify-center gap-5 text-xs font-bold text-slate-600 dark:text-zinc-400">
-                            <HeroTag icon={<ShieldCheck className="h-4 w-4" />} text="Audit-ready logs" />
-                            <HeroTag icon={<ScanLine className="h-4 w-4" />} text="Barcode workflows" />
+                            <HeroTag
+                                icon={<ShieldCheck className="h-4 w-4" />}
+                                text="Audit-ready logs"
+                            />
+                            <HeroTag
+                                icon={<ScanLine className="h-4 w-4" />}
+                                text="Barcode workflows"
+                            />
                             <HeroTag icon={<Clock3 className="h-4 w-4" />} text="Fast onboarding" />
                         </div>
                     </motion.div>
@@ -102,29 +109,54 @@ export function Hero() {
                                 <Activity className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Today</p>
-                                <p className="text-sm font-black text-slate-900 dark:text-white">127 Dispenses Processed</p>
+                                <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">
+                                    Today
+                                </p>
+                                <p className="text-sm font-black text-slate-900 dark:text-white">
+                                    127 Dispenses Processed
+                                </p>
                             </div>
                         </motion.div>
 
                         <motion.div
                             animate={{ y: [0, 7, 0] }}
-                            transition={{ repeat: Infinity, duration: 4.5, ease: 'easeInOut', delay: 0.8 }}
+                            transition={{
+                                repeat: Infinity,
+                                duration: 4.5,
+                                ease: 'easeInOut',
+                                delay: 0.8,
+                            }}
                             className="hidden sm:flex absolute -bottom-7 -right-5 rounded-2xl border border-slate-200 dark:border-zinc-700 bg-white/95 dark:bg-zinc-900/95 p-3 shadow-xl items-center gap-3"
                         >
                             <div className="h-9 w-9 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 flex items-center justify-center">
                                 <Snowflake className="h-5 w-5" />
                             </div>
                             <div>
-                                <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Cold Chain</p>
-                                <p className="text-sm font-black text-slate-900 dark:text-white">98.7% Within Range</p>
+                                <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">
+                                    Cold Chain
+                                </p>
+                                <p className="text-sm font-black text-slate-900 dark:text-white">
+                                    98.7% Within Range
+                                </p>
                             </div>
                         </motion.div>
 
                         <div className="mt-6 grid grid-cols-3 gap-2 text-center">
-                            <MetricChip icon={<Pill className="h-3.5 w-3.5" />} label="Stockouts" value="-32%" />
-                            <MetricChip icon={<ShieldCheck className="h-3.5 w-3.5" />} label="Compliance" value="Up" />
-                            <MetricChip icon={<Clock3 className="h-3.5 w-3.5" />} label="Processing" value="Faster" />
+                            <MetricChip
+                                icon={<Pill className="h-3.5 w-3.5" />}
+                                label="Stockouts"
+                                value="-32%"
+                            />
+                            <MetricChip
+                                icon={<ShieldCheck className="h-3.5 w-3.5" />}
+                                label="Compliance"
+                                value="Up"
+                            />
+                            <MetricChip
+                                icon={<Clock3 className="h-3.5 w-3.5" />}
+                                label="Processing"
+                                value="Faster"
+                            />
                         </div>
                     </motion.div>
                 </div>
@@ -172,7 +204,9 @@ function TrustCard({ label, value }: { label: string; value: string }) {
     return (
         <div className="rounded-xl border border-slate-200/90 dark:border-zinc-700 bg-white/80 dark:bg-zinc-900/75 px-3 py-2 backdrop-blur-sm">
             <p className="text-base font-black text-slate-900 dark:text-white">{value}</p>
-            <p className="text-[10px] uppercase tracking-[0.12em] font-bold text-slate-500 dark:text-zinc-400">{label}</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] font-bold text-slate-500 dark:text-zinc-400">
+                {label}
+            </p>
         </div>
     );
 }
@@ -200,7 +234,9 @@ function MetricChip({
             <div className="inline-flex items-center justify-center h-6 w-6 rounded-lg bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 mb-1">
                 {icon}
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-400">{label}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+                {label}
+            </p>
             <p className="text-xs font-black text-slate-900 dark:text-white">{value}</p>
         </div>
     );

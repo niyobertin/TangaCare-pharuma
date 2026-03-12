@@ -10,7 +10,7 @@ import { settingsService } from './settings.service';
 
 /**
  * Pharmacy Service Facade
- * 
+ *
  * This service acts as a single entry point for all pharmacy-related API calls,
  * delegating to specialized modular services while maintaining backward compatibility.
  */

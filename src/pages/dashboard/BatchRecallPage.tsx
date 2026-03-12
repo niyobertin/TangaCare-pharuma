@@ -88,7 +88,14 @@ export function BatchRecallPage() {
                     <SkeletonTable
                         rows={5}
                         columns={7}
-                        headers={['Recall #', 'Medicine & Batch', 'Reason', 'Affected Sales', 'Recovery Status', 'Status']}
+                        headers={[
+                            'Recall #',
+                            'Medicine & Batch',
+                            'Reason',
+                            'Affected Sales',
+                            'Recovery Status',
+                            'Status',
+                        ]}
                         columnAligns={['left', 'left', 'left', 'left', 'left', 'left', 'right']}
                         actions
                         className="border-none shadow-none"

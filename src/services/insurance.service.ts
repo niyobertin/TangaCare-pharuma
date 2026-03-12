@@ -1,8 +1,5 @@
 import api from '../lib/api';
-import type {
-    InsuranceProvider,
-    InsuranceClaim,
-} from '../types/pharmacy';
+import type { InsuranceProvider, InsuranceClaim } from '../types/pharmacy';
 
 export const insuranceService = {
     async getInsuranceProviders(): Promise<InsuranceProvider[]> {
@@ -16,7 +13,10 @@ export const insuranceService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async updateInsuranceProvider(id: number, data: Partial<InsuranceProvider>): Promise<InsuranceProvider> {
+    async updateInsuranceProvider(
+        id: number,
+        data: Partial<InsuranceProvider>,
+    ): Promise<InsuranceProvider> {
         const response = await api.put<any>(`/pharmacy/insurance/providers/${id}`, data);
         return (response.data as any).data ?? response.data;
     },

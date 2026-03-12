@@ -8,10 +8,7 @@ export function useOfflineSync() {
     const [queueCount, setQueueCount] = useState(0);
 
     const updateQueueCount = useCallback(async () => {
-        const count = await db.saleQueue
-            .where('status')
-            .anyOf(['pending', 'failed'])
-            .count();
+        const count = await db.saleQueue.where('status').anyOf(['pending', 'failed']).count();
         setQueueCount(count);
     }, []);
 
@@ -47,7 +44,7 @@ export function useOfflineSync() {
 
                 // Attempt sync with idempotency key
                 await pharmacyService.createSale(sale, {
-                    headers: { 'idempotency-key': sale.offlineId }
+                    headers: { 'idempotency-key': sale.offlineId },
                 });
 
                 // Mark as synced
@@ -58,7 +55,7 @@ export function useOfflineSync() {
                 await db.saleQueue.update(sale.id!, {
                     status: 'failed',
                     syncError: error.message || 'Unknown error',
-                    retryCount: (sale.retryCount || 0) + 1
+                    retryCount: (sale.retryCount || 0) + 1,
                 });
             }
         }

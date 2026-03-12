@@ -89,9 +89,9 @@ export function SetupPharmacyModal({ onSuccess, onClose }: SetupPharmacyModalPro
                     name: result.organization.name,
                 });
                 // Default branch name to organization name
-                setStep2Form(prev => ({
+                setStep2Form((prev) => ({
                     ...prev,
-                    facility_name: step1Form.organization_name.trim()
+                    facility_name: step1Form.organization_name.trim(),
                 }));
                 await authService.refreshToken();
                 setStep(2);

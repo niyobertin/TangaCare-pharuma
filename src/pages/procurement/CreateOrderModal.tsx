@@ -286,11 +286,16 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                             </p>
                                                         )}
                                                         {(() => {
-                                                            const selectedMedicine = medicineById.get(
-                                                                Number(watchItems[index]?.medicine_id),
-                                                            );
+                                                            const selectedMedicine =
+                                                                medicineById.get(
+                                                                    Number(
+                                                                        watchItems[index]
+                                                                            ?.medicine_id,
+                                                                    ),
+                                                                );
                                                             const selectedSellingPrice = Number(
-                                                                selectedMedicine?.selling_price || 0,
+                                                                selectedMedicine?.selling_price ||
+                                                                    0,
                                                             );
                                                             const selectedCostPrice = Number(
                                                                 selectedMedicine?.cost_price || 0,
@@ -306,13 +311,14 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                                 <div className="mt-1 space-y-1">
                                                                     <p className="text-[10px] font-black text-slate-500">
                                                                         Selling: RWF{' '}
-                                                                        {selectedSellingPrice.toLocaleString()} |
-                                                                        Last Cost: RWF{' '}
+                                                                        {selectedSellingPrice.toLocaleString()}{' '}
+                                                                        | Last Cost: RWF{' '}
                                                                         {selectedCostPrice.toLocaleString()}
                                                                     </p>
                                                                     {isCostAboveSelling && (
                                                                         <p className="text-[10px] font-black text-red-600">
-                                                                            Cost is above selling price. Update medicine
+                                                                            Cost is above selling
+                                                                            price. Update medicine
                                                                             selling price first.
                                                                         </p>
                                                                     )}
@@ -441,7 +447,12 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                     <button
                         type="submit"
                         form="order-form"
-                        disabled={isSubmitting || !isValid || calculateTotal() === 0 || hasCostAboveSelling}
+                        disabled={
+                            isSubmitting ||
+                            !isValid ||
+                            calculateTotal() === 0 ||
+                            hasCostAboveSelling
+                        }
                         className="px-6 py-2 bg-healthcare-primary text-white rounded-xl font-bold hover:bg-teal-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-teal-500/10"
                     >
                         {isSubmitting ? (

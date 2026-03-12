@@ -538,9 +538,7 @@ export const pharmacyService = {
         await api.delete(`/pharmacy/departments/${id}`);
     },
 
-    async getStorageLocations(params?: {
-        facility_id?: number;
-    }): Promise<StorageLocation[]> {
+    async getStorageLocations(params?: { facility_id?: number }): Promise<StorageLocation[]> {
         const response = await api.get<any>('/pharmacy/storage-locations', { params });
         const data = (response.data as any).data ?? response.data;
         return Array.isArray(data) ? data : [];
@@ -551,7 +549,10 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async updateStorageLocation(id: number, data: Partial<StorageLocation>): Promise<StorageLocation> {
+    async updateStorageLocation(
+        id: number,
+        data: Partial<StorageLocation>,
+    ): Promise<StorageLocation> {
         const response = await api.put<any>(`/pharmacy/storage-locations/${id}`, data);
         return (response.data as any).data ?? response.data;
     },
@@ -1083,9 +1084,7 @@ export const pharmacyService = {
     },
 
     async getDashboardSummary(facilityId: number | null): Promise<DashboardSummary> {
-        const url = facilityId
-            ? `/pharmacy/kpis/summary/${facilityId}`
-            : '/pharmacy/kpis/summary';
+        const url = facilityId ? `/pharmacy/kpis/summary/${facilityId}` : '/pharmacy/kpis/summary';
         const response = await api.get<any>(url);
         return (response.data as any).data ?? response.data;
     },
@@ -1199,7 +1198,10 @@ export const pharmacyService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async updateInsuranceProvider(id: number, data: Partial<InsuranceProvider>): Promise<InsuranceProvider> {
+    async updateInsuranceProvider(
+        id: number,
+        data: Partial<InsuranceProvider>,
+    ): Promise<InsuranceProvider> {
         const response = await api.put<any>(`/pharmacy/insurance/providers/${id}`, data);
         return (response.data as any).data ?? response.data;
     },
@@ -1248,14 +1250,20 @@ export const pharmacyService = {
             params: { patient_id: patientId, limit },
         });
         const payload = (response.data as any).data ?? response.data;
-        const items = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
+        const items = Array.isArray(payload?.data)
+            ? payload.data
+            : Array.isArray(payload)
+              ? payload
+              : [];
         return items.slice(0, limit) as Sale[];
     },
 
     // H-2: Get facility-specific selling price for a medicine (falls back to medicine default)
     async getFacilityMedicinePrice(medicineId: number): Promise<number | null> {
         try {
-            const response = await api.get<any>(`/pharmacy/facility-settings/medicine/${medicineId}/price`);
+            const response = await api.get<any>(
+                `/pharmacy/facility-settings/medicine/${medicineId}/price`,
+            );
             const payload = (response.data as any).data ?? response.data;
             return typeof payload?.selling_price === 'number' ? payload.selling_price : null;
         } catch {
@@ -1263,4 +1271,3 @@ export const pharmacyService = {
         }
     },
 };
-

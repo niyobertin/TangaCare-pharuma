@@ -13,11 +13,7 @@ import { toast } from 'react-hot-toast';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { settingsService } from '../../services/settings.service';
-import type {
-    EffectiveSettingItem,
-    SettingDefinition,
-    SettingDomain,
-} from '../../types/settings';
+import type { EffectiveSettingItem, SettingDefinition, SettingDomain } from '../../types/settings';
 
 type ScopeTab = 'tenant' | 'branch' | 'user';
 
@@ -131,7 +127,9 @@ export function SettingsPage() {
         () => SETTINGS_GROUPS.find((group) => group.id === activeGroupId) || SETTINGS_GROUPS[0],
         [activeGroupId],
     );
-    const [activeDomain, setActiveDomain] = useState<SettingDomain>(SETTINGS_GROUPS[0].items[0].domain);
+    const [activeDomain, setActiveDomain] = useState<SettingDomain>(
+        SETTINGS_GROUPS[0].items[0].domain,
+    );
     const [activeScope, setActiveScope] = useState<ScopeTab>('branch');
 
     const [loading, setLoading] = useState(false);
@@ -175,8 +173,8 @@ export function SettingsPage() {
                 activeScope === 'tenant'
                     ? { domain: activeDomain, tenantId }
                     : activeScope === 'branch'
-                        ? { domain: activeDomain, tenantId, branchId }
-                        : { domain: activeDomain, tenantId, branchId, userId };
+                      ? { domain: activeDomain, tenantId, branchId }
+                      : { domain: activeDomain, tenantId, branchId, userId };
 
             const [defs, effective] = await Promise.all([
                 settingsService.getDefinitions(activeDomain),
@@ -229,7 +227,8 @@ export function SettingsPage() {
             setEditing(null);
             await loadSettings();
         } catch (error: any) {
-            const message = error?.response?.data?.message || error?.message || 'Failed to save setting';
+            const message =
+                error?.response?.data?.message || error?.message || 'Failed to save setting';
             toast.error(message);
         } finally {
             setSaving(false);
@@ -238,7 +237,8 @@ export function SettingsPage() {
 
     const onOpenEditor = (definition: SettingDefinition, effective?: EffectiveSettingItem) => {
         const sourceValue = effective?.value ?? definition.default_value;
-        const rawValue = definition.value_type === 'json' ? prettyJson(sourceValue) : String(sourceValue ?? '');
+        const rawValue =
+            definition.value_type === 'json' ? prettyJson(sourceValue) : String(sourceValue ?? '');
         setEditing({
             key: definition.key,
             label: definition.label,
@@ -250,7 +250,14 @@ export function SettingsPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['SUPER_ADMIN', 'SUPER ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'OWNER', 'ADMIN']}
+            allowedRoles={[
+                'SUPER_ADMIN',
+                'SUPER ADMIN',
+                'FACILITY_ADMIN',
+                'FACILITY ADMIN',
+                'OWNER',
+                'ADMIN',
+            ]}
             requireFacility={false}
         >
             <div className="p-5 md:p-6 h-full overflow-auto">
@@ -259,7 +266,9 @@ export function SettingsPage() {
                         <SettingsIcon size={20} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-black text-healthcare-dark dark:text-white">Settings</h1>
+                        <h1 className="text-2xl font-black text-healthcare-dark dark:text-white">
+                            Settings
+                        </h1>
                         <p className="text-xs uppercase tracking-wider font-bold text-slate-500">
                             Tenant, Branch, and User Configuration
                         </p>
@@ -272,20 +281,28 @@ export function SettingsPage() {
                             const Icon = group.icon;
                             const active = group.id === activeGroupId;
                             return (
-                                <div key={group.id} className="rounded-xl border border-transparent">
+                                <div
+                                    key={group.id}
+                                    className="rounded-xl border border-transparent"
+                                >
                                     <button
                                         type="button"
                                         onClick={() => setActiveGroupId(group.id)}
-                                        className={`w-full text-left px-3 py-3 rounded-xl transition-colors ${active
-                                            ? 'bg-healthcare-primary text-white'
-                                            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
-                                            }`}
+                                        className={`w-full text-left px-3 py-3 rounded-xl transition-colors ${
+                                            active
+                                                ? 'bg-healthcare-primary text-white'
+                                                : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                        }`}
                                     >
                                         <div className="flex items-center gap-2">
                                             <Icon size={16} />
-                                            <span className="font-black text-sm tracking-wide">{group.label}</span>
+                                            <span className="font-black text-sm tracking-wide">
+                                                {group.label}
+                                            </span>
                                         </div>
-                                        <p className={`text-[11px] mt-2 leading-relaxed ${active ? 'text-teal-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                                        <p
+                                            className={`text-[11px] mt-2 leading-relaxed ${active ? 'text-teal-100' : 'text-slate-500 dark:text-slate-400'}`}
+                                        >
                                             {group.description}
                                         </p>
                                     </button>
@@ -297,10 +314,11 @@ export function SettingsPage() {
                                                     key={item.domain}
                                                     type="button"
                                                     onClick={() => setActiveDomain(item.domain)}
-                                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-bold ${activeDomain === item.domain
-                                                        ? 'bg-teal-50 text-healthcare-primary dark:bg-teal-900/30'
-                                                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                                                        }`}
+                                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-bold ${
+                                                        activeDomain === item.domain
+                                                            ? 'bg-teal-50 text-healthcare-primary dark:bg-teal-900/30'
+                                                            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                                    }`}
                                                 >
                                                     <span>{item.label}</span>
                                                     <ChevronRight size={14} />
@@ -318,17 +336,24 @@ export function SettingsPage() {
                             {(['tenant', 'branch', 'user'] as ScopeTab[]).map((scope) => {
                                 const disabled = !availableScopes[scope];
                                 const icon =
-                                    scope === 'tenant' ? <Globe2 size={14} /> : scope === 'branch' ? <Building2 size={14} /> : <UserCog size={14} />;
+                                    scope === 'tenant' ? (
+                                        <Globe2 size={14} />
+                                    ) : scope === 'branch' ? (
+                                        <Building2 size={14} />
+                                    ) : (
+                                        <UserCog size={14} />
+                                    );
                                 return (
                                     <button
                                         key={scope}
                                         type="button"
                                         disabled={disabled}
                                         onClick={() => setActiveScope(scope)}
-                                        className={`px-3 py-2 rounded-lg text-xs uppercase font-black tracking-wider flex items-center gap-2 ${activeScope === scope
-                                            ? 'bg-healthcare-primary text-white'
-                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                                            } disabled:opacity-40 disabled:cursor-not-allowed`}
+                                        className={`px-3 py-2 rounded-lg text-xs uppercase font-black tracking-wider flex items-center gap-2 ${
+                                            activeScope === scope
+                                                ? 'bg-healthcare-primary text-white'
+                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                                        } disabled:opacity-40 disabled:cursor-not-allowed`}
                                     >
                                         {icon}
                                         {scope}
@@ -341,10 +366,18 @@ export function SettingsPage() {
                             <table className="tc-table min-w-full text-sm">
                                 <thead className="bg-slate-50 dark:bg-slate-800/60">
                                     <tr className="text-left text-slate-500 dark:text-slate-300">
-                                        <th className="px-4 py-3 font-black uppercase text-[11px]">Setting</th>
-                                        <th className="px-4 py-3 font-black uppercase text-[11px]">Effective Value</th>
-                                        <th className="px-4 py-3 font-black uppercase text-[11px]">Source</th>
-                                        <th className="px-4 py-3 font-black uppercase text-[11px]">Actions</th>
+                                        <th className="px-4 py-3 font-black uppercase text-[11px]">
+                                            Setting
+                                        </th>
+                                        <th className="px-4 py-3 font-black uppercase text-[11px]">
+                                            Effective Value
+                                        </th>
+                                        <th className="px-4 py-3 font-black uppercase text-[11px]">
+                                            Source
+                                        </th>
+                                        <th className="px-4 py-3 font-black uppercase text-[11px]">
+                                            Actions
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -365,7 +398,10 @@ export function SettingsPage() {
                                             const effective = effectiveByKey.get(definition.key);
                                             const canEditAtScope =
                                                 definition.allowed_scopes.includes(activeScope) &&
-                                                !(definition.override_mode === 'strict' && activeScope !== 'tenant');
+                                                !(
+                                                    definition.override_mode === 'strict' &&
+                                                    activeScope !== 'tenant'
+                                                );
                                             const isExpanded = expandedKey === definition.key;
                                             return (
                                                 <Fragment key={definition.key}>
@@ -378,36 +414,53 @@ export function SettingsPage() {
                                                                 {definition.key}
                                                             </div>
                                                             {definition.description && (
-                                                                <p className="text-xs text-slate-500 mt-1 max-w-xl">{definition.description}</p>
+                                                                <p className="text-xs text-slate-500 mt-1 max-w-xl">
+                                                                    {definition.description}
+                                                                </p>
                                                             )}
                                                         </td>
                                                         <td className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
-                                                            {renderValue(definition.value_type, effective?.value ?? definition.default_value)}
+                                                            {renderValue(
+                                                                definition.value_type,
+                                                                effective?.value ??
+                                                                    definition.default_value,
+                                                            )}
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <span
-                                                                className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${effective?.source === 'tenant'
-                                                                    ? 'bg-sky-100 text-sky-700'
-                                                                    : effective?.source === 'branch'
-                                                                        ? 'bg-emerald-100 text-emerald-700'
-                                                                        : effective?.source === 'user'
+                                                                className={`inline-flex px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${
+                                                                    effective?.source === 'tenant'
+                                                                        ? 'bg-sky-100 text-sky-700'
+                                                                        : effective?.source ===
+                                                                            'branch'
+                                                                          ? 'bg-emerald-100 text-emerald-700'
+                                                                          : effective?.source ===
+                                                                              'user'
                                                                             ? 'bg-amber-100 text-amber-700'
                                                                             : 'bg-slate-200 text-slate-700'
-                                                                    }`}
+                                                                }`}
                                                             >
                                                                 {effective?.source || 'system'}
                                                             </span>
-                                                            {definition.override_mode !== 'open' && activeScope !== 'tenant' && (
-                                                                <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wide font-black">
-                                                                    Guardrail: {definition.override_mode}
-                                                                </div>
-                                                            )}
+                                                            {definition.override_mode !== 'open' &&
+                                                                activeScope !== 'tenant' && (
+                                                                    <div className="text-[11px] text-slate-500 mt-1 uppercase tracking-wide font-black">
+                                                                        Guardrail:{' '}
+                                                                        {definition.override_mode}
+                                                                    </div>
+                                                                )}
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <div className="flex flex-wrap gap-2">
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() => setExpandedKey(isExpanded ? null : definition.key)}
+                                                                    onClick={() =>
+                                                                        setExpandedKey(
+                                                                            isExpanded
+                                                                                ? null
+                                                                                : definition.key,
+                                                                        )
+                                                                    }
                                                                     className="px-2.5 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-black uppercase tracking-wider"
                                                                 >
                                                                     Why this value
@@ -415,7 +468,12 @@ export function SettingsPage() {
                                                                 <button
                                                                     type="button"
                                                                     disabled={!canEditAtScope}
-                                                                    onClick={() => onOpenEditor(definition, effective)}
+                                                                    onClick={() =>
+                                                                        onOpenEditor(
+                                                                            definition,
+                                                                            effective,
+                                                                        )
+                                                                    }
                                                                     className="px-2.5 py-1.5 rounded-md bg-healthcare-primary text-white text-xs font-black uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed"
                                                                 >
                                                                     Edit
@@ -425,23 +483,38 @@ export function SettingsPage() {
                                                     </tr>
                                                     {isExpanded && (
                                                         <tr>
-                                                            <td className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50" colSpan={4}>
+                                                            <td
+                                                                className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50"
+                                                                colSpan={4}
+                                                            >
                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                                                                    {(effective?.trail || []).map((trailEntry, index) => (
-                                                                        <div key={`${trailEntry.source}-${index}`} className="rounded-lg border border-slate-200 dark:border-slate-700 p-2.5">
-                                                                            <div className="font-black uppercase tracking-wider text-slate-500">
-                                                                                {trailEntry.source}
-                                                                            </div>
-                                                                            <div className="mt-1 font-semibold text-slate-700 dark:text-slate-200 break-all">
-                                                                                {renderValue(definition.value_type, trailEntry.value)}
-                                                                            </div>
-                                                                            {trailEntry.updated_at && (
-                                                                                <div className="text-[11px] text-slate-500 mt-1">
-                                                                                    {new Date(trailEntry.updated_at).toLocaleString()}
+                                                                    {(effective?.trail || []).map(
+                                                                        (trailEntry, index) => (
+                                                                            <div
+                                                                                key={`${trailEntry.source}-${index}`}
+                                                                                className="rounded-lg border border-slate-200 dark:border-slate-700 p-2.5"
+                                                                            >
+                                                                                <div className="font-black uppercase tracking-wider text-slate-500">
+                                                                                    {
+                                                                                        trailEntry.source
+                                                                                    }
                                                                                 </div>
-                                                                            )}
-                                                                        </div>
-                                                                    ))}
+                                                                                <div className="mt-1 font-semibold text-slate-700 dark:text-slate-200 break-all">
+                                                                                    {renderValue(
+                                                                                        definition.value_type,
+                                                                                        trailEntry.value,
+                                                                                    )}
+                                                                                </div>
+                                                                                {trailEntry.updated_at && (
+                                                                                    <div className="text-[11px] text-slate-500 mt-1">
+                                                                                        {new Date(
+                                                                                            trailEntry.updated_at,
+                                                                                        ).toLocaleString()}
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        ),
+                                                                    )}
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -456,7 +529,8 @@ export function SettingsPage() {
 
                         <div className="mt-4 text-xs text-slate-500 flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
                             <Lock size={14} className="mt-0.5 text-amber-600" />
-                            Sensitive keys may require approval and can be blocked by tenant guardrails.
+                            Sensitive keys may require approval and can be blocked by tenant
+                            guardrails.
                         </div>
                     </section>
                 </div>
@@ -465,7 +539,9 @@ export function SettingsPage() {
             {editing && (
                 <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50 p-4">
                     <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
-                        <h3 className="text-lg font-black text-healthcare-dark dark:text-white mb-1">{editing.label}</h3>
+                        <h3 className="text-lg font-black text-healthcare-dark dark:text-white mb-1">
+                            {editing.label}
+                        </h3>
                         <p className="text-xs uppercase tracking-wider font-black text-slate-500 mb-4">
                             {editing.key}
                         </p>
@@ -477,9 +553,9 @@ export function SettingsPage() {
                                     setEditing((prev) =>
                                         prev
                                             ? {
-                                                ...prev,
-                                                raw_value: event.target.value,
-                                            }
+                                                  ...prev,
+                                                  raw_value: event.target.value,
+                                              }
                                             : null,
                                     )
                                 }
@@ -495,9 +571,9 @@ export function SettingsPage() {
                                     setEditing((prev) =>
                                         prev
                                             ? {
-                                                ...prev,
-                                                raw_value: event.target.value,
-                                            }
+                                                  ...prev,
+                                                  raw_value: event.target.value,
+                                              }
                                             : null,
                                     )
                                 }
@@ -512,9 +588,9 @@ export function SettingsPage() {
                                     setEditing((prev) =>
                                         prev
                                             ? {
-                                                ...prev,
-                                                raw_value: event.target.value,
-                                            }
+                                                  ...prev,
+                                                  raw_value: event.target.value,
+                                              }
                                             : null,
                                     )
                                 }

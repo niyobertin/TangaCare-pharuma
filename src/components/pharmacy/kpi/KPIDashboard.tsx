@@ -46,10 +46,11 @@ const KPICard = ({ title, value, subtitle, icon, trend, status, color = 'blue' }
                 <div className={`p-2.5 rounded-xl border ${colorClasses[color]}`}>{icon}</div>
                 {trend && (
                     <div
-                        className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${trend.isPositive
+                        className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${
+                            trend.isPositive
                                 ? 'bg-emerald-50 text-emerald-600'
                                 : 'bg-rose-50 text-rose-600'
-                            }`}
+                        }`}
                     >
                         {trend.isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                         {trend.value.toFixed(1)}%
@@ -65,12 +66,13 @@ const KPICard = ({ title, value, subtitle, icon, trend, status, color = 'blue' }
                     <div className="flex items-center gap-2 mt-2">
                         {status && (
                             <div
-                                className={`w-2 h-2 rounded-full ${status === 'good'
+                                className={`w-2 h-2 rounded-full ${
+                                    status === 'good'
                                         ? 'bg-emerald-500'
                                         : status === 'warning'
-                                            ? 'bg-amber-500'
-                                            : 'bg-rose-500'
-                                    }`}
+                                          ? 'bg-amber-500'
+                                          : 'bg-rose-500'
+                                }`}
                             />
                         )}
                         <span className="text-xs text-slate-400 font-medium">{subtitle}</span>
@@ -104,7 +106,14 @@ export const KPIDashboard = ({
     });
 
     if (isLoading)
-        return <SkeletonTable rows={4} columns={1} headers={null} className="border-none shadow-none" />;
+        return (
+            <SkeletonTable
+                rows={4}
+                columns={1}
+                headers={null}
+                className="border-none shadow-none"
+            />
+        );
     if (error || !kpis)
         return (
             <div className="p-12 text-center text-slate-400 bg-rose-50 dark:bg-rose-900/10 rounded-2xl border border-rose-100 dark:border-rose-900/20">
@@ -235,8 +244,8 @@ export const KPIDashboard = ({
                                 {inventory.stock_health_score >= 80
                                     ? 'Excellent'
                                     : inventory.stock_health_score >= 60
-                                        ? 'Satisfactory'
-                                        : 'Needs Attention'}
+                                      ? 'Satisfactory'
+                                      : 'Needs Attention'}
                             </div>
                         </div>
                         {/* Decorative pattern */}

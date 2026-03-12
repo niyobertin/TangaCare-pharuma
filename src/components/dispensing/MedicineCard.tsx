@@ -28,28 +28,31 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
 
     const isLowStock = (medicine.stock_quantity || 0) < 10;
     const isExpired = !!nearestExpiry && new Date(nearestExpiry) <= new Date();
-    const isNearExpiry = !!nearestExpiry && !isExpired &&
+    const isNearExpiry =
+        !!nearestExpiry &&
+        !isExpired &&
         new Date(nearestExpiry) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     return (
-        <div
-            className="relative group flex flex-col bg-white dark:bg-slate-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 overflow-hidden shadow-sm"
-        >
+        <div className="relative group flex flex-col bg-white dark:bg-slate-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 overflow-hidden shadow-sm">
             {/* Top Status Bar */}
             {(isLowStock || isNearExpiry || isExpired) && (
-                <div className={clsx(
-                    "absolute top-0 inset-x-0 h-1",
-                    isExpired ? "bg-red-500" :
-                        isNearExpiry ? "bg-amber-500" :
-                            "bg-rose-500"
-                )} />
+                <div
+                    className={clsx(
+                        'absolute top-0 inset-x-0 h-1',
+                        isExpired ? 'bg-red-500' : isNearExpiry ? 'bg-amber-500' : 'bg-rose-500',
+                    )}
+                />
             )}
 
             <div className="p-4 flex-1 flex flex-col gap-3">
                 {/* Header */}
                 <div className="flex justify-between items-start gap-2">
                     <div>
-                        <h3 className="font-bold text-slate-800 dark:text-white line-clamp-1" title={medicine.name}>
+                        <h3
+                            className="font-bold text-slate-800 dark:text-white line-clamp-1"
+                            title={medicine.name}
+                        >
                             {medicine.name}
                         </h3>
                         <div className="flex gap-1 mt-0.5">
@@ -58,11 +61,12 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
                                     Controlled
                                 </span>
                             )}
-                            {medicine.drug_schedule && medicine.drug_schedule !== 'unclassified' && (
-                                <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded text-[9px] font-black uppercase ring-1 ring-blue-200 dark:ring-blue-900/50">
-                                    {medicine.drug_schedule.replace(/_/g, ' ')}
-                                </span>
-                            )}
+                            {medicine.drug_schedule &&
+                                medicine.drug_schedule !== 'unclassified' && (
+                                    <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded text-[9px] font-black uppercase ring-1 ring-blue-200 dark:ring-blue-900/50">
+                                        {medicine.drug_schedule.replace(/_/g, ' ')}
+                                    </span>
+                                )}
                         </div>
                         <p className="text-xs font-medium text-slate-500 tracking-wide mt-1">
                             {displayStrength} • {displayDosageForm}
@@ -71,7 +75,9 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
                             <span className="text-sm font-black text-healthcare-primary">
                                 RWF {sellingPrice.toLocaleString()}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-bold">/ {displayUnit}</span>
+                            <span className="text-[10px] text-slate-400 font-bold">
+                                / {displayUnit}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -79,34 +85,52 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
                 {/* Info Grid */}
                 <div className="grid grid-cols-1 gap-2 mt-1">
                     {/* Stock */}
-                    <div className={clsx(
-                        "flex items-center gap-2 p-2 rounded-lg",
-                        isLowStock
-                            ? "bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400"
-                            : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
-                    )}>
+                    <div
+                        className={clsx(
+                            'flex items-center gap-2 p-2 rounded-lg',
+                            isLowStock
+                                ? 'bg-rose-50 text-rose-700 dark:bg-rose-900/20 dark:text-rose-400'
+                                : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400',
+                        )}
+                    >
                         <div className="flex flex-col">
-                            <span className="text-xs font-bold leading-none">{medicine.stock_quantity || 0} Left</span>
+                            <span className="text-xs font-bold leading-none">
+                                {medicine.stock_quantity || 0} Left
+                            </span>
                         </div>
                     </div>
                 </div>
 
                 {/* Expiry Warning */}
-                <div className={clsx(
-                    "flex items-center gap-2 p-2 rounded-lg mt-auto",
-                    isExpired
-                        ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400"
-                        : isNearExpiry
-                            ? "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
-                            : "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
-                )}>
-                    {isExpired || isNearExpiry ? <AlertTriangle size={14} className="shrink-0" /> : <Calendar size={14} className="shrink-0" />}
+                <div
+                    className={clsx(
+                        'flex items-center gap-2 p-2 rounded-lg mt-auto',
+                        isExpired
+                            ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+                            : isNearExpiry
+                              ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
+                              : 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
+                    )}
+                >
+                    {isExpired || isNearExpiry ? (
+                        <AlertTriangle size={14} className="shrink-0" />
+                    ) : (
+                        <Calendar size={14} className="shrink-0" />
+                    )}
                     <div className="flex flex-col">
                         <span className="text-[10px] opacity-70 font-semibold leading-none">
-                            {isExpired ? "Expired" : isNearExpiry ? "Expiring Soon" : "Nearest Expiry"}
+                            {isExpired
+                                ? 'Expired'
+                                : isNearExpiry
+                                  ? 'Expiring Soon'
+                                  : 'Nearest Expiry'}
                         </span>
                         <span className="text-xs font-bold leading-none">
-                            {isLoading ? "..." : nearestExpiry ? new Date(nearestExpiry).toLocaleDateString() : 'N/A'}
+                            {isLoading
+                                ? '...'
+                                : nearestExpiry
+                                  ? new Date(nearestExpiry).toLocaleDateString()
+                                  : 'N/A'}
                         </span>
                     </div>
                 </div>
@@ -116,12 +140,20 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
             <div className="p-3 bg-slate-50/50 dark:bg-slate-800/50">
                 <button
                     onClick={() => onAddToCart(medicine)}
-                    disabled={readOnly || !medicine.stock_quantity || medicine.stock_quantity <= 0 || isExpired}
+                    disabled={
+                        readOnly ||
+                        !medicine.stock_quantity ||
+                        medicine.stock_quantity <= 0 ||
+                        isExpired
+                    }
                     className={clsx(
-                        "w-full py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2",
-                        readOnly || !medicine.stock_quantity || medicine.stock_quantity <= 0 || isExpired
-                            ? "bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600"
-                            : "bg-healthcare-primary text-white hover:bg-healthcare-primary/90 dark:bg-healthcare-primary dark:text-white"
+                        'w-full py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center justify-center gap-2',
+                        readOnly ||
+                            !medicine.stock_quantity ||
+                            medicine.stock_quantity <= 0 ||
+                            isExpired
+                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600'
+                            : 'bg-healthcare-primary text-white hover:bg-healthcare-primary/90 dark:bg-healthcare-primary dark:text-white',
                     )}
                 >
                     {isExpired ? (
@@ -130,11 +162,9 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
                             Expired
                         </>
                     ) : !medicine.stock_quantity || medicine.stock_quantity <= 0 ? (
-                        "Out of Stock"
+                        'Out of Stock'
                     ) : (
-                        <>
-                            Add to Cart
-                        </>
+                        <>Add to Cart</>
                     )}
                 </button>
                 {onFindAlternatives && (

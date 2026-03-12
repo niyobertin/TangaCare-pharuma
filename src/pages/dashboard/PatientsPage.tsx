@@ -39,7 +39,9 @@ export const PatientsPage: React.FC = () => {
                         <h1 className="text-2xl font-black text-healthcare-dark dark:text-white">
                             Customer Records
                         </h1>
-                        <p className="text-slate-500 text-sm">Manage patient profiles and history</p>
+                        <p className="text-slate-500 text-sm">
+                            Manage patient profiles and history
+                        </p>
                     </div>
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
@@ -103,12 +105,17 @@ export const PatientsPage: React.FC = () => {
                                                 <td colSpan={6} className="p-0">
                                                     <div className="flex flex-col items-center justify-center py-16 text-slate-400 gap-2">
                                                         <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-full">
-                                                            <User size={32} className="text-slate-300" />
+                                                            <User
+                                                                size={32}
+                                                                className="text-slate-300"
+                                                            />
                                                         </div>
-                                                        <span className="font-medium">No customers found</span>
+                                                        <span className="font-medium">
+                                                            No customers found
+                                                        </span>
                                                         <p className="text-xs text-slate-400 max-w-xs text-center">
-                                                            Get started by adding a new customer record to the
-                                                            system.
+                                                            Get started by adding a new customer
+                                                            record to the system.
                                                         </p>
                                                     </div>
                                                 </td>
@@ -132,7 +139,8 @@ export const PatientsPage: React.FC = () => {
                                                             </div>
                                                             <div>
                                                                 <p className="font-bold text-healthcare-dark dark:text-white text-sm">
-                                                                    {patient.first_name} {patient.last_name}
+                                                                    {patient.first_name}{' '}
+                                                                    {patient.last_name}
                                                                 </p>
                                                                 <p className="text-xs text-slate-400">
                                                                     {patient.email || 'No email'}
@@ -142,7 +150,10 @@ export const PatientsPage: React.FC = () => {
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                                                            <Phone size={14} className="text-slate-400" />
+                                                            <Phone
+                                                                size={14}
+                                                                className="text-slate-400"
+                                                            />
                                                             <span className="font-medium">
                                                                 {patient.phone_number}
                                                             </span>
@@ -150,7 +161,10 @@ export const PatientsPage: React.FC = () => {
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-                                                            <MapPin size={14} className="text-slate-400" />
+                                                            <MapPin
+                                                                size={14}
+                                                                className="text-slate-400"
+                                                            />
                                                             <span
                                                                 className="truncate max-w-[150px]"
                                                                 title={patient.address || ''}
@@ -161,13 +175,18 @@ export const PatientsPage: React.FC = () => {
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2 text-xs text-slate-500">
-                                                            <Calendar size={14} className="text-slate-400" />
+                                                            <Calendar
+                                                                size={14}
+                                                                className="text-slate-400"
+                                                            />
                                                             <span>
                                                                 {patient.created_at
                                                                     ? format(
-                                                                        new Date(patient.created_at),
-                                                                        'MMM d, yyyy',
-                                                                    )
+                                                                          new Date(
+                                                                              patient.created_at,
+                                                                          ),
+                                                                          'MMM d, yyyy',
+                                                                      )
                                                                     : '—'}
                                                             </span>
                                                         </div>

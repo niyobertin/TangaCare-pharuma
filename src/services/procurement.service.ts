@@ -1,9 +1,5 @@
 import api from '../lib/api';
-import type {
-    ProcurementOrder,
-    PaginatedResponse,
-    GoodsReceipt,
-} from '../types/pharmacy';
+import type { ProcurementOrder, PaginatedResponse, GoodsReceipt } from '../types/pharmacy';
 import { normalizePaginatedResponse } from './utils';
 
 export const procurementService = {
@@ -40,7 +36,9 @@ export const procurementService = {
     },
 
     async getGoodsReceipt(id: number): Promise<GoodsReceipt> {
-        const response = await api.get<{ data: GoodsReceipt }>(`/pharmacy/procurement/goods-receipts/${id}`);
+        const response = await api.get<{ data: GoodsReceipt }>(
+            `/pharmacy/procurement/goods-receipts/${id}`,
+        );
         return (response.data as any).data ?? response.data;
     },
 
@@ -54,7 +52,11 @@ export const procurementService = {
 
     async receiveProcurementOrder(
         id: number,
-        data: { received_items: any[]; received_date: string; notes?: string },
+        data: {
+            received_items: Array<any & { selling_price?: number }>;
+            received_date: string;
+            notes?: string;
+        },
     ): Promise<ProcurementOrder & { skippedItems?: any[] }> {
         const response = await api.post<any>(`/pharmacy/procurement/${id}/receive`, data);
 
@@ -120,18 +122,24 @@ export const procurementService = {
     },
 
     async quoteProcurementOrder(id: number, items: any[]): Promise<ProcurementOrder> {
-        const response = await api.patch<{ data: ProcurementOrder }>(`/pharmacy/procurement/${id}/quote`, { items });
+        const response = await api.patch<{ data: ProcurementOrder }>(
+            `/pharmacy/procurement/${id}/quote`,
+            { items },
+        );
         return response.data.data;
     },
 
     async reviewQuotation(id: number, items: any[]): Promise<ProcurementOrder> {
-        const response = await api.patch<{ data: ProcurementOrder }>(`/pharmacy/procurement/${id}/review`, { items });
+        const response = await api.patch<{ data: ProcurementOrder }>(
+            `/pharmacy/procurement/${id}/review`,
+            { items },
+        );
         return response.data.data;
     },
 
     async getPriceSuggestions(supplierId: number, medicineId: number): Promise<any> {
         const response = await api.get('/pharmacy/procurement/price-suggestions', {
-            params: { supplier_id: supplierId, medicine_id: medicineId }
+            params: { supplier_id: supplierId, medicine_id: medicineId },
         });
         return response.data.data;
     },

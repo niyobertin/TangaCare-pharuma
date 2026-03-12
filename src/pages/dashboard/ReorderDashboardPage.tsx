@@ -99,11 +99,20 @@ export function ReorderDashboardPage() {
 
     const highUrgency = suggestions.filter((s) => s.urgency === 'high');
     const mediumUrgency = suggestions.filter((s) => s.urgency === 'medium');
-    const smartCritical = smartReorder.filter((item) => item.priority === 'critical' || item.priority === 'high');
+    const smartCritical = smartReorder.filter(
+        (item) => item.priority === 'critical' || item.priority === 'high',
+    );
 
     return (
         <ProtectedRoute
-            allowedRoles={['ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN', 'PHARMACIST', 'STORE_MANAGER', 'OWNER']}
+            allowedRoles={[
+                'ADMIN',
+                'SUPER_ADMIN',
+                'FACILITY_ADMIN',
+                'PHARMACIST',
+                'STORE_MANAGER',
+                'OWNER',
+            ]}
             requireFacility
         >
             <div className="p-6 space-y-6 animate-in fade-in duration-500">
@@ -163,7 +172,10 @@ export function ReorderDashboardPage() {
                     />
                     <StatCard
                         title="Mobile Urgents"
-                        value={mobileBoard?.quick_actions?.urgent_expiry?.length || mediumUrgency.length}
+                        value={
+                            mobileBoard?.quick_actions?.urgent_expiry?.length ||
+                            mediumUrgency.length
+                        }
                         color="text-healthcare-primary"
                         icon={<Smartphone size={15} />}
                         subtitle="Counter-ready actions"
@@ -192,12 +204,17 @@ export function ReorderDashboardPage() {
                                             </p>
                                         </div>
                                         <p className="text-sm font-black text-healthcare-primary">
-                                            +{item.recommended_order_qty ?? item.suggested_quantity ?? 0}
+                                            +
+                                            {item.recommended_order_qty ??
+                                                item.suggested_quantity ??
+                                                0}
                                         </p>
                                     </div>
                                 ))}
                             {smartReorder.length === 0 && suggestions.length === 0 && (
-                                <p className="text-xs text-slate-500">No smart reorder actions right now.</p>
+                                <p className="text-xs text-slate-500">
+                                    No smart reorder actions right now.
+                                </p>
                             )}
                         </div>
                     </div>
@@ -217,10 +234,13 @@ export function ReorderDashboardPage() {
                                             {task.medicine?.name || `Medicine #${task.medicine_id}`}
                                         </p>
                                         <p className="text-[10px] text-slate-400 uppercase tracking-widest">
-                                            {task.priority} · Dept {task.department?.name || task.department_id}
+                                            {task.priority} · Dept{' '}
+                                            {task.department?.name || task.department_id}
                                         </p>
                                     </div>
-                                    <p className="text-sm font-black text-amber-600">+{task.suggested_quantity}</p>
+                                    <p className="text-sm font-black text-amber-600">
+                                        +{task.suggested_quantity}
+                                    </p>
                                 </div>
                             ))}
                             {parTasks.length === 0 && (
@@ -314,12 +334,13 @@ export function ReorderDashboardPage() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span
-                                                        className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${s.urgency === 'high'
-                                                            ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                                                            : s.urgency === 'medium'
-                                                                ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                                : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                                            }`}
+                                                        className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                                            s.urgency === 'high'
+                                                                ? 'bg-rose-50 text-rose-600 border border-rose-100'
+                                                                : s.urgency === 'medium'
+                                                                  ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                  : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                        }`}
                                                     >
                                                         {s.urgency}
                                                     </span>
@@ -376,7 +397,9 @@ function StatCard({
         <div className="tc-stat-card tc-stat-card-neutral">
             <div className="tc-stat-card-header">
                 <span className="tc-stat-card-title">{title}</span>
-                <div className={`tc-stat-card-icon bg-slate-100 dark:bg-slate-800 ${color}`}>{icon}</div>
+                <div className={`tc-stat-card-icon bg-slate-100 dark:bg-slate-800 ${color}`}>
+                    {icon}
+                </div>
             </div>
             <div className="tc-stat-card-foot">
                 <span className={`tc-stat-card-value ${color}`}>{value}</span>

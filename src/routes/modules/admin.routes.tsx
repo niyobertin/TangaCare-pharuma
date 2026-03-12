@@ -9,9 +9,15 @@ const OrganizationsPage = lazyNamed(
     () => import('../../pages/organizations/OrganizationsPage'),
     'OrganizationsPage',
 );
-const FacilitiesPage = lazyNamed(() => import('../../pages/facilities/FacilitiesPage'), 'FacilitiesPage');
+const FacilitiesPage = lazyNamed(
+    () => import('../../pages/facilities/FacilitiesPage'),
+    'FacilitiesPage',
+);
 const UsersPage = lazyNamed(() => import('../../pages/dashboard/UsersPage'), 'UsersPage');
-const AuditLogsPage = lazyNamed(() => import('../../pages/dashboard/AuditLogsPage'), 'AuditLogsPage');
+const AuditLogsPage = lazyNamed(
+    () => import('../../pages/dashboard/AuditLogsPage'),
+    'AuditLogsPage',
+);
 const FacilitySettingsPage = lazyNamed(
     () => import('../../pages/dashboard/FacilitySettingsPage'),
     'FacilitySettingsPage',
@@ -22,49 +28,47 @@ export const createAdminRoutes = (parentRoute: any) => {
     const organizationsRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'organizations',
-        component: () => (
+        component: () =>
             withRouteSuspense(
                 <RequirePermission permission={PERMISSIONS.ORGANIZATION_MANAGE}>
                     <OrganizationsPage />
                 </RequirePermission>,
-            )
-        ),
+            ),
     });
 
     const facilitiesRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'facilities',
-        component: () => (
+        component: () =>
             withRouteSuspense(
-                <RequirePermission permissions={[PERMISSIONS.FACILITY_READ, PERMISSIONS.FACILITY_MANAGE]}>
+                <RequirePermission
+                    permissions={[PERMISSIONS.FACILITY_READ, PERMISSIONS.FACILITY_MANAGE]}
+                >
                     <FacilitiesPage />
                 </RequirePermission>,
-            )
-        ),
+            ),
     });
 
     const usersRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'users',
-        component: () => (
+        component: () =>
             withRouteSuspense(
                 <RequirePermission permissions={[PERMISSIONS.USERS_READ, PERMISSIONS.USERS_MANAGE]}>
                     <UsersPage />
                 </RequirePermission>,
-            )
-        ),
+            ),
     });
 
     const auditLogsRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'audit-logs',
-        component: () => (
+        component: () =>
             withRouteSuspense(
                 <RequirePermission permission={PERMISSIONS.AUDIT_READ}>
                     <AuditLogsPage />
                 </RequirePermission>,
-            )
-        ),
+            ),
         validateSearch: (search: Record<string, unknown>) => {
             return z
                 .object({
@@ -77,25 +81,23 @@ export const createAdminRoutes = (parentRoute: any) => {
     const facilitySettingsRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'facility/$facilityId/settings',
-        component: () => (
+        component: () =>
             withRouteSuspense(
                 <RequirePermission permission={PERMISSIONS.FACILITY_MANAGE}>
                     <FacilitySettingsPage />
                 </RequirePermission>,
-            )
-        ),
+            ),
     });
 
     const patientsRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'patients',
-        component: () => (
+        component: () =>
             withRouteSuspense(
                 <RequirePermission permissions={[PERMISSIONS.USERS_READ, PERMISSIONS.USERS_MANAGE]}>
                     <PatientsPage />
                 </RequirePermission>,
-            )
-        ),
+            ),
     });
 
     return [

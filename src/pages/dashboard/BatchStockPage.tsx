@@ -109,7 +109,7 @@ export function BatchStockPage() {
             requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                { }
+                {}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">
                         <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
@@ -121,7 +121,7 @@ export function BatchStockPage() {
                     </div>
                 </div>
 
-                { }
+                {}
                 {loading ? (
                     <StatsSkeleton />
                 ) : (
@@ -153,7 +153,7 @@ export function BatchStockPage() {
                     </div>
                 )}
 
-                { }
+                {}
                 <div className="flex flex-col md:flex-row gap-4 justify-between">
                     <div className="relative flex-1 max-w-lg">
                         <Search
@@ -170,7 +170,7 @@ export function BatchStockPage() {
                     </div>
                 </div>
 
-                { }
+                {}
                 {loading ? (
                     <SkeletonTable
                         rows={5}
@@ -207,12 +207,15 @@ export function BatchStockPage() {
                                     {filteredBatches.length > 0 ? (
                                         filteredBatches.map((batch) => {
                                             const medicineName = String(
-                                                (batch as any).medicine?.name || `Med ID: ${batch.medicine_id}`,
+                                                (batch as any).medicine?.name ||
+                                                    `Med ID: ${batch.medicine_id}`,
                                             );
                                             const isControlled = Boolean(
                                                 (batch as any).medicine?.is_controlled_drug ||
-                                                    (batch as any).medicine?.controlled_flag ||
-                                                    (batch as any).medicine?.drug_schedule?.includes('controlled'),
+                                                (batch as any).medicine?.controlled_flag ||
+                                                (batch as any).medicine?.drug_schedule?.includes(
+                                                    'controlled',
+                                                ),
                                             );
 
                                             return (
@@ -220,75 +223,82 @@ export function BatchStockPage() {
                                                     key={batch.id}
                                                     className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                                                 >
-                                                <td className="px-6 py-4 font-mono text-xs text-slate-500">
-                                                    #{batch.id}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
-                                                            {medicineName}
-                                                        </span>
-                                                        <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                                                            Med ID: {batch.medicine_id} • Batch: {batch.batch_number}
-                                                        </span>
-                                                        {isControlled && (
-                                                            <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-100 rounded-full px-2 py-0.5 mt-1 w-fit">
-                                                                <ShieldAlert size={10} />
-                                                                Controlled
+                                                    <td className="px-6 py-4 font-mono text-xs text-slate-500">
+                                                        #{batch.id}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
+                                                                {medicineName}
                                                             </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="text-xs font-black text-healthcare-dark dark:text-white">
-                                                            {(
-                                                                batch.current_quantity || 0
-                                                            ).toLocaleString()}{' '}
-                                                            Units
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div
-                                                        className={cn(
-                                                            'w-fit px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5',
-                                                            new Date(batch.expiry_date) < new Date()
-                                                                ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                                                                : 'bg-teal-50 text-teal-600 border border-teal-100',
-                                                        )}
-                                                    >
-                                                        <Calendar size={12} />
-                                                        {new Date(
-                                                            batch.expiry_date,
-                                                        ).toLocaleDateString()}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        {user?.role?.toString().toLowerCase() !==
-                                                            'auditor' && (
+                                                            <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">
+                                                                Med ID: {batch.medicine_id} • Batch:{' '}
+                                                                {batch.batch_number}
+                                                            </span>
+                                                            {isControlled && (
+                                                                <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-100 rounded-full px-2 py-0.5 mt-1 w-fit">
+                                                                    <ShieldAlert size={10} />
+                                                                    Controlled
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="text-xs font-black text-healthcare-dark dark:text-white">
+                                                                {(
+                                                                    batch.current_quantity || 0
+                                                                ).toLocaleString()}{' '}
+                                                                Units
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div
+                                                            className={cn(
+                                                                'w-fit px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5',
+                                                                new Date(batch.expiry_date) <
+                                                                    new Date()
+                                                                    ? 'bg-rose-50 text-rose-600 border border-rose-100'
+                                                                    : 'bg-teal-50 text-teal-600 border border-teal-100',
+                                                            )}
+                                                        >
+                                                            <Calendar size={12} />
+                                                            {new Date(
+                                                                batch.expiry_date,
+                                                            ).toLocaleDateString()}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            {user?.role
+                                                                ?.toString()
+                                                                .toLowerCase() !== 'auditor' && (
                                                                 <button
                                                                     onClick={() =>
-                                                                        setSelectedBatchForAdjustment(batch)
+                                                                        setSelectedBatchForAdjustment(
+                                                                            batch,
+                                                                        )
                                                                     }
                                                                     className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
                                                                     title="Adjust Stock"
                                                                 >
-                                                                    <ArrowDownWideNarrow size={16} />
+                                                                    <ArrowDownWideNarrow
+                                                                        size={16}
+                                                                    />
                                                                 </button>
                                                             )}
-                                                        <button
-                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
-                                                            title="View History"
-                                                        >
-                                                            <History size={16} />
-                                                        </button>
-                                                        <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
-                                                            <MoreVertical size={16} />
-                                                        </button>
-                                                    </div>
-                                                </td>
+                                                            <button
+                                                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
+                                                                title="View History"
+                                                            >
+                                                                <History size={16} />
+                                                            </button>
+                                                            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 transition-colors">
+                                                                <MoreVertical size={16} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             );
                                         })
@@ -296,7 +306,10 @@ export function BatchStockPage() {
                                         <tr>
                                             <td colSpan={5} className="px-6 py-10 text-center">
                                                 <div className="flex flex-col items-center gap-2">
-                                                    <AlertCircle size={32} className="text-slate-300" />
+                                                    <AlertCircle
+                                                        size={32}
+                                                        className="text-slate-300"
+                                                    />
                                                     <span className="text-slate-500 font-bold italic">
                                                         No batches found
                                                     </span>
@@ -311,7 +324,7 @@ export function BatchStockPage() {
                 )}
             </div>
 
-            { }
+            {}
             {selectedBatchForAdjustment && (
                 <StockAdjustmentModal
                     batch={selectedBatchForAdjustment}

@@ -205,7 +205,9 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                         <Filter className="text-[#2563EB] dark:text-blue-300" size={20} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-[#111827] dark:text-slate-100 leading-tight">Dashboard</h2>
+                        <h2 className="text-xl font-bold text-[#111827] dark:text-slate-100 leading-tight">
+                            Dashboard
+                        </h2>
                         <p className="text-xs text-[#6B7280] dark:text-slate-400 font-semibold">
                             Pharmacy inventory overview
                         </p>
@@ -271,14 +273,18 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             trend={summary?.month.operational.sales_growth_rate}
                             icon={<DollarSign size={15} />}
                             gradient="from-[#10B981] to-[#059669]"
-                            onClick={() => navigate({ to: '/app/analytics/sales' as any, search: {} as any })}
+                            onClick={() =>
+                                navigate({ to: '/app/analytics/sales' as any, search: {} as any })
+                            }
                         />
                         <StatCard
                             title="Medicines"
                             value={kpis?.inventory.total_items || 0}
                             icon={<Package size={15} />}
                             gradient="from-[#2563EB] to-[#1D4ED8]"
-                            onClick={() => navigate({ to: '/app/inventory' as any, search: {} as any })}
+                            onClick={() =>
+                                navigate({ to: '/app/inventory' as any, search: {} as any })
+                            }
                         />
                         <StatCard
                             title="Low stock"
@@ -286,7 +292,12 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             icon={<AlertTriangle size={15} />}
                             gradient="from-[#F59E0B] to-[#D97706]"
                             actionLabel="View Details"
-                            onClick={() => navigate({ to: '/app/analytics/low-stock' as any, search: {} as any })}
+                            onClick={() =>
+                                navigate({
+                                    to: '/app/analytics/low-stock' as any,
+                                    search: {} as any,
+                                })
+                            }
                         />
                         <StatCard
                             title="Expiring soon"
@@ -294,7 +305,9 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             icon={<Clock size={15} />}
                             gradient="from-[#EF4444] to-[#DC2626]"
                             actionLabel="View Details"
-                            onClick={() => navigate({ to: '/app/analytics/recall' as any, search: {} as any })}
+                            onClick={() =>
+                                navigate({ to: '/app/analytics/recall' as any, search: {} as any })
+                            }
                         />
                     </>
                 )}
@@ -303,9 +316,13 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <div className="xl:col-span-2 bg-[#FFFFFF] dark:bg-slate-900 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 shadow-sm overflow-hidden">
                     <div className="px-5 py-4 border-b border-[#E5E7EB] dark:border-slate-700 flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Sales trend</h3>
+                        <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">
+                            Sales trend
+                        </h3>
                         <button
-                            onClick={() => navigate({ to: '/app/analytics/sales' as any, search: {} as any })}
+                            onClick={() =>
+                                navigate({ to: '/app/analytics/sales' as any, search: {} as any })
+                            }
                             className="text-xs font-semibold text-[#2563EB] dark:text-blue-300 hover:underline inline-flex items-center gap-1"
                         >
                             View Report <ArrowRight size={13} />
@@ -416,9 +433,7 @@ const StatCard: React.FC<{
             <div className="relative z-10 flex h-full flex-col justify-between">
                 <div className="tc-stat-card-header">
                     <h3 className="tc-stat-card-title text-white/90">{title}</h3>
-                    <span className="tc-stat-card-icon bg-white/20">
-                        {icon}
-                    </span>
+                    <span className="tc-stat-card-icon bg-white/20">{icon}</span>
                 </div>
                 <div className="tc-stat-card-foot">
                     <div className="min-w-0 flex items-center gap-1.5">
@@ -453,8 +468,12 @@ const LowStockCard: React.FC<{
         <div className="tc-table-surface">
             <div className="px-5 py-4 border-b border-[#E5E7EB] dark:border-slate-700 flex justify-between items-center">
                 <div>
-                    <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Top 5 low stock medicines</h3>
-                    <p className="text-sm text-[#6B7280] dark:text-slate-400 mt-0.5">Items below reorder threshold</p>
+                    <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">
+                        Top 5 low stock medicines
+                    </h3>
+                    <p className="text-sm text-[#6B7280] dark:text-slate-400 mt-0.5">
+                        Items below reorder threshold
+                    </p>
                 </div>
                 <span className="rounded-full bg-[#EFF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#1D4ED8] dark:bg-blue-900/40 dark:text-blue-300">
                     Immediate actions
@@ -462,13 +481,23 @@ const LowStockCard: React.FC<{
             </div>
 
             {loading ? (
-                <SkeletonTable rows={5} columns={3} headers={null} className="border-none shadow-none" />
+                <SkeletonTable
+                    rows={5}
+                    columns={3}
+                    headers={null}
+                    className="border-none shadow-none"
+                />
             ) : rows.length > 0 ? (
                 <div className="divide-y divide-[#E5E7EB] dark:divide-slate-700">
                     {rows.slice(0, 5).map((item) => (
-                        <div key={item.medicine_id} className="px-5 py-4 flex items-center justify-between gap-3">
+                        <div
+                            key={item.medicine_id}
+                            className="px-5 py-4 flex items-center justify-between gap-3"
+                        >
                             <div>
-                                <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">{item.medicine_name}</p>
+                                <p className="text-sm font-semibold text-[#111827] dark:text-slate-100">
+                                    {item.medicine_name}
+                                </p>
                                 <p className="text-xs text-[#6B7280] dark:text-slate-400 mt-0.5">
                                     Current: {item.current_quantity} | Reorder: {item.reorder_point}
                                 </p>
@@ -507,15 +536,25 @@ const CriticalAlertsCard: React.FC<{
     return (
         <div className="bg-[#FFFFFF] dark:bg-slate-900 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E5E7EB] dark:border-slate-700">
-                <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Critical alerts</h3>
+                <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">
+                    Critical alerts
+                </h3>
             </div>
 
             {loading ? (
-                <SkeletonTable rows={5} columns={2} headers={null} className="border-none shadow-none" />
+                <SkeletonTable
+                    rows={5}
+                    columns={2}
+                    headers={null}
+                    className="border-none shadow-none"
+                />
             ) : rows.length > 0 ? (
                 <div className="divide-y divide-[#E5E7EB] dark:divide-slate-700">
                     {rows.slice(0, 5).map((alert) => (
-                        <div key={alert.id} className="px-5 py-4 flex items-start justify-between gap-3">
+                        <div
+                            key={alert.id}
+                            className="px-5 py-4 flex items-start justify-between gap-3"
+                        >
                             <div>
                                 <p className="text-sm font-semibold text-[#111827] dark:text-slate-100 line-clamp-1">
                                     {alert.title || alert.message}
@@ -538,7 +577,9 @@ const CriticalAlertsCard: React.FC<{
                     ))}
                 </div>
             ) : (
-                <div className="px-5 py-10 text-center text-sm text-[#6B7280] dark:text-slate-400">No active alerts</div>
+                <div className="px-5 py-10 text-center text-sm text-[#6B7280] dark:text-slate-400">
+                    No active alerts
+                </div>
             )}
 
             <button
@@ -558,11 +599,18 @@ const TopStockMedicinesCard: React.FC<{
     return (
         <div className="bg-[#FFFFFF] dark:bg-slate-900 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 shadow-sm overflow-hidden">
             <div className="px-4 py-4 border-b border-[#E5E7EB] dark:border-slate-700">
-                <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Top stock medicines</h3>
+                <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">
+                    Top stock medicines
+                </h3>
             </div>
 
             {loading ? (
-                <SkeletonTable rows={5} columns={3} headers={null} className="border-none shadow-none" />
+                <SkeletonTable
+                    rows={5}
+                    columns={3}
+                    headers={null}
+                    className="border-none shadow-none"
+                />
             ) : (
                 <div className="divide-y divide-[#E5E7EB] dark:divide-slate-700">
                     <div className="grid grid-cols-[1.3fr_1fr_0.8fr] gap-2 px-4 py-3 text-xs font-semibold text-[#6B7280] dark:text-slate-400">
@@ -572,9 +620,16 @@ const TopStockMedicinesCard: React.FC<{
                     </div>
                     {rows.length > 0 ? (
                         rows.slice(0, 5).map((row) => (
-                            <div key={row.id} className="grid grid-cols-[1.3fr_1fr_0.8fr] gap-2 px-4 py-3 text-sm">
-                                <span className="font-semibold text-[#111827] dark:text-slate-100 truncate">{row.name}</span>
-                                <span className="text-[#6B7280] dark:text-slate-400 truncate">{row.category}</span>
+                            <div
+                                key={row.id}
+                                className="grid grid-cols-[1.3fr_1fr_0.8fr] gap-2 px-4 py-3 text-sm"
+                            >
+                                <span className="font-semibold text-[#111827] dark:text-slate-100 truncate">
+                                    {row.name}
+                                </span>
+                                <span className="text-[#6B7280] dark:text-slate-400 truncate">
+                                    {row.category}
+                                </span>
                                 <span className="text-right font-semibold text-[#2563EB] dark:text-blue-300">
                                     {row.quantity.toLocaleString()}
                                 </span>
@@ -598,11 +653,18 @@ const TopSellingMedicinesCard: React.FC<{
     return (
         <div className="bg-[#FFFFFF] dark:bg-slate-900 rounded-2xl border border-[#E5E7EB] dark:border-slate-700 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-[#E5E7EB] dark:border-slate-700 flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">Top selling medicines</h3>
+                <h3 className="text-lg font-semibold text-[#111827] dark:text-slate-100">
+                    Top selling medicines
+                </h3>
             </div>
 
             {loading ? (
-                <SkeletonTable rows={5} columns={2} headers={null} className="border-none shadow-none" />
+                <SkeletonTable
+                    rows={5}
+                    columns={2}
+                    headers={null}
+                    className="border-none shadow-none"
+                />
             ) : (
                 <div className="divide-y divide-[#E5E7EB] dark:divide-slate-700">
                     <div className="grid grid-cols-[1.5fr_0.8fr] gap-2 px-5 py-3 text-xs font-semibold text-[#6B7280] dark:text-slate-400">
@@ -611,8 +673,13 @@ const TopSellingMedicinesCard: React.FC<{
                     </div>
                     {rows.length > 0 ? (
                         rows.slice(0, 5).map((item, index) => (
-                            <div key={`${item.name}-${index}`} className="grid grid-cols-[1.5fr_0.8fr] gap-2 px-5 py-3 text-sm">
-                                <span className="font-semibold text-[#111827] dark:text-slate-100 truncate">{item.name}</span>
+                            <div
+                                key={`${item.name}-${index}`}
+                                className="grid grid-cols-[1.5fr_0.8fr] gap-2 px-5 py-3 text-sm"
+                            >
+                                <span className="font-semibold text-[#111827] dark:text-slate-100 truncate">
+                                    {item.name}
+                                </span>
                                 <span className="text-right font-semibold text-[#10B981] dark:text-emerald-300">
                                     {Number(item.value || 0).toLocaleString()}
                                 </span>

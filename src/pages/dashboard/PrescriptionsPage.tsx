@@ -58,7 +58,9 @@ export function PrescriptionsPage() {
                                     <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-healthcare-primary/10 text-healthcare-primary text-xs font-black">
                                         {index + 1}
                                     </span>
-                                    <span className="text-sm text-slate-600 dark:text-slate-300">{step}</span>
+                                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                                        {step}
+                                    </span>
                                 </li>
                             ))}
                         </ol>
@@ -71,7 +73,8 @@ export function PrescriptionsPage() {
                                 Controlled Drug Rule
                             </h3>
                             <p className="text-xs mt-2 text-amber-700 dark:text-amber-200 leading-relaxed">
-                                A valid prescription ID is required before checkout when controlled items are in cart.
+                                A valid prescription ID is required before checkout when controlled
+                                items are in cart.
                             </p>
                         </div>
 

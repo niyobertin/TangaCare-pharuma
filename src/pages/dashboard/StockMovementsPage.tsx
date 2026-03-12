@@ -1,11 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-    Download,
-    ArrowDownCircle,
-    ArrowUpCircle,
-    Repeat,
-    Edit3,
-} from 'lucide-react';
+import { Download, ArrowDownCircle, ArrowUpCircle, Repeat, Edit3 } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -73,9 +67,9 @@ export function StockMovementsPage() {
         'stock-movements-audit',
         STOCK_MOVEMENT_TABLE_COLUMNS,
         {
-        role: String(user?.role || ''),
-        roleDefaultColumns: STOCK_MOVEMENT_ROLE_DEFAULT_COLUMNS,
-    },
+            role: String(user?.role || ''),
+            roleDefaultColumns: STOCK_MOVEMENT_ROLE_DEFAULT_COLUMNS,
+        },
     );
 
     useEffect(() => {
@@ -126,12 +120,16 @@ export function StockMovementsPage() {
         const normalizedSearch = searchTerm.trim().toLowerCase();
 
         const filtered = data.filter((row) => {
-            const movementType = normalizeStockMovementType(row.movement_subtype || row.movement_type);
+            const movementType = normalizeStockMovementType(
+                row.movement_subtype || row.movement_type,
+            );
             const rowUser = String(row.user_name || row.user?.name || '').trim();
             const medicineName = String(
                 row.medicine_name || row.medicine?.name || row.entity_name || row.description || '',
             ).toLowerCase();
-            const batchNumber = String(row.batch_number || row.batch?.batch_number || '').toLowerCase();
+            const batchNumber = String(
+                row.batch_number || row.batch?.batch_number || '',
+            ).toLowerCase();
             const reference = String(row.reference || row.reference_number || '').toLowerCase();
 
             if (movementTypeFilter !== 'all' && movementType !== movementTypeFilter) return false;
@@ -347,19 +345,23 @@ export function StockMovementsPage() {
                     <SkeletonTable
                         rows={10}
                         columns={visibleMovementColumnCount}
-                        headers={STOCK_MOVEMENT_TABLE_COLUMNS
-                            .filter((column) => movementVisibleColumnSet.has(column.key))
-                            .map((column) => column.label)}
-                        columnAligns={STOCK_MOVEMENT_TABLE_COLUMNS
-                            .filter((column) => movementVisibleColumnSet.has(column.key))
-                            .map((column) => (column.key === 'quantity' ? 'right' : 'left')) as any}
+                        headers={STOCK_MOVEMENT_TABLE_COLUMNS.filter((column) =>
+                            movementVisibleColumnSet.has(column.key),
+                        ).map((column) => column.label)}
+                        columnAligns={
+                            STOCK_MOVEMENT_TABLE_COLUMNS.filter((column) =>
+                                movementVisibleColumnSet.has(column.key),
+                            ).map((column) => (column.key === 'quantity' ? 'right' : 'left')) as any
+                        }
                         className="border-none shadow-none"
                     />
                 ) : (
                     <>
                         <div
                             ref={movementTableRef}
-                            onScroll={(event) => setMovementScrollTop(event.currentTarget.scrollTop)}
+                            onScroll={(event) =>
+                                setMovementScrollTop(event.currentTarget.scrollTop)
+                            }
                             className="overflow-x-auto overflow-y-auto max-h-[520px] rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900"
                         >
                             <table className="tc-table w-full text-left text-sm">
@@ -421,9 +423,15 @@ export function StockMovementsPage() {
                                             row.movement_subtype || row.movement_type,
                                         );
                                         const medicineName =
-                                            row.medicine_name || row.medicine?.name || row.entity_name || '—';
+                                            row.medicine_name ||
+                                            row.medicine?.name ||
+                                            row.entity_name ||
+                                            '—';
                                         const batchNumber =
-                                            row.batch_number || row.batch?.batch_number || row.batch_code || '—';
+                                            row.batch_number ||
+                                            row.batch?.batch_number ||
+                                            row.batch_code ||
+                                            '—';
                                         const quantityDelta = Number(row.quantity_delta || 0);
 
                                         return (
@@ -434,7 +442,9 @@ export function StockMovementsPage() {
                                                 {movementVisibleColumnSet.has('timestamp') && (
                                                     <td className="p-4 text-slate-600 dark:text-slate-400 whitespace-nowrap">
                                                         {row.created_at
-                                                            ? new Date(row.created_at).toLocaleString()
+                                                            ? new Date(
+                                                                  row.created_at,
+                                                              ).toLocaleString()
                                                             : '—'}
                                                     </td>
                                                 )}
@@ -471,7 +481,9 @@ export function StockMovementsPage() {
                                                 )}
                                                 {movementVisibleColumnSet.has('reference') && (
                                                     <td className="p-4 font-medium text-healthcare-dark dark:text-white whitespace-nowrap">
-                                                        {row.reference || row.reference_number || '—'}
+                                                        {row.reference ||
+                                                            row.reference_number ||
+                                                            '—'}
                                                     </td>
                                                 )}
                                                 {movementVisibleColumnSet.has('user') && (
@@ -487,14 +499,17 @@ export function StockMovementsPage() {
                                             </tr>
                                         );
                                     })}
-                                    {shouldVirtualizeMovements && movementBottomSpacerHeight > 0 && (
-                                        <tr>
-                                            <td
-                                                colSpan={visibleMovementColumnCount}
-                                                style={{ height: `${movementBottomSpacerHeight}px` }}
-                                            />
-                                        </tr>
-                                    )}
+                                    {shouldVirtualizeMovements &&
+                                        movementBottomSpacerHeight > 0 && (
+                                            <tr>
+                                                <td
+                                                    colSpan={visibleMovementColumnCount}
+                                                    style={{
+                                                        height: `${movementBottomSpacerHeight}px`,
+                                                    }}
+                                                />
+                                            </tr>
+                                        )}
                                 </tbody>
                             </table>
                         </div>

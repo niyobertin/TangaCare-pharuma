@@ -26,7 +26,7 @@ export function RegisterPage() {
         resolver: yupResolver(registerSchema) as any,
     });
 
-    if (isAuthenticated) return <Navigate to={"/app" as any} search={{} as any} />;
+    if (isAuthenticated) return <Navigate to={'/app' as any} search={{} as any} />;
 
     const onSubmit = async (data: RegisterForm) => {
         setLoading(true);
@@ -113,7 +113,9 @@ export function RegisterPage() {
                 </div>
                 <div className="space-y-1.5">
                     <div className="flex justify-between items-center px-1">
-                        <label className="text-sm font-bold text-text-secondary">Phone number</label>
+                        <label className="text-sm font-bold text-text-secondary">
+                            Phone number
+                        </label>
                         <span className="text-[10px] font-bold text-text-muted">(Optional)</span>
                     </div>
                     <input

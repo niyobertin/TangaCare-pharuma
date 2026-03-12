@@ -20,7 +20,7 @@ export class TangaCareDB extends Dexie {
         this.version(1).stores({
             medicines: '++id, name, code, barcode',
             saleQueue: '++id, offlineId, status, createdAt',
-            settings: 'key'
+            settings: 'key',
         });
     }
 }

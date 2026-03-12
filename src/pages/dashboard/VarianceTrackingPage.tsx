@@ -77,7 +77,14 @@ export function VarianceTrackingPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN', 'PHARMACIST', 'STORE_MANAGER', 'OWNER']}
+            allowedRoles={[
+                'ADMIN',
+                'SUPER_ADMIN',
+                'FACILITY_ADMIN',
+                'PHARMACIST',
+                'STORE_MANAGER',
+                'OWNER',
+            ]}
             requireFacility
         >
             <div className="p-6 space-y-6 animate-in fade-in duration-500">
@@ -130,15 +137,7 @@ export function VarianceTrackingPage() {
                             'Variance',
                             'Status',
                         ]}
-                        columnAligns={[
-                            'left',
-                            'left',
-                            'left',
-                            'right',
-                            'right',
-                            'left',
-                            'right',
-                        ]}
+                        columnAligns={['left', 'left', 'left', 'right', 'right', 'left', 'right']}
                         actions
                         className="border-none shadow-none"
                     />
@@ -206,12 +205,13 @@ export function VarianceTrackingPage() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div
-                                                    className={`inline-flex items-center gap-1 font-black ${v.variance_quantity > 0
-                                                        ? 'text-emerald-500'
-                                                        : v.variance_quantity < 0
-                                                            ? 'text-rose-500'
-                                                            : 'text-slate-400'
-                                                        }`}
+                                                    className={`inline-flex items-center gap-1 font-black ${
+                                                        v.variance_quantity > 0
+                                                            ? 'text-emerald-500'
+                                                            : v.variance_quantity < 0
+                                                              ? 'text-rose-500'
+                                                              : 'text-slate-400'
+                                                    }`}
                                                 >
                                                     {v.variance_quantity > 0 ? (
                                                         <ArrowUpRight size={14} />
@@ -279,7 +279,7 @@ export function VarianceTrackingPage() {
                     </div>
                 )}
             </div>
-        </ProtectedRoute >
+        </ProtectedRoute>
     );
 }
 

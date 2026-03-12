@@ -42,8 +42,9 @@ export function TermsOfUsePage() {
                                 1. Service Access
                             </h2>
                             <p>
-                                Access is provided to authorized users under your organization account. You are responsible for
-                                account security and role assignment.
+                                Access is provided to authorized users under your organization
+                                account. You are responsible for account security and role
+                                assignment.
                             </p>
                         </section>
                         <section>
@@ -51,8 +52,9 @@ export function TermsOfUsePage() {
                                 2. Acceptable Use
                             </h2>
                             <p>
-                                You agree not to misuse the platform, attempt unauthorized access, or use the system in ways
-                                that violate laws, regulations, or professional obligations.
+                                You agree not to misuse the platform, attempt unauthorized access,
+                                or use the system in ways that violate laws, regulations, or
+                                professional obligations.
                             </p>
                         </section>
                         <section>
@@ -60,8 +62,8 @@ export function TermsOfUsePage() {
                                 3. Customer Responsibilities
                             </h2>
                             <p>
-                                Customers are responsible for data accuracy, local regulatory compliance, and operational
-                                procedures within their facilities.
+                                Customers are responsible for data accuracy, local regulatory
+                                compliance, and operational procedures within their facilities.
                             </p>
                         </section>
                         <section>
@@ -69,8 +71,9 @@ export function TermsOfUsePage() {
                                 4. Availability and Changes
                             </h2>
                             <p>
-                                We may update features to improve reliability, security, or compliance. Scheduled maintenance
-                                and service notices are communicated through standard support channels.
+                                We may update features to improve reliability, security, or
+                                compliance. Scheduled maintenance and service notices are
+                                communicated through standard support channels.
                             </p>
                         </section>
                         <section>
@@ -78,8 +81,8 @@ export function TermsOfUsePage() {
                                 5. Limitation of Liability
                             </h2>
                             <p>
-                                The service is provided under applicable contractual limits. Nothing in these terms removes
-                                liabilities that cannot be excluded by law.
+                                The service is provided under applicable contractual limits. Nothing
+                                in these terms removes liabilities that cannot be excluded by law.
                             </p>
                         </section>
                         <section>
@@ -88,7 +91,10 @@ export function TermsOfUsePage() {
                             </h2>
                             <p>
                                 Terms questions can be sent to{' '}
-                                <a href="mailto:legal@tangacare.io" className="text-healthcare-primary font-bold">
+                                <a
+                                    href="mailto:legal@tangacare.io"
+                                    className="text-healthcare-primary font-bold"
+                                >
                                     legal@tangacare.io
                                 </a>
                                 .

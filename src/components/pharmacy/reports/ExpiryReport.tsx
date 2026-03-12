@@ -41,27 +41,31 @@ const getRiskBadge = (risk: ExpiryRisk) => {
     if (risk === 'expired') {
         return {
             label: 'Expired',
-            className: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-900/30',
+            className:
+                'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-900/30',
         };
     }
 
     if (risk === 'critical') {
         return {
             label: 'Critical',
-            className: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-900/30',
+            className:
+                'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-300 dark:border-rose-900/30',
         };
     }
 
     if (risk === 'warning') {
         return {
             label: 'Warning',
-            className: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-900/30',
+            className:
+                'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-900/30',
         };
     }
 
     return {
         label: 'Watch',
-        className: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-900/20 dark:text-teal-300 dark:border-teal-900/30',
+        className:
+            'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-900/20 dark:text-teal-300 dark:border-teal-900/30',
     };
 };
 
@@ -263,7 +267,9 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                 <h3 className="text-lg font-black text-rose-900 dark:text-rose-100 uppercase tracking-tight">
                     Report Load Failed
                 </h3>
-                <p className="text-rose-700 dark:text-rose-400 text-xs font-bold mt-2 uppercase">{error}</p>
+                <p className="text-rose-700 dark:text-rose-400 text-xs font-bold mt-2 uppercase">
+                    {error}
+                </p>
                 <button
                     onClick={() => setReloadKey((prev) => prev + 1)}
                     className="mt-6 px-6 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-500/20"
@@ -348,7 +354,10 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
 
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="relative w-full md:w-96">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <Search
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                        size={16}
+                    />
                     <input
                         type="text"
                         placeholder="Search medicine or batch..."
@@ -366,7 +375,8 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                             : 'bg-healthcare-dark dark:bg-slate-800 text-white hover:bg-black',
                     )}
                 >
-                    <RotateCcw size={14} /> {showTraceability ? 'Hide Traceability' : 'Batch Traceability'}
+                    <RotateCcw size={14} />{' '}
+                    {showTraceability ? 'Hide Traceability' : 'Batch Traceability'}
                 </button>
             </div>
 
@@ -378,8 +388,8 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                                 <FileText size={18} /> Recall & Trace Mode
                             </h4>
                             <p className="text-rose-700 dark:text-rose-300 text-[10px] font-bold mt-1 max-w-sm">
-                                Enter a Batch ID to retrieve a full list of transactions and dispensed
-                                units for patient notifications.
+                                Enter a Batch ID to retrieve a full list of transactions and
+                                dispensed units for patient notifications.
                             </p>
                         </div>
                         <form onSubmit={handleTrace} className="flex gap-2 w-full md:w-auto">
@@ -397,27 +407,46 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                     </div>
 
                     {traceLoading ? (
-                        <SkeletonTable rows={3} columns={4} headers={null} className="border-none shadow-none" />
+                        <SkeletonTable
+                            rows={3}
+                            columns={4}
+                            headers={null}
+                            className="border-none shadow-none"
+                        />
                     ) : (
                         traceResult && (
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-top-2 duration-500">
                                 <div className="bg-white/80 dark:bg-slate-900/80 p-4 rounded-2xl border border-rose-100 dark:border-rose-900/20 shadow-sm">
-                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Target Medicine</p>
-                                    <p className="font-black text-sm text-rose-900 dark:text-rose-100 mt-1">{traceResult.medicine_name}</p>
+                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">
+                                        Target Medicine
+                                    </p>
+                                    <p className="font-black text-sm text-rose-900 dark:text-rose-100 mt-1">
+                                        {traceResult.medicine_name}
+                                    </p>
                                 </div>
                                 <div className="bg-white/80 dark:bg-slate-900/80 p-4 rounded-2xl border border-rose-100 dark:border-rose-900/20 shadow-sm">
-                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Batch Reference</p>
-                                    <p className="font-black text-sm text-healthcare-primary mt-1">#{traceResult.batch_number}</p>
+                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">
+                                        Batch Reference
+                                    </p>
+                                    <p className="font-black text-sm text-healthcare-primary mt-1">
+                                        #{traceResult.batch_number}
+                                    </p>
                                 </div>
                                 <div className="bg-white/80 dark:bg-slate-900/80 p-4 rounded-2xl border border-rose-100 dark:border-rose-900/20 shadow-sm">
-                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Expiration Date</p>
+                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">
+                                        Expiration Date
+                                    </p>
                                     <p className="font-black text-sm text-rose-600 mt-1">
                                         {new Date(traceResult.expiry_date).toLocaleDateString()}
                                     </p>
                                 </div>
                                 <div className="bg-white/80 dark:bg-slate-900/80 p-4 rounded-2xl border border-rose-100 dark:border-rose-900/20 shadow-sm">
-                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Units to Recall</p>
-                                    <p className="font-black text-sm text-slate-800 dark:text-white mt-1">{traceResult.total_dispensed} Units</p>
+                                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">
+                                        Units to Recall
+                                    </p>
+                                    <p className="font-black text-sm text-slate-800 dark:text-white mt-1">
+                                        {traceResult.total_dispensed} Units
+                                    </p>
                                 </div>
                             </div>
                         )
@@ -453,7 +482,8 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                                             key={`${item.status}-${item.batch_id}`}
                                             className={cn(
                                                 'group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all',
-                                                item.status === 'expired' && 'bg-rose-50/30 dark:bg-rose-900/5',
+                                                item.status === 'expired' &&
+                                                    'bg-rose-50/30 dark:bg-rose-900/5',
                                             )}
                                         >
                                             <td className="px-6 py-5">
@@ -468,11 +498,14 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
-                                                    {new Date(item.expiry_date).toLocaleDateString('en-US', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        year: 'numeric',
-                                                    })}
+                                                    {new Date(item.expiry_date).toLocaleDateString(
+                                                        'en-US',
+                                                        {
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            year: 'numeric',
+                                                        },
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">
@@ -489,7 +522,11 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                                             </td>
                                             <td className="px-6 py-5 whitespace-nowrap">
                                                 <span className="text-xs font-bold text-slate-500">
-                                                    {String((item as any).supplier_name || (item as any).supplier?.name || 'N/A')}
+                                                    {String(
+                                                        (item as any).supplier_name ||
+                                                            (item as any).supplier?.name ||
+                                                            'N/A',
+                                                    )}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5">
@@ -512,7 +549,10 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                                                     onClick={() => {
                                                         setTraceBatchId(item.batch_id.toString());
                                                         setShowTraceability(true);
-                                                        window.scrollTo({ top: 300, behavior: 'smooth' });
+                                                        window.scrollTo({
+                                                            top: 300,
+                                                            behavior: 'smooth',
+                                                        });
                                                     }}
                                                     className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center border border-slate-100 dark:border-slate-700"
                                                     title="Trace batch"
@@ -528,14 +568,17 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                                     <td colSpan={9} className="px-8 py-20 text-center">
                                         <div className="max-w-xs mx-auto">
                                             <div className="w-16 h-16 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-6 opacity-40">
-                                                <CheckCircle size={32} className="text-healthcare-primary" />
+                                                <CheckCircle
+                                                    size={32}
+                                                    className="text-healthcare-primary"
+                                                />
                                             </div>
                                             <h4 className="text-lg font-black text-healthcare-dark dark:text-white uppercase tracking-tight">
                                                 Zero Risk Batches
                                             </h4>
                                             <p className="text-slate-400 text-xs font-bold mt-2 uppercase">
-                                                No expiring or expired items found within the selected {days} day
-                                                window.
+                                                No expiring or expired items found within the
+                                                selected {days} day window.
                                             </p>
                                         </div>
                                     </td>

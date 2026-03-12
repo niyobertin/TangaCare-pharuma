@@ -1,7 +1,6 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 
-
 interface Props {
     children: ReactNode;
     /** Optional custom fallback UI. Defaults to a generic error page. */
@@ -58,7 +57,14 @@ export class ErrorBoundary extends Component<Props, State> {
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>
                         Something went wrong
                     </h1>
-                    <p style={{ color: 'var(--text-secondary, #94a3b8)', marginBottom: '1.5rem', textAlign: 'center', maxWidth: '480px' }}>
+                    <p
+                        style={{
+                            color: 'var(--text-secondary, #94a3b8)',
+                            marginBottom: '1.5rem',
+                            textAlign: 'center',
+                            maxWidth: '480px',
+                        }}
+                    >
                         An unexpected error occurred. Your data is safe. Please reload the page.
                     </p>
                     {import.meta.env.DEV && this.state.error && (

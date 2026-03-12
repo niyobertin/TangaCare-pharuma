@@ -456,7 +456,14 @@ function PerformanceReports({
     }, [facilityId, startDate, endDate]);
 
     if (loading)
-        return <SkeletonTable rows={5} columns={1} headers={null} className="border-none shadow-none" />;
+        return (
+            <SkeletonTable
+                rows={5}
+                columns={1}
+                headers={null}
+                className="border-none shadow-none"
+            />
+        );
 
     return (
         <div className="space-y-6">
@@ -524,7 +531,14 @@ function LoyaltyReports({ facilityId }: { facilityId?: number }) {
     }, [facilityId]);
 
     if (loading)
-        return <SkeletonTable rows={5} columns={1} headers={null} className="border-none shadow-none" />;
+        return (
+            <SkeletonTable
+                rows={5}
+                columns={1}
+                headers={null}
+                className="border-none shadow-none"
+            />
+        );
 
     return (
         <div className="space-y-6">
@@ -622,7 +636,14 @@ function TaxReports({
     }, [facilityId, startDate, endDate]);
 
     if (loading)
-        return <SkeletonTable rows={5} columns={1} headers={null} className="border-none shadow-none" />;
+        return (
+            <SkeletonTable
+                rows={5}
+                columns={1}
+                headers={null}
+                className="border-none shadow-none"
+            />
+        );
 
     return (
         <div className="space-y-8">
@@ -660,23 +681,23 @@ function SalesReports({
             try {
                 const [salesResult, profitResult, purchaseVsSalesResult, medicineMarginResult] =
                     await Promise.allSettled([
-                    pharmacyService.getSalesReport(facilityId, {
-                        start_date: startDate,
-                        end_date: endDate,
-                    }),
-                    pharmacyService.getProfitReport(facilityId, {
-                        start_date: startDate,
-                        end_date: endDate,
-                    }),
-                    pharmacyService.getPurchaseVsSalesReport(facilityId, {
-                        start_date: startDate || '',
-                        end_date: endDate || '',
-                    }),
-                    pharmacyService.getMedicineMarginReport(facilityId, {
-                        start_date: startDate || '',
-                        end_date: endDate || '',
-                    }),
-                ]);
+                        pharmacyService.getSalesReport(facilityId, {
+                            start_date: startDate,
+                            end_date: endDate,
+                        }),
+                        pharmacyService.getProfitReport(facilityId, {
+                            start_date: startDate,
+                            end_date: endDate,
+                        }),
+                        pharmacyService.getPurchaseVsSalesReport(facilityId, {
+                            start_date: startDate || '',
+                            end_date: endDate || '',
+                        }),
+                        pharmacyService.getMedicineMarginReport(facilityId, {
+                            start_date: startDate || '',
+                            end_date: endDate || '',
+                        }),
+                    ]);
 
                 if (salesResult.status === 'fulfilled') {
                     setSales(salesResult.value);
@@ -776,21 +797,34 @@ function SalesReports({
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-                            <p className="text-[10px] font-black uppercase text-slate-400">Purchases</p>
+                            <p className="text-[10px] font-black uppercase text-slate-400">
+                                Purchases
+                            </p>
                             <p className="text-sm font-black text-slate-700 dark:text-slate-100">
-                                RWF {Number(purchaseVsSales?.totals?.purchase_amount || 0).toLocaleString()}
+                                RWF{' '}
+                                {Number(
+                                    purchaseVsSales?.totals?.purchase_amount || 0,
+                                ).toLocaleString()}
                             </p>
                         </div>
                         <div className="rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
                             <p className="text-[10px] font-black uppercase text-slate-400">Sales</p>
                             <p className="text-sm font-black text-slate-700 dark:text-slate-100">
-                                RWF {Number(purchaseVsSales?.totals?.sales_amount || 0).toLocaleString()}
+                                RWF{' '}
+                                {Number(
+                                    purchaseVsSales?.totals?.sales_amount || 0,
+                                ).toLocaleString()}
                             </p>
                         </div>
                         <div className="rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3">
-                            <p className="text-[10px] font-black uppercase text-slate-400">Variance</p>
+                            <p className="text-[10px] font-black uppercase text-slate-400">
+                                Variance
+                            </p>
                             <p className="text-sm font-black text-slate-700 dark:text-slate-100">
-                                RWF {Number(purchaseVsSales?.totals?.variance_amount || 0).toLocaleString()}
+                                RWF{' '}
+                                {Number(
+                                    purchaseVsSales?.totals?.variance_amount || 0,
+                                ).toLocaleString()}
                             </p>
                         </div>
                     </div>
@@ -806,8 +840,13 @@ function SalesReports({
                             </thead>
                             <tbody>
                                 {(purchaseVsSales?.timeline || []).slice(0, 20).map((row: any) => (
-                                    <tr key={row.date} className="border-t border-slate-100 dark:border-slate-800">
-                                        <td className="px-3 py-2 text-slate-600 dark:text-slate-200">{row.date}</td>
+                                    <tr
+                                        key={row.date}
+                                        className="border-t border-slate-100 dark:border-slate-800"
+                                    >
+                                        <td className="px-3 py-2 text-slate-600 dark:text-slate-200">
+                                            {row.date}
+                                        </td>
                                         <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-200">
                                             {Number(row.purchase_amount || 0).toLocaleString()}
                                         </td>
@@ -925,7 +964,10 @@ function SalesReports({
                             }, {});
 
                             return Object.values(grouped || {}).map((t: any) => (
-                                <tr key={t.transaction_number} className="hover:bg-slate-50 transition-colors">
+                                <tr
+                                    key={t.transaction_number}
+                                    className="hover:bg-slate-50 transition-colors"
+                                >
                                     <td className="px-6 py-4 text-xs font-bold text-slate-500">
                                         {new Date(t.date).toLocaleDateString()}
                                     </td>
@@ -943,7 +985,10 @@ function SalesReports({
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right text-slate-500">
-                                        {t.items.reduce((sum: number, item: any) => sum + item.quantity, 0)}
+                                        {t.items.reduce(
+                                            (sum: number, item: any) => sum + item.quantity,
+                                            0,
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 text-right font-black text-healthcare-primary">
                                         RWF {t.total.toLocaleString()}
@@ -953,7 +998,10 @@ function SalesReports({
                                             <button
                                                 onClick={async () => {
                                                     if (facilityId) {
-                                                        await pharmacyService.getSaleReceipt(t.sale_id, facilityId);
+                                                        await pharmacyService.getSaleReceipt(
+                                                            t.sale_id,
+                                                            facilityId,
+                                                        );
                                                     }
                                                 }}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase hover:bg-blue-100 transition-colors border border-blue-100"
@@ -994,24 +1042,14 @@ function SalesReports({
 }
 
 function StockReports({ facilityId }: { facilityId?: number }) {
-    type InventoryStatus =
-        | 'in_stock'
-        | 'low_stock'
-        | 'expiring_soon'
-        | 'expired'
-        | 'out_of_stock';
+    type InventoryStatus = 'in_stock' | 'low_stock' | 'expiring_soon' | 'expired' | 'out_of_stock';
     type StockSummary = {
         total_medicines: number;
         low_stock_count: number;
         expiring_batches_count: number;
         total_value: number;
     };
-    type SortOption =
-        | 'name_asc'
-        | 'stock_desc'
-        | 'stock_asc'
-        | 'expiry_soonest'
-        | 'value_desc';
+    type SortOption = 'name_asc' | 'stock_desc' | 'stock_asc' | 'expiry_soonest' | 'value_desc';
     type DetailedInventoryRow = Medicine & {
         status: InventoryStatus;
         days_to_expiry: number | null;
@@ -1422,9 +1460,7 @@ function StockReports({ facilityId }: { facilityId?: number }) {
 
                     <select
                         value={statusFilter}
-                        onChange={(e) =>
-                            setStatusFilter(e.target.value as 'all' | InventoryStatus)
-                        }
+                        onChange={(e) => setStatusFilter(e.target.value as 'all' | InventoryStatus)}
                         className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:outline-none"
                     >
                         <option value="all">All Status</option>
@@ -1517,16 +1553,32 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                     <table className="tc-table w-full text-left text-sm whitespace-nowrap">
                         <thead className="bg-slate-50 dark:bg-slate-800/50">
                             <tr className="text-[10px] uppercase tracking-wider text-slate-400">
-                                <th className="px-4 py-3 font-semibold whitespace-nowrap">Medicine</th>
+                                <th className="px-4 py-3 font-semibold whitespace-nowrap">
+                                    Medicine
+                                </th>
                                 <th className="px-4 py-3 font-semibold whitespace-nowrap">Code</th>
                                 <th className="px-4 py-3 font-semibold whitespace-nowrap">Form</th>
-                                <th className="px-4 py-3 font-semibold text-right whitespace-nowrap">Stock</th>
-                                <th className="px-4 py-3 font-semibold text-right whitespace-nowrap">Cost</th>
-                                <th className="px-4 py-3 font-semibold text-right whitespace-nowrap">Value</th>
-                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">Expiry</th>
-                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">Days Left</th>
-                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">Status</th>
-                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">Date Added</th>
+                                <th className="px-4 py-3 font-semibold text-right whitespace-nowrap">
+                                    Stock
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-right whitespace-nowrap">
+                                    Cost
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-right whitespace-nowrap">
+                                    Value
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">
+                                    Expiry
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">
+                                    Days Left
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">
+                                    Status
+                                </th>
+                                <th className="px-4 py-3 font-semibold text-center whitespace-nowrap">
+                                    Date Added
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1542,11 +1594,17 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                                 <>
                                     {shouldVirtualizeRows && stockTopSpacerHeight > 0 && (
                                         <tr>
-                                            <td colSpan={10} style={{ height: `${stockTopSpacerHeight}px` }} />
+                                            <td
+                                                colSpan={10}
+                                                style={{ height: `${stockTopSpacerHeight}px` }}
+                                            />
                                         </tr>
                                     )}
                                     {renderedRows.map((row) => (
-                                        <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+                                        <tr
+                                            key={row.id}
+                                            className="hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                                        >
                                             <td className="px-4 py-3 whitespace-nowrap">
                                                 <div className="font-black text-slate-800 dark:text-white">
                                                     {row.name}
@@ -1568,7 +1626,8 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                                                 RWF {Number(row.cost_price || 0).toLocaleString()}
                                             </td>
                                             <td className="px-4 py-3 text-right font-black text-healthcare-primary whitespace-nowrap">
-                                                RWF {Number(row.inventory_value || 0).toLocaleString()}
+                                                RWF{' '}
+                                                {Number(row.inventory_value || 0).toLocaleString()}
                                             </td>
                                             <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
                                                 {row.expiry_date
@@ -1648,8 +1707,8 @@ function SummaryCard({ title, value, trend, icon, color = 'teal' }: any) {
                         color === 'teal'
                             ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300'
                             : color === 'amber'
-                                ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300'
-                                : 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300',
+                              ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300'
+                              : 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300',
                     )}
                 >
                     {icon}
@@ -1662,8 +1721,8 @@ function SummaryCard({ title, value, trend, icon, color = 'teal' }: any) {
                         color === 'teal'
                             ? 'text-[#2563EB] dark:text-blue-300'
                             : color === 'amber'
-                                ? 'text-[#D97706] dark:text-amber-300'
-                                : 'text-[#DC2626] dark:text-rose-300',
+                              ? 'text-[#D97706] dark:text-amber-300'
+                              : 'text-[#DC2626] dark:text-rose-300',
                     )}
                 >
                     {value}

@@ -49,7 +49,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         return <Navigate to="/app/onboarding" />;
     }
 
-
     if (requireFacility && isFacilityAdmin && !isSuperAdminUser && user) {
         const hasFacility = facilityId != null || user.facility_id != null;
         if (!hasFacility) {

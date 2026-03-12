@@ -60,9 +60,9 @@ export function DeadStockReport() {
                             {loading
                                 ? '...'
                                 : new Intl.NumberFormat('sw-TZ', {
-                                    style: 'currency',
-                                    currency: 'TZS',
-                                }).format(totalValue)}
+                                      style: 'currency',
+                                      currency: 'TZS',
+                                  }).format(totalValue)}
                         </div>
                     </div>
                 </div>

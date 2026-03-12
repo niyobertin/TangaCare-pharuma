@@ -24,7 +24,7 @@ export function LoginPage() {
         resolver: yupResolver(loginSchema) as any,
     });
 
-    if (isAuthenticated) return <Navigate to={"/app" as any} search={{} as any} />;
+    if (isAuthenticated) return <Navigate to={'/app' as any} search={{} as any} />;
 
     const onSubmit = async (data: LoginForm) => {
         setLoading(true);
@@ -84,7 +84,9 @@ export function LoginPage() {
                         <label className="text-sm font-bold text-text-secondary">Password</label>
                         <button
                             type="button"
-                            onClick={() => navigate({ to: '/auth/forgot-password' as any, search: {} as any })}
+                            onClick={() =>
+                                navigate({ to: '/auth/forgot-password' as any, search: {} as any })
+                            }
                             className="text-[10px] font-bold text-healthcare-primary hover:underline"
                         >
                             Forgot?

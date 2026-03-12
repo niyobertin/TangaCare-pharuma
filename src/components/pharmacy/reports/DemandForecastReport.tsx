@@ -44,7 +44,16 @@ export function DemandForecastReport({ facilityId }: DemandForecastReportProps) 
             <SkeletonTable
                 rows={8}
                 columns={8}
-                headers={['Medicine', 'Stock', 'Historical Daily', 'Forecast', 'Trend', 'Season Peak', 'Confidence', 'MAPE']}
+                headers={[
+                    'Medicine',
+                    'Stock',
+                    'Historical Daily',
+                    'Forecast',
+                    'Trend',
+                    'Season Peak',
+                    'Confidence',
+                    'MAPE',
+                ]}
                 className="border-none shadow-none"
             />
         );
@@ -98,10 +107,18 @@ export function DemandForecastReport({ facilityId }: DemandForecastReportProps) 
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {rows.map((item: any) => (
                             <tr key={item.medicine_id}>
-                                <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">{item.medicine_name}</td>
-                                <td className="px-4 py-3 text-right">{Number(item.current_stock || 0).toLocaleString()}</td>
-                                <td className="px-4 py-3 text-right">{Number(item.historical_daily_average || 0).toFixed(2)}</td>
-                                <td className="px-4 py-3 text-right font-bold text-healthcare-primary">{Number(item.forecast_total || 0).toLocaleString()}</td>
+                                <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">
+                                    {item.medicine_name}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                    {Number(item.current_stock || 0).toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                    {Number(item.historical_daily_average || 0).toFixed(2)}
+                                </td>
+                                <td className="px-4 py-3 text-right font-bold text-healthcare-primary">
+                                    {Number(item.forecast_total || 0).toLocaleString()}
+                                </td>
                                 <td className="px-4 py-3 text-center">
                                     <span
                                         className={`px-2 py-1 rounded-full text-[10px] font-black uppercase ${
@@ -118,7 +135,9 @@ export function DemandForecastReport({ facilityId }: DemandForecastReportProps) 
                                 <td className="px-4 py-3 text-center">
                                     {WEEKDAY_LABEL[Number(item.peak_weekday ?? 0)] || 'N/A'}
                                 </td>
-                                <td className="px-4 py-3 text-right">{Number(item.confidence_score || 0).toFixed(1)}%</td>
+                                <td className="px-4 py-3 text-right">
+                                    {Number(item.confidence_score || 0).toFixed(1)}%
+                                </td>
                                 <td className="px-4 py-3 text-right">
                                     {item.mape_estimate === null || item.mape_estimate === undefined
                                         ? 'N/A'

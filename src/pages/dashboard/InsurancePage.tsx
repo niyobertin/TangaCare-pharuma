@@ -108,7 +108,10 @@ const ProviderModal = ({
                                 max="100"
                                 value={formData.coverage_percentage}
                                 onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, coverage_percentage: Number(e.target.value) }))
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        coverage_percentage: Number(e.target.value),
+                                    }))
                                 }
                                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 text-slate-900 dark:text-white font-bold"
                             />
@@ -122,7 +125,12 @@ const ProviderModal = ({
                                 min="0"
                                 value={formData.max_coverage_limit || ''}
                                 onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, max_coverage_limit: e.target.value ? Number(e.target.value) : undefined }))
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        max_coverage_limit: e.target.value
+                                            ? Number(e.target.value)
+                                            : undefined,
+                                    }))
                                 }
                                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 text-slate-900 dark:text-white"
                                 placeholder="Optional"
@@ -285,7 +293,9 @@ const ClaimModal = ({
                                 onChange={(e) =>
                                     setFormData((prev) => ({
                                         ...prev,
-                                        sale_id: e.target.value ? Number(e.target.value) : undefined,
+                                        sale_id: e.target.value
+                                            ? Number(e.target.value)
+                                            : undefined,
                                     }))
                                 }
                                 className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-healthcare-primary/20 text-slate-900 dark:text-white"
@@ -485,14 +495,15 @@ export function InsurancePage() {
         }
     };
 
-    const filteredProviders = providers.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase())
+    const filteredProviders = providers.filter((p) =>
+        p.name.toLowerCase().includes(search.toLowerCase()),
     );
 
-    const filteredClaims = claims.filter(c =>
-        c.patient_insurance_number?.toLowerCase().includes(search.toLowerCase()) ||
-        c.provider?.name?.toLowerCase().includes(search.toLowerCase()) ||
-        c.sale?.sale_number?.toLowerCase().includes(search.toLowerCase())
+    const filteredClaims = claims.filter(
+        (c) =>
+            c.patient_insurance_number?.toLowerCase().includes(search.toLowerCase()) ||
+            c.provider?.name?.toLowerCase().includes(search.toLowerCase()) ||
+            c.sale?.sale_number?.toLowerCase().includes(search.toLowerCase()),
     );
 
     return (
@@ -533,10 +544,10 @@ export function InsurancePage() {
                     <button
                         onClick={() => setActiveTab('providers')}
                         className={cn(
-                            "px-6 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2",
+                            'px-6 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2',
                             activeTab === 'providers'
-                                ? "bg-white dark:bg-slate-900 text-healthcare-primary shadow-sm"
-                                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                ? 'bg-white dark:bg-slate-900 text-healthcare-primary shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300',
                         )}
                     >
                         <ShieldCheck size={14} />
@@ -545,10 +556,10 @@ export function InsurancePage() {
                     <button
                         onClick={() => setActiveTab('claims')}
                         className={cn(
-                            "px-6 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2",
+                            'px-6 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2',
                             activeTab === 'claims'
-                                ? "bg-white dark:bg-slate-900 text-healthcare-primary shadow-sm"
-                                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                                ? 'bg-white dark:bg-slate-900 text-healthcare-primary shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300',
                         )}
                     >
                         <ClipboardList size={14} />
@@ -569,7 +580,11 @@ export function InsurancePage() {
                                     type="text"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    placeholder={activeTab === 'providers' ? "Search providers..." : "Search by number, provider, or sale..."}
+                                    placeholder={
+                                        activeTab === 'providers'
+                                            ? 'Search providers...'
+                                            : 'Search by number, provider, or sale...'
+                                    }
                                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl text-xs font-bold text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all shadow-sm"
                                 />
                             </div>
@@ -588,7 +603,9 @@ export function InsurancePage() {
                                         <option value="PENDING">Pending</option>
                                         <option value="SUBMITTED">Submitted</option>
                                         <option value="APPROVED">Approved</option>
-                                        <option value="PARTIALLY_APPROVED">Partially Approved</option>
+                                        <option value="PARTIALLY_APPROVED">
+                                            Partially Approved
+                                        </option>
                                         <option value="REJECTED">Rejected</option>
                                         <option value="PAID">Paid</option>
                                     </select>
@@ -602,7 +619,9 @@ export function InsurancePage() {
                                         onChange={(e) => setStartDate(e.target.value)}
                                         className="bg-transparent border-none text-[10px] font-black text-slate-600 dark:text-slate-300 focus:ring-0 uppercase tracking-wider cursor-pointer font-sans"
                                     />
-                                    <span className="text-slate-300 font-bold px-1 text-[10px]">to</span>
+                                    <span className="text-slate-300 font-bold px-1 text-[10px]">
+                                        to
+                                    </span>
                                     <input
                                         type="date"
                                         value={endDate}
@@ -644,21 +663,45 @@ export function InsurancePage() {
                                 <tr className="bg-slate-50 dark:bg-slate-800/50">
                                     {activeTab === 'providers' ? (
                                         <>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center w-16">ID</th>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">Provider Name</th>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center">Coverage</th>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center">Type</th>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center">Status</th>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-right">Actions</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center w-16">
+                                                ID
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
+                                                Provider Name
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center">
+                                                Coverage
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center">
+                                                Type
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-center">
+                                                Status
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-right">
+                                                Actions
+                                            </th>
                                         </>
                                     ) : (
                                         <>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">Claim Details</th>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">Provider</th>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">Requested</th>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">Co-pay</th>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">Status</th>
-                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-right">Update Status</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
+                                                Claim Details
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
+                                                Provider
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
+                                                Requested
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
+                                                Co-pay
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight">
+                                                Status
+                                            </th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-slate-400 tracking-tight text-right">
+                                                Update Status
+                                            </th>
                                         </>
                                     )}
                                 </tr>
@@ -667,36 +710,62 @@ export function InsurancePage() {
                                 {activeTab === 'providers' ? (
                                     filteredProviders.length > 0 ? (
                                         filteredProviders.map((p) => (
-                                            <tr key={p.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                                <td className="px-6 py-4 text-center text-xs font-bold text-slate-400">#{p.id}</td>
+                                            <tr
+                                                key={p.id}
+                                                className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                            >
+                                                <td className="px-6 py-4 text-center text-xs font-bold text-slate-400">
+                                                    #{p.id}
+                                                </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 rounded-lg bg-teal-50 dark:bg-emerald-900/30 text-healthcare-primary flex items-center justify-center">
                                                             <Building2 size={16} />
                                                         </div>
-                                                        <span className="font-black text-healthcare-dark dark:text-white text-sm">{p.name}</span>
+                                                        <span className="font-black text-healthcare-dark dark:text-white text-sm">
+                                                            {p.name}
+                                                        </span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <p className="text-xs font-black text-healthcare-dark dark:text-white">{p.coverage_percentage}%</p>
+                                                    <p className="text-xs font-black text-healthcare-dark dark:text-white">
+                                                        {p.coverage_percentage}%
+                                                    </p>
                                                     {p.max_coverage_limit && (
-                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Max: {Number(p.max_coverage_limit).toLocaleString()}</p>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">
+                                                            Max:{' '}
+                                                            {Number(
+                                                                p.max_coverage_limit,
+                                                            ).toLocaleString()}
+                                                        </p>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <span className={cn(
-                                                        "text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider",
-                                                        p.type === 'PUBLIC' ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"
-                                                    )}>
+                                                    <span
+                                                        className={cn(
+                                                            'text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider',
+                                                            p.type === 'PUBLIC'
+                                                                ? 'bg-blue-50 text-blue-600'
+                                                                : 'bg-purple-50 text-purple-600',
+                                                        )}
+                                                    >
                                                         {p.type}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <div className={cn(
-                                                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold",
-                                                        p.is_active ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
-                                                    )}>
-                                                        {p.is_active ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
+                                                    <div
+                                                        className={cn(
+                                                            'inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-semibold',
+                                                            p.is_active
+                                                                ? 'bg-emerald-50 text-emerald-600'
+                                                                : 'bg-red-50 text-red-600',
+                                                        )}
+                                                    >
+                                                        {p.is_active ? (
+                                                            <CheckCircle2 size={12} />
+                                                        ) : (
+                                                            <XCircle size={12} />
+                                                        )}
                                                         {p.is_active ? 'Active' : 'Inactive'}
                                                     </div>
                                                 </td>
@@ -714,87 +783,148 @@ export function InsurancePage() {
                                             </tr>
                                         ))
                                     ) : (
-                                        <tr><td colSpan={6} className="px-6 py-10 text-center text-slate-500 font-bold italic">No providers found</td></tr>
+                                        <tr>
+                                            <td
+                                                colSpan={6}
+                                                className="px-6 py-10 text-center text-slate-500 font-bold italic"
+                                            >
+                                                No providers found
+                                            </td>
+                                        </tr>
                                     )
+                                ) : filteredClaims.length > 0 ? (
+                                    filteredClaims.map((c) => (
+                                        <tr
+                                            key={c.id}
+                                            className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                        >
+                                            <td className="px-6 py-4">
+                                                <div className="space-y-0.5">
+                                                    <p className="font-black text-healthcare-dark dark:text-white text-sm">
+                                                        Sale #{c.sale?.sale_number || c.sale_id}
+                                                    </p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase">
+                                                        Policy:{' '}
+                                                        {c.patient_insurance_number || 'N/A'}
+                                                    </p>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <ShieldCheck
+                                                        size={14}
+                                                        className="text-blue-500"
+                                                    />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs font-bold text-healthcare-dark dark:text-white">
+                                                            {c.provider?.name || 'Unknown'}
+                                                        </span>
+                                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
+                                                            Applied: {c.applied_coverage_percentage}
+                                                            %
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <p className="text-xs font-black text-healthcare-dark dark:text-white">
+                                                    {c.expected_amount.toLocaleString()} RWF
+                                                </p>
+                                                <p className="text-[10px] text-slate-400">
+                                                    Total: {c.total_amount.toLocaleString()}
+                                                </p>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-xs font-bold text-orange-600">
+                                                    {c.copay_amount.toLocaleString()} RWF
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span
+                                                    className={cn(
+                                                        'text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider',
+                                                        c.status === 'pending' &&
+                                                            'bg-amber-50 text-amber-600',
+                                                        c.status === 'submitted' &&
+                                                            'bg-blue-50 text-blue-600',
+                                                        c.status === 'approved' &&
+                                                            'bg-emerald-50 text-emerald-600',
+                                                        c.status === 'paid' &&
+                                                            'bg-healthcare-primary text-white',
+                                                        c.status === 'rejected' &&
+                                                            'bg-red-50 text-red-600',
+                                                    )}
+                                                >
+                                                    {c.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-1">
+                                                    {c.status === 'pending' && (
+                                                        <button
+                                                            onClick={() =>
+                                                                handleClaimStatusUpdate(
+                                                                    c.id,
+                                                                    'submitted',
+                                                                )
+                                                            }
+                                                            className="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-100 transition-colors"
+                                                        >
+                                                            Submit
+                                                        </button>
+                                                    )}
+                                                    {c.status === 'submitted' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleClaimStatusUpdate(
+                                                                        c.id,
+                                                                        'approved',
+                                                                    )
+                                                                }
+                                                                className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg hover:bg-emerald-100 transition-colors"
+                                                            >
+                                                                Approve
+                                                            </button>
+                                                            <button
+                                                                onClick={() =>
+                                                                    handleClaimStatusUpdate(
+                                                                        c.id,
+                                                                        'rejected',
+                                                                    )
+                                                                }
+                                                                className="text-[10px] font-black bg-red-50 text-red-600 px-2 py-1 rounded-lg hover:bg-red-100 transition-colors"
+                                                            >
+                                                                Reject
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {c.status === 'approved' && (
+                                                        <button
+                                                            onClick={() =>
+                                                                handleClaimStatusUpdate(
+                                                                    c.id,
+                                                                    'paid',
+                                                                )
+                                                            }
+                                                            className="text-[10px] font-black bg-healthcare-primary text-white px-2 py-1 rounded-lg hover:bg-teal-700 transition-colors"
+                                                        >
+                                                            Mark as Paid
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
                                 ) : (
-                                    filteredClaims.length > 0 ? (
-                                        filteredClaims.map((c) => (
-                                            <tr key={c.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="space-y-0.5">
-                                                        <p className="font-black text-healthcare-dark dark:text-white text-sm">Sale #{c.sale?.sale_number || c.sale_id}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase">Policy: {c.patient_insurance_number || 'N/A'}</p>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <ShieldCheck size={14} className="text-blue-500" />
-                                                        <div className="flex flex-col">
-                                                            <span className="text-xs font-bold text-healthcare-dark dark:text-white">{c.provider?.name || 'Unknown'}</span>
-                                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Applied: {c.applied_coverage_percentage}%</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <p className="text-xs font-black text-healthcare-dark dark:text-white">{c.expected_amount.toLocaleString()} RWF</p>
-                                                    <p className="text-[10px] text-slate-400">Total: {c.total_amount.toLocaleString()}</p>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="text-xs font-bold text-orange-600">{c.copay_amount.toLocaleString()} RWF</span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={cn(
-                                                        "text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider",
-                                                        c.status === 'pending' && "bg-amber-50 text-amber-600",
-                                                        c.status === 'submitted' && "bg-blue-50 text-blue-600",
-                                                        c.status === 'approved' && "bg-emerald-50 text-emerald-600",
-                                                        c.status === 'paid' && "bg-healthcare-primary text-white",
-                                                        c.status === 'rejected' && "bg-red-50 text-red-600"
-                                                    )}>
-                                                        {c.status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex justify-end gap-1">
-                                                        {c.status === 'pending' && (
-                                                            <button
-                                                                onClick={() => handleClaimStatusUpdate(c.id, 'submitted')}
-                                                                className="text-[10px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-100 transition-colors"
-                                                            >
-                                                                Submit
-                                                            </button>
-                                                        )}
-                                                        {c.status === 'submitted' && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => handleClaimStatusUpdate(c.id, 'approved')}
-                                                                    className="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg hover:bg-emerald-100 transition-colors"
-                                                                >
-                                                                    Approve
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleClaimStatusUpdate(c.id, 'rejected')}
-                                                                    className="text-[10px] font-black bg-red-50 text-red-600 px-2 py-1 rounded-lg hover:bg-red-100 transition-colors"
-                                                                >
-                                                                    Reject
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                        {c.status === 'approved' && (
-                                                            <button
-                                                                onClick={() => handleClaimStatusUpdate(c.id, 'paid')}
-                                                                className="text-[10px] font-black bg-healthcare-primary text-white px-2 py-1 rounded-lg hover:bg-teal-700 transition-colors"
-                                                            >
-                                                                Mark as Paid
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr><td colSpan={6} className="px-6 py-10 text-center text-slate-500 font-bold italic">No insurance claims found</td></tr>
-                                    )
+                                    <tr>
+                                        <td
+                                            colSpan={6}
+                                            className="px-6 py-10 text-center text-slate-500 font-bold italic"
+                                        >
+                                            No insurance claims found
+                                        </td>
+                                    </tr>
                                 )}
                             </tbody>
                         </table>

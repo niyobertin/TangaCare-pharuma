@@ -94,10 +94,11 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                         <input
                             {...register('name')}
                             placeholder="e.g. Kigali City Pharmacy"
-                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${errors.name
+                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${
+                                errors.name
                                     ? 'border-red-400'
                                     : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
-                                }`}
+                            }`}
                         />
                         {errors.name && (
                             <p className="text-[10px] font-bold text-red-500">
@@ -113,10 +114,11 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                             </label>
                             <select
                                 {...register('type')}
-                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all appearance-none cursor-pointer ${errors.type
+                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all appearance-none cursor-pointer ${
+                                    errors.type
                                         ? 'border-red-400'
                                         : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
-                                    }`}
+                                }`}
                             >
                                 <option value="">Select Type</option>
                                 <option value="pharmacy_shop">Pharmacy Shop</option>
@@ -137,10 +139,11 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                             <input
                                 {...register('phone')}
                                 placeholder="+250 7..."
-                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${errors.phone
+                                className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${
+                                    errors.phone
                                         ? 'border-red-400'
                                         : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
-                                    }`}
+                                }`}
                             />
                             {errors.phone && (
                                 <p className="text-[10px] font-bold text-red-500">
@@ -158,10 +161,11 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                             {...register('email')}
                             type="email"
                             placeholder="contact@pharmacy.com"
-                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${errors.email
+                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${
+                                errors.email
                                     ? 'border-red-400'
                                     : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
-                                }`}
+                            }`}
                         />
                         {errors.email && (
                             <p className="text-[10px] font-bold text-red-500">
@@ -177,10 +181,11 @@ export function CreateFacilityModal({ onClose }: CreateFacilityModalProps) {
                         <input
                             {...register('address')}
                             placeholder="District, Sector, Cell"
-                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${errors.address
+                            className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 rounded-xl text-sm font-bold focus:outline-none transition-all ${
+                                errors.address
                                     ? 'border-red-400'
                                     : 'border-slate-100 dark:border-slate-700 focus:border-healthcare-primary'
-                                }`}
+                            }`}
                         />
                         {errors.address && (
                             <p className="text-[10px] font-bold text-red-500">

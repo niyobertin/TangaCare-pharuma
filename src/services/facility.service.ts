@@ -92,9 +92,7 @@ export const facilityService = {
         await api.delete(`/pharmacy/facilities/${id}`);
     },
 
-    async getDepartments(params?: {
-        facility_id: number;
-    }): Promise<Department[]> {
+    async getDepartments(params?: { facility_id: number }): Promise<Department[]> {
         const response = await api.get<any>('/pharmacy/departments', { params });
         const payload = response.data?.data;
 
@@ -104,24 +102,13 @@ export const facilityService = {
         return Array.isArray(payload) ? payload : [];
     },
 
-    async createDepartment(
-        data: Partial<Department>,
-    ): Promise<Department> {
-        const response = await api.post<{ data: Department }>(
-            '/pharmacy/departments',
-            data,
-        );
+    async createDepartment(data: Partial<Department>): Promise<Department> {
+        const response = await api.post<{ data: Department }>('/pharmacy/departments', data);
         return response.data.data;
     },
 
-    async updateDepartment(
-        id: number,
-        data: Partial<Department>,
-    ): Promise<Department> {
-        const response = await api.put<{ data: Department }>(
-            `/pharmacy/departments/${id}`,
-            data,
-        );
+    async updateDepartment(id: number, data: Partial<Department>): Promise<Department> {
+        const response = await api.put<{ data: Department }>(`/pharmacy/departments/${id}`, data);
         return response.data.data;
     },
 
@@ -129,9 +116,7 @@ export const facilityService = {
         await api.delete(`/pharmacy/departments/${id}`);
     },
 
-    async getStorageLocations(params?: {
-        facility_id?: number;
-    }): Promise<StorageLocation[]> {
+    async getStorageLocations(params?: { facility_id?: number }): Promise<StorageLocation[]> {
         const response = await api.get<any>('/pharmacy/storage-locations', { params });
         const data = (response.data as any).data ?? response.data;
         return Array.isArray(data) ? data : [];
@@ -142,7 +127,10 @@ export const facilityService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async updateStorageLocation(id: number, data: Partial<StorageLocation>): Promise<StorageLocation> {
+    async updateStorageLocation(
+        id: number,
+        data: Partial<StorageLocation>,
+    ): Promise<StorageLocation> {
         const response = await api.put<any>(`/pharmacy/storage-locations/${id}`, data);
         return (response.data as any).data ?? response.data;
     },
@@ -167,7 +155,9 @@ export const facilityService = {
     },
 
     async acknowledgeColdChainExcursion(id: number, notes?: string): Promise<ColdChainExcursion> {
-        const response = await api.patch<any>(`/pharmacy/cold-chain/excursions/${id}/acknowledge`, { notes });
+        const response = await api.patch<any>(`/pharmacy/cold-chain/excursions/${id}/acknowledge`, {
+            notes,
+        });
         return (response.data as any).data ?? response.data;
     },
 
@@ -175,7 +165,10 @@ export const facilityService = {
         id: number,
         payload: { action_taken: string; notes?: string },
     ): Promise<ColdChainExcursion> {
-        const response = await api.patch<any>(`/pharmacy/cold-chain/excursions/${id}/resolve`, payload);
+        const response = await api.patch<any>(
+            `/pharmacy/cold-chain/excursions/${id}/resolve`,
+            payload,
+        );
         return (response.data as any).data ?? response.data;
     },
 
@@ -193,7 +186,10 @@ export const facilityService = {
         excursion: ColdChainExcursion | null;
         within_range: boolean;
     }> {
-        const response = await api.post<any>(`/pharmacy/cold-chain/locations/${locationId}/telemetry`, payload);
+        const response = await api.post<any>(
+            `/pharmacy/cold-chain/locations/${locationId}/telemetry`,
+            payload,
+        );
         return (response.data as any).data ?? response.data;
     },
 
@@ -201,7 +197,10 @@ export const facilityService = {
         locationId: number,
         params?: { limit?: number },
     ): Promise<ColdChainTelemetry[]> {
-        const response = await api.get<any>(`/pharmacy/cold-chain/locations/${locationId}/telemetry`, { params });
+        const response = await api.get<any>(
+            `/pharmacy/cold-chain/locations/${locationId}/telemetry`,
+            { params },
+        );
         const data = (response.data as any).data ?? response.data;
         return Array.isArray(data) ? data : [];
     },

@@ -92,7 +92,11 @@ export function VerifyOtpPage() {
             } else {
                 await authService.verifyResetOtp(email, otpValue);
                 toast.success('OTP verified successfully!');
-                navigate({ to: '/auth/reset-password' as any, search: { email, otp: otpValue } as any, params: {} as any });
+                navigate({
+                    to: '/auth/reset-password' as any,
+                    search: { email, otp: otpValue } as any,
+                    params: {} as any,
+                });
             }
         } catch (err: any) {
             const message = err.response?.data?.message || 'Invalid OTP. Please try again.';
@@ -114,7 +118,9 @@ export function VerifyOtpPage() {
                 <h2 className="text-3xl font-black text-text-primary tracking-tight">Verify OTP</h2>
                 <p className="text-text-muted font-bold text-[10px] uppercase tracking-widest px-4">
                     We've sent a 6-digit code to <br />
-                    <span className="text-healthcare-primary lowercase font-black text-xs">{email}</span>
+                    <span className="text-healthcare-primary lowercase font-black text-xs">
+                        {email}
+                    </span>
                 </p>
             </div>
 

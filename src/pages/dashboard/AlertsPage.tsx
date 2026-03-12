@@ -25,7 +25,13 @@ function cn(...inputs: ClassValue[]) {
 
 const ACTIONS_BY_ALERT_TYPE: Record<string, string[]> = {
     low_stock: ['Restocked', 'PO Created', 'Transferred', 'Adjusted Count', 'False Alarm'],
-    expiry_soon: ['Discounted', 'Transferred', 'Returned to Supplier', 'Quarantined', 'False Alarm'],
+    expiry_soon: [
+        'Discounted',
+        'Transferred',
+        'Returned to Supplier',
+        'Quarantined',
+        'False Alarm',
+    ],
     expired: ['Disposed', 'Returned to Supplier', 'Quarantined', 'False Alarm'],
     controlled_drug_threshold: ['Investigated', 'Adjusted Count', 'Escalated', 'False Alarm'],
     reorder_suggestion: ['PO Created', 'Transferred', 'Deferred', 'False Alarm'],
@@ -48,8 +54,7 @@ function ResolveAlertModal({
     onResolve: (id: number, data: { action_taken: string; action_reason: string }) => Promise<void>;
 }) {
     const alertType = normalizeAlertType(alert.type);
-    const actionOptions =
-        ACTIONS_BY_ALERT_TYPE[alertType] || ACTIONS_BY_ALERT_TYPE.low_stock;
+    const actionOptions = ACTIONS_BY_ALERT_TYPE[alertType] || ACTIONS_BY_ALERT_TYPE.low_stock;
 
     const [actionTaken, setActionTaken] = useState(actionOptions[0] || '');
     const [reason, setReason] = useState('');
@@ -76,7 +81,10 @@ function ResolveAlertModal({
         setIsSubmitting(true);
         setFormError('');
         try {
-            await onResolve(alert.id, { action_taken: actionTaken, action_reason: normalizedReason });
+            await onResolve(alert.id, {
+                action_taken: actionTaken,
+                action_reason: normalizedReason,
+            });
             onClose();
         } catch (error: any) {
             setFormError(error?.response?.data?.message || 'Failed to resolve alert.');
@@ -243,8 +251,8 @@ export function AlertsPage() {
             filterType === 'all'
                 ? true
                 : filterType === 'low_stock'
-                    ? alert.type === 'low_stock'
-                    : (alert.type || '').includes('expiry') || alert.type === 'expired';
+                  ? alert.type === 'low_stock'
+                  : (alert.type || '').includes('expiry') || alert.type === 'expired';
 
         // Additional status check (though currently backend only returns active)
         const matchesStatus = alert.status === statusFilter;
@@ -390,24 +398,25 @@ export function AlertsPage() {
                                     alert.severity === 'out_of_stock'
                                         ? 'border-l-rose-700 border-y-slate-100 border-r-slate-100'
                                         : alert.severity === 'critical'
-                                            ? 'border-l-rose-500 border-y-slate-100 border-r-slate-100'
-                                            : alert.severity === 'warning'
-                                                ? 'border-l-amber-500 border-y-slate-100 border-r-slate-100'
-                                                : 'border-l-blue-400 border-y-slate-100 border-r-slate-100',
+                                          ? 'border-l-rose-500 border-y-slate-100 border-r-slate-100'
+                                          : alert.severity === 'warning'
+                                            ? 'border-l-amber-500 border-y-slate-100 border-r-slate-100'
+                                            : 'border-l-blue-400 border-y-slate-100 border-r-slate-100',
                                 )}
                             >
                                 <div
                                     className={cn(
                                         'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm',
-                                        alert.severity === 'out_of_stock' || alert.severity === 'critical'
+                                        alert.severity === 'out_of_stock' ||
+                                            alert.severity === 'critical'
                                             ? 'bg-rose-50 text-rose-500'
                                             : alert.severity === 'warning'
-                                                ? 'bg-amber-50 text-amber-500'
-                                                : 'bg-blue-50 text-blue-500',
+                                              ? 'bg-amber-50 text-amber-500'
+                                              : 'bg-blue-50 text-blue-500',
                                     )}
                                 >
                                     {(alert.type || '').includes('expiry') ||
-                                        alert.type === 'expired' ? (
+                                    alert.type === 'expired' ? (
                                         <AlertTriangle size={24} />
                                     ) : alert.type === 'low_stock' ? (
                                         <Database size={24} />

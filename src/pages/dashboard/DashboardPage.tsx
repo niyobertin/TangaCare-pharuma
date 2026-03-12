@@ -3,7 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import { DashboardOwner } from '../../components/dashboard/DashboardOwner';
 import { Navigate } from '@tanstack/react-router';
 
-
 export function DashboardPage() {
     const { user, facilityId, organizationId } = useAuth();
 
@@ -33,7 +32,6 @@ export function DashboardPage() {
         return <Navigate to="/app/onboarding" />;
     }
 
-
     return (
         <ProtectedRoute
             allowedRoles={[
@@ -53,12 +51,11 @@ export function DashboardPage() {
                 'USER',
                 'user',
             ]}
-
         >
             {isOwnerView ? (
                 facilityId && organizationId ? (
                     <DashboardOwner facilityId={facilityId} />
-                ) : (organizationId || user?.organization_id) ? (
+                ) : organizationId || user?.organization_id ? (
                     <DashboardOwner facilityId={null} />
                 ) : (
                     <div className="p-10 flex flex-col items-center justify-center min-h-[60vh] text-center">

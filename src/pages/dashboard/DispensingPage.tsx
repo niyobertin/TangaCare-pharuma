@@ -1,13 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import {
-    Search,
-    ShoppingCart,
-    Trash2,
-    CheckCircle2,
-    User,
-    ChevronDown,
-    X,
-} from 'lucide-react';
+import { Search, ShoppingCart, Trash2, CheckCircle2, User, ChevronDown, X } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Medicine, Batch, Stock } from '../../types/pharmacy';
@@ -66,7 +58,9 @@ export function DispensingPage() {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [prescriptionId, setPrescriptionId] = useState('');
     const [lastSaleId, setLastSaleId] = useState<number | null>(null);
-    const [substitutionLoadingMedicineId, setSubstitutionLoadingMedicineId] = useState<number | null>(null);
+    const [substitutionLoadingMedicineId, setSubstitutionLoadingMedicineId] = useState<
+        number | null
+    >(null);
     const [substitutionContext, setSubstitutionContext] = useState<{
         medicine: Medicine;
         alternatives: SubstitutionAlternative[];
@@ -89,13 +83,17 @@ export function DispensingPage() {
         );
     };
 
-    const getAvailableQuantity = (stock: Stock & { reserved_quantity?: number; is_frozen?: boolean }): number => {
+    const getAvailableQuantity = (
+        stock: Stock & { reserved_quantity?: number; is_frozen?: boolean },
+    ): number => {
         const quantity = Number(stock.quantity || 0);
         const reserved = Number(stock.reserved_quantity || 0);
         return Math.max(0, quantity - reserved);
     };
 
-    const getDispensableStocks = async (medicineId: number): Promise<Array<Stock & { reserved_quantity?: number; is_frozen?: boolean }>> => {
+    const getDispensableStocks = async (
+        medicineId: number,
+    ): Promise<Array<Stock & { reserved_quantity?: number; is_frozen?: boolean }>> => {
         const stockResponse = await pharmacyService.getStock({
             medicine_id: medicineId,
             ...(user?.facility_id ? { facility_id: user.facility_id } : {}),
@@ -106,7 +104,10 @@ export function DispensingPage() {
 
         return (stockResponse.data || [])
             .filter((stock) => {
-                const candidate = stock as Stock & { reserved_quantity?: number; is_frozen?: boolean };
+                const candidate = stock as Stock & {
+                    reserved_quantity?: number;
+                    is_frozen?: boolean;
+                };
                 if (candidate.is_frozen) return false;
                 if (!candidate.batch?.expiry_date) return false;
                 const expiry = new Date(candidate.batch.expiry_date);
@@ -115,7 +116,8 @@ export function DispensingPage() {
             })
             .sort(
                 (a, b) =>
-                    new Date(a.batch!.expiry_date).getTime() - new Date(b.batch!.expiry_date).getTime(),
+                    new Date(a.batch!.expiry_date).getTime() -
+                    new Date(b.batch!.expiry_date).getTime(),
             );
     };
 
@@ -136,8 +138,11 @@ export function DispensingPage() {
         requestedQty: number,
     ): string | null => {
         const earliestStock = stocks[0];
-        const selectedStock = stocks.find((stock) => Number(stock.batch?.id) === Number(selectedBatchId));
-        if (!earliestStock || !selectedStock || !earliestStock.batch || !selectedStock.batch) return null;
+        const selectedStock = stocks.find(
+            (stock) => Number(stock.batch?.id) === Number(selectedBatchId),
+        );
+        if (!earliestStock || !selectedStock || !earliestStock.batch || !selectedStock.batch)
+            return null;
 
         if (Number(earliestStock.batch.id) === Number(selectedStock.batch.id)) return null;
 
@@ -312,11 +317,7 @@ export function DispensingPage() {
 
             if (bestStock?.batch) {
                 bestBatchAvailableQty = getAvailableQuantity(bestStock);
-                const violation = getFefoViolationMessage(
-                    dispensableStocks,
-                    bestStock.batch.id,
-                    1,
-                );
+                const violation = getFefoViolationMessage(dispensableStocks, bestStock.batch.id, 1);
                 if (violation) {
                     toast.error(violation, { duration: 7000 });
                     return;
@@ -366,18 +367,14 @@ export function DispensingPage() {
                     ? Number(item.selectedBatch.stock_id) === Number(bestBatch.stock_id)
                     : item.selectedBatch?.id === bestBatch?.id);
 
-            const existing = prev.find(
-                (item) => isSameCartLine(item),
-            );
+            const existing = prev.find((item) => isSameCartLine(item));
             if (existing) {
                 if (existing.quantity >= bestBatchAvailableQty) {
                     toast.error(`Batch ${bestBatch!.batch_number} stock limit reached`);
                     return prev;
                 }
                 return prev.map((item) =>
-                    isSameCartLine(item)
-                        ? { ...item, quantity: item.quantity + 1 }
-                        : item,
+                    isSameCartLine(item) ? { ...item, quantity: item.quantity + 1 } : item,
                 );
             }
             const sellingPrice = Number(med.selling_price || 0);
@@ -394,19 +391,24 @@ export function DispensingPage() {
 
         // FEFO Prompt & Expiry Warning
         const expiryDate = new Date(bestBatch.expiry_date);
-        const daysToExpiry = Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        const daysToExpiry = Math.ceil(
+            (expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
+        );
         const locationName = toSentenceCase(bestBatch.location?.name || 'Main Shelf');
 
         if (daysToExpiry <= 30 && !shownExpiryWarningsRef.current.has(bestBatch.id)) {
             shownExpiryWarningsRef.current.add(bestBatch.id);
-            toast(() => (
-                <div className="flex flex-col gap-1">
-                    <span className="font-bold text-orange-600">⚠️ Batch Expiring Soon!</span>
-                    <span className="text-xs">
-                        {med.name} • Batch {bestBatch!.batch_number} • {locationName}
-                    </span>
-                </div>
-            ), { duration: 3500, icon: '⚠️' });
+            toast(
+                () => (
+                    <div className="flex flex-col gap-1">
+                        <span className="font-bold text-orange-600">⚠️ Batch Expiring Soon!</span>
+                        <span className="text-xs">
+                            {med.name} • Batch {bestBatch!.batch_number} • {locationName}
+                        </span>
+                    </div>
+                ),
+                { duration: 3500, icon: '⚠️' },
+            );
         }
     };
 
@@ -419,7 +421,10 @@ export function DispensingPage() {
 
         setSubstitutionLoadingMedicineId(medicine.id);
         try {
-            const alternatives = await pharmacyService.getSubstitutionRecommendations(medicine.id, activeFacilityId);
+            const alternatives = await pharmacyService.getSubstitutionRecommendations(
+                medicine.id,
+                activeFacilityId,
+            );
             if (!alternatives.length) {
                 toast('No substitution candidates with stock found.', { icon: 'ℹ️' });
                 return;
@@ -497,14 +502,14 @@ export function DispensingPage() {
                     prev.map((item) =>
                         isTargetLine(item)
                             ? {
-                                ...item,
-                                quantity: requestedQty,
-                                selectedBatch: {
-                                    ...item.selectedBatch!,
-                                    stock_id: selectedStock.id,
-                                    current_quantity: availableQty,
-                                },
-                            }
+                                  ...item,
+                                  quantity: requestedQty,
+                                  selectedBatch: {
+                                      ...item.selectedBatch!,
+                                      stock_id: selectedStock.id,
+                                      current_quantity: availableQty,
+                                  },
+                              }
                             : item,
                     ),
                 );
@@ -578,7 +583,7 @@ export function DispensingPage() {
         patientIdType?: string,
         patientIdNumber?: string,
         insuranceProviderId?: number,
-        patientInsuranceNumber?: string
+        patientInsuranceNumber?: string,
     ) => {
         setProcessing(true);
         const saleData: any = {
@@ -612,7 +617,7 @@ export function DispensingPage() {
                     offlineId,
                     createdAt: new Date().toISOString(),
                     status: 'pending',
-                    retryCount: 0
+                    retryCount: 0,
                 });
                 toast.success('Offline: Sale queued for sync');
                 setCart([]);
@@ -623,10 +628,9 @@ export function DispensingPage() {
 
             const response: any = await pharmacyService.createSale(saleData);
             if (response?.success === false) {
-                toast.error(
-                    String(response?.message || 'Checkout failed. Please try again.'),
-                    { duration: 7000 },
-                );
+                toast.error(String(response?.message || 'Checkout failed. Please try again.'), {
+                    duration: 7000,
+                });
                 return;
             }
 
@@ -731,7 +735,9 @@ export function DispensingPage() {
                                         medicine={med}
                                         onAddToCart={addToCart}
                                         onFindAlternatives={handleFindAlternatives}
-                                        isFindingAlternatives={substitutionLoadingMedicineId === med.id}
+                                        isFindingAlternatives={
+                                            substitutionLoadingMedicineId === med.id
+                                        }
                                         readOnly={isReadOnly}
                                     />
                                 ))}
@@ -827,7 +833,7 @@ export function DispensingPage() {
                                 </div>
                             )}
                         {(selectedPatient && !selectedPatient.is_walk_in) ||
-                            user?.role?.toString()?.toLowerCase() === 'auditor' ? (
+                        user?.role?.toString()?.toLowerCase() === 'auditor' ? (
                             <div className="flex justify-between items-center bg-white dark:bg-slate-800 px-2 py-1.5 rounded-lg border dark:border-slate-700 text-sm">
                                 <div>
                                     <div className="font-bold text-healthcare-dark dark:text-white">
@@ -881,8 +887,12 @@ export function DispensingPage() {
                                 name: `${selectedPatient.first_name || selectedPatient.firstName || selectedPatient.name || ''} ${selectedPatient.last_name || selectedPatient.lastName || ''}`.trim(),
                                 id_type: selectedPatient.id_type,
                                 id_number: selectedPatient.id_number,
-                                phone: selectedPatient.phone_number || selectedPatient.phoneNumber || selectedPatient.phone,
-                                insurance_provider: selectedPatient.insurance_provider || selectedPatient.insurance,
+                                phone:
+                                    selectedPatient.phone_number ||
+                                    selectedPatient.phoneNumber ||
+                                    selectedPatient.phone,
+                                insurance_provider:
+                                    selectedPatient.insurance_provider || selectedPatient.insurance,
                             }}
                             onDownloadReceipt={(saleId) => {
                                 if (user?.facility_id) {
@@ -936,7 +946,12 @@ export function DispensingPage() {
                             </h3>
                             {lastSaleId && user?.facility_id && (
                                 <button
-                                    onClick={() => pharmacyService.getSaleReceipt(lastSaleId, user.facility_id!)}
+                                    onClick={() =>
+                                        pharmacyService.getSaleReceipt(
+                                            lastSaleId,
+                                            user.facility_id!,
+                                        )
+                                    }
                                     className="mt-6 flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95"
                                 >
                                     <ShoppingCart size={18} /> Print Receipt
@@ -956,7 +971,10 @@ export function DispensingPage() {
                                     Substitution Options
                                 </h3>
                                 <p className="text-xs text-slate-500 mt-1">
-                                    Alternatives for <span className="font-bold">{substitutionContext.medicine.name}</span>
+                                    Alternatives for{' '}
+                                    <span className="font-bold">
+                                        {substitutionContext.medicine.name}
+                                    </span>
                                 </p>
                             </div>
                             <button
@@ -988,7 +1006,8 @@ export function DispensingPage() {
                                                 {alternative.total_stock.toLocaleString()}
                                             </td>
                                             <td className="px-4 py-3 text-right font-bold text-slate-600 dark:text-slate-300">
-                                                {runtimeConfig.currency} {alternative.selling_price.toLocaleString()}
+                                                {runtimeConfig.currency}{' '}
+                                                {alternative.selling_price.toLocaleString()}
                                             </td>
                                             <td className="px-4 py-3 text-xs text-slate-500">
                                                 {alternative.reason}

@@ -5,10 +5,22 @@ import { lazyNamed, withRouteSuspense } from '../lazy';
 // import { ReorderDashboardPage } from '../../pages/dashboard/ReorderDashboardPage';
 // import React from 'react';
 
-const ProcurementLayout = lazyNamed(() => import('../../pages/procurement/ProcurementLayout'), 'ProcurementLayout');
-const ProcurementPage = lazyNamed(() => import('../../pages/procurement/ProcurementPage'), 'ProcurementPage');
-const GoodsReceiptsPage = lazyNamed(() => import('../../pages/procurement/GoodsReceiptsPage'), 'GoodsReceiptsPage');
-const ViewOrderPage = lazyNamed(() => import('../../pages/procurement/ViewOrderPage'), 'ViewOrderPage');
+const ProcurementLayout = lazyNamed(
+    () => import('../../pages/procurement/ProcurementLayout'),
+    'ProcurementLayout',
+);
+const ProcurementPage = lazyNamed(
+    () => import('../../pages/procurement/ProcurementPage'),
+    'ProcurementPage',
+);
+const GoodsReceiptsPage = lazyNamed(
+    () => import('../../pages/procurement/GoodsReceiptsPage'),
+    'GoodsReceiptsPage',
+);
+const ViewOrderPage = lazyNamed(
+    () => import('../../pages/procurement/ViewOrderPage'),
+    'ViewOrderPage',
+);
 const ViewGoodsReceiptPage = lazyNamed(
     () => import('../../pages/procurement/ViewGoodsReceiptPage'),
     'ViewGoodsReceiptPage',
@@ -18,19 +30,18 @@ export const createProcurementRoutes = (parentRoute: any) => {
     const procurementRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'procurement',
-        component: () => (
+        component: () =>
             withRouteSuspense(
                 <RequirePermission permission={PERMISSIONS.PROCUREMENT_READ}>
                     <ProcurementLayout />
                 </RequirePermission>,
-            )
-        ),
+            ),
     });
 
     const procurementIndexRoute = createRoute({
         getParentRoute: () => procurementRoute,
         path: '/',
-        component: () => <Navigate to={"/app/procurement/orders" as any} search={{} as any} />,
+        component: () => <Navigate to={'/app/procurement/orders' as any} search={{} as any} />,
     });
 
     const ordersRoute = createRoute({

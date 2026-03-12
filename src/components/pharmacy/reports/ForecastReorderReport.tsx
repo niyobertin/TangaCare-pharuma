@@ -40,14 +40,30 @@ export function ForecastReorderReport({ facilityId }: ForecastReorderReportProps
             <SkeletonTable
                 rows={8}
                 columns={10}
-                headers={['Medicine', 'Usable', 'Demand', 'Safety', 'Target', 'Order Qty', 'Lead Time', 'JIT Date', 'Priority', 'Reason']}
+                headers={[
+                    'Medicine',
+                    'Usable',
+                    'Demand',
+                    'Safety',
+                    'Target',
+                    'Order Qty',
+                    'Lead Time',
+                    'JIT Date',
+                    'Priority',
+                    'Reason',
+                ]}
                 className="border-none shadow-none"
             />
         );
     }
 
-    const criticalCount = rows.filter((item: any) => ['critical', 'high'].includes(String(item.priority))).length;
-    const totalOrderQty = rows.reduce((sum: number, item: any) => sum + Number(item.recommended_order_qty || 0), 0);
+    const criticalCount = rows.filter((item: any) =>
+        ['critical', 'high'].includes(String(item.priority)),
+    ).length;
+    const totalOrderQty = rows.reduce(
+        (sum: number, item: any) => sum + Number(item.recommended_order_qty || 0),
+        0,
+    );
 
     return (
         <div className="space-y-4">
@@ -77,16 +93,24 @@ export function ForecastReorderReport({ facilityId }: ForecastReorderReportProps
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2">
-                    <p className="text-[10px] font-black uppercase text-slate-400">Critical / High</p>
+                    <p className="text-[10px] font-black uppercase text-slate-400">
+                        Critical / High
+                    </p>
                     <p className="text-lg font-black text-rose-600">{criticalCount}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2">
                     <p className="text-[10px] font-black uppercase text-slate-400">Order Lines</p>
-                    <p className="text-lg font-black text-slate-700 dark:text-slate-100">{rows.length}</p>
+                    <p className="text-lg font-black text-slate-700 dark:text-slate-100">
+                        {rows.length}
+                    </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2">
-                    <p className="text-[10px] font-black uppercase text-slate-400">Total Order Qty</p>
-                    <p className="text-lg font-black text-healthcare-primary">{totalOrderQty.toLocaleString()}</p>
+                    <p className="text-[10px] font-black uppercase text-slate-400">
+                        Total Order Qty
+                    </p>
+                    <p className="text-lg font-black text-healthcare-primary">
+                        {totalOrderQty.toLocaleString()}
+                    </p>
                 </div>
             </div>
 
@@ -109,14 +133,30 @@ export function ForecastReorderReport({ facilityId }: ForecastReorderReportProps
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                         {rows.map((item: any) => (
                             <tr key={item.medicine_id}>
-                                <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">{item.medicine_name}</td>
-                                <td className="px-4 py-3 text-right">{Number(item.usable_stock || 0).toFixed(1)}</td>
-                                <td className="px-4 py-3 text-right">{Number(item.forecast_horizon_demand || 0).toFixed(1)}</td>
-                                <td className="px-4 py-3 text-right">{Number(item.safety_stock || 0).toLocaleString()}</td>
-                                <td className="px-4 py-3 text-right">{Number(item.target_stock || 0).toLocaleString()}</td>
-                                <td className="px-4 py-3 text-right font-black text-healthcare-primary">{Number(item.recommended_order_qty || 0).toLocaleString()}</td>
-                                <td className="px-4 py-3 text-right">{Number(item.lead_time_days || 0)}</td>
-                                <td className="px-4 py-3 text-center">{item.jit_reorder_by_date || 'N/A'}</td>
+                                <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">
+                                    {item.medicine_name}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                    {Number(item.usable_stock || 0).toFixed(1)}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                    {Number(item.forecast_horizon_demand || 0).toFixed(1)}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                    {Number(item.safety_stock || 0).toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                    {Number(item.target_stock || 0).toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3 text-right font-black text-healthcare-primary">
+                                    {Number(item.recommended_order_qty || 0).toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                    {Number(item.lead_time_days || 0)}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    {item.jit_reorder_by_date || 'N/A'}
+                                </td>
                                 <td className="px-4 py-3">
                                     <span
                                         className={`px-2 py-1 rounded-full text-[10px] font-black uppercase ${

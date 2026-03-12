@@ -104,17 +104,19 @@ export function FacilitiesPage() {
                                 'Email',
                                 'Phone',
                             ]}
-                            columnAligns={[
-                                'left',
-                                'left',
-                                ...(showOrgColumn ? ['left'] : []),
-                                'left',
-                                'left',
-                                'left',
-                                'left',
-                                'left',
-                                'right',
-                            ] as ("left" | "center" | "right")[]}
+                            columnAligns={
+                                [
+                                    'left',
+                                    'left',
+                                    ...(showOrgColumn ? ['left'] : []),
+                                    'left',
+                                    'left',
+                                    'left',
+                                    'left',
+                                    'left',
+                                    'right',
+                                ] as ('left' | 'center' | 'right')[]
+                            }
                             actions
                             className="bg-white dark:bg-slate-800 rounded-xl shadow-sm"
                         />
@@ -138,7 +140,7 @@ export function FacilitiesPage() {
             requireFacility
         >
             <div className="h-full flex flex-col bg-slate-50/50 dark:bg-slate-900/50">
-                { }
+                {}
                 <div className="flex-shrink-0 flex items-center justify-between p-6 pb-4">
                     <div>
                         <h1 className="text-2xl font-black text-healthcare-dark">My Facilities</h1>
@@ -167,29 +169,31 @@ export function FacilitiesPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        { }
+                        {}
                         <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg p-1 shadow-sm">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'grid'
-                                    ? 'bg-healthcare-primary text-white'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
-                                    }`}
+                                className={`p-2 rounded-md transition-all ${
+                                    viewMode === 'grid'
+                                        ? 'bg-healthcare-primary text-white'
+                                        : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                }`}
                             >
                                 <Grid size={18} />
                             </button>
                             <button
                                 onClick={() => setViewMode('table')}
-                                className={`p-2 rounded-md transition-all ${viewMode === 'table'
-                                    ? 'bg-healthcare-primary text-white'
-                                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
-                                    }`}
+                                className={`p-2 rounded-md transition-all ${
+                                    viewMode === 'table'
+                                        ? 'bg-healthcare-primary text-white'
+                                        : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                }`}
                             >
                                 <List size={18} />
                             </button>
                         </div>
 
-                        { }
+                        {}
                         {(role === 'SUPER_ADMIN' || role === 'SUPER ADMIN' || role === 'OWNER') && (
                             <button
                                 onClick={() => setShowCreateModal(true)}
@@ -202,9 +206,9 @@ export function FacilitiesPage() {
                     </div>
                 </div>
 
-                { }
+                {}
                 <div className="flex-1 flex flex-col min-h-0 px-6">
-                    { }
+                    {}
                     {facilities.length === 0 ? (
                         isFacilityAdmin ? (
                             <div className="flex-1 flex items-center justify-center p-8 bg-slate-50/50 dark:bg-slate-900/50">
@@ -217,7 +221,9 @@ export function FacilitiesPage() {
                                         facility.
                                     </p>
                                     <button
-                                        onClick={() => navigate({ to: '/app' as any, search: {} as any })}
+                                        onClick={() =>
+                                            navigate({ to: '/app' as any, search: {} as any })
+                                        }
                                         className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
                                     >
                                         Go to Dashboard
@@ -231,13 +237,13 @@ export function FacilitiesPage() {
                                     {(role === 'SUPER_ADMIN' ||
                                         role === 'SUPER ADMIN' ||
                                         role === 'OWNER') && (
-                                            <button
-                                                onClick={() => setShowCreateModal(true)}
-                                                className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
-                                            >
-                                                Add Facility
-                                            </button>
-                                        )}
+                                        <button
+                                            onClick={() => setShowCreateModal(true)}
+                                            className="px-6 py-3 bg-healthcare-primary text-white rounded-lg font-bold hover:bg-teal-700 transition-all"
+                                        >
+                                            Add Facility
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )
@@ -311,10 +317,10 @@ export function FacilitiesPage() {
                                             {(role === 'SUPER_ADMIN' ||
                                                 role === 'SUPER ADMIN' ||
                                                 role === 'OWNER') && (
-                                                    <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                                        Organization
-                                                    </th>
-                                                )}
+                                                <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                    Organization
+                                                </th>
+                                            )}
                                             <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                                                 Name
                                             </th>
@@ -374,17 +380,17 @@ export function FacilitiesPage() {
                                                 {(role === 'SUPER_ADMIN' ||
                                                     role === 'SUPER ADMIN' ||
                                                     role === 'OWNER') && (
-                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                            <div className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                                                                {facility.organization?.name || '—'}
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                                                            {facility.organization?.name || '—'}
+                                                        </div>
+                                                        {facility.organization?.code && (
+                                                            <div className="text-xs text-slate-500 font-mono">
+                                                                {facility.organization.code}
                                                             </div>
-                                                            {facility.organization?.code && (
-                                                                <div className="text-xs text-slate-500 font-mono">
-                                                                    {facility.organization.code}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                    )}
+                                                        )}
+                                                    </td>
+                                                )}
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="font-bold text-healthcare-dark">
                                                         {facility.name}
@@ -439,7 +445,7 @@ export function FacilitiesPage() {
                         </div>
                     )}
 
-                    { }
+                    {}
                     {facilities.length > 0 && (
                         <div className="flex-shrink-0 mt-4 py-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/80 backdrop-blur-sm flex flex-col sm:flex-row justify-between items-center gap-4 rounded-t-2xl shadow-[0_-4px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.2)]">
                             <div className="flex items-center gap-6">
@@ -513,7 +519,7 @@ export function FacilitiesPage() {
                     )}
                 </div>
 
-                { }
+                {}
                 {showCreateModal && (
                     <CreateFacilityModal
                         onClose={() => {
@@ -523,7 +529,7 @@ export function FacilitiesPage() {
                     />
                 )}
 
-                { }
+                {}
             </div>
         </ProtectedRoute>
     );

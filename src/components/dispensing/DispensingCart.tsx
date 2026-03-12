@@ -55,17 +55,21 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                                     {item.name}
                                 </h4>
                                 <p className="text-[10px] text-slate-500 font-medium mt-0.5">
-                                    {String(item.strength || '').toLowerCase()} • {toSentenceCase(item.dosage_form)}
+                                    {String(item.strength || '').toLowerCase()} •{' '}
+                                    {toSentenceCase(item.dosage_form)}
                                 </p>
                                 <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                                    RWF {Number(item.selling_price || 0).toLocaleString()} / {toSentenceCase(item.unit)}
+                                    RWF {Number(item.selling_price || 0).toLocaleString()} /{' '}
+                                    {toSentenceCase(item.unit)}
                                 </p>
                             </div>
                             <div>
                                 {item.selectedBatch?.id && (
                                     <div className="flex justify-center mt-0.5">
                                         <span className="px-2 py-0.5 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700 text-[10px] font-bold text-slate-500 uppercase">
-                                            {toSentenceCase(item.selectedBatch.location?.name || 'Main Shelf')}
+                                            {toSentenceCase(
+                                                item.selectedBatch.location?.name || 'Main Shelf',
+                                            )}
                                         </span>
                                     </div>
                                 )}
@@ -95,7 +99,9 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                                         >
                                             <Minus size={12} />
                                         </button>
-                                        <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
+                                        <span className="text-xs font-bold w-4 text-center">
+                                            {item.quantity}
+                                        </span>
                                         <button
                                             onClick={() =>
                                                 updateQuantity(
@@ -154,7 +160,9 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                         <span>RWF {subtotal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-xs text-slate-500 font-bold uppercase tracking-tight">
-                        <span>Tax ({subtotal > 0 ? (tax / subtotal * 100).toFixed(0) : 18}%)</span>
+                        <span>
+                            Tax ({subtotal > 0 ? ((tax / subtotal) * 100).toFixed(0) : 18}%)
+                        </span>
                         <span>RWF {tax.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -166,10 +174,16 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                 <div className="pt-2">
                     <button
                         onClick={onCheckout}
-                        disabled={readOnly || isProcessing || (prescriptionRequired && !prescriptionId)}
+                        disabled={
+                            readOnly || isProcessing || (prescriptionRequired && !prescriptionId)
+                        }
                         className="w-full py-3 bg-healthcare-primary hover:bg-healthcare-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold shadow-lg shadow-healthcare-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                     >
-                        {isProcessing ? 'Processing...' : readOnly ? 'View Only Mode' : 'Proceed to Payment'}
+                        {isProcessing
+                            ? 'Processing...'
+                            : readOnly
+                              ? 'View Only Mode'
+                              : 'Proceed to Payment'}
                     </button>
                     {prescriptionRequired && !prescriptionId && (
                         <p className="text-[10px] text-center text-orange-500 font-bold mt-2">

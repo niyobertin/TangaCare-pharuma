@@ -75,7 +75,9 @@ export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
                         <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
                             <Receipt size={14} className="text-blue-500 shrink-0" />
                             <div>
-                                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wide">Insurance</p>
+                                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wide">
+                                    Insurance
+                                </p>
                                 <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">
                                     {patient.insurance_provider}
                                 </p>
@@ -103,7 +105,10 @@ export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
                         {isLoading ? (
                             <div className="space-y-2">
                                 {[1, 2, 3].map((i) => (
-                                    <div key={i} className="h-8 bg-slate-100 dark:bg-slate-700 rounded-lg animate-pulse" />
+                                    <div
+                                        key={i}
+                                        className="h-8 bg-slate-100 dark:bg-slate-700 rounded-lg animate-pulse"
+                                    />
                                 ))}
                             </div>
                         ) : sales.length === 0 ? (
@@ -124,17 +129,19 @@ export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
                                                     {sale.sale_number}
                                                 </p>
                                                 <p className="text-[10px] text-slate-400">
-                                                    {sale.items?.length ?? 0} item(s) &bull;{' '}
-                                                    RWF {Number(sale.total_amount).toLocaleString()}
+                                                    {sale.items?.length ?? 0} item(s) &bull; RWF{' '}
+                                                    {Number(sale.total_amount).toLocaleString()}
                                                 </p>
                                             </div>
                                             <div className="text-right shrink-0 ml-2">
                                                 <p className="text-[10px] text-slate-400">
                                                     {sale.created_at
-                                                        ? new Date(sale.created_at).toLocaleDateString('en-GB', {
-                                                            day: '2-digit',
-                                                            month: 'short',
-                                                        })
+                                                        ? new Date(
+                                                              sale.created_at,
+                                                          ).toLocaleDateString('en-GB', {
+                                                              day: '2-digit',
+                                                              month: 'short',
+                                                          })
                                                         : '–'}
                                                 </p>
                                                 {onDownloadReceipt && (

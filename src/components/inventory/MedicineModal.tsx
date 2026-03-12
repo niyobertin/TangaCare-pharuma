@@ -54,10 +54,7 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
         strength: payload?.strength || '',
         dosage_form: payload?.dosage_form || '',
         unit: payload?.unit || '',
-        category_id:
-            payload?.category_id ??
-            (payload as any)?.category?.id ??
-            '',
+        category_id: payload?.category_id ?? (payload as any)?.category?.id ?? '',
         selling_price: Number(payload?.selling_price || 0),
         reorder_point: Number(payload?.reorder_point || 0),
         min_stock_level: Number(payload?.min_stock_level || 0),
@@ -128,10 +125,11 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
     }, [medicine, reset]);
 
     const generateCategoryCode = (name: string): string => {
-        const base = name
-            .toUpperCase()
-            .replace(/[^A-Z0-9]+/g, '_')
-            .replace(/^_+|_+$/g, '') || 'CATEGORY';
+        const base =
+            name
+                .toUpperCase()
+                .replace(/[^A-Z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '') || 'CATEGORY';
         const suffix = Date.now().toString().slice(-6);
         const safeBase = base.slice(0, Math.max(1, 50 - (suffix.length + 1)));
         return `${safeBase}_${suffix}`;
@@ -150,7 +148,9 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                 name: trimmedName,
                 code: generateCategoryCode(trimmedName),
             });
-            setCategories((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
+            setCategories((prev) =>
+                [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
+            );
             setValue('category_id', created.id, { shouldDirty: true, shouldValidate: true });
             setNewCategoryName('');
             setShowCreateCategory(false);
@@ -184,7 +184,9 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                 selling_price: Number(data.selling_price || 0),
                 reorder_point: toNumberOrUndefined(data.reorder_point) ?? 0,
                 min_stock_level: toNumberOrUndefined(data.min_stock_level) ?? 0,
-                units_per_package: data.allow_partial_sales ? toNumberOrUndefined(data.units_per_package) : undefined,
+                units_per_package: data.allow_partial_sales
+                    ? toNumberOrUndefined(data.units_per_package)
+                    : undefined,
                 base_unit: data.allow_partial_sales ? data.base_unit : undefined,
             };
 
@@ -318,7 +320,8 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                                     type="button"
                                                     onClick={handleCreateCategory}
                                                     disabled={
-                                                        isCreatingCategory || !newCategoryName.trim()
+                                                        isCreatingCategory ||
+                                                        !newCategoryName.trim()
                                                     }
                                                     className="min-w-[82px] px-3 py-2 rounded-lg bg-healthcare-primary text-white text-xs font-bold hover:bg-teal-700 disabled:opacity-50 inline-flex items-center justify-center gap-1"
                                                 >
@@ -439,7 +442,8 @@ export function MedicineModal({ medicine, onClose, onSuccess }: MedicineModalPro
                                         className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                     />
                                     <p className="text-[10px] text-slate-500 mt-1">
-                                        Alert and reorder suggestion will trigger below this quantity.
+                                        Alert and reorder suggestion will trigger below this
+                                        quantity.
                                     </p>
                                 </div>
 

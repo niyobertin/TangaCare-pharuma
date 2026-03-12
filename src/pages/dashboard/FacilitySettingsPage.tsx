@@ -30,7 +30,9 @@ export function FacilitySettingsPage() {
     const { facilityId } = useParams({ from: '/app/facility/$facilityId/settings' });
     const navigate = useNavigate();
     const { user, facilityId: contextFacilityId, facilities } = useAuth();
-    const [activeTab, setActiveTab] = useState<'general' | 'config' | 'storage' | 'admin'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'config' | 'storage' | 'admin'>(
+        'general',
+    );
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [facility, setFacility] = useState<Facility | null>(null);
@@ -135,7 +137,7 @@ export function FacilitySettingsPage() {
                     role: 'facility_admin',
                     facility_id: facility.id,
                 });
-            } catch (userErr) { }
+            } catch (userErr) {}
             toast.success('Admin assigned successfully');
             loadFacility(facility.id);
         } catch (error) {
@@ -235,10 +237,12 @@ export function FacilitySettingsPage() {
             requireFacility
         >
             <div className="p-6 max-w-5xl xl:max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                { }
+                {}
                 <div className="flex items-center gap-4 mb-8">
                     <button
-                        onClick={() => navigate({ to: '/app/facilities' as any, search: {} as any })}
+                        onClick={() =>
+                            navigate({ to: '/app/facilities' as any, search: {} as any })
+                        }
                         className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
                     >
                         <ArrowLeft size={20} className="text-slate-500" />
@@ -273,7 +277,7 @@ export function FacilitySettingsPage() {
                     </div>
                 </div>
 
-                { }
+                {}
                 <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 mb-6 overflow-x-auto">
                     <button
                         onClick={() => setActiveTab('general')}
@@ -327,7 +331,7 @@ export function FacilitySettingsPage() {
 
                 <div className="max-w-4xl">
                     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-800">
-                        { }
+                        {}
                         {activeTab === 'general' && (
                             <div className="space-y-8">
                                 <div className="space-y-6">
@@ -447,7 +451,7 @@ export function FacilitySettingsPage() {
                                     </div>
                                 </div>
 
-                                { }
+                                {}
                                 <div className="pt-8 mt-4 border-t border-slate-200 dark:border-slate-800">
                                     <h4 className="flex items-center gap-2 text-red-500 font-bold mb-4">
                                         <AlertTriangle size={18} />
@@ -473,7 +477,7 @@ export function FacilitySettingsPage() {
                             </div>
                         )}
 
-                        { }
+                        {}
                         {activeTab === 'config' && (
                             <div className="space-y-6">
                                 <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
@@ -623,7 +627,9 @@ export function FacilitySettingsPage() {
                                                 onChange={(e) =>
                                                     setFormData((p) => ({
                                                         ...p,
-                                                        expiry_critical_days: Number(e.target.value),
+                                                        expiry_critical_days: Number(
+                                                            e.target.value,
+                                                        ),
                                                     }))
                                                 }
                                                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold text-healthcare-dark"
@@ -634,7 +640,7 @@ export function FacilitySettingsPage() {
                             </div>
                         )}
 
-                        { }
+                        {}
                         {activeTab === 'admin' && (
                             <div className="space-y-6">
                                 <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
@@ -657,7 +663,7 @@ export function FacilitySettingsPage() {
                                         <p className="text-base font-black text-healthcare-dark">
                                             {facility?.facility_admin
                                                 ? `${facility.facility_admin.first_name || ''} ${facility.facility_admin.last_name || ''}`.trim() ||
-                                                'Admin'
+                                                  'Admin'
                                                 : facility?.admin_name || 'No Admin Assigned'}
                                         </p>
                                     </div>
@@ -675,7 +681,7 @@ export function FacilitySettingsPage() {
                                         className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold"
                                     />
 
-                                    { }
+                                    {}
                                     {adminQuery && (
                                         <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
                                             {searchingUsers ? (
@@ -719,7 +725,7 @@ export function FacilitySettingsPage() {
                             <StorageLocationManager facilityId={Number(facilityId)} />
                         )}
 
-                        { }
+                        {}
                         {activeTab !== 'admin' && (
                             <div className="flex justify-end pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
                                 <button

@@ -37,11 +37,7 @@ export function FacilityEmptyState({
                         className=" whitespace-nowrap group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-healthcare-primary text-white rounded-2xl font-bold text-sm hover:bg-teal-700 transition-all shadow-lg hover:shadow-healthcare-primary/30 active:scale-[0.98] w-full sm:w-auto"
                     >
                         <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-                        <span>
-                            {noOrganization
-                                ? 'Add new & branch'
-                                : 'Register New Facility'}
-                        </span>
+                        <span>{noOrganization ? 'Add new & branch' : 'Register New Facility'}</span>
                     </button>
 
                     {noOrganization && (

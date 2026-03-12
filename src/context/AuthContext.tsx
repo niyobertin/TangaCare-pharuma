@@ -91,7 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 2. Resolve Organization Default
         if (!oid) {
             const selectedFacility = profile.facilities?.find((f: any) => String(f.id) === fid);
-            const resolvedOid = selectedFacility?.organization_id ?? profile.organizations?.[0]?.id ?? profile.organization_id ?? null;
+            const resolvedOid =
+                selectedFacility?.organization_id ??
+                profile.organizations?.[0]?.id ??
+                profile.organization_id ??
+                null;
             oid = resolvedOid ? String(resolvedOid) : null;
         }
 
@@ -127,7 +131,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 let orgs = profile.organizations || [];
 
                 // For super_admin users, fetch organizations if not returned from profile
-                const userRole = (profile?.role || profile?.user_role || '').toString().toUpperCase();
+                const userRole = (profile?.role || profile?.user_role || '')
+                    .toString()
+                    .toUpperCase();
                 const isSuperAdmin = userRole === 'SUPER_ADMIN' || userRole === 'SUPER ADMIN';
 
                 if (isSuperAdmin && (!orgs || orgs.length === 0)) {
@@ -135,7 +141,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         const orgsBody = await pharmacyService.getOrganizations({ limit: 100 });
                         orgs = orgsBody.data || [];
                     } catch (e) {
-                        console.error('Failed to fetch organizations for super_admin during checkAuth:', e);
+                        console.error(
+                            'Failed to fetch organizations for super_admin during checkAuth:',
+                            e,
+                        );
                     }
                 }
 
@@ -162,7 +171,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(profile);
 
                 resolveAndSetDefaultScope(profile);
-
             } catch (error) {
                 console.error('Failed to fetch profile:', error);
                 await authService.logout();
@@ -221,7 +229,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Resolve and set scope BEFORE setting user to ensure context is ready
             resolveAndSetDefaultScope(u);
             setUser(u);
-
         } catch (error) {
             setIsLoading(false);
             throw error;
@@ -262,7 +269,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const orgsBody = await pharmacyService.getOrganizations({ limit: 100 });
                 orgs = orgsBody.data || [];
             } catch (e) {
-                console.error('Failed to fetch organizations for super_admin during refreshProfile:', e);
+                console.error(
+                    'Failed to fetch organizations for super_admin during refreshProfile:',
+                    e,
+                );
             }
         }
 
@@ -286,7 +296,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         resolveAndSetDefaultScope(profile);
-
     };
 
     const can = useCallback(

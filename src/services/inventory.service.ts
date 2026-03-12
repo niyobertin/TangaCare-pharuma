@@ -93,10 +93,7 @@ export const inventoryService = {
         return response.data;
     },
 
-    async startPhysicalCount(
-        facilityId: number,
-        medicineIds?: number[],
-    ): Promise<PhysicalCount> {
+    async startPhysicalCount(facilityId: number, medicineIds?: number[]): Promise<PhysicalCount> {
         const response = await api.post<any>('/pharmacy/physical-counts/start', {
             facility_id: facilityId,
             medicineIds,
@@ -104,9 +101,7 @@ export const inventoryService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async getPhysicalCounts(
-        facilityId: number,
-    ): Promise<PhysicalCount[]> {
+    async getPhysicalCounts(facilityId: number): Promise<PhysicalCount[]> {
         const response = await api.get<any>('/pharmacy/physical-counts', {
             params: { facility_id: facilityId },
         });

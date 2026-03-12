@@ -76,10 +76,11 @@ export function Pricing() {
                     {plans.map((plan) => (
                         <div
                             key={plan.name}
-                            className={`rounded-3xl p-8 border ${plan.highlight
-                                ? 'border-teal-600 bg-teal-50/50 dark:bg-teal-900/10 shadow-xl relative'
-                                : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
-                                } flex flex-col transition-all duration-300 hover:-translate-y-2`}
+                            className={`rounded-3xl p-8 border ${
+                                plan.highlight
+                                    ? 'border-teal-600 bg-teal-50/50 dark:bg-teal-900/10 shadow-xl relative'
+                                    : 'border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
+                            } flex flex-col transition-all duration-300 hover:-translate-y-2`}
                         >
                             {plan.highlight && (
                                 <div className="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-teal-600 text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-teal-600/30">
@@ -122,10 +123,11 @@ export function Pricing() {
                                     hash={plan.price === 'Custom' ? 'contact' : undefined}
                                 >
                                     <Button
-                                        className={`w-full h-12 rounded-xl font-bold transition-all ${plan.highlight
-                                            ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20'
-                                            : 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700'
-                                            }`}
+                                        className={`w-full h-12 rounded-xl font-bold transition-all ${
+                                            plan.highlight
+                                                ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-600/20'
+                                                : 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700'
+                                        }`}
                                     >
                                         {plan.price === 'Custom' ? 'Contact Sales' : 'Get Started'}
                                     </Button>

@@ -42,8 +42,9 @@ export function PrivacyPolicyPage() {
                                 1. Information We Collect
                             </h2>
                             <p>
-                                We collect account information, facility configuration data, inventory records, transaction
-                                logs, and support communications needed to operate the platform.
+                                We collect account information, facility configuration data,
+                                inventory records, transaction logs, and support communications
+                                needed to operate the platform.
                             </p>
                         </section>
                         <section>
@@ -51,8 +52,8 @@ export function PrivacyPolicyPage() {
                                 2. How We Use Data
                             </h2>
                             <p>
-                                Data is used to provide system functionality, maintain security and auditability, improve
-                                performance, and deliver support.
+                                Data is used to provide system functionality, maintain security and
+                                auditability, improve performance, and deliver support.
                             </p>
                         </section>
                         <section>
@@ -60,8 +61,9 @@ export function PrivacyPolicyPage() {
                                 3. Data Sharing
                             </h2>
                             <p>
-                                We do not sell personal data. We may share information with subprocessors or authorities only
-                                when required to deliver the service or comply with law.
+                                We do not sell personal data. We may share information with
+                                subprocessors or authorities only when required to deliver the
+                                service or comply with law.
                             </p>
                         </section>
                         <section>
@@ -69,8 +71,9 @@ export function PrivacyPolicyPage() {
                                 4. Security
                             </h2>
                             <p>
-                                We use access controls, audit logs, encrypted transport, and operational safeguards to protect
-                                data from unauthorized access and misuse.
+                                We use access controls, audit logs, encrypted transport, and
+                                operational safeguards to protect data from unauthorized access and
+                                misuse.
                             </p>
                         </section>
                         <section>
@@ -78,8 +81,9 @@ export function PrivacyPolicyPage() {
                                 5. Retention
                             </h2>
                             <p>
-                                Data is retained according to contractual and regulatory requirements. Customers may request
-                                deletion where legally permitted.
+                                Data is retained according to contractual and regulatory
+                                requirements. Customers may request deletion where legally
+                                permitted.
                             </p>
                         </section>
                         <section>
@@ -88,7 +92,10 @@ export function PrivacyPolicyPage() {
                             </h2>
                             <p>
                                 Privacy questions can be sent to{' '}
-                                <a href="mailto:privacy@tangacare.io" className="text-healthcare-primary font-bold">
+                                <a
+                                    href="mailto:privacy@tangacare.io"
+                                    className="text-healthcare-primary font-bold"
+                                >
                                     privacy@tangacare.io
                                 </a>
                                 .

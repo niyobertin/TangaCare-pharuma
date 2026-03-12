@@ -64,7 +64,13 @@ export interface Medicine {
     supplier_name?: string;
     is_controlled_drug: boolean;
     controlled_flag?: boolean;
-    drug_schedule?: 'unclassified' | 'prescription_only' | 'controlled_substance_sch_ii' | 'controlled_substance_sch_iii' | 'controlled_substance_sch_iv' | 'pharmacist_only';
+    drug_schedule?:
+        | 'unclassified'
+        | 'prescription_only'
+        | 'controlled_substance_sch_ii'
+        | 'controlled_substance_sch_iii'
+        | 'controlled_substance_sch_iv'
+        | 'pharmacist_only';
     stock_quantity?: number;
     expiry_date?: string;
     created_at?: string;
@@ -244,7 +250,8 @@ export const ColdChainExcursionStatus = {
     ACKNOWLEDGED: 'acknowledged',
     RESOLVED: 'resolved',
 } as const;
-export type ColdChainExcursionStatus = (typeof ColdChainExcursionStatus)[keyof typeof ColdChainExcursionStatus];
+export type ColdChainExcursionStatus =
+    (typeof ColdChainExcursionStatus)[keyof typeof ColdChainExcursionStatus];
 
 export interface ColdChainTelemetry {
     id: number;
@@ -417,6 +424,7 @@ export interface GoodsReceiptItem {
     batch_id: number;
     quantity_received: number;
     unit_cost: number;
+    selling_price?: number;
     batch_number?: string;
     expiry_date?: string;
     medicine?: Medicine;
@@ -1057,7 +1065,13 @@ export interface InsuranceProvider {
     created_at: string;
 }
 
-export type InsuranceClaimStatus = 'pending' | 'submitted' | 'approved' | 'partially_approved' | 'rejected' | 'paid';
+export type InsuranceClaimStatus =
+    | 'pending'
+    | 'submitted'
+    | 'approved'
+    | 'partially_approved'
+    | 'rejected'
+    | 'paid';
 
 export interface InsuranceClaim {
     id: number;

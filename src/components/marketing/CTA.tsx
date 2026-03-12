@@ -18,7 +18,7 @@ export function CTA() {
                     optimize inventory, eliminate waste, and boost profitability.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
-                    <Link to={"/auth/register" as any} search={{} as any}>
+                    <Link to={'/auth/register' as any} search={{} as any}>
                         <Button
                             size="lg"
                             className="h-16 px-12 rounded-2xl bg-white text-teal-600 hover:bg-slate-50 font-black text-xl shadow-2xl transition-all hover:scale-105 active:scale-95 group"

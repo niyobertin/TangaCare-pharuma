@@ -112,10 +112,7 @@ export const medicineService = {
         return (response.data as any).data ?? response.data;
     },
 
-    async updateCategory(
-        id: number,
-        data: Partial<MedicineCategory>,
-    ): Promise<MedicineCategory> {
+    async updateCategory(id: number, data: Partial<MedicineCategory>): Promise<MedicineCategory> {
         const response = await api.patch<any>(`/pharmacy/categories/${id}`, data);
         return (response.data as any).data ?? response.data;
     },

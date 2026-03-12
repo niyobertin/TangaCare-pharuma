@@ -168,19 +168,19 @@ export function UsersPage() {
                             <option value="">All facilities</option>
                             {user?.role?.toUpperCase().includes('SUPER')
                                 ? Object.entries(groupedFacilities).map(([orgName, facs]) => (
-                                    <optgroup key={orgName} label={orgName}>
-                                        {facs.map((f) => (
-                                            <option key={f.id} value={f.id}>
-                                                {f.name}
-                                            </option>
-                                        ))}
-                                    </optgroup>
-                                ))
+                                      <optgroup key={orgName} label={orgName}>
+                                          {facs.map((f) => (
+                                              <option key={f.id} value={f.id}>
+                                                  {f.name}
+                                              </option>
+                                          ))}
+                                      </optgroup>
+                                  ))
                                 : facilities.map((f) => (
-                                    <option key={f.id} value={f.id}>
-                                        {f.name ?? `Facility ${f.id}`}
-                                    </option>
-                                ))}
+                                      <option key={f.id} value={f.id}>
+                                          {f.name ?? `Facility ${f.id}`}
+                                      </option>
+                                  ))}
                         </select>
                     )}
                     <select
@@ -216,8 +216,25 @@ export function UsersPage() {
                     <SkeletonTable
                         rows={10}
                         columns={7}
-                        headers={['ID', 'Joined Date', 'Name', 'Email', 'Role', 'Facility', 'Status']}
-                        columnAligns={['left', 'left', 'left', 'left', 'left', 'left', 'left', 'right']}
+                        headers={[
+                            'ID',
+                            'Joined Date',
+                            'Name',
+                            'Email',
+                            'Role',
+                            'Facility',
+                            'Status',
+                        ]}
+                        columnAligns={[
+                            'left',
+                            'left',
+                            'left',
+                            'left',
+                            'left',
+                            'left',
+                            'left',
+                            'right',
+                        ]}
                         actions
                         className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700"
                     />
@@ -268,13 +285,13 @@ export function UsersPage() {
                                             );
                                             const joinedDate = u.created_at
                                                 ? new Date(u.created_at).toLocaleDateString(
-                                                    'en-US',
-                                                    {
-                                                        year: 'numeric',
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                    },
-                                                )
+                                                      'en-US',
+                                                      {
+                                                          year: 'numeric',
+                                                          month: 'short',
+                                                          day: 'numeric',
+                                                      },
+                                                  )
                                                 : '—';
                                             return (
                                                 <tr
@@ -466,7 +483,7 @@ function UserActionsIcons({
     return (
         <div className="flex items-center justify-end gap-1">
             <Link
-                to={"/app/audit-logs" as any}
+                to={'/app/audit-logs' as any}
                 search={{ search: user.email || user.id.toString() } as any}
                 className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-healthcare-primary transition-colors"
                 title="View activity history"

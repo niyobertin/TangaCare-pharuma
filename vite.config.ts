@@ -45,7 +45,11 @@ export default defineConfig({
                         return 'radix';
                     }
 
-                    if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('yup')) {
+                    if (
+                        id.includes('react-hook-form') ||
+                        id.includes('@hookform') ||
+                        id.includes('yup')
+                    ) {
                         return 'forms';
                     }
 

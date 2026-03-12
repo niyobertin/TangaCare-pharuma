@@ -14,7 +14,8 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-const formatRwf = (value: number): string => `RWF ${Math.round(Number(value || 0)).toLocaleString()}`;
+const formatRwf = (value: number): string =>
+    `RWF ${Math.round(Number(value || 0)).toLocaleString()}`;
 
 export function GoodsReceiptsPage() {
     const navigate = useNavigate();
@@ -49,7 +50,9 @@ export function GoodsReceiptsPage() {
         if (!term) return rows;
         return rows.filter((row) => {
             const receiptNo = String(row.receipt_number || '').toLowerCase();
-            const poNumber = String(row.purchase_order?.order_number || row.purchase_order_id || '').toLowerCase();
+            const poNumber = String(
+                row.purchase_order?.order_number || row.purchase_order_id || '',
+            ).toLowerCase();
             const supplier = String(row.purchase_order?.supplier?.name || '').toLowerCase();
             return receiptNo.includes(term) || poNumber.includes(term) || supplier.includes(term);
         });
@@ -178,7 +181,9 @@ export function GoodsReceiptsPage() {
                             </span>
                         </div>
                         <div className="tc-stat-card-foot">
-                            <p className="tc-stat-card-value">{stats.totalUnits.toLocaleString()}</p>
+                            <p className="tc-stat-card-value">
+                                {stats.totalUnits.toLocaleString()}
+                            </p>
                             <p className="tc-stat-card-subtitle">Current page</p>
                         </div>
                     </div>
@@ -225,21 +230,38 @@ export function GoodsReceiptsPage() {
                             <table className="tc-table w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800/50">
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Receipt #</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Received Date</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">PO #</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Supplier</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Items</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Units</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Receiver</th>
-                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            Receipt #
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            Received Date
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            PO #
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            Supplier
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">
+                                            Items
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
+                                            Units
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            Receiver
+                                        </th>
+                                        <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">
+                                            Actions
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {visibleRows.length > 0 ? (
                                         visibleRows.map((row) => {
                                             const totalUnits = (row.items || []).reduce(
-                                                (sum, item) => sum + Number(item.quantity_received || 0),
+                                                (sum, item) =>
+                                                    sum + Number(item.quantity_received || 0),
                                                 0,
                                             );
                                             return (
@@ -249,27 +271,35 @@ export function GoodsReceiptsPage() {
                                                 >
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2">
-                                                            <PackageCheck size={14} className="text-emerald-500" />
+                                                            <PackageCheck
+                                                                size={14}
+                                                                className="text-emerald-500"
+                                                            />
                                                             <span className="text-sm font-black text-healthcare-dark dark:text-white">
-                                                                {row.receipt_number || `GR-${row.id}`}
+                                                                {row.receipt_number ||
+                                                                    `GR-${row.id}`}
                                                             </span>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-xs font-bold text-slate-500 whitespace-nowrap">
                                                         {row.received_date
-                                                            ? new Date(row.received_date).toLocaleString()
+                                                            ? new Date(
+                                                                  row.received_date,
+                                                              ).toLocaleString()
                                                             : 'N/A'}
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
                                                             <FileText size={13} />
-                                                            {row.purchase_order?.order_number || `PO-${row.purchase_order_id}`}
+                                                            {row.purchase_order?.order_number ||
+                                                                `PO-${row.purchase_order_id}`}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
                                                             <Truck size={13} />
-                                                            {row.purchase_order?.supplier?.name || 'N/A'}
+                                                            {row.purchase_order?.supplier?.name ||
+                                                                'N/A'}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-center text-xs font-black text-slate-500">
@@ -308,7 +338,9 @@ export function GoodsReceiptsPage() {
                                     ) : (
                                         <tr>
                                             <td colSpan={8} className="px-6 py-12 text-center">
-                                                <span className="text-slate-500 font-bold italic">No goods receipts found</span>
+                                                <span className="text-slate-500 font-bold italic">
+                                                    No goods receipts found
+                                                </span>
                                             </td>
                                         </tr>
                                     )}

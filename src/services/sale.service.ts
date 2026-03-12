@@ -1,10 +1,6 @@
 import api from '../lib/api';
 import type { AxiosRequestConfig } from 'axios';
-import type {
-    Sale,
-    CreateSaleDto,
-    PaginatedResponse,
-} from '../types/pharmacy';
+import type { Sale, CreateSaleDto, PaginatedResponse } from '../types/pharmacy';
 import { normalizePaginatedResponse } from './utils';
 
 export const saleService = {
@@ -55,7 +51,11 @@ export const saleService = {
             params: { patient_id: patientId, limit },
         });
         const payload = (response.data as any).data ?? response.data;
-        const items = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
+        const items = Array.isArray(payload?.data)
+            ? payload.data
+            : Array.isArray(payload)
+              ? payload
+              : [];
         return items.slice(0, limit) as Sale[];
     },
 
@@ -92,7 +92,9 @@ export const saleService = {
 
     async getFacilityMedicinePrice(medicineId: number): Promise<number | null> {
         try {
-            const response = await api.get<any>(`/pharmacy/facility-settings/medicine/${medicineId}/price`);
+            const response = await api.get<any>(
+                `/pharmacy/facility-settings/medicine/${medicineId}/price`,
+            );
             const payload = (response.data as any).data ?? response.data;
             return typeof payload?.selling_price === 'number' ? payload.selling_price : null;
         } catch {

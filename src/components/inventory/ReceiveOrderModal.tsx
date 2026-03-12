@@ -20,7 +20,9 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
     const fetchLocations = async () => {
         if (!order?.facility_id) return;
         try {
-            const data = await pharmacyService.getStorageLocations({ facility_id: order.facility_id });
+            const data = await pharmacyService.getStorageLocations({
+                facility_id: order.facility_id,
+            });
             setLocations(data.filter((l: any) => l.is_active));
         } catch (error) {
             console.error('Failed to fetch locations:', error);
@@ -56,11 +58,13 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
 
     const applyGlobalLocation = (locationId: number | null) => {
         setGlobalLocationId(locationId);
-        setReceivedItems(prev => prev.map(item => ({ ...item, location_id: locationId })));
+        setReceivedItems((prev) => prev.map((item) => ({ ...item, location_id: locationId })));
     };
 
     const receivingSummary = useMemo(() => {
-        const receivingRows = receivedItems.filter((item) => Number(item.quantity_received || 0) > 0);
+        const receivingRows = receivedItems.filter(
+            (item) => Number(item.quantity_received || 0) > 0,
+        );
         const actionRows = receivedItems.filter(
             (item) =>
                 Number(item.quantity_received || 0) > 0 || Number(item.backorder_qty || 0) > 0,
@@ -111,8 +115,12 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
 
         const duplicateEntryKeys = new Set<string>();
         const duplicateEntries: string[] = [];
-        for (const item of attemptedItems.filter((entry) => Number(entry.quantity_received || 0) > 0)) {
-            const key = `${String(item.id)}::${String(item.batch_number || '').trim().toLowerCase()}`;
+        for (const item of attemptedItems.filter(
+            (entry) => Number(entry.quantity_received || 0) > 0,
+        )) {
+            const key = `${String(item.id)}::${String(item.batch_number || '')
+                .trim()
+                .toLowerCase()}`;
             if (duplicateEntryKeys.has(key)) {
                 duplicateEntries.push(`${item.medicine_name} (${item.batch_number || 'NO-BATCH'})`);
             } else {
@@ -213,6 +221,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     expiry_date: i.expiry_date,
                     manufacturing_date: i.manufacturing_date || undefined,
                     location_id: i.location_id,
+                    selling_price: i.selling_price != null ? Number(i.selling_price) : undefined,
                 })),
                 received_date: new Date().toISOString().split('T')[0],
             });
@@ -280,11 +289,15 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                             Enter received and/or backorder quantities per item.
                         </span>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                            <span className="font-black uppercase text-[10px] text-slate-500">Apply to all:</span>
+                            <span className="font-black uppercase text-[10px] text-slate-500">
+                                Apply to all:
+                            </span>
                             <select
                                 value={globalLocationId || ''}
                                 onChange={(e) =>
-                                    applyGlobalLocation(e.target.value ? parseInt(e.target.value) : null)
+                                    applyGlobalLocation(
+                                        e.target.value ? parseInt(e.target.value) : null,
+                                    )
                                 }
                                 className="h-10 px-3 bg-white dark:bg-slate-800 border-2 border-amber-200 rounded-lg text-[10px] font-black outline-none focus:border-amber-500"
                             >
@@ -299,8 +312,9 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            Preview: {receivingSummary.actionLines} lines • {receivingSummary.totalUnits}{' '}
-                            units received • {receivingSummary.backorderUnits} units backordered
+                            Preview: {receivingSummary.actionLines} lines •{' '}
+                            {receivingSummary.totalUnits} units received •{' '}
+                            {receivingSummary.backorderUnits} units backordered
                             {receivingSummary.missingDetails > 0 &&
                                 ` • ${receivingSummary.missingDetails} missing details`}
                         </div>
@@ -323,7 +337,8 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                     Number(item.quantity_previously_received || 0),
                             );
                             const isMissingInfo =
-                                isReceiving && (!item.batch_number || !item.expiry_date || !item.location_id);
+                                isReceiving &&
+                                (!item.batch_number || !item.expiry_date || !item.location_id);
 
                             return (
                                 <div
@@ -336,9 +351,9 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                 {item.medicine_name}
                                             </p>
                                             <p className="text-[10px] uppercase tracking-wider text-slate-500 font-black">
-                                                Ordered: {item.quantity_ordered} • Previously Received:{' '}
-                                                {item.quantity_previously_received || 0} • Outstanding:{' '}
-                                                {outstandingQty}
+                                                Ordered: {item.quantity_ordered} • Previously
+                                                Received: {item.quantity_previously_received || 0} •
+                                                Outstanding: {outstandingQty}
                                             </p>
                                             {isMissingInfo && (
                                                 <span className="text-[10px] text-red-500 font-bold">
@@ -361,6 +376,27 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                     )
                                                 }
                                                 className="h-10 w-full px-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                                            />
+                                        </div>
+                                        <div className="min-w-[84px]">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase">
+                                                Sell Price
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={item.selling_price || ''}
+                                                onChange={(e) =>
+                                                    handleItemChange(
+                                                        idx,
+                                                        'selling_price',
+                                                        e.target.value !== ''
+                                                            ? Number(e.target.value)
+                                                            : '',
+                                                    )
+                                                }
+                                                className="h-10 w-full px-2 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center font-black text-sm text-slate-900 dark:text-white outline-none focus:border-emerald-500"
+                                                placeholder="optional"
                                             />
                                         </div>
                                         <div className="min-w-[84px]">
@@ -393,7 +429,11 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                 placeholder="Batch Number"
                                                 value={item.batch_number}
                                                 onChange={(e) =>
-                                                    handleItemChange(idx, 'batch_number', e.target.value)
+                                                    handleItemChange(
+                                                        idx,
+                                                        'batch_number',
+                                                        e.target.value,
+                                                    )
                                                 }
                                                 className={`h-10 w-full px-3 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo && !item.batch_number ? 'border-red-300 dark:border-red-800' : 'border-slate-200 dark:border-slate-700'}`}
                                                 required={item.quantity_received > 0}
@@ -409,7 +449,9 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                     handleItemChange(
                                                         idx,
                                                         'location_id',
-                                                        e.target.value ? parseInt(e.target.value) : null,
+                                                        e.target.value
+                                                            ? parseInt(e.target.value)
+                                                            : null,
                                                     )
                                                 }
                                                 className={`h-10 w-full px-3 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo && !item.location_id ? 'border-red-300 dark:border-red-800' : 'border-slate-200 dark:border-slate-700'}`}
@@ -431,7 +473,11 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                 type="date"
                                                 value={item.expiry_date}
                                                 onChange={(e) =>
-                                                    handleItemChange(idx, 'expiry_date', e.target.value)
+                                                    handleItemChange(
+                                                        idx,
+                                                        'expiry_date',
+                                                        e.target.value,
+                                                    )
                                                 }
                                                 className={`h-10 w-full px-2 bg-white dark:bg-slate-800 border-2 rounded-lg font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-emerald-500 ${isMissingInfo && !item.expiry_date ? 'border-red-300 dark:border-red-800' : 'border-slate-200 dark:border-slate-700'}`}
                                                 required={item.quantity_received > 0}
@@ -491,7 +537,9 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                     );
                                     const isMissingInfo =
                                         isReceiving &&
-                                        (!item.batch_number || !item.expiry_date || !item.location_id);
+                                        (!item.batch_number ||
+                                            !item.expiry_date ||
+                                            !item.location_id);
 
                                     return (
                                         <tr
@@ -508,7 +556,8 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
                                                     </span>
                                                 )}
                                                 <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 mt-1">
-                                                    Previously Received: {item.quantity_previously_received || 0} •
+                                                    Previously Received:{' '}
+                                                    {item.quantity_previously_received || 0} •
                                                     Outstanding: {outstandingQty}
                                                 </div>
                                             </td>

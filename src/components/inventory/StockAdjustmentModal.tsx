@@ -155,7 +155,10 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                 <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start">
                     <div className="min-w-0">
                         <h2 className="text-lg sm:text-xl font-black text-healthcare-dark dark:text-white flex items-center gap-2">
-                            <ArrowDownWideNarrow size={20} className="text-healthcare-primary shrink-0" />
+                            <ArrowDownWideNarrow
+                                size={20}
+                                className="text-healthcare-primary shrink-0"
+                            />
                             <span className="truncate">Adjust Stock</span>
                         </h2>
                         <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -253,7 +256,9 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                                 className="w-full h-11 px-4 border rounded-lg focus:ring-2 focus:ring-healthcare-primary/20 focus:border-healthcare-primary text-sm font-bold bg-white dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                             />
                             {errors.quantity && (
-                                <p className="text-red-500 text-xs mt-1">{errors.quantity.message}</p>
+                                <p className="text-red-500 text-xs mt-1">
+                                    {errors.quantity.message}
+                                </p>
                             )}
                         </div>
 
@@ -281,8 +286,8 @@ export function StockAdjustmentModal({ batch, onClose, onSuccess }: StockAdjustm
                                     className="mt-0.5"
                                 />
                                 <span className="text-xs font-bold leading-relaxed">
-                                    This is a high-risk adjustment. I confirm the quantity and reason are
-                                    correct and should be permanently audited.
+                                    This is a high-risk adjustment. I confirm the quantity and
+                                    reason are correct and should be permanently audited.
                                 </span>
                             </label>
                         )}

@@ -77,7 +77,10 @@ export function MedicineDetailsPage() {
     }, [effectiveFacilityId, numericMedicineId]);
 
     const stockSummary = useMemo(() => {
-        const totalFromBatches = batches.reduce((sum, batch) => sum + Number(batch.current_quantity || 0), 0);
+        const totalFromBatches = batches.reduce(
+            (sum, batch) => sum + Number(batch.current_quantity || 0),
+            0,
+        );
         const fallbackTotal = Number(medicine?.stock_quantity || 0);
         const totalStock = totalFromBatches > 0 ? totalFromBatches : fallbackTotal;
         const reservedStock = Number((medicine as any)?.reserved_stock || 0);
@@ -158,8 +161,8 @@ export function MedicineDetailsPage() {
 
     const isControlled = Boolean(
         (medicine as any).is_controlled_drug ||
-            (medicine as any).controlled_flag ||
-            (medicine as any).drug_schedule?.includes('controlled'),
+        (medicine as any).controlled_flag ||
+        (medicine as any).drug_schedule?.includes('controlled'),
     );
 
     return (
@@ -191,22 +194,44 @@ export function MedicineDetailsPage() {
                 </div>
 
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
-                    <h2 className="text-2xl font-black text-healthcare-dark dark:text-white">{medicine.name}</h2>
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">{medicine.code}</p>
+                    <h2 className="text-2xl font-black text-healthcare-dark dark:text-white">
+                        {medicine.name}
+                    </h2>
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mt-1">
+                        {medicine.code}
+                    </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-5">
-                        <InfoCard label="Generic Name" value={String((medicine as any).generic_name || 'N/A')} />
+                        <InfoCard
+                            label="Generic Name"
+                            value={String((medicine as any).generic_name || 'N/A')}
+                        />
                         <InfoCard label="Dosage" value={medicine.strength || 'N/A'} />
-                        <InfoCard label="Manufacturer" value={String((medicine as any).manufacturer || 'N/A')} />
+                        <InfoCard
+                            label="Manufacturer"
+                            value={String((medicine as any).manufacturer || 'N/A')}
+                        />
                         <InfoCard
                             label="Category"
-                            value={String((medicine as any).category?.name || (medicine as any).category_name || 'N/A')}
+                            value={String(
+                                (medicine as any).category?.name ||
+                                    (medicine as any).category_name ||
+                                    'N/A',
+                            )}
                         />
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <MetricCard label="Total Stock" value={stockSummary.totalStock} icon={<Package size={14} />} />
-                    <MetricCard label="Reserved Stock" value={stockSummary.reservedStock} icon={<Clock size={14} />} />
+                    <MetricCard
+                        label="Total Stock"
+                        value={stockSummary.totalStock}
+                        icon={<Package size={14} />}
+                    />
+                    <MetricCard
+                        label="Reserved Stock"
+                        value={stockSummary.reservedStock}
+                        icon={<Clock size={14} />}
+                    />
                     <MetricCard
                         label="Available Stock"
                         value={stockSummary.availableStock}
@@ -237,7 +262,10 @@ export function MedicineDetailsPage() {
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {batches.length === 0 ? (
                                     <tr>
-                                        <td className="px-6 py-8 text-sm text-slate-500" colSpan={5}>
+                                        <td
+                                            className="px-6 py-8 text-sm text-slate-500"
+                                            colSpan={5}
+                                        >
                                             No batches available.
                                         </td>
                                     </tr>
@@ -249,18 +277,28 @@ export function MedicineDetailsPage() {
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                                                 {batch.expiry_date
-                                                    ? new Date(batch.expiry_date).toLocaleDateString()
+                                                    ? new Date(
+                                                          batch.expiry_date,
+                                                      ).toLocaleDateString()
                                                     : 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 text-right font-black text-slate-800 dark:text-white">
-                                                {Number(batch.current_quantity || 0).toLocaleString()}
+                                                {Number(
+                                                    batch.current_quantity || 0,
+                                                ).toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                                                {String((batch as any).supplier_name || (batch as any).supplier?.name || 'N/A')}
+                                                {String(
+                                                    (batch as any).supplier_name ||
+                                                        (batch as any).supplier?.name ||
+                                                        'N/A',
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                                                 {(batch as any).received_date
-                                                    ? new Date((batch as any).received_date).toLocaleDateString()
+                                                    ? new Date(
+                                                          (batch as any).received_date,
+                                                      ).toLocaleDateString()
                                                     : 'N/A'}
                                             </td>
                                         </tr>
@@ -294,7 +332,10 @@ export function MedicineDetailsPage() {
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {movements.length === 0 ? (
                                     <tr>
-                                        <td className="px-6 py-8 text-sm text-slate-500" colSpan={5}>
+                                        <td
+                                            className="px-6 py-8 text-sm text-slate-500"
+                                            colSpan={5}
+                                        >
                                             No stock movements found for this medicine.
                                         </td>
                                     </tr>
@@ -302,7 +343,10 @@ export function MedicineDetailsPage() {
                                     movements.map((movement) => (
                                         <tr key={movement.id}>
                                             <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">
-                                                {toLabel(movement.movement_subtype || movement.movement_type)}
+                                                {toLabel(
+                                                    movement.movement_subtype ||
+                                                        movement.movement_type,
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 text-right font-black">
                                                 <span
@@ -312,8 +356,12 @@ export function MedicineDetailsPage() {
                                                             : 'text-rose-600'
                                                     }
                                                 >
-                                                    {Number(movement.quantity_delta || 0) >= 0 ? '+' : ''}
-                                                    {Number(movement.quantity_delta || 0).toLocaleString()}
+                                                    {Number(movement.quantity_delta || 0) >= 0
+                                                        ? '+'
+                                                        : ''}
+                                                    {Number(
+                                                        movement.quantity_delta || 0,
+                                                    ).toLocaleString()}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
@@ -357,7 +405,9 @@ export function MedicineDetailsPage() {
 function InfoCard({ label, value }: { label: string; value: string }) {
     return (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 p-3">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                {label}
+            </p>
             <p className="mt-1 text-sm font-black text-slate-800 dark:text-white">{value}</p>
         </div>
     );
@@ -367,7 +417,9 @@ function MetricCard({ label, value, icon }: { label: string; value: number; icon
     return (
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
             <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    {label}
+                </p>
                 <span className="text-slate-400">{icon}</span>
             </div>
             <p className="mt-2 text-2xl font-black text-healthcare-dark dark:text-white">
@@ -399,7 +451,9 @@ function AlertCard({
             }`}
         >
             <div className="flex items-start justify-between">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700">{title}</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-700">
+                    {title}
+                </h4>
                 <AlertTriangle
                     size={16}
                     className={

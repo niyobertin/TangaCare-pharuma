@@ -53,27 +53,36 @@ const INVENTORY_TABLE_COLUMNS: TableViewColumn[] = [
 ];
 
 const INVENTORY_ROLE_DEFAULT_COLUMNS: Record<string, string[]> = {
-    OWNER: ['medicine', 'category', 'supplier', 'stock', 'threshold', 'expiry', 'status', 'actions'],
+    OWNER: [
+        'medicine',
+        'category',
+        'supplier',
+        'stock',
+        'threshold',
+        'expiry',
+        'status',
+        'actions',
+    ],
     PHARMACIST: ['medicine', 'dosage_form', 'stock', 'threshold', 'expiry', 'status', 'actions'],
     STOREMANAGER: ['medicine', 'category', 'supplier', 'stock', 'threshold', 'status', 'actions'],
-    AUDITOR: ['medicine', 'category', 'supplier', 'stock', 'threshold', 'updated', 'status', 'actions'],
+    AUDITOR: [
+        'medicine',
+        'category',
+        'supplier',
+        'stock',
+        'threshold',
+        'updated',
+        'status',
+        'actions',
+    ],
 };
 
 const ALL_CATEGORIES_FILTER = 'All Categories';
 const UNCATEGORIZED_FILTER = '__UNCATEGORIZED__';
 
-type InventoryQuickPreset =
-    | 'all'
-    | 'safety_risk'
-    | 'controlled'
-    | 'reorder_needed';
+type InventoryQuickPreset = 'all' | 'safety_risk' | 'controlled' | 'reorder_needed';
 
-type InventorySort =
-    | 'name_asc'
-    | 'name_desc'
-    | 'stock_desc'
-    | 'stock_asc'
-    | 'updated_desc';
+type InventorySort = 'name_asc' | 'name_desc' | 'stock_desc' | 'stock_asc' | 'updated_desc';
 
 const MedicineImportPreviewModal = ({
     isOpen,
@@ -96,7 +105,7 @@ const MedicineImportPreviewModal = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-                { }
+                {}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <div>
                         <h3 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
@@ -115,7 +124,7 @@ const MedicineImportPreviewModal = ({
                     </button>
                 </div>
 
-                { }
+                {}
                 <div className="flex-1 overflow-auto p-6">
                     <div className="flex gap-4 mb-6">
                         <div className="flex-1 bg-healthcare-primary/5 rounded-xl p-4 border border-healthcare-primary/10">
@@ -150,7 +159,6 @@ const MedicineImportPreviewModal = ({
                                     <th className="px-4 py-3 text-[10px] font-black uppercase text-slate-500 tracking-wider">
                                         Form
                                     </th>
-
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -184,7 +192,6 @@ const MedicineImportPreviewModal = ({
                                         <td className="px-4 py-3 text-xs font-bold text-slate-500">
                                             {toSentenceCase(item.dosage_form)}
                                         </td>
-
                                     </tr>
                                 ))}
                             </tbody>
@@ -192,7 +199,7 @@ const MedicineImportPreviewModal = ({
                     </div>
                 </div>
 
-                { }
+                {}
                 <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-slate-50/50 dark:bg-slate-800/30">
                     <button
                         onClick={onClose}
@@ -231,12 +238,12 @@ export function InventoryPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES_FILTER);
-    const [stockFilter, setStockFilter] = useState<'all' | 'low_stock' | 'out_of_stock' | 'expiring_soon'>(
-        'all',
-    );
-    const [controlledFilter, setControlledFilter] = useState<'all' | 'controlled' | 'non_controlled'>(
-        'all',
-    );
+    const [stockFilter, setStockFilter] = useState<
+        'all' | 'low_stock' | 'out_of_stock' | 'expiring_soon'
+    >('all');
+    const [controlledFilter, setControlledFilter] = useState<
+        'all' | 'controlled' | 'non_controlled'
+    >('all');
     const [supplierFilter, setSupplierFilter] = useState('All Suppliers');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -261,7 +268,10 @@ export function InventoryPage() {
     const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
     const [isMedicineModalOpen, setIsMedicineModalOpen] = useState(false);
     const [editingMedicine, setEditingMedicine] = useState<Medicine | undefined>(undefined);
-    const [categories, setCategories] = useState<string[]>([ALL_CATEGORIES_FILTER, UNCATEGORIZED_FILTER]);
+    const [categories, setCategories] = useState<string[]>([
+        ALL_CATEGORIES_FILTER,
+        UNCATEGORIZED_FILTER,
+    ]);
     const [quickPreset] = useState<InventoryQuickPreset>('all');
     const [sortBy] = useState<InventorySort>('updated_desc');
     const inventoryTableRef = useRef<HTMLDivElement | null>(null);
@@ -271,9 +281,9 @@ export function InventoryPage() {
         'inventory-medicines',
         INVENTORY_TABLE_COLUMNS,
         {
-        role: String(user?.role || ''),
-        roleDefaultColumns: INVENTORY_ROLE_DEFAULT_COLUMNS,
-    },
+            role: String(user?.role || ''),
+            roleDefaultColumns: INVENTORY_ROLE_DEFAULT_COLUMNS,
+        },
     );
 
     const debouncedSearch = useDebounce(searchQuery, 500);
@@ -338,13 +348,32 @@ export function InventoryPage() {
 
     useEffect(() => {
         setPage(1);
-    }, [debouncedSearch, selectedCategory, stockFilter, controlledFilter, supplierFilter, limit, startDate, endDate]);
+    }, [
+        debouncedSearch,
+        selectedCategory,
+        stockFilter,
+        controlledFilter,
+        supplierFilter,
+        limit,
+        startDate,
+        endDate,
+    ]);
 
     useEffect(() => {
         if (facilityId) {
             fetchMedicines();
         }
-    }, [page, debouncedSearch, selectedCategory, stockFilter, controlledFilter, limit, startDate, endDate, facilityId]);
+    }, [
+        page,
+        debouncedSearch,
+        selectedCategory,
+        stockFilter,
+        controlledFilter,
+        limit,
+        startDate,
+        endDate,
+        facilityId,
+    ]);
 
     useEffect(() => {
         const updateViewport = () => {
@@ -362,7 +391,16 @@ export function InventoryPage() {
         if (inventoryTableRef.current) {
             inventoryTableRef.current.scrollTop = 0;
         }
-    }, [page, limit, stockFilter, controlledFilter, supplierFilter, quickPreset, sortBy, searchQuery]);
+    }, [
+        page,
+        limit,
+        stockFilter,
+        controlledFilter,
+        supplierFilter,
+        quickPreset,
+        sortBy,
+        searchQuery,
+    ]);
 
     const handleImportFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -430,7 +468,9 @@ export function InventoryPage() {
 
     const supplierOptions = useMemo(() => {
         const names = medicines
-            .map((med) => String((med as any).supplier_name || (med as any).supplier?.name || '').trim())
+            .map((med) =>
+                String((med as any).supplier_name || (med as any).supplier?.name || '').trim(),
+            )
             .filter(Boolean);
         return ['All Suppliers', ...Array.from(new Set(names))];
     }, [medicines]);
@@ -446,12 +486,17 @@ export function InventoryPage() {
             const isExpired = !!expiryDate && expiryDate < now;
             const isExpiringSoon = !!expiryDate && expiryDate >= now && expiryDate <= in90Days;
             const isOutOfStock = quantity <= 0;
-            const isLowStock = reorderPoint > 0 ? quantity <= reorderPoint : quantity <= Number(med.min_stock_level || 0);
-            const supplierName = String((med as any).supplier_name || (med as any).supplier?.name || '');
+            const isLowStock =
+                reorderPoint > 0
+                    ? quantity <= reorderPoint
+                    : quantity <= Number(med.min_stock_level || 0);
+            const supplierName = String(
+                (med as any).supplier_name || (med as any).supplier?.name || '',
+            );
             const isControlled = Boolean(
                 (med as any).is_controlled_drug ||
-                    (med as any).controlled_flag ||
-                    (med as any).drug_schedule?.includes('controlled'),
+                (med as any).controlled_flag ||
+                (med as any).drug_schedule?.includes('controlled'),
             );
 
             if (stockFilter === 'out_of_stock' && !isOutOfStock) return false;
@@ -461,7 +506,10 @@ export function InventoryPage() {
             if (controlledFilter === 'non_controlled' && isControlled) return false;
             if (supplierFilter !== 'All Suppliers' && supplierName !== supplierFilter) return false;
 
-            if (quickPreset === 'safety_risk' && !(isExpired || isExpiringSoon || isLowStock || isOutOfStock)) {
+            if (
+                quickPreset === 'safety_risk' &&
+                !(isExpired || isExpiringSoon || isLowStock || isOutOfStock)
+            ) {
                 return false;
             }
             if (quickPreset === 'controlled' && !isControlled) return false;
@@ -573,11 +621,14 @@ export function InventoryPage() {
             const el = target as HTMLElement | null;
             if (!el) return false;
             const tag = el.tagName?.toLowerCase();
-            return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
+            return (
+                tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable
+            );
         };
 
         const handleShortcuts = (event: KeyboardEvent) => {
-            if (!event.altKey || event.ctrlKey || event.metaKey || isTypingTarget(event.target)) return;
+            if (!event.altKey || event.ctrlKey || event.metaKey || isTypingTarget(event.target))
+                return;
 
             const key = event.key.toLowerCase();
             if (key === 'a') {
@@ -624,7 +675,7 @@ export function InventoryPage() {
             requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                { }
+                {}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h2 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
@@ -677,7 +728,7 @@ export function InventoryPage() {
                     )}
                 </div>
 
-                { }
+                {}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="tc-stat-card tc-stat-card-gradient bg-gradient-to-br from-[#2563EB] to-[#1D4ED8]">
                         <div className="tc-stat-card-header">
@@ -687,7 +738,9 @@ export function InventoryPage() {
                             </span>
                         </div>
                         <div className="tc-stat-card-foot">
-                            <span className="tc-stat-card-value">{stats.totalItems.toLocaleString()}</span>
+                            <span className="tc-stat-card-value">
+                                {stats.totalItems.toLocaleString()}
+                            </span>
                             <span className="tc-stat-card-subtitle">Total</span>
                         </div>
                     </div>
@@ -700,7 +753,9 @@ export function InventoryPage() {
                             </span>
                         </div>
                         <div className="tc-stat-card-foot">
-                            <span className="tc-stat-card-value">{stats.totalCategories.toLocaleString()}</span>
+                            <span className="tc-stat-card-value">
+                                {stats.totalCategories.toLocaleString()}
+                            </span>
                             <span className="tc-stat-card-subtitle">Types</span>
                         </div>
                     </div>
@@ -713,7 +768,9 @@ export function InventoryPage() {
                             </span>
                         </div>
                         <div className="tc-stat-card-foot">
-                            <span className="tc-stat-card-value">{stats.lowStock.toLocaleString()}</span>
+                            <span className="tc-stat-card-value">
+                                {stats.lowStock.toLocaleString()}
+                            </span>
                             <span className="tc-stat-card-subtitle">Alert</span>
                         </div>
                     </div>
@@ -726,13 +783,15 @@ export function InventoryPage() {
                             </span>
                         </div>
                         <div className="tc-stat-card-foot">
-                            <span className="tc-stat-card-value">{stats.expired.toLocaleString()}</span>
+                            <span className="tc-stat-card-value">
+                                {stats.expired.toLocaleString()}
+                            </span>
                             <span className="tc-stat-card-subtitle">Critical</span>
                         </div>
                     </div>
                 </div>
 
-                { }
+                {}
                 <div className="flex flex-col gap-4">
                     <TableToolbar
                         layout="stacked"
@@ -835,7 +894,7 @@ export function InventoryPage() {
                     )}
                 </div>
 
-                { }
+                {}
                 <div className="bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                     <div
                         ref={inventoryTableRef}
@@ -916,16 +975,21 @@ export function InventoryPage() {
                                 {loading ? (
                                     Array.from({ length: 5 }).map((_, rowIdx) => (
                                         <tr key={`skeleton-${rowIdx}`} className="animate-pulse">
-                                            {Array.from({ length: inventoryVisibleColumnCount }).map((__, colIdx) => (
-                                                <td key={`skeleton-${rowIdx}-${colIdx}`} className="px-4 py-4">
+                                            {Array.from({
+                                                length: inventoryVisibleColumnCount,
+                                            }).map((__, colIdx) => (
+                                                <td
+                                                    key={`skeleton-${rowIdx}-${colIdx}`}
+                                                    className="px-4 py-4"
+                                                >
                                                     <div
                                                         className={cn(
                                                             'h-3 rounded bg-slate-200 dark:bg-slate-700',
                                                             colIdx === 0
                                                                 ? 'w-4'
                                                                 : colIdx === 1
-                                                                    ? 'w-36'
-                                                                    : 'w-20',
+                                                                  ? 'w-36'
+                                                                  : 'w-20',
                                                         )}
                                                     />
                                                 </td>
@@ -934,7 +998,10 @@ export function InventoryPage() {
                                     ))
                                 ) : visibleMedicines.length === 0 ? (
                                     <tr>
-                                        <td colSpan={inventoryVisibleColumnCount} className="px-6 py-20 text-center">
+                                        <td
+                                            colSpan={inventoryVisibleColumnCount}
+                                            className="px-6 py-20 text-center"
+                                        >
                                             <div className="flex flex-col items-center justify-center space-y-3">
                                                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full">
                                                     <Search size={32} className="text-slate-300" />
@@ -947,236 +1014,284 @@ export function InventoryPage() {
                                     </tr>
                                 ) : (
                                     <>
-                                        {shouldVirtualizeInventory && inventoryTopSpacerHeight > 0 && (
-                                            <tr>
-                                                <td
-                                                    colSpan={inventoryVisibleColumnCount}
-                                                    style={{ height: `${inventoryTopSpacerHeight}px` }}
-                                                />
-                                            </tr>
-                                        )}
+                                        {shouldVirtualizeInventory &&
+                                            inventoryTopSpacerHeight > 0 && (
+                                                <tr>
+                                                    <td
+                                                        colSpan={inventoryVisibleColumnCount}
+                                                        style={{
+                                                            height: `${inventoryTopSpacerHeight}px`,
+                                                        }}
+                                                    />
+                                                </tr>
+                                            )}
                                         {renderedMedicines.map((med) => {
-                                        const quantity = Number(med.stock_quantity || 0);
-                                        const reorderPoint = Number(med.reorder_point ?? med.min_stock_level ?? 0);
-                                        const minLevel = Number(med.min_stock_level || 0);
-                                        const expiryDate = med.expiry_date ? new Date(med.expiry_date) : null;
-                                        const now = new Date();
-                                        const in90Days = new Date();
-                                        in90Days.setDate(now.getDate() + 90);
-                                        const isExpired = !!expiryDate && expiryDate < now;
-                                        const isExpiringSoon = !!expiryDate && expiryDate >= now && expiryDate <= in90Days;
-                                        const isOutOfStock = quantity <= 0;
-                                        const isLowStock = reorderPoint > 0 ? quantity <= reorderPoint : quantity <= minLevel;
-                                        const isControlled = Boolean(
-                                            (med as any).is_controlled_drug ||
+                                            const quantity = Number(med.stock_quantity || 0);
+                                            const reorderPoint = Number(
+                                                med.reorder_point ?? med.min_stock_level ?? 0,
+                                            );
+                                            const minLevel = Number(med.min_stock_level || 0);
+                                            const expiryDate = med.expiry_date
+                                                ? new Date(med.expiry_date)
+                                                : null;
+                                            const now = new Date();
+                                            const in90Days = new Date();
+                                            in90Days.setDate(now.getDate() + 90);
+                                            const isExpired = !!expiryDate && expiryDate < now;
+                                            const isExpiringSoon =
+                                                !!expiryDate &&
+                                                expiryDate >= now &&
+                                                expiryDate <= in90Days;
+                                            const isOutOfStock = quantity <= 0;
+                                            const isLowStock =
+                                                reorderPoint > 0
+                                                    ? quantity <= reorderPoint
+                                                    : quantity <= minLevel;
+                                            const isControlled = Boolean(
+                                                (med as any).is_controlled_drug ||
                                                 (med as any).controlled_flag ||
                                                 (med as any).drug_schedule?.includes('controlled'),
-                                        );
-                                        const supplierName = String(
-                                            (med as any).supplier_name ||
-                                                (med as any).supplier?.name ||
-                                                'Unassigned',
-                                        );
-                                        const genericName = String((med as any).generic_name || '');
-                                        const manufacturerName = String((med as any).manufacturer || '');
-                                        const updatedAt = (med as any).updated_at || med.created_at;
+                                            );
+                                            const supplierName = String(
+                                                (med as any).supplier_name ||
+                                                    (med as any).supplier?.name ||
+                                                    'Unassigned',
+                                            );
+                                            const genericName = String(
+                                                (med as any).generic_name || '',
+                                            );
+                                            const manufacturerName = String(
+                                                (med as any).manufacturer || '',
+                                            );
+                                            const updatedAt =
+                                                (med as any).updated_at || med.created_at;
 
-                                        return (
-                                            <tr
-                                                key={med.id}
-                                                className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group"
-                                            >
-                                                {inventoryVisibleColumnSet.has('select') && (
-                                                    <td className="px-4 py-4">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedIds.includes(med.id)}
-                                                            onChange={() => toggleSelect(med.id)}
-                                                            className="w-4 h-4 rounded border-2 border-slate-300 text-healthcare-primary focus:ring-healthcare-primary transition-all"
-                                                        />
-                                                    </td>
-                                                )}
-                                                {inventoryVisibleColumnSet.has('medicine') && (
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="h-10 w-10 bg-healthcare-primary/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                                <Pill className="text-healthcare-primary" size={20} />
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">
-                                                                    {med.name}
-                                                                </p>
-                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">
-                                                                    {med.code} • {med.brand_name || 'N/A'}
-                                                                </p>
-                                                                {(genericName || manufacturerName) && (
-                                                                    <p className="text-[10px] font-bold text-slate-500 mt-0.5">
-                                                                        {[genericName, manufacturerName]
-                                                                            .filter(Boolean)
-                                                                            .join(' • ')}
-                                                                    </p>
+                                            return (
+                                                <tr
+                                                    key={med.id}
+                                                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group"
+                                                >
+                                                    {inventoryVisibleColumnSet.has('select') && (
+                                                        <td className="px-4 py-4">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedIds.includes(
+                                                                    med.id,
                                                                 )}
-                                                                {isControlled && (
-                                                                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-100 rounded-full px-2 py-0.5 mt-1">
-                                                                        <ShieldAlert size={10} />
-                                                                        Controlled
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                )}
-                                                {inventoryVisibleColumnSet.has('category') && (
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className="text-xs font-bold text-slate-500">
-                                                            {String(
-                                                                (med as any).category?.name ||
-                                                                    (med as any).category_name ||
-                                                                    'Uncategorized',
-                                                            )}
-                                                        </span>
-                                                    </td>
-                                                )}
-                                                {inventoryVisibleColumnSet.has('dosage_form') && (
-                                                    <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                        <span className="text-xs font-bold text-slate-500">
-                                                            {toSentenceCase(med.dosage_form)}
-                                                        </span>
-                                                    </td>
-                                                )}
-                                                {inventoryVisibleColumnSet.has('supplier') && (
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className="text-xs font-bold text-slate-500">
-                                                            {supplierName}
-                                                        </span>
-                                                    </td>
-                                                )}
-                                                {inventoryVisibleColumnSet.has('stock') && (
-                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                        <div className="flex flex-col items-end">
-                                                            <span className="text-sm font-black text-slate-800 dark:text-white">
-                                                                {quantity}
-                                                            </span>
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                                {toSentenceCase(med.unit)}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                )}
-                                                {inventoryVisibleColumnSet.has('threshold') && (
-                                                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                                                        <div className="flex flex-col items-end">
-                                                            <span className="text-sm font-black text-slate-800 dark:text-white">
-                                                                {reorderPoint.toLocaleString()}
-                                                            </span>
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                                                min {minLevel.toLocaleString()}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                )}
-                                                {inventoryVisibleColumnSet.has('expiry') && (
-                                                    <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                        <span
-                                                            className={cn(
-                                                                'text-xs font-bold',
-                                                                isExpired
-                                                                    ? 'text-red-500'
-                                                                    : isExpiringSoon
-                                                                      ? 'text-amber-600'
-                                                                      : 'text-slate-500',
-                                                            )}
-                                                        >
-                                                            {expiryDate ? expiryDate.toLocaleDateString() : 'N/A'}
-                                                        </span>
-                                                    </td>
-                                                )}
-                                                {inventoryVisibleColumnSet.has('updated') && (
-                                                    <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                        <span className="text-xs font-bold text-slate-500">
-                                                            {updatedAt
-                                                                ? new Date(updatedAt).toLocaleDateString()
-                                                                : 'N/A'}
-                                                        </span>
-                                                    </td>
-                                                )}
-                                                {inventoryVisibleColumnSet.has('status') && (
-                                                    <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                        <span
-                                                            className={cn(
-                                                                'px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider',
-                                                                isExpired
-                                                                    ? 'bg-rose-50 text-rose-600 border-rose-100'
-                                                                    : isOutOfStock
-                                                                      ? 'bg-red-50 text-red-600 border-red-100'
-                                                                      : isLowStock
-                                                                        ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                                                        : 'bg-teal-50 text-teal-600 border-teal-100',
-                                                            )}
-                                                        >
-                                                            {isExpired
-                                                                ? 'Expired'
-                                                                : isOutOfStock
-                                                                  ? 'Out of Stock'
-                                                                  : isLowStock
-                                                                    ? 'Low Stock'
-                                                                    : 'In Stock'}
-                                                        </span>
-                                                    </td>
-                                                )}
-                                                {inventoryVisibleColumnSet.has('actions') && (
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center justify-end gap-2 transition-all">
-                                                            {canManageInventory && (
-                                                                <button
-                                                                    onClick={() => setIsAddStockModalOpen(true)}
-                                                                    title="Add Stock"
-                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-teal-600 hover:bg-teal-50 bg-teal-50/10 rounded-lg transition-colors touch-manipulation"
-                                                                >
-                                                                    <PackagePlus size={16} />
-                                                                </button>
-                                                            )}
-                                                            {canManageInventory && (
-                                                                <button
-                                                                    onClick={() => openEditMedicine(med)}
-                                                                    title="Edit Medicine"
-                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-emerald-600 hover:bg-emerald-50 bg-emerald-50/10 rounded-lg transition-colors touch-manipulation"
-                                                                >
-                                                                    <Pencil size={16} />
-                                                                </button>
-                                                            )}
-                                                            <button
-                                                                onClick={() =>
-                                                                    navigate({
-                                                                        to: `/app/inventory/${med.id}` as any,
-                                                                    })
+                                                                onChange={() =>
+                                                                    toggleSelect(med.id)
                                                                 }
-                                                                title="View details"
-                                                                className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-slate-400 hover:bg-slate-100 bg-slate-50/30 dark:hover:bg-slate-800 rounded-lg transition-colors touch-manipulation"
+                                                                className="w-4 h-4 rounded border-2 border-slate-300 text-healthcare-primary focus:ring-healthcare-primary transition-all"
+                                                            />
+                                                        </td>
+                                                    )}
+                                                    {inventoryVisibleColumnSet.has('medicine') && (
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="h-10 w-10 bg-healthcare-primary/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                                    <Pill
+                                                                        className="text-healthcare-primary"
+                                                                        size={20}
+                                                                    />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">
+                                                                        {med.name}
+                                                                    </p>
+                                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mt-0.5">
+                                                                        {med.code} •{' '}
+                                                                        {med.brand_name || 'N/A'}
+                                                                    </p>
+                                                                    {(genericName ||
+                                                                        manufacturerName) && (
+                                                                        <p className="text-[10px] font-bold text-slate-500 mt-0.5">
+                                                                            {[
+                                                                                genericName,
+                                                                                manufacturerName,
+                                                                            ]
+                                                                                .filter(Boolean)
+                                                                                .join(' • ')}
+                                                                        </p>
+                                                                    )}
+                                                                    {isControlled && (
+                                                                        <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 border border-rose-100 rounded-full px-2 py-0.5 mt-1">
+                                                                            <ShieldAlert
+                                                                                size={10}
+                                                                            />
+                                                                            Controlled
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                    {inventoryVisibleColumnSet.has('category') && (
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <span className="text-xs font-bold text-slate-500">
+                                                                {String(
+                                                                    (med as any).category?.name ||
+                                                                        (med as any)
+                                                                            .category_name ||
+                                                                        'Uncategorized',
+                                                                )}
+                                                            </span>
+                                                        </td>
+                                                    )}
+                                                    {inventoryVisibleColumnSet.has(
+                                                        'dosage_form',
+                                                    ) && (
+                                                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                            <span className="text-xs font-bold text-slate-500">
+                                                                {toSentenceCase(med.dosage_form)}
+                                                            </span>
+                                                        </td>
+                                                    )}
+                                                    {inventoryVisibleColumnSet.has('supplier') && (
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <span className="text-xs font-bold text-slate-500">
+                                                                {supplierName}
+                                                            </span>
+                                                        </td>
+                                                    )}
+                                                    {inventoryVisibleColumnSet.has('stock') && (
+                                                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-sm font-black text-slate-800 dark:text-white">
+                                                                    {quantity}
+                                                                </span>
+                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                                    {toSentenceCase(med.unit)}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                    {inventoryVisibleColumnSet.has('threshold') && (
+                                                        <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                            <div className="flex flex-col items-end">
+                                                                <span className="text-sm font-black text-slate-800 dark:text-white">
+                                                                    {reorderPoint.toLocaleString()}
+                                                                </span>
+                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                                                    min {minLevel.toLocaleString()}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                    {inventoryVisibleColumnSet.has('expiry') && (
+                                                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                            <span
+                                                                className={cn(
+                                                                    'text-xs font-bold',
+                                                                    isExpired
+                                                                        ? 'text-red-500'
+                                                                        : isExpiringSoon
+                                                                          ? 'text-amber-600'
+                                                                          : 'text-slate-500',
+                                                                )}
                                                             >
-                                                                <Eye size={16} />
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                )}
-                                            </tr>
-                                        );
-                                    })}
-                                        {shouldVirtualizeInventory && inventoryBottomSpacerHeight > 0 && (
-                                            <tr>
-                                                <td
-                                                    colSpan={inventoryVisibleColumnCount}
-                                                    style={{ height: `${inventoryBottomSpacerHeight}px` }}
-                                                />
-                                            </tr>
-                                        )}
+                                                                {expiryDate
+                                                                    ? expiryDate.toLocaleDateString()
+                                                                    : 'N/A'}
+                                                            </span>
+                                                        </td>
+                                                    )}
+                                                    {inventoryVisibleColumnSet.has('updated') && (
+                                                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                            <span className="text-xs font-bold text-slate-500">
+                                                                {updatedAt
+                                                                    ? new Date(
+                                                                          updatedAt,
+                                                                      ).toLocaleDateString()
+                                                                    : 'N/A'}
+                                                            </span>
+                                                        </td>
+                                                    )}
+                                                    {inventoryVisibleColumnSet.has('status') && (
+                                                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                                                            <span
+                                                                className={cn(
+                                                                    'px-2.5 py-1 rounded-full text-[10px] font-black border uppercase tracking-wider',
+                                                                    isExpired
+                                                                        ? 'bg-rose-50 text-rose-600 border-rose-100'
+                                                                        : isOutOfStock
+                                                                          ? 'bg-red-50 text-red-600 border-red-100'
+                                                                          : isLowStock
+                                                                            ? 'bg-amber-50 text-amber-600 border-amber-100'
+                                                                            : 'bg-teal-50 text-teal-600 border-teal-100',
+                                                                )}
+                                                            >
+                                                                {isExpired
+                                                                    ? 'Expired'
+                                                                    : isOutOfStock
+                                                                      ? 'Out of Stock'
+                                                                      : isLowStock
+                                                                        ? 'Low Stock'
+                                                                        : 'In Stock'}
+                                                            </span>
+                                                        </td>
+                                                    )}
+                                                    {inventoryVisibleColumnSet.has('actions') && (
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center justify-end gap-2 transition-all">
+                                                                {canManageInventory && (
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            setIsAddStockModalOpen(
+                                                                                true,
+                                                                            )
+                                                                        }
+                                                                        title="Add Stock"
+                                                                        className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-teal-600 hover:bg-teal-50 bg-teal-50/10 rounded-lg transition-colors touch-manipulation"
+                                                                    >
+                                                                        <PackagePlus size={16} />
+                                                                    </button>
+                                                                )}
+                                                                {canManageInventory && (
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            openEditMedicine(med)
+                                                                        }
+                                                                        title="Edit Medicine"
+                                                                        className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-emerald-600 hover:bg-emerald-50 bg-emerald-50/10 rounded-lg transition-colors touch-manipulation"
+                                                                    >
+                                                                        <Pencil size={16} />
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() =>
+                                                                        navigate({
+                                                                            to: `/app/inventory/${med.id}` as any,
+                                                                        })
+                                                                    }
+                                                                    title="View details"
+                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center text-slate-400 hover:bg-slate-100 bg-slate-50/30 dark:hover:bg-slate-800 rounded-lg transition-colors touch-manipulation"
+                                                                >
+                                                                    <Eye size={16} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    )}
+                                                </tr>
+                                            );
+                                        })}
+                                        {shouldVirtualizeInventory &&
+                                            inventoryBottomSpacerHeight > 0 && (
+                                                <tr>
+                                                    <td
+                                                        colSpan={inventoryVisibleColumnCount}
+                                                        style={{
+                                                            height: `${inventoryBottomSpacerHeight}px`,
+                                                        }}
+                                                    />
+                                                </tr>
+                                            )}
                                     </>
                                 )}
                             </tbody>
                         </table>
                     </div>
 
-                    { }
+                    {}
                     <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex justify-between items-center">
                         <Pagination
                             page={page}
@@ -1211,8 +1326,7 @@ export function InventoryPage() {
                     />
                 )}
 
-
-                { }
+                {}
                 <MedicineImportPreviewModal
                     isOpen={isImportModalOpen}
                     onClose={() => {
@@ -1247,6 +1361,6 @@ export function InventoryPage() {
                     />
                 )}
             </div>
-        </ProtectedRoute >
+        </ProtectedRoute>
     );
 }

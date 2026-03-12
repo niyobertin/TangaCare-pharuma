@@ -21,6 +21,7 @@ import {
     FileText,
     ArrowLeft,
     ShieldCheck,
+    Receipt,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -173,6 +174,7 @@ const NAV_SECTIONS: NavSection[] = [
                 children: [
                     { to: '/app/procurement/suppliers', icon: Factory, label: 'Suppliers' },
                     { to: '/app/procurement/orders', icon: ShoppingCart, label: 'Purchase Orders' },
+                    { to: '/app/procurement/receipts', icon: Receipt, label: 'Goods Receipts' },
                     { to: '/app/procurement/receiving', icon: Database, label: 'Receiving' },
                 ],
             },
@@ -304,7 +306,9 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
     const hasChildren = children && children.length > 0;
     const shouldBeOpen =
         !!hasChildren &&
-        (currentPath === to || currentPath.startsWith(`${to}/`) || children.some((child) => currentPath.startsWith(child.to)));
+        (currentPath === to ||
+            currentPath.startsWith(`${to}/`) ||
+            children.some((child) => currentPath.startsWith(child.to)));
     const [isOpen, setIsOpen] = useState(shouldBeOpen);
 
     React.useEffect(() => {
@@ -363,8 +367,7 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
                             to={child.to as any}
                             search={{} as any}
                             activeProps={{
-                                className:
-                                    'text-healthcare-primary font-bold bg-blue-50',
+                                className: 'text-healthcare-primary font-bold bg-blue-50',
                             }}
                             className="block px-3 py-2 text-sm text-slate-600 hover:text-healthcare-primary hover:bg-blue-50 rounded-md transition-colors whitespace-nowrap"
                         >
@@ -435,15 +438,13 @@ export function MainLayout() {
 
     const filteredSections = useMemo(() => {
         return NAV_SECTIONS.map((section) => {
-            const items = section.items
-                .filter(isItemAllowed)
-                .map((item) => {
-                    const filteredChildren = item.children?.filter((child) => isItemAllowed(child));
-                    return {
-                        ...item,
-                        children: filteredChildren,
-                    };
-                });
+            const items = section.items.filter(isItemAllowed).map((item) => {
+                const filteredChildren = item.children?.filter((child) => isItemAllowed(child));
+                return {
+                    ...item,
+                    children: filteredChildren,
+                };
+            });
             return {
                 ...section,
                 items,
@@ -458,7 +459,8 @@ export function MainLayout() {
 
     const isSuperAdminUser = isSuperAdmin(user?.role);
 
-    const showSwitcher = organizations.length > 0 || facilities.length > 0 || isSuperAdminUser || isOwner;
+    const showSwitcher =
+        organizations.length > 0 || facilities.length > 0 || isSuperAdminUser || isOwner;
 
     const switcherLabel =
         currentFacility?.name ??
@@ -478,7 +480,6 @@ export function MainLayout() {
         !user?.facility_id &&
         !user?.facility &&
         isOwnerOrAdmin;
-
 
     React.useEffect(() => {
         const path = window.location.pathname;
@@ -513,31 +514,35 @@ export function MainLayout() {
         const timer = setTimeout(async () => {
             setGlobalSearchLoading(true);
             try {
-                const [medicinesResponse, suppliersResponse, purchaseOrdersResponse, movementsResponse] =
-                    await Promise.all([
-                        pharmacyService.getMedicines({
-                            search: query,
-                            limit: 5,
-                            ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
-                        }),
-                        pharmacyService.getSuppliers({
-                            search: query,
-                            limit: 5,
-                        }),
-                        pharmacyService.getProcurementOrders({
-                            search: query,
-                            limit: 5,
-                            ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
-                        }),
-                        effectiveFacilityId
-                            ? pharmacyService.getStockMovements({
-                                  facilityId: effectiveFacilityId,
-                                  search: query,
-                                  limit: 8,
-                                  page: 1,
-                              })
-                            : Promise.resolve({ data: [] as any[] }),
-                    ]);
+                const [
+                    medicinesResponse,
+                    suppliersResponse,
+                    purchaseOrdersResponse,
+                    movementsResponse,
+                ] = await Promise.all([
+                    pharmacyService.getMedicines({
+                        search: query,
+                        limit: 5,
+                        ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
+                    }),
+                    pharmacyService.getSuppliers({
+                        search: query,
+                        limit: 5,
+                    }),
+                    pharmacyService.getProcurementOrders({
+                        search: query,
+                        limit: 5,
+                        ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
+                    }),
+                    effectiveFacilityId
+                        ? pharmacyService.getStockMovements({
+                              facilityId: effectiveFacilityId,
+                              search: query,
+                              limit: 8,
+                              page: 1,
+                          })
+                        : Promise.resolve({ data: [] as any[] }),
+                ]);
 
                 if (cancelled) return;
 
@@ -548,7 +553,9 @@ export function MainLayout() {
                 const batchMap = new Map<string, GlobalSearchResultItem>(
                     movementRows
                         .filter((row: any) =>
-                            String(row.batch_number || row.batch?.batch_number || row.batch_code || '')
+                            String(
+                                row.batch_number || row.batch?.batch_number || row.batch_code || '',
+                            )
                                 .toLowerCase()
                                 .includes(lowerQuery),
                         )
@@ -851,7 +858,9 @@ export function MainLayout() {
                                                                     key={`${group.key}-${item.id}`}
                                                                     type="button"
                                                                     onClick={() =>
-                                                                        handleGlobalSearchSelect(item)
+                                                                        handleGlobalSearchSelect(
+                                                                            item,
+                                                                        )
                                                                     }
                                                                     className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors"
                                                                 >
@@ -1041,7 +1050,8 @@ export function MainLayout() {
                                     onClose={() => setShowJoinModal(false)}
                                 />
                             </>
-                        ) : isUnassignedAdmin && !window.location.pathname.includes('/onboarding') ? (
+                        ) : isUnassignedAdmin &&
+                          !window.location.pathname.includes('/onboarding') ? (
                             <>
                                 <FacilityEmptyState
                                     onCreateClick={() => setShowCreateModal(true)}
@@ -1060,7 +1070,6 @@ export function MainLayout() {
                         ) : (
                             <Outlet key={facilityId ?? 'all'} />
                         )}
-
                     </div>
                 </div>
             </main>

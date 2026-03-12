@@ -19,8 +19,9 @@ export function OnboardingPage() {
     const [city, setCity] = useState('');
     const [country, setCountry] = useState('');
     const [facilityName, setFacilityName] = useState('');
-    const [facilityType, setFacilityType] = useState<'pharmacy_shop' | 'hospital' | 'clinic'>('pharmacy_shop');
-
+    const [facilityType, setFacilityType] = useState<'pharmacy_shop' | 'hospital' | 'clinic'>(
+        'pharmacy_shop',
+    );
 
     const handleCreateOrg = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -55,7 +56,8 @@ export function OnboardingPage() {
                         Welcome to TangaCare, {user?.first_name}!
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">
-                        To get started, you need to either create a new organization for your business or join an existing one via invitation.
+                        To get started, you need to either create a new organization for your
+                        business or join an existing one via invitation.
                     </p>
                 </div>
 
@@ -71,9 +73,12 @@ export function OnboardingPage() {
                         <div className="w-16 h-16 bg-healthcare-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                             <Building2 className="text-healthcare-primary" size={32} />
                         </div>
-                        <h2 className="text-2xl font-black text-healthcare-dark dark:text-white mb-2">Create Business</h2>
+                        <h2 className="text-2xl font-black text-healthcare-dark dark:text-white mb-2">
+                            Create Business
+                        </h2>
                         <p className="text-slate-500 text-sm mb-8">
-                            Register your pharmacy or clinic, setup your first branch, and start managing your inventory and sales.
+                            Register your pharmacy or clinic, setup your first branch, and start
+                            managing your inventory and sales.
                         </p>
                         <div className="flex items-center gap-2 text-healthcare-primary font-bold text-sm">
                             Get Started <ArrowRight size={18} />
@@ -88,9 +93,12 @@ export function OnboardingPage() {
                         <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mb-6">
                             <Users className="text-slate-400" size={32} />
                         </div>
-                        <h2 className="text-2xl font-black text-slate-400 dark:text-slate-500 mb-2">Join Team</h2>
+                        <h2 className="text-2xl font-black text-slate-400 dark:text-slate-500 mb-2">
+                            Join Team
+                        </h2>
                         <p className="text-slate-400 text-sm mb-8">
-                            Already part of a pharmacy? Ask your administrator to send you an invitation link to join their organization.
+                            Already part of a pharmacy? Ask your administrator to send you an
+                            invitation link to join their organization.
                         </p>
                         <div className="flex items-center gap-2 text-slate-300 font-bold text-sm">
                             Waiting for Invite
@@ -117,15 +125,21 @@ export function OnboardingPage() {
                             <Building2 className="text-healthcare-primary" size={24} />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">Setup your Organization</h2>
-                            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Initial Business Configuration</p>
+                            <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
+                                Setup your Organization
+                            </h2>
+                            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
+                                Initial Business Configuration
+                            </p>
                         </div>
                     </div>
 
                     <form onSubmit={handleCreateOrg} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Business Name *</label>
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                                    Business Name *
+                                </label>
                                 <input
                                     required
                                     value={orgName}
@@ -135,7 +149,9 @@ export function OnboardingPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Legal Name</label>
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                                    Legal Name
+                                </label>
                                 <input
                                     value={legalName}
                                     onChange={(e) => setLegalName(e.target.value)}
@@ -144,7 +160,9 @@ export function OnboardingPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Registration Number</label>
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                                    Registration Number
+                                </label>
                                 <input
                                     value={registrationNumber}
                                     onChange={(e) => setRegistrationNumber(e.target.value)}
@@ -153,7 +171,9 @@ export function OnboardingPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Medical License</label>
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                                    Medical License
+                                </label>
                                 <input
                                     value={medicalLicense}
                                     onChange={(e) => setMedicalLicense(e.target.value)}
@@ -162,7 +182,9 @@ export function OnboardingPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">City</label>
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                                    City
+                                </label>
                                 <input
                                     value={city}
                                     onChange={(e) => setCity(e.target.value)}
@@ -171,7 +193,9 @@ export function OnboardingPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Country</label>
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                                    Country
+                                </label>
                                 <input
                                     value={country}
                                     onChange={(e) => setCountry(e.target.value)}
@@ -181,16 +205,19 @@ export function OnboardingPage() {
                             </div>
                         </div>
 
-
                         <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-2 mb-4">
                                 <CheckCircle2 className="text-healthcare-primary" size={18} />
-                                <h3 className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-wider">Primary Facility Setup</h3>
+                                <h3 className="text-sm font-black text-healthcare-dark dark:text-white uppercase tracking-wider">
+                                    Primary Facility Setup
+                                </h3>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Facility (Branch) Name *</label>
+                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                                        Facility (Branch) Name *
+                                    </label>
                                     <input
                                         required
                                         value={facilityName}
@@ -200,7 +227,9 @@ export function OnboardingPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Facility Type</label>
+                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                                        Facility Type
+                                    </label>
                                     <select
                                         value={facilityType}
                                         onChange={(e) => setFacilityType(e.target.value as any)}

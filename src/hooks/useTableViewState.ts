@@ -36,7 +36,10 @@ export function useTableViewState(
         [columns],
     );
     const normalizedRole = useMemo(
-        () => String(options?.role || '').toUpperCase().replace(/[\s_]+/g, ''),
+        () =>
+            String(options?.role || '')
+                .toUpperCase()
+                .replace(/[\s_]+/g, ''),
         [options?.role],
     );
     const roleDefaultVisibleKeys = useMemo(() => {
@@ -45,8 +48,7 @@ export function useTableViewState(
         if (!normalizedRole || templateEntries.length === 0) return [];
 
         const matchedEntry = templateEntries.find(
-            ([roleKey]) =>
-                roleKey.toUpperCase().replace(/[\s_]+/g, '') === normalizedRole,
+            ([roleKey]) => roleKey.toUpperCase().replace(/[\s_]+/g, '') === normalizedRole,
         );
         if (!matchedEntry) return [];
 
@@ -83,7 +85,9 @@ export function useTableViewState(
             const parsed = JSON.parse(raw) as Partial<TableViewStorage>;
             const views = Array.isArray(parsed.views)
                 ? parsed.views
-                      .filter((view) => typeof view?.name === 'string' && Array.isArray(view.columns))
+                      .filter(
+                          (view) => typeof view?.name === 'string' && Array.isArray(view.columns),
+                      )
                       .map((view) => ({
                           name: view.name,
                           columns: view.columns.filter((columnKey) =>
@@ -113,7 +117,10 @@ export function useTableViewState(
         }
     }, [columns, defaultVisibleKeys, nonHideableKeys, storageKey]);
 
-    const persist = (nextActiveView: string, nextSavedViews: Array<{ name: string; columns: string[] }>) => {
+    const persist = (
+        nextActiveView: string,
+        nextSavedViews: Array<{ name: string; columns: string[] }>,
+    ) => {
         if (typeof window === 'undefined') return;
         const payload: TableViewStorage = {
             activeView: nextActiveView,
@@ -146,7 +153,9 @@ export function useTableViewState(
         const matchedView = savedViews.find((view) => view.name === viewName);
         if (!matchedView) return;
 
-        const nextVisibleColumns = Array.from(new Set([...matchedView.columns, ...nonHideableKeys]));
+        const nextVisibleColumns = Array.from(
+            new Set([...matchedView.columns, ...nonHideableKeys]),
+        );
         setActiveView(viewName);
         setVisibleColumns(nextVisibleColumns);
         persist(viewName, savedViews);
@@ -204,7 +213,9 @@ export function useTableViewState(
             };
             const importedViews = Array.isArray(parsed.views)
                 ? parsed.views
-                      .filter((view) => typeof view?.name === 'string' && Array.isArray(view.columns))
+                      .filter(
+                          (view) => typeof view?.name === 'string' && Array.isArray(view.columns),
+                      )
                       .map((view) => ({
                           name: view.name.trim(),
                           columns: view.columns.filter((columnKey) =>
@@ -216,7 +227,8 @@ export function useTableViewState(
 
             const mergedViews = [
                 ...savedViews.filter(
-                    (existing) => !importedViews.some((incoming) => incoming.name === existing.name),
+                    (existing) =>
+                        !importedViews.some((incoming) => incoming.name === existing.name),
                 ),
                 ...importedViews,
             ].sort((a, b) => a.name.localeCompare(b.name));
@@ -231,7 +243,9 @@ export function useTableViewState(
             if (nextActiveView !== 'default') {
                 const matched = mergedViews.find((view) => view.name === nextActiveView);
                 if (matched) {
-                    setVisibleColumns(Array.from(new Set([...matched.columns, ...nonHideableKeys])));
+                    setVisibleColumns(
+                        Array.from(new Set([...matched.columns, ...nonHideableKeys])),
+                    );
                 }
             }
             persist(nextActiveView, mergedViews);

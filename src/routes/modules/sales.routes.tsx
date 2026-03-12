@@ -4,50 +4,52 @@ import { PERMISSIONS } from '../../types/auth';
 import { lazyNamed, withRouteSuspense } from '../lazy';
 // import React from 'react';
 
-const DispensingPage = lazyNamed(() => import('../../pages/dashboard/DispensingPage'), 'DispensingPage');
-const InsurancePage = lazyNamed(() => import('../../pages/dashboard/InsurancePage'), 'InsurancePage');
-const PrescriptionsPage = lazyNamed(() => import('../../pages/dashboard/PrescriptionsPage'), 'PrescriptionsPage');
+const DispensingPage = lazyNamed(
+    () => import('../../pages/dashboard/DispensingPage'),
+    'DispensingPage',
+);
+const InsurancePage = lazyNamed(
+    () => import('../../pages/dashboard/InsurancePage'),
+    'InsurancePage',
+);
+const PrescriptionsPage = lazyNamed(
+    () => import('../../pages/dashboard/PrescriptionsPage'),
+    'PrescriptionsPage',
+);
 
 export const createSalesRoutes = (parentRoute: any) => {
     const dispensingRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'dispensing',
-        component: () => (
+        component: () =>
             withRouteSuspense(
                 <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
                     <DispensingPage />
                 </RequirePermission>,
-            )
-        ),
+            ),
     });
 
     const insuranceRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'insurance',
-        component: () => (
+        component: () =>
             withRouteSuspense(
                 <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
                     <InsurancePage />
                 </RequirePermission>,
-            )
-        ),
+            ),
     });
 
     const prescriptionsRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'prescriptions',
-        component: () => (
+        component: () =>
             withRouteSuspense(
                 <RequirePermission permission={PERMISSIONS.DISPENSING_READ}>
                     <PrescriptionsPage />
                 </RequirePermission>,
-            )
-        ),
+            ),
     });
 
-    return [
-        dispensingRoute,
-        insuranceRoute,
-        prescriptionsRoute,
-    ];
+    return [dispensingRoute, insuranceRoute, prescriptionsRoute];
 };
