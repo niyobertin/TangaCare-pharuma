@@ -160,10 +160,10 @@ export const PublicPurchaseOrder = () => {
                         </svg>
                     </div>
                     <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-                        Purchase Order
+                        Purchase Order Details
                     </h1>
                     <p className="mt-2 text-lg text-slate-600">
-                        {order.facility.name}
+                        {order.facility?.name || 'Unknown facility'}
                     </p>
                 </div>
 
@@ -185,14 +185,7 @@ export const PublicPurchaseOrder = () => {
                                 }`}></span>
                             {order.status.replace(/_/g, ' ')}
                         </div>
-                        {order.status.toUpperCase() === 'SUBMITTED' && !isQuoting && (
-                            <button 
-                                onClick={() => setIsQuoting(true)}
-                                className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-sm font-bold shadow-sm"
-                            >
-                                Submit Quotation
-                            </button>
-                        )}
+                      
                     </div>
 
                     <div className="p-8">
@@ -200,13 +193,13 @@ export const PublicPurchaseOrder = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                             <div className="flex flex-col gap-1">
                                 <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">From</span>
-                                <h3 className="font-bold text-slate-800 text-lg">{order.facility.name}</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed whitespace-pre-line">{order.facility.address}</p>
-                                <p className="text-slate-500 text-sm">{order.facility.contact_phone}</p>
+                                <h3 className="font-bold text-slate-800 text-lg">{order.facility?.name || 'Unknown facility'}</h3>
+                                <p className="text-slate-500 text-sm leading-relaxed whitespace-pre-line">{order.facility?.address || ''}</p>
+                                <p className="text-slate-500 text-sm">{order.facility?.contact_phone || ''}</p>
                             </div>
                             <div className="flex flex-col gap-1 md:text-right">
                                 <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">To Supplier</span>
-                                <h3 className="font-bold text-slate-800 text-lg">{order.supplier.name}</h3>
+                                <h3 className="font-bold text-slate-800 text-lg">{order.supplier?.name || 'Unknown supplier'}</h3>
                                 <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mt-4 mb-1">Date Sent</span>
                                 <p className="text-slate-700 font-medium">{format(new Date(order.order_date), 'MMMM dd, yyyy')}</p>
                             </div>
@@ -227,8 +220,8 @@ export const PublicPurchaseOrder = () => {
                                     {order.items.map((item) => (
                                         <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="px-6 py-4">
-                                                <div className="font-bold text-slate-700">{item.medicine.name}</div>
-                                                <div className="text-xs text-slate-400 font-medium">{item.medicine.code}</div>
+                                                <div className="font-bold text-slate-700">{item.medicine?.name ?? `Medicine #${item.medicine_id}`}</div>
+                                                <div className="text-xs text-slate-400 font-medium">{item.medicine?.code}</div>
                                                 {isQuoting && (
                                                     <input 
                                                         type="text"
@@ -284,16 +277,16 @@ export const PublicPurchaseOrder = () => {
                         {/* Actions Area */}
                         {['PENDING', 'ORDERED', 'SUBMITTED', 'DRAFT', 'QUOTED', 'PARTIALLY_QUOTED'].includes(order.status.toUpperCase()) ? (
                             <div className="flex flex-col gap-4">
-                                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-amber-800 text-sm flex gap-3 items-start">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                <div className="p-4 bg-teal-50 rounded-xl border border-teal-100 text-teal-800 text-sm flex gap-3 items-start">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-teal-500 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                                     </svg>
                                     <p>
-                                        {order.status.toUpperCase() === 'QUOTED' 
-                                            ? 'Quotation submitted. Waiting for pharmacy review.' 
-                                            : isQuoting 
-                                                ? 'Update the unit prices and availability for each item above then submit your quotation.'
-                                                : 'Please review the order details above. You can accept to fulfill this order or reject it if you cannot meet the requirements.'}
+                                        {['QUOTED', 'PARTIALLY_QUOTED'].includes(order.status.toUpperCase())
+                                            ? 'Quotation submitted. Waiting for pharmacy to review and accept.'
+                                            : isQuoting
+                                                ? 'Fill in your unit prices for each item and adjust available quantities, then submit your quotation.'
+                                                : 'The pharmacy is requesting the items above. Please submit a quotation with your prices.'}
                                     </p>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -302,47 +295,40 @@ export const PublicPurchaseOrder = () => {
                                             <button
                                                 onClick={() => handleAction('quote')}
                                                 disabled={actionLoading}
-                                                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg shadow-teal-600/20 transition-all transform hover:-translate-y-0.5 disabled:opacity-50"
+                                                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-teal-600/20 transition-all disabled:opacity-50"
                                             >
                                                 {actionLoading ? 'Submitting...' : 'Submit Quotation'}
                                             </button>
                                             <button
                                                 onClick={() => setIsQuoting(false)}
                                                 disabled={actionLoading}
-                                                className="px-6 py-3.5 bg-white text-slate-500 border rounded-xl font-bold"
+                                                className="px-6 py-2.5 bg-white text-slate-500 border rounded-xl font-bold"
                                             >
                                                 Cancel
                                             </button>
                                         </>
-                                    ) : order.status.toUpperCase() === 'QUOTED' ? (
+                                    ) : ['QUOTED', 'PARTIALLY_QUOTED'].includes(order.status.toUpperCase()) ? (
                                         <button
                                             onClick={() => setIsQuoting(true)}
-                                            className="flex-1 bg-teal-100 text-teal-700 px-6 py-3.5 rounded-xl font-bold hover:bg-teal-200 transition-colors"
+                                            className="flex-1 bg-teal-50 text-teal-700 border border-teal-200 px-6 py-2.5 rounded-xl font-bold hover:bg-teal-100 transition-colors"
                                         >
                                             Update Quotation
                                         </button>
                                     ) : (
                                         <>
                                             <button
-                                                onClick={() => handleAction('approve')}
-                                                disabled={actionLoading}
-                                                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-6 py-3.5 rounded-xl font-bold shadow-lg shadow-teal-600/20 hover:shadow-xl transition-all disabled:opacity-50"
-                                            >
-                                                {actionLoading ? 'Processing...' : 'Accept & Approve Order'}
-                                            </button>
-                                            <button
                                                 onClick={() => setIsQuoting(true)}
                                                 disabled={actionLoading}
-                                                className="flex-1 bg-white hover:bg-teal-50 text-teal-600 border border-teal-200 px-6 py-3.5 rounded-xl font-bold transition-all"
+                                                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg shadow-teal-600/20 transition-all disabled:opacity-50"
                                             >
-                                                Submit Quotation
+                                                Submit Quotation with Prices
                                             </button>
                                             <button
                                                 onClick={() => handleAction('reject')}
                                                 disabled={actionLoading}
-                                                className="bg-white hover:bg-red-50 text-slate-600 border border-slate-200 px-6 py-3.5 rounded-xl font-bold hover:text-red-600 transition-colors disabled:opacity-50"
+                                                className="bg-white hover:bg-red-50 text-slate-500 border border-slate-200 px-6 py-2.5 rounded-xl font-bold hover:text-red-600 transition-colors disabled:opacity-50"
                                             >
-                                                Reject
+                                                Cannot Fulfill
                                             </button>
                                         </>
                                     )}
@@ -350,7 +336,7 @@ export const PublicPurchaseOrder = () => {
                                         <button
                                             onClick={() => setShowClarification(true)}
                                             disabled={actionLoading}
-                                            className="sm:flex-none text-slate-500 hover:text-teal-600 px-4 py-3.5 font-bold text-sm transition-colors"
+                                            className="sm:flex-none text-slate-500 hover:text-teal-600 px-4 py-2 font-bold text-sm transition-colors"
                                         >
                                             Ask Question
                                         </button>

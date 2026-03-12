@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
     Plus,
-    ShoppingCart,
     Truck,
     Clock,
     CheckCircle2,
@@ -29,7 +28,6 @@ import type { ProcurementOrder, Supplier } from '../../types/pharmacy';
 import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { CreatePurchaseOrderModal } from '../../components/inventory/CreatePurchaseOrderModal';
 import { ReceiveOrderModal } from '../../components/inventory/ReceiveOrderModal';
-import { StatsSkeleton } from '../../components/shared/Skeleton';
 import { Pagination } from '../../components/ui/Pagination';
 import { TableToolbar } from '../../components/ui/table/TableToolbar';
 import { clsx, type ClassValue } from 'clsx';
@@ -41,26 +39,40 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const ACTIVE_ORDER_STATUSES = [
+    'submitted',
+    'quoted',
+    'partially_quoted',
     'approved',
     'confirmed',
+    'accepted',
+    'partially_accepted',
     'partially_received',
     'backordered',
 ] as const;
 
+// Orders that show up in the "Receiving" tab
 const RECEIVING_ORDER_STATUSES = new Set([
     'approved',
     'confirmed',
+    'accepted',
+    'partially_accepted',
     'partially_received',
     'backordered',
 ]);
 
+// Orders where the "Receive" button is active
 const RECEIVABLE_ORDER_STATUSES = new Set([
     'approved',
     'confirmed',
+    'accepted',
+    'partially_accepted',
     'partial',
     'partially_received',
     'backordered',
 ]);
+
+// Orders where "Review Quotation" button is active
+const QUOTATION_REVIEW_STATUSES = new Set(['quoted', 'partially_quoted']);
 
 const PROCUREMENT_ORDER_TABLE_COLUMNS: TableViewColumn[] = [
     { key: 'order_id', label: 'Order #', hideable: false },
@@ -79,12 +91,7 @@ const PROCUREMENT_ROLE_DEFAULT_COLUMNS: Record<string, string[]> = {
     AUDITOR: ['order_id', 'supplier', 'amount', 'expected_delivery', 'status', 'actions'],
 };
 
-type ProcurementQuickPreset =
-    | 'all'
-    | 'pending'
-    | 'receiving_due'
-    | 'overdue'
-    | 'received';
+type ProcurementQuickPreset = 'all' | 'pending' | 'receiving_due' | 'overdue' | 'received';
 
 type ProcurementSort =
     | 'order_date_desc'
@@ -92,14 +99,6 @@ type ProcurementSort =
     | 'amount_desc'
     | 'amount_asc'
     | 'expected_asc';
-
-const formatRwfCompact = (value: number): string => {
-    const amount = Number(value || 0);
-    if (amount >= 1_000_000_000) return `RWF ${(amount / 1_000_000_000).toFixed(1)}B`;
-    if (amount >= 1_000_000) return `RWF ${(amount / 1_000_000).toFixed(1)}M`;
-    if (amount >= 1_000) return `RWF ${(amount / 1_000).toFixed(1)}K`;
-    return `RWF ${Math.round(amount).toLocaleString()}`;
-};
 
 const toLabelCase = (value: string): string =>
     String(value || '')
@@ -355,7 +354,14 @@ const SuppliersTab = () => {
                         <SkeletonTable
                             rows={5}
                             columns={6}
-                            headers={['ID', 'Company Name', 'TIN (Tax ID)', 'Contact', 'Location', 'Actions']}
+                            headers={[
+                                'ID',
+                                'Company Name',
+                                'TIN (Tax ID)',
+                                'Contact',
+                                'Location',
+                                'Actions',
+                            ]}
                             columnAligns={['left', 'left', 'left', 'left', 'left', 'right']}
                             className="border-none shadow-none"
                         />
@@ -421,27 +427,29 @@ const SuppliersTab = () => {
                                                 <div className="flex items-center justify-end gap-2">
                                                     {user?.role?.toString()?.toLowerCase() !==
                                                         'auditor' && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setSelectedSupplier(supplier);
-                                                                        setIsModalOpen(true);
-                                                                    }}
-                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-all touch-manipulation"
-                                                                >
-                                                                    <Edit size={16} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => {
-                                                                        setSupplierToDelete(supplier.id);
-                                                                        setIsConfirmOpen(true);
-                                                                    }}
-                                                                    className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-all touch-manipulation"
-                                                                >
-                                                                    <Trash2 size={16} />
-                                                                </button>
-                                                            </>
-                                                        )}
+                                                        <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedSupplier(supplier);
+                                                                    setIsModalOpen(true);
+                                                                }}
+                                                                className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-all touch-manipulation"
+                                                            >
+                                                                <Edit size={16} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSupplierToDelete(
+                                                                        supplier.id,
+                                                                    );
+                                                                    setIsConfirmOpen(true);
+                                                                }}
+                                                                className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-500 transition-all touch-manipulation"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -524,9 +532,15 @@ export function ProcurementPage() {
     const [statusFilter, setStatusFilter] = useState<
         | 'all'
         | 'draft'
+        | 'submitted'
+        | 'quoted'
+        | 'partially_quoted'
         | 'pending'
         | 'approved'
         | 'confirmed'
+        | 'accepted'
+        | 'partially_accepted'
+        | 'rejected'
         | 'partially_received'
         | 'backordered'
         | 'received'
@@ -540,14 +554,6 @@ export function ProcurementPage() {
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [limit, setLimit] = useState(10);
-    const [procurementStats, setProcurementStats] = useState({
-        pending: 0,
-        active: 0,
-        totalOrders: 0,
-        totalValue: 0,
-    });
-
-
     const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<ProcurementOrder | null>(null);
 
@@ -572,9 +578,9 @@ export function ProcurementPage() {
         'procurement-orders',
         PROCUREMENT_ORDER_TABLE_COLUMNS,
         {
-        role: String(user?.role || ''),
-        roleDefaultColumns: PROCUREMENT_ROLE_DEFAULT_COLUMNS,
-    },
+            role: String(user?.role || ''),
+            roleDefaultColumns: PROCUREMENT_ROLE_DEFAULT_COLUMNS,
+        },
     );
 
     const fetchOrders = async () => {
@@ -592,7 +598,7 @@ export function ProcurementPage() {
                 status: statusFilter === 'all' ? undefined : statusFilter,
             };
 
-            const [response, pendingStats, activeStats] = await Promise.all([
+            const [response] = await Promise.all([
                 pharmacyService.getProcurementOrders(params),
                 pharmacyService.getProcurementOrders({
                     ...sharedParams,
@@ -609,22 +615,9 @@ export function ProcurementPage() {
             ]);
 
             const responseRows = Array.isArray(response.data) ? response.data : [];
-            const activeCount = Number(
-                activeStats.meta?.total ||
-                    responseRows.filter((order) =>
-                        ACTIVE_ORDER_STATUSES.includes(order.status.toLowerCase() as any),
-                    ).length,
-            );
-
             setOrders(responseRows);
             setTotalPages(response.meta?.totalPages || 1);
             setTotalItems(response.meta?.total || 0);
-            setProcurementStats({
-                pending: pendingStats.meta?.total || 0,
-                active: activeCount,
-                totalOrders: response.meta?.total || 0,
-                totalValue: response.meta?.totalValue ?? 0,
-            });
         } catch (error) {
             console.error('Failed to fetch procurement orders:', error);
         } finally {
@@ -752,38 +745,6 @@ export function ProcurementPage() {
         setSelectedOrder(order);
         setIsReceiveModalOpen(true);
     };
-
-    const stats = [
-        {
-            label: 'Pending POs',
-            value: procurementStats.pending,
-            icon: Clock,
-            color: 'text-amber-500',
-            bg: 'bg-amber-50 dark:bg-amber-900/20',
-        },
-        {
-            label: 'Active Orders',
-            value: procurementStats.active,
-            icon: Truck,
-            color: 'text-blue-500',
-            bg: 'bg-blue-50 dark:bg-blue-900/20',
-        },
-        {
-            label: 'Total Value',
-            value: formatRwfCompact(procurementStats.totalValue),
-            icon: ShoppingCart,
-            color: 'text-teal-500',
-            bg: 'bg-teal-50 dark:bg-teal-900/20',
-        },
-        {
-            label: 'Total Orders',
-            value: procurementStats.totalOrders,
-            icon: FileText,
-            color: 'text-rose-500',
-            bg: 'bg-rose-50 dark:bg-rose-900/20',
-        },
-    ];
-
     const visibleOrders = useMemo(() => {
         const now = new Date();
         const baseRows =
@@ -845,7 +806,9 @@ export function ProcurementPage() {
             const el = target as HTMLElement | null;
             if (!el) return false;
             const tag = el.tagName?.toLowerCase();
-            return tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable;
+            return (
+                tag === 'input' || tag === 'textarea' || tag === 'select' || el.isContentEditable
+            );
         };
 
         const handleShortcuts = (event: KeyboardEvent) => {
@@ -920,10 +883,10 @@ export function ProcurementPage() {
             requireFacility
         >
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                { }
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
-                    <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-                        <div className="space-y-2">
+                {}
+                <div className="bg-white dark:bg-slate-900">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
+                        <div className="flex-1 space-y-2 w-full">
                             <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
                                 {activeTab === 'suppliers'
                                     ? 'Suppliers'
@@ -931,77 +894,15 @@ export function ProcurementPage() {
                                       ? 'Stock Receiving'
                                       : 'Procurement & Orders'}
                             </h2>
-                            <div className="inline-flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                                <button
-                                    onClick={() =>
-                                        navigate({
-                                            to: '/app/procurement/orders' as any,
-                                            search: {} as any,
-                                        })
-                                    }
-                                    className={cn(
-                                        'px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
-                                        activeTab === 'orders'
-                                            ? 'bg-healthcare-primary text-white shadow-lg shadow-teal-500/20'
-                                            : 'text-slate-500 hover:text-healthcare-primary',
-                                    )}
-                                >
-                                    Purchase orders
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        navigate({
-                                            to: '/app/procurement/suppliers' as any,
-                                            search: {} as any,
-                                        })
-                                    }
-                                    className={cn(
-                                        'px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
-                                        activeTab === 'suppliers'
-                                            ? 'bg-healthcare-primary text-white shadow-lg shadow-teal-500/20'
-                                            : 'text-slate-500 hover:text-healthcare-primary',
-                                    )}
-                                >
-                                    Suppliers
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        navigate({
-                                            to: '/app/procurement/receiving' as any,
-                                            search: {} as any,
-                                        })
-                                    }
-                                    className={cn(
-                                        'px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
-                                        activeTab === 'receiving'
-                                            ? 'bg-healthcare-primary text-white shadow-lg shadow-teal-500/20'
-                                            : 'text-slate-500 hover:text-healthcare-primary',
-                                    )}
-                                >
-                                    Receiving
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        navigate({
-                                            to: '/app/procurement/receipts' as any,
-                                            search: {} as any,
-                                        })
-                                    }
-                                    className={cn(
-                                        'px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all',
-                                        'text-slate-500 hover:text-healthcare-primary',
-                                    )}
-                                >
-                                    Receipts
-                                </button>
-                            </div>
                         </div>
                         {activeTab === 'orders' &&
                             user?.role?.toString()?.toLowerCase() !== 'auditor' && (
-                                <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex flex-wrap items-center gap-3 mt-2 md:mt-0">
                                     <select
                                         value={selectedSupplierId || ''}
-                                        onChange={(e) => setSelectedSupplierId(Number(e.target.value))}
+                                        onChange={(e) =>
+                                            setSelectedSupplierId(Number(e.target.value))
+                                        }
                                         className="min-w-[220px] h-11 px-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-healthcare-primary"
                                     >
                                         <option value="">Select supplier to import</option>
@@ -1046,39 +947,7 @@ export function ProcurementPage() {
 
                 {activeTab !== 'suppliers' ? (
                     <>
-                        { }
-                        {loading ? (
-                            <StatsSkeleton />
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {stats.map((stat, i) => (
-                                    <div
-                                        key={i}
-                                        className="glass-card min-h-[108px] p-4 sm:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center justify-between gap-4 shadow-sm"
-                                    >
-                                        <div className="min-w-0">
-                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                                {stat.label}
-                                            </p>
-                                            <p className="mt-1 text-xl font-black text-healthcare-dark dark:text-white leading-none truncate">
-                                                {stat.value}
-                                            </p>
-                                        </div>
-                                        <div
-                                            className={cn(
-                                                'w-12 h-12 shrink-0 rounded-xl flex items-center justify-center',
-                                                stat.bg,
-                                                stat.color,
-                                            )}
-                                        >
-                                            <stat.icon size={22} />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        { }
+                        {}
                         <div className="space-y-4">
                             <TableToolbar
                                 layout="stacked"
@@ -1095,23 +964,37 @@ export function ProcurementPage() {
                                 }}
                                 filters={
                                     <>
-                                        <span className="h-11 sm:h-10 inline-flex items-center text-[10px] font-black uppercase text-slate-400 tracking-widest whitespace-nowrap mr-1">
+                                        <span className="h-11 sm:h-10 inline-flex items-center text-[10px] font-black text-slate-400 tracking-widest whitespace-nowrap mr-1">
                                             Status
                                         </span>
                                         <select
                                             value={statusFilter}
                                             onChange={(e) => {
-                                                setStatusFilter(e.target.value as typeof statusFilter);
+                                                setStatusFilter(
+                                                    e.target.value as typeof statusFilter,
+                                                );
                                                 setPage(1);
                                             }}
-                                            className="h-11 sm:h-10 min-w-[150px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
+                                            className="h-11 sm:h-10 min-w-[150px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
                                         >
                                             <option value="all">All status</option>
                                             <option value="draft">Draft</option>
+                                            <option value="submitted">Submitted</option>
+                                            <option value="quoted">Quoted</option>
+                                            <option value="partially_quoted">
+                                                Partially Quoted
+                                            </option>
+                                            <option value="accepted">Accepted</option>
+                                            <option value="partially_accepted">
+                                                Partially Accepted
+                                            </option>
+                                            <option value="rejected">Rejected</option>
                                             <option value="pending">Pending</option>
                                             <option value="approved">Approved</option>
                                             <option value="confirmed">Confirmed</option>
-                                            <option value="partially_received">Partially received</option>
+                                            <option value="partially_received">
+                                                Partially Received
+                                            </option>
                                             <option value="backordered">Backordered</option>
                                             <option value="received">Received</option>
                                             <option value="cancelled">Cancelled</option>
@@ -1120,23 +1003,25 @@ export function ProcurementPage() {
                                             type="date"
                                             value={startDate}
                                             onChange={(e) => setStartDate(e.target.value)}
-                                            className="h-11 sm:h-10 px-3 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
+                                            className="h-11 sm:h-10 px-3 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black text-slate-900 dark:text-white transition-all outline-none"
                                         />
-                                        <span className="h-11 sm:h-10 inline-flex items-center px-1 text-slate-400 font-black text-[10px] shrink-0 uppercase tracking-widest">
+                                        <span className="h-11 sm:h-10 inline-flex items-center px-1 text-slate-400 font-black text-[10px] shrink-0 tracking-widest">
                                             To
                                         </span>
                                         <input
                                             type="date"
                                             value={endDate}
                                             onChange={(e) => setEndDate(e.target.value)}
-                                            className="h-11 sm:h-10 px-3 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black uppercase text-slate-900 dark:text-white transition-all outline-none"
+                                            className="h-11 sm:h-10 px-3 bg-slate-50 dark:bg-slate-800 border-slate-200 focus:bg-white border-2 focus:border-healthcare-primary rounded-xl text-[10px] font-black text-slate-900 dark:text-white transition-all outline-none"
                                         />
                                         <select
                                             value={quickPreset}
                                             onChange={(e) =>
-                                                setQuickPreset(e.target.value as ProcurementQuickPreset)
+                                                setQuickPreset(
+                                                    e.target.value as ProcurementQuickPreset,
+                                                )
                                             }
-                                            className="h-11 sm:h-10 min-w-[150px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
+                                            className="h-11 sm:h-10 min-w-[150px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
                                         >
                                             <option value="all">All</option>
                                             <option value="pending">Pending</option>
@@ -1146,8 +1031,10 @@ export function ProcurementPage() {
                                         </select>
                                         <select
                                             value={sortBy}
-                                            onChange={(e) => setSortBy(e.target.value as ProcurementSort)}
-                                            className="h-11 sm:h-10 min-w-[170px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black uppercase tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
+                                            onChange={(e) =>
+                                                setSortBy(e.target.value as ProcurementSort)
+                                            }
+                                            className="h-11 sm:h-10 min-w-[170px] bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-black tracking-widest text-healthcare-dark dark:text-white focus:outline-none focus:border-healthcare-primary transition-all"
                                         >
                                             <option value="order_date_desc">Newest orders</option>
                                             <option value="order_date_asc">Oldest orders</option>
@@ -1160,7 +1047,7 @@ export function ProcurementPage() {
                             />
                         </div>
 
-                        { }
+                        {}
                         <div className="glass-card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                             <div className="overflow-x-auto">
                                 {loading ? (
@@ -1170,11 +1057,13 @@ export function ProcurementPage() {
                                         headers={PROCUREMENT_ORDER_TABLE_COLUMNS.filter((column) =>
                                             procurementVisibleColumnSet.has(column.key),
                                         ).map((column) => column.label)}
-                                        columnAligns={PROCUREMENT_ORDER_TABLE_COLUMNS.filter((column) =>
-                                            procurementVisibleColumnSet.has(column.key),
-                                        ).map((column) =>
-                                            column.key === 'actions' ? 'right' : 'left',
-                                        ) as any}
+                                        columnAligns={
+                                            PROCUREMENT_ORDER_TABLE_COLUMNS.filter((column) =>
+                                                procurementVisibleColumnSet.has(column.key),
+                                            ).map((column) =>
+                                                column.key === 'actions' ? 'right' : 'left',
+                                            ) as any
+                                        }
                                         className="border-none shadow-none"
                                     />
                                 ) : (
@@ -1182,32 +1071,34 @@ export function ProcurementPage() {
                                         <thead>
                                             <tr className="bg-slate-50 dark:bg-slate-800/50">
                                                 {procurementVisibleColumnSet.has('order_id') && (
-                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 tracking-widest">
                                                         Order ID
                                                     </th>
                                                 )}
                                                 {procurementVisibleColumnSet.has('supplier') && (
-                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 tracking-widest">
                                                         Supplier
                                                     </th>
                                                 )}
                                                 {procurementVisibleColumnSet.has('amount') && (
-                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 tracking-widest">
                                                         Amount
                                                     </th>
                                                 )}
-                                                {procurementVisibleColumnSet.has('expected_delivery') && (
-                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                {procurementVisibleColumnSet.has(
+                                                    'expected_delivery',
+                                                ) && (
+                                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 tracking-widest">
                                                         Expected Delivery
                                                     </th>
                                                 )}
                                                 {procurementVisibleColumnSet.has('status') && (
-                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 tracking-widest">
                                                         Status
                                                     </th>
                                                 )}
                                                 {procurementVisibleColumnSet.has('actions') && (
-                                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">
+                                                    <th className="px-6 py-4 text-[10px] font-black text-slate-400 tracking-widest text-right">
                                                         Actions
                                                     </th>
                                                 )}
@@ -1220,7 +1111,9 @@ export function ProcurementPage() {
                                                         key={order.id}
                                                         className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                                                     >
-                                                        {procurementVisibleColumnSet.has('order_id') && (
+                                                        {procurementVisibleColumnSet.has(
+                                                            'order_id',
+                                                        ) && (
                                                             <td className="px-6 py-4">
                                                                 <div className="flex flex-col">
                                                                     <span className="font-black text-healthcare-dark dark:text-white text-sm leading-tight">
@@ -1229,7 +1122,7 @@ export function ProcurementPage() {
                                                                             .toString()
                                                                             .padStart(4, '0')}
                                                                     </span>
-                                                                    <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">
+                                                                    <span className="text-[10px] text-slate-400 font-bold mt-1">
                                                                         Date:{' '}
                                                                         {new Date(
                                                                             order.order_date,
@@ -1239,7 +1132,9 @@ export function ProcurementPage() {
                                                                 </div>
                                                             </td>
                                                         )}
-                                                        {procurementVisibleColumnSet.has('supplier') && (
+                                                        {procurementVisibleColumnSet.has(
+                                                            'supplier',
+                                                        ) && (
                                                             <td className="px-6 py-4">
                                                                 <div className="flex items-center gap-2">
                                                                     <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-slate-800 text-healthcare-primary border border-teal-100 dark:border-slate-700">
@@ -1252,7 +1147,9 @@ export function ProcurementPage() {
                                                                 </div>
                                                             </td>
                                                         )}
-                                                        {procurementVisibleColumnSet.has('amount') && (
+                                                        {procurementVisibleColumnSet.has(
+                                                            'amount',
+                                                        ) && (
                                                             <td className="px-6 py-4">
                                                                 <span className="text-sm font-black text-healthcare-dark dark:text-white">
                                                                     RWF{' '}
@@ -1283,58 +1180,70 @@ export function ProcurementPage() {
                                                                 >
                                                                     {order.expected_delivery_date
                                                                         ? new Date(
-                                                                            order.expected_delivery_date,
-                                                                        ).toLocaleDateString()
+                                                                              order.expected_delivery_date,
+                                                                          ).toLocaleDateString()
                                                                         : 'Not set'}
                                                                 </span>
                                                             </td>
                                                         )}
-                                                        {procurementVisibleColumnSet.has('status') && (
+                                                        {procurementVisibleColumnSet.has(
+                                                            'status',
+                                                        ) && (
                                                             <td className="px-6 py-4">
                                                                 <div
                                                                     className={cn(
-                                                                        'w-fit px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5',
+                                                                        'w-fit px-3 py-1 rounded-lg text-[10px] font-black flex items-center gap-1.5',
                                                                         order.status.toUpperCase() ===
                                                                             'RECEIVED'
                                                                             ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                                                             : [
-                                                                                  'ORDERED',
-                                                                                  'APPROVED',
-                                                                                  'CONFIRMED',
-                                                                              ].includes(
+                                                                                    'ORDERED',
+                                                                                    'APPROVED',
+                                                                                    'CONFIRMED',
+                                                                                    'ACCEPTED',
+                                                                                ].includes(
                                                                                     order.status.toUpperCase(),
                                                                                 )
                                                                               ? 'bg-teal-50 text-teal-600 border border-teal-100'
-                                                                              : order.status.toUpperCase() ===
-                                                                                  'PENDING'
-                                                                                ? 'bg-amber-50 text-amber-600 border border-amber-100'
-                                                                                : [
+                                                                              : [
                                                                                       'PARTIAL',
                                                                                       'PARTIALLY_RECEIVED',
                                                                                       'BACKORDERED',
+                                                                                      'PARTIALLY_ACCEPTED',
                                                                                   ].includes(
-                                                                                        order.status.toUpperCase(),
-                                                                                    )
-                                                                                  ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
-                                                                                  : order.status.toUpperCase() ===
-                                                                                      'DRAFT'
-                                                                                    ? 'bg-slate-100 text-slate-500 border border-slate-200'
-                                                                                    : 'bg-red-50 text-red-600 border border-red-100',
+                                                                                      order.status.toUpperCase(),
+                                                                                  )
+                                                                                ? 'bg-indigo-50 text-indigo-600 border border-indigo-100'
+                                                                                : order.status.toUpperCase() ===
+                                                                                    'SUBMITTED'
+                                                                                  ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                                                                  : [
+                                                                                          'QUOTED',
+                                                                                          'PARTIALLY_QUOTED',
+                                                                                      ].includes(
+                                                                                          order.status.toUpperCase(),
+                                                                                      )
+                                                                                    ? 'bg-violet-50 text-violet-600 border border-violet-100'
+                                                                                    : order.status.toUpperCase() ===
+                                                                                        'PENDING'
+                                                                                      ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                                                                                      : order.status.toUpperCase() ===
+                                                                                          'DRAFT'
+                                                                                        ? 'bg-slate-100 text-slate-500 border border-slate-200'
+                                                                                        : 'bg-red-50 text-red-600 border border-red-100',
                                                                     )}
                                                                 >
                                                                     {order.status.toUpperCase() ===
                                                                     'RECEIVED' ? (
                                                                         <CheckCircle2 size={12} />
-                                                                    ) : order.status.toUpperCase() ===
-                                                                      'PENDING' ? (
-                                                                        <Clock size={12} />
                                                                     ) : [
                                                                           'ORDERED',
                                                                           'APPROVED',
                                                                           'CONFIRMED',
+                                                                          'ACCEPTED',
                                                                       ].includes(
-                                                                            order.status.toUpperCase(),
-                                                                        ) ? (
+                                                                          order.status.toUpperCase(),
+                                                                      ) ? (
                                                                         <CheckCircle2
                                                                             size={12}
                                                                             className="text-teal-500"
@@ -1343,26 +1252,46 @@ export function ProcurementPage() {
                                                                           'PARTIAL',
                                                                           'PARTIALLY_RECEIVED',
                                                                           'BACKORDERED',
+                                                                          'PARTIALLY_ACCEPTED',
                                                                       ].includes(
-                                                                            order.status.toUpperCase(),
-                                                                        ) ? (
+                                                                          order.status.toUpperCase(),
+                                                                      ) ? (
                                                                         <Truck
                                                                             size={12}
                                                                             className="text-indigo-500"
                                                                         />
+                                                                    ) : order.status.toUpperCase() ===
+                                                                      'SUBMITTED' ? (
+                                                                        <ArrowUpRight
+                                                                            size={12}
+                                                                            className="text-blue-500"
+                                                                        />
+                                                                    ) : [
+                                                                          'QUOTED',
+                                                                          'PARTIALLY_QUOTED',
+                                                                      ].includes(
+                                                                          order.status.toUpperCase(),
+                                                                      ) ? (
+                                                                        <FileText
+                                                                            size={12}
+                                                                            className="text-violet-500"
+                                                                        />
+                                                                    ) : order.status.toUpperCase() ===
+                                                                      'PENDING' ? (
+                                                                        <Clock size={12} />
                                                                     ) : order.status.toUpperCase() ===
                                                                       'DRAFT' ? (
                                                                         <FileText size={12} />
                                                                     ) : (
                                                                         <XCircle size={12} />
                                                                     )}
-                                                                    {toLabelCase(
-                                                                        order.status,
-                                                                    )}
+                                                                    {toLabelCase(order.status)}
                                                                 </div>
                                                             </td>
                                                         )}
-                                                        {procurementVisibleColumnSet.has('actions') && (
+                                                        {procurementVisibleColumnSet.has(
+                                                            'actions',
+                                                        ) && (
                                                             <td className="px-6 py-4 text-right">
                                                                 <div className="flex items-center justify-end gap-2">
                                                                     {user?.role
@@ -1399,9 +1328,25 @@ export function ProcurementPage() {
                                                                                         Approve
                                                                                     </button>
                                                                                 )}
+                                                                            {QUOTATION_REVIEW_STATUSES.has(
+                                                                                order.status.toLowerCase(),
+                                                                            ) && (
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        navigate({
+                                                                                            to: `/app/procurement/orders/${order.id}`,
+                                                                                        })
+                                                                                    }
+                                                                                    className="h-9 px-3 bg-violet-600 text-white rounded-lg text-[10px] font-black hover:bg-violet-700 transition-colors shadow-sm touch-manipulation"
+                                                                                >
+                                                                                    Review
+                                                                                </button>
+                                                                            )}
                                                                             {[
                                                                                 'APPROVED',
                                                                                 'CONFIRMED',
+                                                                                'ACCEPTED',
+                                                                                'PARTIALLY_ACCEPTED',
                                                                                 'PARTIAL',
                                                                                 'PARTIALLY_RECEIVED',
                                                                                 'BACKORDERED',
@@ -1422,6 +1367,7 @@ export function ProcurementPage() {
                                                                             {[
                                                                                 'DRAFT',
                                                                                 'PENDING',
+                                                                                'SUBMITTED',
                                                                                 'APPROVED',
                                                                             ].includes(
                                                                                 order.status.toUpperCase(),
@@ -1436,7 +1382,9 @@ export function ProcurementPage() {
                                                                                     className="h-10 w-10 sm:h-9 sm:w-9 inline-flex items-center justify-center hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors touch-manipulation"
                                                                                     title="Cancel PO"
                                                                                 >
-                                                                                    <XCircle size={16} />
+                                                                                    <XCircle
+                                                                                        size={16}
+                                                                                    />
                                                                                 </button>
                                                                             )}
                                                                         </>
@@ -1470,7 +1418,10 @@ export function ProcurementPage() {
                                                 ))
                                             ) : (
                                                 <tr>
-                                                    <td colSpan={visibleProcurementColumnCount} className="px-6 py-10 text-center">
+                                                    <td
+                                                        colSpan={visibleProcurementColumnCount}
+                                                        className="px-6 py-10 text-center"
+                                                    >
                                                         <div className="flex flex-col items-center gap-2">
                                                             <AlertCircle
                                                                 size={32}
