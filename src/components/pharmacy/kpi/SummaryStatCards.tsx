@@ -8,6 +8,7 @@ import {
     Activity,
 } from 'lucide-react';
 import type { DashboardSummary } from '../../../types/pharmacy';
+import { useRuntimeConfig } from '../../../context/RuntimeConfigContext';
 
 interface StatCardProps {
     title: string;
@@ -60,13 +61,14 @@ const StatCard = ({ title, value, subtitle, icon, trend, color }: StatCardProps)
 };
 
 export const SummaryStatCards = ({ summary }: { summary: DashboardSummary }) => {
+    const { formatMoney } = useRuntimeConfig();
     const { today, expiry_risk } = summary;
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             <StatCard
                 title="Today's Sales"
-                value={`RWF ${today.financial.total_revenue.toLocaleString()}`}
+                value={formatMoney(today.financial.total_revenue)}
                 subtitle="Gross revenue today"
                 icon={<DollarSign size={15} />}
                 color="emerald"
@@ -77,7 +79,7 @@ export const SummaryStatCards = ({ summary }: { summary: DashboardSummary }) => 
             />
             <StatCard
                 title="Today's Profit"
-                value={`RWF ${today.financial.net_profit.toLocaleString()}`}
+                value={formatMoney(today.financial.net_profit)}
                 subtitle={`${today.financial.net_profit_margin.toFixed(1)}% margin`}
                 icon={<Activity size={15} />}
                 color="indigo"

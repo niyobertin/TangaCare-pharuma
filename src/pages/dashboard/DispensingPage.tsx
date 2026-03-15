@@ -17,7 +17,7 @@ import { useOfflineSync } from '../../hooks/useOfflineSync';
 import { db } from '../../lib/indexeddb';
 import { toSentenceCase } from '../../lib/text';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
-import { settingsService } from '../../services/settings.service';
+import { useRuntimeConfig } from '../../context/RuntimeConfigContext';
 import { cn } from '../../lib/utils';
 import { formatLocalDate, parseLocalDate } from '../../lib/date';
 
@@ -120,10 +120,7 @@ export function DispensingPage() {
         }
     };
 
-    const [runtimeConfig, setRuntimeConfig] = useState<{ currency: string; vatRate: number }>({
-        currency: 'RWF',
-        vatRate: 0.18,
-    });
+    const { formatMoney, vatRate } = useRuntimeConfig();
 
     const isReadOnly = user?.role?.toString()?.toLowerCase() === 'auditor';
     const hasControlledDrug = cart.some((item) => item.is_controlled_drug);
@@ -292,42 +289,6 @@ export function DispensingPage() {
     useEffect(() => {
         fetchMedicines();
     }, [debouncedSearch, page]);
-
-    useEffect(() => {
-        let active = true;
-        const loadRuntimeConfig = async () => {
-            try {
-                const tenantId = Number(user?.organization_id ?? 0) || undefined;
-                const activeBranchId = Number(user?.facility_id ?? 0) || undefined;
-                const activeUserId = Number(user?.id ?? 0) || undefined;
-
-                const effective = await settingsService.getEffective({
-                    tenantId,
-                    branchId: activeBranchId,
-                    userId: activeUserId,
-                });
-
-                const values = effective?.values || {};
-                const vatEnabled = values['tax_fiscal.vat_enabled'] !== false;
-                const vatRate = Number(values['tax_fiscal.default_vat_rate'] ?? 0.18);
-                const currency = String(values['currency_pricing.base_currency'] || 'RWF');
-
-                if (active) {
-                    setRuntimeConfig({
-                        currency,
-                        vatRate: vatEnabled && Number.isFinite(vatRate) ? vatRate : 0,
-                    });
-                }
-            } catch {
-                // Keep defaults if settings endpoint is not reachable
-            }
-        };
-
-        void loadRuntimeConfig();
-        return () => {
-            active = false;
-        };
-    }, [user?.organization_id, user?.facility_id, user?.id]);
 
     useBarcodeScanner(
         (barcode) => {
@@ -603,7 +564,7 @@ export function DispensingPage() {
     };
 
     const subtotal = cart.reduce((acc, item) => acc + item.selling_price * item.quantity, 0);
-    const tax = subtotal * runtimeConfig.vatRate;
+    const tax = subtotal * vatRate;
     const total = subtotal + tax;
     const cartTotalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -644,7 +605,7 @@ export function DispensingPage() {
         const saleData: any = {
             patient_id: selectedPatient.id,
             dispense_type: 'otc' as const,
-            vat_rate: runtimeConfig.vatRate,
+            vat_rate: vatRate,
             items: cart
                 .filter((i) => !!i.selectedBatch)
                 .map((i) => ({
@@ -1076,7 +1037,7 @@ export function DispensingPage() {
                             <div className="flex justify-between text-sm">
                                 <span className="text-slate-500 dark:text-slate-400">Amount</span>
                                 <span className="font-bold text-slate-900 dark:text-white">
-                                    {runtimeConfig.currency} {successSummary.amount.toLocaleString()}
+                                    {formatMoney(successSummary.amount)}
                                 </span>
                             </div>
                             <div className="flex justify-between text-sm items-center">
@@ -1192,8 +1153,7 @@ export function DispensingPage() {
                                                 {alternative.total_stock.toLocaleString()}
                                             </td>
                                             <td className="px-4 py-3 text-right font-bold text-slate-600 dark:text-slate-300">
-                                                {runtimeConfig.currency}{' '}
-                                                {alternative.selling_price.toLocaleString()}
+                                                {formatMoney(alternative.selling_price)}
                                             </td>
                                             <td className="px-4 py-3 text-xs text-slate-500">
                                                 {alternative.reason}

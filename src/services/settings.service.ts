@@ -7,7 +7,27 @@ import type {
     SettingScopeType,
 } from '../types/settings';
 
+/** Flattened runtime config from backend: currency, tax, locale for UI display. */
+export interface RuntimeConfig {
+    currencyCode: string;
+    currencySymbol: string;
+    currencyDecimals: number;
+    maxDiscountPercent: number;
+    vatEnabled: boolean;
+    vatRate: number;
+    locale: string;
+    timezone: string;
+    dateFormat: string;
+    numberFormat: string;
+}
+
 export const settingsService = {
+    /** Single endpoint for UI: currency, tax, locale. Use for all display formatting. */
+    async getRuntimeConfig(): Promise<RuntimeConfig> {
+        const response = await api.get<{ data: RuntimeConfig }>('/pharmacy/settings/runtime-config');
+        return (response.data as any).data ?? response.data;
+    },
+
     async getDefinitions(domain?: SettingDomain): Promise<SettingDefinition[]> {
         const response = await api.get<any>('/pharmacy/settings/definitions', {
             params: domain ? { domain } : undefined,

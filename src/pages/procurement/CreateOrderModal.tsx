@@ -7,6 +7,7 @@ import { X, Plus, Trash2, Save, ShoppingCart } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Supplier, Medicine } from '../../types/pharmacy';
 import { useAuth } from '../../context/AuthContext';
+import { useRuntimeConfig } from '../../context/RuntimeConfigContext';
 
 interface CreateOrderModalProps {
     onClose: () => void;
@@ -23,17 +24,20 @@ const orderSchema = yup.object({
     supplier_id: yup.number().required('Select a supplier'),
     order_date: yup.string().required('Date is required'),
     discount_percent: yup.number().min(0).max(100).optional().default(0),
-    vat_rate: yup.number().min(0).max(100).optional().default(18),
+    vat_rate: yup.number().min(0).max(100).optional(),
     notes: yup.string(),
     items: yup.array().of(itemSchema).min(1, 'Add at least one item').required(),
 });
 
 export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) {
     const { user } = useAuth();
+    const { formatMoney, currencySymbol, vatRate, maxDiscountPercent } = useRuntimeConfig();
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [medicines, setMedicines] = useState<Medicine[]>([]);
     const [loadingData, setLoadingData] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const defaultVatPercent = Math.round((vatRate ?? 0.18) * 100);
 
     const {
         register,
@@ -46,7 +50,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
         defaultValues: {
             order_date: new Date().toISOString().split('T')[0],
             discount_percent: 0,
-            vat_rate: 18,
+            vat_rate: defaultVatPercent,
             items: [{ medicine_id: 0, quantity_ordered: 1, unit_price: 0 }],
         },
         mode: 'onChange',
@@ -310,10 +314,8 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                             return (
                                                                 <div className="mt-1 space-y-1">
                                                                     <p className="text-[10px] font-black text-slate-500">
-                                                                        Selling: RWF{' '}
-                                                                        {selectedSellingPrice.toLocaleString()}{' '}
-                                                                        | Last Cost: RWF{' '}
-                                                                        {selectedCostPrice.toLocaleString()}
+                                                                        Selling: {formatMoney(selectedSellingPrice)}{' '}
+                                                                        | Last Cost: {formatMoney(selectedCostPrice)}
                                                                     </p>
                                                                     {isCostAboveSelling && (
                                                                         <p className="text-[10px] font-black text-red-600">
@@ -339,7 +341,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                     <td className="p-2">
                                                         <div className="relative">
                                                             <span className="absolute left-2 top-1.5 text-slate-400 text-xs">
-                                                                RWF
+                                                                {currencySymbol}
                                                             </span>
                                                             <input
                                                                 type="number"
@@ -378,7 +380,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                     Subtotal
                                                 </td>
                                                 <td className="px-4 py-2 text-right font-black text-healthcare-dark dark:text-white">
-                                                    RWF {subtotal.toLocaleString()}
+                                                    {formatMoney(subtotal)}
                                                 </td>
                                                 <td></td>
                                             </tr>
@@ -390,7 +392,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                     Discount ({discountPercent}%)
                                                 </td>
                                                 <td className="px-4 py-2 text-right font-black text-healthcare-dark dark:text-white">
-                                                    - RWF {discountAmount.toLocaleString()}
+                                                    - {formatMoney(discountAmount)}
                                                 </td>
                                                 <td></td>
                                             </tr>
@@ -402,7 +404,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                     VAT ({vatRate}%)
                                                 </td>
                                                 <td className="px-4 py-2 text-right font-black text-healthcare-dark dark:text-white">
-                                                    RWF {vatAmount.toLocaleString()}
+                                                    {formatMoney(vatAmount)}
                                                 </td>
                                                 <td></td>
                                             </tr>
@@ -414,7 +416,7 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
                                                     Total Amount
                                                 </td>
                                                 <td className="px-4 py-3 text-right font-black text-healthcare-dark dark:text-white text-lg">
-                                                    RWF {grandTotal.toLocaleString()}
+                                                    {formatMoney(grandTotal)}
                                                 </td>
                                                 <td></td>
                                             </tr>

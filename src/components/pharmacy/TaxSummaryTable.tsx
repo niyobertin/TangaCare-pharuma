@@ -1,3 +1,5 @@
+import { useRuntimeConfig } from '../../context/RuntimeConfigContext';
+
 interface TaxDetail {
     tax_rate: number;
     taxable_amount: number;
@@ -11,6 +13,7 @@ interface TaxSummaryTableProps {
 }
 
 export const TaxSummaryTable = ({ data, totalTaxable, totalVat }: TaxSummaryTableProps) => {
+    const { formatMoney } = useRuntimeConfig();
     return (
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
             <div className="p-6 border-b border-gray-100 dark:border-slate-800">
@@ -43,18 +46,10 @@ export const TaxSummaryTable = ({ data, totalTaxable, totalVat }: TaxSummaryTabl
                                     {(item.tax_rate * 100).toFixed(0)}%
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-right whitespace-nowrap">
-                                    RWF{' '}
-                                    {Number(item.taxable_amount).toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                    })}
+                                    {formatMoney(item.taxable_amount)}
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-right whitespace-nowrap">
-                                    RWF{' '}
-                                    {Number(item.tax_amount).toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2,
-                                    })}
+                                    {formatMoney(item.tax_amount)}
                                 </td>
                             </tr>
                         ))}
@@ -65,10 +60,10 @@ export const TaxSummaryTable = ({ data, totalTaxable, totalVat }: TaxSummaryTabl
                                 Total
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-right">
-                                RWF {totalTaxable.toLocaleString()}
+                                {formatMoney(totalTaxable)}
                             </td>
                             <td className="px-6 py-4 text-sm text-blue-600 dark:text-blue-400 text-right">
-                                RWF {totalVat.toLocaleString()}
+                                {formatMoney(totalVat)}
                             </td>
                         </tr>
                     </tfoot>

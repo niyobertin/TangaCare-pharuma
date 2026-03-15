@@ -16,6 +16,7 @@ import {
 import { pharmacyService } from '../../../services/pharmacy.service';
 import { SkeletonTable } from '../../ui/SkeletonTable';
 import type { ComprehensiveKPIs } from '../../../types/pharmacy';
+import { useRuntimeConfig } from '../../../context/RuntimeConfigContext';
 
 interface KPICardProps {
     title: string;
@@ -92,6 +93,7 @@ export const KPIDashboard = ({
     startDate: string;
     endDate: string;
 }) => {
+    const { formatMoney } = useRuntimeConfig();
     const {
         data: kpis,
         isLoading,
@@ -139,14 +141,14 @@ export const KPIDashboard = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <KPICard
                         title="Net Revenue"
-                        value={`RWF ${financial.total_revenue.toLocaleString()}`}
+                        value={formatMoney(financial.total_revenue)}
                         icon={<DollarSign size={20} />}
                         color="green"
-                        subtitle={`Avg. RWF ${financial.revenue_per_day.toLocaleString()}/day`}
+                        subtitle={`Avg. ${formatMoney(financial.revenue_per_day)}/day`}
                     />
                     <KPICard
                         title="Net Profit"
-                        value={`RWF ${financial.net_profit.toLocaleString()}`}
+                        value={formatMoney(financial.net_profit)}
                         icon={<Activity size={20} />}
                         color="indigo"
                         subtitle={`${financial.net_profit_margin.toFixed(1)}% margin`}
@@ -154,7 +156,7 @@ export const KPIDashboard = ({
                     />
                     <KPICard
                         title="Avg Sale Value"
-                        value={`RWF ${financial.average_transaction_value.toLocaleString()}`}
+                        value={formatMoney(financial.average_transaction_value)}
                         icon={<BarChart3 size={20} />}
                         color="blue"
                         subtitle="Per transaction"
@@ -183,7 +185,7 @@ export const KPIDashboard = ({
                     <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <KPICard
                             title="Total Stock Value"
-                            value={`RWF ${inventory.total_inventory_value.toLocaleString()}`}
+                            value={formatMoney(inventory.total_inventory_value)}
                             icon={<Package size={20} />}
                             color="blue"
                             subtitle={`${inventory.total_items.toLocaleString()} units in stock`}
@@ -319,8 +321,7 @@ export const KPIDashboard = ({
                                 {operational.top_selling_medicine.medicine_name}
                             </h3>
                             <p className="text-sm text-slate-500 font-medium">
-                                Contributed RWF{' '}
-                                {operational.top_selling_medicine.revenue.toLocaleString()} in
+                                Contributed {formatMoney(operational.top_selling_medicine.revenue)} in
                                 revenue
                             </p>
                         </div>

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { User, ShieldAlert, Package, Clock, Receipt } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Sale } from '../../types/pharmacy';
+import { useRuntimeConfig } from '../../context/RuntimeConfigContext';
 
 interface PatientSummaryPanelProps {
     /** Patient user object as returned by the patient search */
@@ -27,6 +28,7 @@ export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
     patient,
     onDownloadReceipt,
 }) => {
+    const { formatMoney } = useRuntimeConfig();
     const [expanded, setExpanded] = useState(true);
 
     // Fetch the last 5 sales for this patient to show recent history
@@ -129,8 +131,7 @@ export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
                                                     {sale.sale_number}
                                                 </p>
                                                 <p className="text-[10px] text-slate-400">
-                                                    {sale.items?.length ?? 0} item(s) &bull; RWF{' '}
-                                                    {Number(sale.total_amount).toLocaleString()}
+                                                    {sale.items?.length ?? 0} item(s) &bull; {formatMoney(sale.total_amount)}
                                                 </p>
                                             </div>
                                             <div className="text-right shrink-0 ml-2">
