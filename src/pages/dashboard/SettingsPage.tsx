@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
+import { useLocation } from '@tanstack/react-router';
 import {
     Building2,
     ChevronRight,
@@ -15,6 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 import { settingsService } from '../../services/settings.service';
 import type { EffectiveSettingItem, SettingDefinition, SettingDomain } from '../../types/settings';
 import { formatLocalDateTime } from '../../lib/date';
+import { OrganizationProfileForm } from '../../components/organization/OrganizationProfileForm';
 
 type ScopeTab = 'tenant' | 'branch' | 'user';
 
@@ -40,6 +42,13 @@ interface EditState {
 }
 
 const SETTINGS_GROUPS: SettingsGroup[] = [
+    {
+        id: 'organization',
+        label: 'Organization',
+        description: 'Company profile, legal and tax identity.',
+        icon: Building2,
+        items: [{ domain: 'organization_profile', label: 'Organization profile' }],
+    },
     {
         id: 'regulatory_finance',
         label: 'Regulatory & Finance',
@@ -118,19 +127,28 @@ function renderValue(valueType: SettingDefinition['value_type'], value: any): st
 
 export function SettingsPage() {
     const { user, organizationId, facilityId } = useAuth();
+    const location = useLocation();
+    const sectionParam = typeof location?.search === 'string'
+        ? new URLSearchParams(location.search).get('section')
+        : null;
+    const openOrganizationProfile = sectionParam === 'organization';
 
     const tenantId = Number(organizationId ?? user?.organization_id ?? 0) || undefined;
     const branchId = Number(facilityId ?? user?.facility_id ?? 0) || undefined;
     const userId = Number(user?.id ?? 0) || undefined;
 
-    const [activeGroupId, setActiveGroupId] = useState<string>(SETTINGS_GROUPS[0].id);
+    const orgGroup = SETTINGS_GROUPS.find((g) => g.id === 'organization');
+    const defaultGroupId = openOrganizationProfile && orgGroup ? 'organization' : SETTINGS_GROUPS[0].id;
+    const defaultDomain: SettingDomain = openOrganizationProfile && orgGroup
+        ? 'organization_profile'
+        : SETTINGS_GROUPS[0].items[0].domain;
+
+    const [activeGroupId, setActiveGroupId] = useState<string>(defaultGroupId);
     const activeGroup = useMemo(
         () => SETTINGS_GROUPS.find((group) => group.id === activeGroupId) || SETTINGS_GROUPS[0],
         [activeGroupId],
     );
-    const [activeDomain, setActiveDomain] = useState<SettingDomain>(
-        SETTINGS_GROUPS[0].items[0].domain,
-    );
+    const [activeDomain, setActiveDomain] = useState<SettingDomain>(defaultDomain);
     const [activeScope, setActiveScope] = useState<ScopeTab>('branch');
 
     const [loading, setLoading] = useState(false);
@@ -168,6 +186,7 @@ export function SettingsPage() {
     }, [activeScope, availableScopes]);
 
     const loadSettings = async () => {
+        if (activeDomain === 'organization_profile') return;
         setLoading(true);
         try {
             const context =
@@ -333,6 +352,18 @@ export function SettingsPage() {
                     </aside>
 
                     <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 md:p-5">
+                        {activeDomain === 'organization_profile' ? (
+                            <>
+                                {!tenantId ? (
+                                    <p className="text-slate-500 text-sm py-6">
+                                        Select an organization context to edit organization profile.
+                                    </p>
+                                ) : (
+                                    <OrganizationProfileForm organizationId={tenantId} />
+                                )}
+                            </>
+                        ) : (
+                            <>
                         <div className="flex flex-wrap items-center gap-2 mb-4">
                             {(['tenant', 'branch', 'user'] as ScopeTab[]).map((scope) => {
                                 const disabled = !availableScopes[scope];
@@ -533,6 +564,8 @@ export function SettingsPage() {
                             Sensitive keys may require approval and can be blocked by tenant
                             guardrails.
                         </div>
+                            </>
+                        )}
                     </section>
                 </div>
             </div>

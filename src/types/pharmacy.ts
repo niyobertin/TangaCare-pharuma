@@ -93,6 +93,16 @@ export interface Organization {
     type?: string;
     subscription_status?: string;
     is_active?: boolean;
+    address?: string;
+    phone?: string;
+    email?: string;
+    legal_name?: string;
+    registration_number?: string;
+    medical_license?: string;
+    city?: string;
+    country?: string;
+    tax_registration_number?: string;
+    business_license_number?: string;
 }
 
 export interface Facility {
@@ -117,6 +127,7 @@ export interface Facility {
     default_markup_percent?: number;
     status?: string | 'Active' | 'Inactive';
     is_active?: boolean;
+    tax_registration_number?: string;
 }
 
 export interface MedicineCategory {
@@ -134,6 +145,32 @@ export interface CreateOrganizationDto {
     address?: string;
     phone?: string;
     email?: string;
+    legal_name?: string;
+    registration_number?: string;
+    medical_license?: string;
+    city?: string;
+    country?: string;
+    tax_registration_number?: string;
+    business_license_number?: string;
+}
+
+/** Payload for updating organization profile (partial). */
+export interface UpdateOrganizationDto {
+    name?: string;
+    code?: string;
+    type?: string;
+    subscription_status?: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    legal_name?: string;
+    registration_number?: string;
+    medical_license?: string;
+    city?: string;
+    country?: string;
+    tax_registration_number?: string;
+    business_license_number?: string;
+    is_active?: boolean;
 }
 
 export interface Department {
@@ -154,7 +191,7 @@ export interface CreateFacilityDto {
     phone?: string;
     email?: string;
     organization_id?: number;
-
+    tax_registration_number?: string;
     departments_enabled?: boolean;
     controlled_drug_rules_enabled?: boolean;
     ebm_enabled?: boolean;

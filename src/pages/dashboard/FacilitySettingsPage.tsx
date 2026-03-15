@@ -43,6 +43,7 @@ export function FacilitySettingsPage() {
         address: '',
         phone: '',
         email: '',
+        tax_registration_number: '',
         status: 'Active',
         departments_enabled: true,
         controlled_drug_rules_enabled: true,
@@ -87,6 +88,7 @@ export function FacilitySettingsPage() {
                 address: data.address,
                 phone: data.phone,
                 email: data.email,
+                tax_registration_number: data.tax_registration_number ?? '',
                 status: data.status || 'Active',
                 departments_enabled: data.departments_enabled ?? true,
                 controlled_drug_rules_enabled: data.controlled_drug_rules_enabled ?? true,
@@ -425,6 +427,23 @@ export function FacilitySettingsPage() {
                                                         email: e.target.value,
                                                     }))
                                                 }
+                                                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold text-healthcare-dark"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-black uppercase text-slate-400">
+                                                Tax registration (TIN)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.tax_registration_number ?? ''}
+                                                onChange={(e) =>
+                                                    setFormData((p) => ({
+                                                        ...p,
+                                                        tax_registration_number: e.target.value || undefined,
+                                                    }))
+                                                }
+                                                placeholder="Facility-level TIN for EBM/fiscal"
                                                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-xl focus:outline-none focus:border-healthcare-primary font-bold text-healthcare-dark"
                                             />
                                         </div>

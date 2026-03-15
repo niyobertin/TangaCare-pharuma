@@ -1,4 +1,5 @@
 export type SettingDomain =
+    | 'organization_profile' // UI-only: shows org profile form in Settings
     | 'localization'
     | 'currency_pricing'
     | 'tax_fiscal'
