@@ -15,8 +15,10 @@ import { SkeletonTable } from '../../ui/SkeletonTable';
 import { format } from 'date-fns';
 import { parseLocalDate } from '../../../lib/date';
 import type { CustomerReturn, ReturnStatus } from '../../../types/pharmacy';
+import { useRuntimeConfig } from '../../../context/RuntimeConfigContext';
 
 export const ReturnManagement = ({ facilityId }: { facilityId: number }) => {
+    const { formatMoney } = useRuntimeConfig();
     const queryClient = useQueryClient();
     const [statusFilter, setStatusFilter] = useState<ReturnStatus | 'all'>('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -193,7 +195,7 @@ export const ReturnManagement = ({ facilityId }: { facilityId: number }) => {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <p className="font-black text-slate-900 dark:text-white">
-                                                RWF {ret.total_refund_amount.toLocaleString()}
+                                                {formatMoney(ret.total_refund_amount)}
                                             </p>
                                             <p className="text-[10px] text-slate-400 font-bold uppercase">
                                                 {ret.refund_method.replace('_', ' ')}

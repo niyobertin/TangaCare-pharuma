@@ -12,6 +12,8 @@ export interface RuntimeConfig {
     currencyCode: string;
     currencySymbol: string;
     currencyDecimals: number;
+    /** Rounding mode (e.g. half_up). Single-currency; no exchange execution yet. */
+    currencyRoundingMode?: string;
     maxDiscountPercent: number;
     vatEnabled: boolean;
     vatRate: number;

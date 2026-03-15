@@ -16,11 +16,15 @@ interface SupplierModalProps {
 
 const supplierSchema = yup.object({
     name: yup.string().required('Company name is required'),
-    contact_person: yup.string().required('Contact person is required'),
-    phone: yup.string().required('Phone number is required'),
-    email: yup.string().email('Invalid email address').required('Email is required'),
-    address: yup.string().required('Physical address is required'),
+    contact_person: yup.string().optional().default(''),
+    phone: yup.string().optional().default(''),
+    email: yup.string().email('Invalid email address').optional().default(''),
+    address: yup.string().optional().default(''),
     tax_id: yup.string().optional().default(''),
+    category: yup.string().optional().default(''),
+    country: yup.string().optional().default(''),
+    payment_terms: yup.string().optional().default(''),
+    priority: yup.number().min(1).max(10).optional().default(undefined),
     is_active: yup.boolean().default(true),
 });
 
@@ -43,6 +47,10 @@ export function SupplierModal({ isOpen, onClose, onSuccess, supplier }: Supplier
             email: '',
             address: '',
             tax_id: '',
+            category: '',
+            country: '',
+            payment_terms: '',
+            priority: undefined as number | undefined,
             is_active: true,
         },
     });
@@ -52,11 +60,15 @@ export function SupplierModal({ isOpen, onClose, onSuccess, supplier }: Supplier
             if (supplier) {
                 reset({
                     name: supplier.name,
-                    contact_person: supplier.contact_person,
-                    phone: supplier.phone,
-                    email: supplier.email,
-                    address: supplier.address,
+                    contact_person: supplier.contact_person || '',
+                    phone: supplier.phone || '',
+                    email: supplier.email || '',
+                    address: supplier.address || '',
                     tax_id: supplier.tax_id || '',
+                    category: supplier.category || '',
+                    country: supplier.country || '',
+                    payment_terms: supplier.payment_terms || '',
+                    priority: supplier.priority,
                     is_active: supplier.is_active,
                 });
             } else {
@@ -67,6 +79,10 @@ export function SupplierModal({ isOpen, onClose, onSuccess, supplier }: Supplier
                     email: '',
                     address: '',
                     tax_id: '',
+                    category: '',
+                    country: '',
+                    payment_terms: '',
+                    priority: undefined,
                     is_active: true,
                 });
             }
@@ -280,6 +296,57 @@ export function SupplierModal({ isOpen, onClose, onSuccess, supplier }: Supplier
                                     type="text"
                                     placeholder="KRA PIN / VAT Number"
                                     className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 rounded-2xl outline-none transition-all font-bold text-sm shadow-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                                    Category
+                                </label>
+                                <input
+                                    {...register('category')}
+                                    type="text"
+                                    placeholder="e.g. Wholesaler"
+                                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl font-bold text-sm"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                                    Country
+                                </label>
+                                <input
+                                    {...register('country')}
+                                    type="text"
+                                    placeholder="e.g. Rwanda"
+                                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl font-bold text-sm"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                                    Payment terms
+                                </label>
+                                <input
+                                    {...register('payment_terms')}
+                                    type="text"
+                                    placeholder="e.g. Net 30"
+                                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl font-bold text-sm"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                                    Priority (1–10)
+                                </label>
+                                <input
+                                    {...register('priority', { valueAsNumber: true })}
+                                    type="number"
+                                    min={1}
+                                    max={10}
+                                    placeholder="Optional"
+                                    className="w-full px-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl font-bold text-sm"
                                 />
                             </div>
                         </div>

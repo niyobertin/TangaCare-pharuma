@@ -370,11 +370,15 @@ export interface ColdChainOverview {
 export interface Supplier {
     id: number;
     name: string;
-    contact_person: string;
-    phone: string;
-    email: string;
-    address: string;
+    contact_person?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
     tax_id?: string;
+    category?: string;
+    country?: string;
+    payment_terms?: string;
+    priority?: number;
     is_active: boolean;
     created_at?: string;
 }

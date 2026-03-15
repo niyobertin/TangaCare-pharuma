@@ -24,6 +24,7 @@ const defaultConfig: RuntimeConfig = {
     currencyCode: 'RWF',
     currencySymbol: 'RWF',
     currencyDecimals: 0,
+    currencyRoundingMode: 'half_up',
     maxDiscountPercent: 20,
     vatEnabled: true,
     vatRate: 0.18,

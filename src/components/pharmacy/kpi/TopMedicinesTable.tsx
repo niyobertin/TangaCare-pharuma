@@ -1,7 +1,9 @@
 import { Trophy, ArrowUpRight } from 'lucide-react';
 import type { TopRevenueMedicine } from '../../../types/pharmacy';
+import { useRuntimeConfig } from '../../../context/RuntimeConfigContext';
 
 export const TopMedicinesTable = ({ data }: { data: TopRevenueMedicine[] }) => {
+    const { formatMoney } = useRuntimeConfig();
     return (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col h-full">
             <div className="flex items-center justify-between mb-6">
@@ -51,13 +53,13 @@ export const TopMedicinesTable = ({ data }: { data: TopRevenueMedicine[] }) => {
                                 </td>
                                 <td className="py-3 text-right">
                                     <p className="text-xs font-black text-slate-900 dark:text-white">
-                                        RWF {item.revenue.toLocaleString()}
+                                        {formatMoney(item.revenue)}
                                     </p>
                                 </td>
                                 <td className="py-3 text-right">
                                     <div className="flex items-center justify-end gap-1 text-emerald-600">
                                         <p className="text-xs font-black">
-                                            RWF {item.profit.toLocaleString()}
+                                            {formatMoney(item.profit)}
                                         </p>
                                         <ArrowUpRight size={10} />
                                     </div>

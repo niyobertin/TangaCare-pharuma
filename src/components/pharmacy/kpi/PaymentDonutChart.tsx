@@ -1,8 +1,10 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { CreditCard } from 'lucide-react';
 import type { PaymentBreakdown } from '../../../types/pharmacy';
+import { useRuntimeConfig } from '../../../context/RuntimeConfigContext';
 
 export const PaymentDonutChart = ({ data }: { data: PaymentBreakdown[] }) => {
+    const { formatMoney } = useRuntimeConfig();
     const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444'];
 
     return (
@@ -52,7 +54,7 @@ export const PaymentDonutChart = ({ data }: { data: PaymentBreakdown[] }) => {
                                 fontSize: '11px',
                                 fontWeight: '700',
                             }}
-                            formatter={(value: any) => [`RWF ${value.toLocaleString()}`, 'Total']}
+                            formatter={(value: any) => [formatMoney(value), 'Total']}
                         />
                         <Legend
                             verticalAlign="bottom"
