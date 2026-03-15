@@ -16,6 +16,7 @@ import {
     ReferenceLine,
 } from 'recharts';
 import { useTheme } from '../../context/ThemeContext';
+import { formatLocalDate, formatLocalDateTime, parseLocalDate } from '../../lib/date';
 
 // --- Types ---
 export interface InventoryData {
@@ -114,14 +115,14 @@ export const ConsumptionTrendChart: React.FC<{ data: TrendData[] }> = ({ data })
                     stroke={axisColor}
                     tick={{ fontSize: 10 }}
                     tickFormatter={(str) => {
-                        const date = new Date(str);
+                        const date = parseLocalDate(str);
                         return `${date.getMonth() + 1}/${date.getDate()}`;
                     }}
                 />
                 <YAxis stroke={axisColor} tick={{ fontSize: 10 }} width={35} />
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
                 <Tooltip
-                    labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                    labelFormatter={(label) => formatLocalDate(label)}
                     contentStyle={tooltipStyle}
                 />
                 <Legend />
@@ -204,14 +205,14 @@ export const ColdChainTelemetryChart: React.FC<{ data: ColdChainTrendData[] }> =
                     stroke={axisColor}
                     tick={{ fontSize: 10 }}
                     tickFormatter={(value) => {
-                        const d = new Date(value);
+                        const d = parseLocalDate(value);
                         return `${d.getHours().toString().padStart(2, '0')}:00`;
                     }}
                 />
                 <YAxis stroke={axisColor} tick={{ fontSize: 10 }} width={35} />
                 <Tooltip
                     contentStyle={tooltipStyle}
-                    labelFormatter={(label) => new Date(label).toLocaleString()}
+                    labelFormatter={(label) => formatLocalDateTime(label)}
                     formatter={(value: any, name: any) => {
                         if (name === 'average_temperature_c') {
                             return [`${Number(value).toFixed(1)}°C`, 'Avg Temperature'];

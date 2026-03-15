@@ -8,7 +8,7 @@ export function AuthLayout() {
 
     return (
         <div
-            className="h-screen w-full flex items-center justify-center p-4 md:p-6 overflow-hidden bg-cover bg-center relative transition-colors duration-300"
+            className="fixed inset-0 h-screen w-full flex items-center justify-center p-4 md:p-6 overflow-hidden bg-cover bg-center bg-no-repeat relative transition-colors duration-300"
             style={{ backgroundImage: `url(${authBg})` }}
         >
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]"></div>

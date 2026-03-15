@@ -19,6 +19,7 @@ import { TaxSummaryTable } from '../../components/pharmacy/TaxSummaryTable';
 import { format, subDays } from 'date-fns';
 import { cn } from '../../lib/utils';
 import { useNavigate } from '@tanstack/react-router';
+import { formatLocalDate, parseLocalDate } from '../../lib/date';
 
 import { ReorderSuggestions } from '../../components/pharmacy/reports/ReorderSuggestions';
 import { ExpiryReport } from '../../components/pharmacy/reports/ExpiryReport';
@@ -594,7 +595,7 @@ function LoyaltyReports({ facilityId }: { facilityId?: number }) {
                                         RWF {p.total_spent.toLocaleString()}
                                     </td>
                                     <td className="px-6 py-4 text-right text-slate-400 text-[10px]">
-                                        {new Date(p.last_visit).toLocaleDateString()}
+                                        {formatLocalDate(p.last_visit)}
                                     </td>
                                 </tr>
                             ))}
@@ -969,7 +970,7 @@ function SalesReports({
                                     className="hover:bg-slate-50 transition-colors"
                                 >
                                     <td className="px-6 py-4 text-xs font-bold text-slate-500">
-                                        {new Date(t.date).toLocaleDateString()}
+                                        {formatLocalDate(t.date)}
                                     </td>
                                     <td className="px-6 py-4 font-black text-healthcare-primary text-xs tracking-tighter uppercase">
                                         {t.transaction_number}
@@ -1153,7 +1154,7 @@ function StockReports({ facilityId }: { facilityId?: number }) {
 
             let daysToExpiry: number | null = null;
             if (medicine.expiry_date) {
-                const expiryDate = new Date(medicine.expiry_date);
+                const expiryDate = parseLocalDate(medicine.expiry_date);
                 if (!Number.isNaN(expiryDate.getTime())) {
                     expiryDate.setHours(0, 0, 0, 0);
                     daysToExpiry = Math.ceil(
@@ -1631,7 +1632,7 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                                             </td>
                                             <td className="px-4 py-3 text-center text-slate-600 dark:text-slate-300 font-semibold whitespace-nowrap">
                                                 {row.expiry_date
-                                                    ? new Date(row.expiry_date).toLocaleDateString()
+                                                    ? formatLocalDate(row.expiry_date)
                                                     : 'N/A'}
                                             </td>
                                             <td className="px-4 py-3 text-center font-semibold whitespace-nowrap">
@@ -1659,7 +1660,7 @@ function StockReports({ facilityId }: { facilityId?: number }) {
                                             </td>
                                             <td className="px-4 py-3 text-center text-slate-500 dark:text-slate-400 text-xs font-semibold whitespace-nowrap">
                                                 {row.created_at
-                                                    ? new Date(row.created_at).toLocaleDateString()
+                                                    ? formatLocalDate(row.created_at)
                                                     : 'N/A'}
                                             </td>
                                         </tr>

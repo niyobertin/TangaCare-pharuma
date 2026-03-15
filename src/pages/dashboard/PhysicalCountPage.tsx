@@ -4,6 +4,7 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import type { PhysicalCount, PhysicalCountItem } from '../../types/pharmacy';
 import { format } from 'date-fns';
+import { parseLocalDate } from '../../lib/date';
 import {
     ClipboardCheck,
     Plus,
@@ -156,7 +157,7 @@ export function PhysicalCountPage() {
                                             <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
                                                 {format(new Date(count.created_at), 'PPP')}
                                                 <div className="text-xs text-slate-400">
-                                                    {format(new Date(count.created_at), 'p')}
+                                                    {format(parseLocalDate(count.created_at), 'p')}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">

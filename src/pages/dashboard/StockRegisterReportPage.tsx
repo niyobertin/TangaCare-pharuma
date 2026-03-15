@@ -14,6 +14,7 @@ import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { getStockMovementLabel } from '../../lib/stockMovement';
+import { formatLocalDateTime } from '../../lib/date';
 
 export function StockRegisterReportPage() {
     const { user, facilityId } = useAuth();
@@ -167,7 +168,7 @@ export function StockRegisterReportPage() {
                                         >
                                             <td className="p-4 text-slate-600 dark:text-slate-400 whitespace-nowrap">
                                                 {row.created_at
-                                                    ? new Date(row.created_at).toLocaleString()
+                                                    ? formatLocalDateTime(row.created_at)
                                                     : '—'}
                                             </td>
                                             <td className="p-4">

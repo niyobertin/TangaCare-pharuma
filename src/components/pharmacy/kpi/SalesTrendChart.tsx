@@ -8,6 +8,7 @@ import {
     ResponsiveContainer,
 } from 'recharts';
 import { Calendar } from 'lucide-react';
+import { parseLocalDate } from '../../../lib/date';
 
 interface SalesTrendChartProps {
     data: Array<{ date: string; sales: number }>;
@@ -43,7 +44,7 @@ export const SalesTrendChart = ({ data, title = '30-Day Sales Trend' }: SalesTre
                             tickLine={false}
                             tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 700 }}
                             tickFormatter={(str) => {
-                                const date = new Date(str);
+                                const date = parseLocalDate(str);
                                 return date.toLocaleDateString('en-US', {
                                     day: 'numeric',
                                     month: 'short',
@@ -68,7 +69,7 @@ export const SalesTrendChart = ({ data, title = '30-Day Sales Trend' }: SalesTre
                             }}
                             formatter={(value: any) => [`RWF ${value.toLocaleString()}`, 'Revenue']}
                             labelFormatter={(label) =>
-                                new Date(label).toLocaleDateString('en-US', {
+                                parseLocalDate(label).toLocaleDateString('en-US', {
                                     day: 'numeric',
                                     month: 'long',
                                     year: 'numeric',

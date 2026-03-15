@@ -24,8 +24,6 @@ export function LoginPage() {
         resolver: yupResolver(loginSchema) as any,
     });
 
-    if (isAuthenticated) return <Navigate to={'/app' as any} search={{} as any} />;
-
     const onSubmit = async (data: LoginForm) => {
         setLoading(true);
         try {
@@ -41,6 +39,56 @@ export function LoginPage() {
         }
     };
 
+    if (isAuthenticated) return <Navigate to={'/app' as any} search={{} as any} />;
+
+    return (
+        <>
+            {loading && (
+                <div
+                    className="fixed inset-0 z-[100] bg-slate-900 dark:bg-slate-950 flex items-center justify-center"
+                    aria-hidden="true"
+                >
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        <span className="text-xs font-bold text-white/90 uppercase tracking-widest">
+                            Signing in...
+                        </span>
+                    </div>
+                </div>
+            )}
+            <LoginFormContent
+                loading={loading}
+                register={register}
+                handleSubmit={handleSubmit}
+                errors={errors}
+                showPassword={showPassword}
+                setShowPassword={setShowPassword}
+                onSubmit={onSubmit}
+                navigate={navigate}
+            />
+        </>
+    );
+}
+
+function LoginFormContent({
+    loading,
+    register,
+    handleSubmit,
+    errors,
+    showPassword,
+    setShowPassword,
+    onSubmit,
+    navigate,
+}: {
+    loading: boolean;
+    register: any;
+    handleSubmit: any;
+    errors: any;
+    showPassword: boolean;
+    setShowPassword: (v: boolean) => void;
+    onSubmit: (data: LoginForm) => Promise<void>;
+    navigate: any;
+}) {
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}

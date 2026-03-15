@@ -5,6 +5,7 @@ import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import type { BatchRecall, Batch } from '../../types/pharmacy';
 import { RecallStatus, RecallReason } from '../../types/pharmacy';
 import { format } from 'date-fns';
+import { parseLocalDate } from '../../lib/date';
 import { LifeBuoy, Plus, Search, AlertCircle, Download, Eye, ChevronRight } from 'lucide-react';
 import { SkeletonTable } from '../../components/ui/SkeletonTable';
 
@@ -402,7 +403,7 @@ function RecallDetail({ recall, onBack }: { recall: BatchRecall; onBack: () => v
                             <div>
                                 <div className="text-slate-400">Initiated At</div>
                                 <div className="font-bold">
-                                    {format(new Date(recall.initiated_at), 'PPP')}
+                                    {format(parseLocalDate(recall.initiated_at), 'PPP')}
                                 </div>
                             </div>
                             <div className="col-span-2">

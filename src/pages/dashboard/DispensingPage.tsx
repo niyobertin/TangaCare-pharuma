@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, ShoppingCart, Trash2, CheckCircle2, User, ChevronDown, X } from 'lucide-react';
+import { Search, ShoppingCart, Trash2, CheckCircle2, User, ChevronDown, ChevronUp, X, Download, ArrowLeft, Mail } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Medicine, Batch, Stock } from '../../types/pharmacy';
@@ -18,6 +18,8 @@ import { db } from '../../lib/indexeddb';
 import { toSentenceCase } from '../../lib/text';
 import { useBarcodeScanner } from '../../hooks/useBarcodeScanner';
 import { settingsService } from '../../services/settings.service';
+import { cn } from '../../lib/utils';
+import { formatLocalDate, parseLocalDate } from '../../lib/date';
 
 const WALK_IN_PATIENT = {
     id: null,
@@ -36,8 +38,17 @@ interface SubstitutionAlternative {
     reason: string;
 }
 
+interface SuccessSummary {
+    amount: number;
+    saleId: number | string;
+    paymentMethod: string;
+    date: Date;
+    facilityName: string;
+    customerEmail?: string | null;
+}
+
 export function DispensingPage() {
-    const { user } = useAuth();
+    const { user, currentFacility } = useAuth();
     const { isOnline, queueCount } = useOfflineSync();
     const [medicines, setMedicines] = useState<Medicine[]>([]);
     const [loading, setLoading] = useState(true);
@@ -57,7 +68,8 @@ export function DispensingPage() {
     const [showCreatePatient, setShowCreatePatient] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [prescriptionId, setPrescriptionId] = useState('');
-    const [lastSaleId, setLastSaleId] = useState<number | null>(null);
+    const [successSummary, setSuccessSummary] = useState<SuccessSummary | null>(null);
+    const [downloadingReceipt, setDownloadingReceipt] = useState(false);
     const [substitutionLoadingMedicineId, setSubstitutionLoadingMedicineId] = useState<
         number | null
     >(null);
@@ -66,6 +78,48 @@ export function DispensingPage() {
         alternatives: SubstitutionAlternative[];
     } | null>(null);
     const shownExpiryWarningsRef = useRef<Set<number>>(new Set());
+    const cartPanelRef = useRef<HTMLDivElement>(null);
+    const [isMobile, setIsMobile] = useState(() =>
+        typeof window !== 'undefined' ? window.innerWidth < 1024 : false,
+    );
+    const [isCartExpandedOnMobile, setIsCartExpandedOnMobile] = useState(false);
+
+    useEffect(() => {
+        const mq = window.matchMedia('(max-width: 1023px)');
+        const onChange = () => setIsMobile(mq.matches);
+        mq.addEventListener('change', onChange);
+        return () => mq.removeEventListener('change', onChange);
+    }, []);
+
+    const scrollToCart = () => {
+        setIsCartExpandedOnMobile(true);
+        if (!isMobile) {
+            cartPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    useEffect(() => {
+        if (!isMobile || !isCartExpandedOnMobile) return;
+        const id = setTimeout(() => {
+            cartPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50);
+        return () => clearTimeout(id);
+    }, [isMobile, isCartExpandedOnMobile]);
+
+    const handleDownloadReceipt = async () => {
+        if (!successSummary || typeof successSummary.saleId !== 'number' || !user?.facility_id) return;
+        setDownloadingReceipt(true);
+        try {
+            await pharmacyService.getSaleReceipt(successSummary.saleId, user.facility_id);
+            toast.success('Receipt downloaded');
+        } catch (err: any) {
+            const message = err?.message || 'Failed to download receipt';
+            toast.error(message);
+        } finally {
+            setDownloadingReceipt(false);
+        }
+    };
+
     const [runtimeConfig, setRuntimeConfig] = useState<{ currency: string; vatRate: number }>({
         currency: 'RWF',
         vatRate: 0.18,
@@ -110,14 +164,14 @@ export function DispensingPage() {
                 };
                 if (candidate.is_frozen) return false;
                 if (!candidate.batch?.expiry_date) return false;
-                const expiry = new Date(candidate.batch.expiry_date);
+                const expiry = parseLocalDate(candidate.batch.expiry_date);
                 if (Number.isNaN(expiry.getTime()) || expiry <= now) return false;
                 return getAvailableQuantity(candidate) > 0;
             })
             .sort(
                 (a, b) =>
-                    new Date(a.batch!.expiry_date).getTime() -
-                    new Date(b.batch!.expiry_date).getTime(),
+                    parseLocalDate(a.batch!.expiry_date).getTime() -
+                    parseLocalDate(b.batch!.expiry_date).getTime(),
             );
     };
 
@@ -125,9 +179,9 @@ export function DispensingPage() {
         stocks: Array<Stock & { reserved_quantity?: number; is_frozen?: boolean }>,
     ) => {
         if (!stocks.length) return undefined;
-        const firstExpiryTs = new Date(stocks[0].batch!.expiry_date).getTime();
+        const firstExpiryTs = parseLocalDate(stocks[0].batch!.expiry_date).getTime();
         const sameEarliestExpiry = stocks.filter(
-            (stock) => new Date(stock.batch!.expiry_date).getTime() === firstExpiryTs,
+            (stock) => parseLocalDate(stock.batch!.expiry_date).getTime() === firstExpiryTs,
         );
         return sameEarliestExpiry.find((stock) => !!stock.location?.name) || sameEarliestExpiry[0];
     };
@@ -146,8 +200,8 @@ export function DispensingPage() {
 
         if (Number(earliestStock.batch.id) === Number(selectedStock.batch.id)) return null;
 
-        const earliestExpiryTs = new Date(earliestStock.batch.expiry_date).getTime();
-        const selectedExpiryTs = new Date(selectedStock.batch.expiry_date).getTime();
+        const earliestExpiryTs = parseLocalDate(earliestStock.batch.expiry_date).getTime();
+        const selectedExpiryTs = parseLocalDate(selectedStock.batch.expiry_date).getTime();
         if (!Number.isFinite(earliestExpiryTs) || !Number.isFinite(selectedExpiryTs)) return null;
         if (earliestExpiryTs >= selectedExpiryTs) return null;
 
@@ -389,8 +443,8 @@ export function DispensingPage() {
             ];
         });
 
-        // FEFO Prompt & Expiry Warning
-        const expiryDate = new Date(bestBatch.expiry_date);
+        // FEFO Prompt & Expiry Warning (use local timezone for expiry date)
+        const expiryDate = parseLocalDate(bestBatch.expiry_date);
         const daysToExpiry = Math.ceil(
             (expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
         );
@@ -551,6 +605,7 @@ export function DispensingPage() {
     const subtotal = cart.reduce((acc, item) => acc + item.selling_price * item.quantity, 0);
     const tax = subtotal * runtimeConfig.vatRate;
     const total = subtotal + tax;
+    const cartTotalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const handleCheckout = () => {
         if (!user?.facility_id) {
@@ -622,6 +677,14 @@ export function DispensingPage() {
                 toast.success('Offline: Sale queued for sync');
                 setCart([]);
                 setShowPaymentModal(false);
+                setSuccessSummary({
+                    amount: total,
+                    saleId: 'Pending sync',
+                    paymentMethod: payments[0]?.method ? String(payments[0].method).replace(/_/g, ' ') : 'Cash',
+                    date: new Date(),
+                    facilityName: currentFacility?.name ?? 'Pharmacy',
+                    customerEmail: (selectedPatient as any)?.email ?? null,
+                });
                 setShowSuccess(true);
                 return;
             }
@@ -634,21 +697,18 @@ export function DispensingPage() {
                 return;
             }
 
-            setLastSaleId(response.id);
+            setSuccessSummary({
+                amount: total,
+                saleId: response.id,
+                paymentMethod: payments[0]?.method ? String(payments[0].method).replace(/_/g, ' ') : 'Cash',
+                date: new Date(),
+                facilityName: currentFacility?.name ?? 'Pharmacy',
+                customerEmail: selectedPatient?.email ?? (selectedPatient as any)?.email ?? null,
+            });
             setShowSuccess(true);
             toast.success('Dispensing completed successfully');
             setShowPaymentModal(false);
-
-            setTimeout(() => {
-                setShowSuccess(false);
-                setCart([]);
-                setSearchQuery('');
-                setPatientQuery('');
-                setPrescriptionId('');
-                setSelectedPatient(WALK_IN_PATIENT);
-                setLastSaleId(null);
-                fetchMedicines();
-            }, 5000);
+            // Success overlay stays open until user clicks "Return to Dispensing"
         } catch (error) {
             console.error('Checkout failed:', error);
             const message = getApiErrorMessage(error);
@@ -682,16 +742,32 @@ export function DispensingPage() {
                     )}
                 </div>
             )}
-            <div className="flex h-full flex-row p-5 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-700 overflow-hidden">
-                {/* LEFT SIDE - Medicine Search and Cards */}
-                <div className="flex-1 flex flex-col gap-6 overflow-hidden min-h-0">
-                    <div className="space-y-1">
-                        <h2 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
-                            Dispense Medicine
-                        </h2>
-                        <p className="text-slate-500 font-bold text-xs uppercase tracking-wider">
-                            Point of Sale & Search
-                        </p>
+            <div className="flex h-full flex-col lg:flex-row p-3 sm:p-4 md:p-5 gap-4 md:gap-5 lg:gap-6 animate-in fade-in slide-in-from-bottom-2 duration-700 overflow-y-auto lg:overflow-hidden">
+                {/* LEFT SIDE - Medicine Search and Cards (mobile: 2 cols, tablet: 3 cols, desktop: 2–3 cols) */}
+                <div className="flex flex-col gap-4 md:gap-5 lg:gap-6 overflow-hidden min-h-0 lg:flex-1 lg:min-h-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="space-y-1">
+                            <h2 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
+                                Dispense Medicine
+                            </h2>
+                            <p className="text-slate-500 font-bold text-xs uppercase tracking-wider">
+                                Point of Sale & Search
+                            </p>
+                        </div>
+                        {/* Cart / Store indicator - click to show cart items list */}
+                        <button
+                            type="button"
+                            onClick={scrollToCart}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-healthcare-primary/10 dark:bg-healthcare-primary/20 border-2 border-healthcare-primary/30 text-healthcare-primary hover:bg-healthcare-primary/20 dark:hover:bg-healthcare-primary/30 transition-colors font-bold text-sm shrink-0"
+                        >
+                            <ShoppingCart size={20} />
+                            <span>Cart</span>
+                            {cartTotalQuantity > 0 && (
+                                <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-healthcare-primary text-white text-xs font-black flex items-center justify-center">
+                                    {cartTotalQuantity}
+                                </span>
+                            )}
+                        </button>
                     </div>
 
                     <div className="relative">
@@ -712,10 +788,10 @@ export function DispensingPage() {
                     <div
                         ref={scrollContainerRef}
                         onScroll={handleScroll}
-                        className="flex-1 overflow-y-auto custom-scrollbar pr-2 -mr-2"
+                        className="flex-1 min-h-[200px] lg:min-h-0 overflow-y-auto custom-scrollbar pr-2 -mr-2"
                     >
                         {loading ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 pb-4">
                                 {Array.from({ length: 8 }).map((_, i) => (
                                     <SkeletonTable
                                         key={i}
@@ -728,7 +804,7 @@ export function DispensingPage() {
                                 ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 pb-4">
                                 {medicines.map((med) => (
                                     <MedicineCard
                                         key={med.id}
@@ -746,8 +822,26 @@ export function DispensingPage() {
                     </div>
                 </div>
 
-                {/* RIGHT SIDE - Cart and Patient Details */}
-                <div className="w-full lg:w-[450px] flex flex-col gap-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl relative min-h-0">
+                {/* RIGHT SIDE - Hidden completely on mobile/tablet until user taps Cart; always visible on desktop (lg+) */}
+                {(!isMobile || isCartExpandedOnMobile) && (
+                <div
+                    ref={cartPanelRef}
+                    className="w-full md:max-w-md lg:w-[450px] flex-shrink-0 flex flex-col gap-4 md:gap-5 lg:gap-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 md:p-6 shadow-xl relative min-h-0"
+                >
+                    {/* On mobile/tablet: close button to hide panel completely */}
+                    {isMobile && (
+                        <div className="flex justify-end -mt-1 -mx-1">
+                            <button
+                                type="button"
+                                onClick={() => setIsCartExpandedOnMobile(false)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-sm"
+                                aria-label="Close cart"
+                            >
+                                <X size={18} />
+                                Close
+                            </button>
+                        </div>
+                    )}
                     {/* Patient Details Section */}
                     <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 space-y-2">
                         <div className="flex items-center justify-between text-healthcare-dark dark:text-white font-black text-sm">
@@ -902,8 +996,15 @@ export function DispensingPage() {
                         />
                     )}
 
-                    {/* Cart Header */}
-                    <div className="flex items-center justify-between">
+                    {/* Cart Header - on mobile, click to expand and show cart items list */}
+                    <button
+                        type="button"
+                        onClick={() => isMobile && setIsCartExpandedOnMobile((v) => !v)}
+                        className={cn(
+                            'w-full flex items-center justify-between text-left rounded-xl transition-colors',
+                            isMobile && 'hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 p-1 -m-1',
+                        )}
+                    >
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-xl bg-healthcare-primary/10 flex items-center justify-center text-healthcare-primary border border-healthcare-primary/20">
                                 <ShoppingCart size={18} />
@@ -912,12 +1013,24 @@ export function DispensingPage() {
                                 Current Cart
                             </h3>
                         </div>
-                        <span className="text-xs font-black bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-slate-500 uppercase">
-                            {cart.length} Items
-                        </span>
-                    </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-black bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full text-slate-500 uppercase">
+                                {cartTotalQuantity} Item{cartTotalQuantity !== 1 ? 's' : ''}
+                            </span>
+                            {isMobile && (
+                                <span className="text-slate-400">
+                                    {isCartExpandedOnMobile ? (
+                                        <ChevronUp size={20} />
+                                    ) : (
+                                        <ChevronDown size={20} />
+                                    )}
+                                </span>
+                            )}
+                        </div>
+                    </button>
 
-                    {/* Cart Items - Scrollable */}
+                    {/* Cart Items - on mobile/tablet hidden completely until card is clicked; click again to hide */}
+                    {(isMobile ? isCartExpandedOnMobile : true) ? (
                     <div className="flex-1 overflow-hidden flex flex-col min-h-0">
                         <DispensingCart
                             cart={cart}
@@ -934,33 +1047,106 @@ export function DispensingPage() {
                             readOnly={isReadOnly}
                         />
                     </div>
+                    ) : null}
+                </div>
+                )}
 
-                    {/* Success Overlay */}
-                    {showSuccess && (
-                        <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 z-20 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300 rounded-2xl">
-                            <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-500 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                                <CheckCircle2 size={40} />
+            </div>
+
+            {/* Success Overlay - Payment/Sale success (fixed so it shows on mobile too); green icons */}
+            {showSuccess && successSummary && (
+                <div className="fixed inset-0 z-50 bg-slate-200/90 dark:bg-slate-950/90 flex items-center justify-center p-4 sm:p-6">
+                    <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 animate-in fade-in duration-300">
+                        {/* Green success icon */}
+                        <div className="flex justify-center mb-6">
+                            <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center ring-4 ring-emerald-200/50 dark:ring-emerald-800/30">
+                                <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center">
+                                    <CheckCircle2 size={32} className="text-white" />
+                                </div>
                             </div>
-                            <h3 className="text-xl font-black text-healthcare-dark dark:text-white tracking-tight">
-                                Sale Completed!
-                            </h3>
-                            {lastSaleId && user?.facility_id && (
+                        </div>
+                        <h3 className="text-xl font-black text-center text-slate-900 dark:text-white tracking-tight">
+                            Payment Successful!
+                        </h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 text-center mt-2">
+                            Your payment has been processed successfully. Receipt is ready to download.
+                        </p>
+                        {/* Payment summary */}
+                        <div className="mt-6 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 space-y-3">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-500 dark:text-slate-400">Amount</span>
+                                <span className="font-bold text-slate-900 dark:text-white">
+                                    {runtimeConfig.currency} {successSummary.amount.toLocaleString()}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-sm items-center">
+                                <span className="text-slate-500 dark:text-slate-400">Transaction ID</span>
+                                <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 font-mono text-xs">
+                                    {typeof successSummary.saleId === 'number' ? `SALE-${String(successSummary.saleId).padStart(6, '0')}` : successSummary.saleId}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-500 dark:text-slate-400">Payment Method</span>
+                                <span className="font-semibold text-slate-800 dark:text-slate-200 capitalize">
+                                    {successSummary.paymentMethod.replace(/_/g, ' ')}
+                                </span>
+                            </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-500 dark:text-slate-400">Date</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                            {formatLocalDate(successSummary.date)}
+                                        </span>
+                                    </div>
+                            <div className="flex justify-between text-sm">
+                                <span className="text-slate-500 dark:text-slate-400">Merchant</span>
+                                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                    {successSummary.facilityName}
+                                </span>
+                            </div>
+                        </div>
+                        {/* Receipt email */}
+                        {successSummary.customerEmail && (
+                            <div className="mt-4 flex items-center gap-2 px-3 py-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/40">
+                                <Mail size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <span className="text-sm text-emerald-800 dark:text-emerald-200">
+                                    Receipt sent to {successSummary.customerEmail}
+                                </span>
+                            </div>
+                        )}
+                        {/* Actions */}
+                        <div className="mt-6 flex flex-col gap-3">
+                            {typeof successSummary.saleId === 'number' && user?.facility_id && (
                                 <button
-                                    onClick={() =>
-                                        pharmacyService.getSaleReceipt(
-                                            lastSaleId,
-                                            user.facility_id!,
-                                        )
-                                    }
-                                    className="mt-6 flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                                    type="button"
+                                    onClick={handleDownloadReceipt}
+                                    disabled={downloadingReceipt}
+                                    className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-md active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                                 >
-                                    <ShoppingCart size={18} /> Print Receipt
+                                    <Download size={20} className="text-white shrink-0" />
+                                    {downloadingReceipt ? 'Downloading…' : 'Download Receipt'}
                                 </button>
                             )}
+                            <button
+                                onClick={() => {
+                                    setShowSuccess(false);
+                                    setSuccessSummary(null);
+                                    setIsCartExpandedOnMobile(false);
+                                    setCart([]);
+                                    setSearchQuery('');
+                                    setPatientQuery('');
+                                    setPrescriptionId('');
+                                    setSelectedPatient(WALK_IN_PATIENT);
+                                    fetchMedicines();
+                                }}
+                                className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all"
+                            >
+                                <ArrowLeft size={20} className="text-emerald-600 dark:text-emerald-400" />
+                                Return to Dispensing
+                            </button>
                         </div>
-                    )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {substitutionContext && (
                 <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">

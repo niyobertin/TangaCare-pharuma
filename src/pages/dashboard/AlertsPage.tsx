@@ -18,6 +18,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../../context/AuthContext';
 import { useSearch, useNavigate } from '@tanstack/react-router';
+import { formatLocalDateTime } from '../../lib/date';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -432,7 +433,7 @@ export function AlertsPage() {
                                         <div className="flex items-center gap-1.5 text-slate-400">
                                             <Clock size={12} />
                                             <span className="text-[10px] font-bold uppercase">
-                                                {new Date(alert.created_at).toLocaleString()}
+                                                {formatLocalDateTime(alert.created_at)}
                                             </span>
 
                                             {alert.status === 'resolved' && (

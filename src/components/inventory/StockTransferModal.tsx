@@ -8,6 +8,7 @@ import type { Medicine, Batch, Department, StorageLocation } from '../../types/p
 import { X, ArrowRightLeft, Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toSentenceCase } from '../../lib/text';
+import { formatLocalDate, parseLocalDate } from '../../lib/date';
 
 interface StockTransferModalProps {
     medicine: Medicine;
@@ -66,7 +67,7 @@ export function StockTransferModal({
                 ]);
 
                 const activeBatches = (batchesData || []).filter(
-                    (b) => b.current_quantity > 0 && new Date(b.expiry_date) > new Date(),
+                    (b) => b.current_quantity > 0 && parseLocalDate(b.expiry_date) > new Date(),
                 );
 
                 setBatches(activeBatches);
@@ -171,7 +172,7 @@ export function StockTransferModal({
                                     {batches.map((b) => (
                                         <option key={b.id} value={b.id}>
                                             {b.batch_number} (Qty: {b.current_quantity}) - Exp:{' '}
-                                            {new Date(b.expiry_date).toLocaleDateString()}
+                                            {formatLocalDate(b.expiry_date)}
                                         </option>
                                     ))}
                                 </select>

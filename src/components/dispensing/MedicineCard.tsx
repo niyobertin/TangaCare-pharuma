@@ -4,6 +4,7 @@ import { Calendar, AlertTriangle, AlertCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useMedicineStock } from '../../hooks/useMedicineStock';
 import { toSentenceCase } from '../../lib/text';
+import { parseLocalDate, formatLocalDate } from '../../lib/date';
 
 interface MedicineCardProps {
     medicine: Medicine;
@@ -27,11 +28,12 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
     const displayUnit = toSentenceCase(medicine.unit);
 
     const isLowStock = (medicine.stock_quantity || 0) < 10;
-    const isExpired = !!nearestExpiry && new Date(nearestExpiry) <= new Date();
+    const expiryDate = nearestExpiry ? parseLocalDate(nearestExpiry) : null;
+    const isExpired = !!expiryDate && !Number.isNaN(expiryDate.getTime()) && expiryDate <= new Date();
     const isNearExpiry =
-        !!nearestExpiry &&
+        !!expiryDate &&
         !isExpired &&
-        new Date(nearestExpiry) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+        expiryDate <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     return (
         <div className="relative group flex flex-col bg-white dark:bg-slate-800 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-1 overflow-hidden shadow-sm">
@@ -129,7 +131,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
                             {isLoading
                                 ? '...'
                                 : nearestExpiry
-                                  ? new Date(nearestExpiry).toLocaleDateString()
+                                  ? formatLocalDate(nearestExpiry)
                                   : 'N/A'}
                         </span>
                     </div>

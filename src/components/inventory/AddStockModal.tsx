@@ -20,6 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toSentenceCase } from '../../lib/text';
+import { parseLocalDate } from '../../lib/date';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -39,7 +40,9 @@ const batchSchema = yup.object({
         .string()
         .required('Required')
         .test('is-future', 'Expiry must be in future', (val) => {
-            return !!val && new Date(val) > new Date();
+            if (!val) return false;
+            const d = parseLocalDate(val);
+            return !Number.isNaN(d.getTime()) && d > new Date();
         }),
     manufacturing_date: yup.string().optional(),
     unit_cost: yup.number().min(0, 'Cannot be negative').required('Required'),

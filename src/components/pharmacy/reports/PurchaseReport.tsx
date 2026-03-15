@@ -3,6 +3,7 @@ import { pharmacyService } from '../../../services/pharmacy.service';
 import { SkeletonTable } from '../../ui/SkeletonTable';
 import { ShoppingCart, TrendingUp, Users, Package } from 'lucide-react';
 import { format } from 'date-fns';
+import { parseLocalDate } from '../../../lib/date';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 interface PurchaseReportProps {
@@ -262,7 +263,7 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                                     </td>
                                     <td className="px-6 py-4">
                                         <p className="text-xs font-medium text-slate-500">
-                                            {format(new Date(po.date), 'MMM dd, yyyy')}
+                                            {format(parseLocalDate(po.date), 'MMM dd, yyyy')}
                                         </p>
                                     </td>
                                     <td className="px-6 py-4">

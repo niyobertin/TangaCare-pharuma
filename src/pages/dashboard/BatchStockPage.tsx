@@ -20,6 +20,7 @@ import { StatsSkeleton } from '../../components/shared/Skeleton';
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { formatLocalDate, parseLocalDate } from '../../lib/date';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -65,11 +66,11 @@ export function BatchStockPage() {
         {
             label: 'Expiring Soon',
             value: batches.filter((b) => {
-                const expiry = new Date(b.expiry_date);
+                const expiry = parseLocalDate(b.expiry_date);
                 const now = new Date();
                 const threeMonthsFromNow = new Date();
                 threeMonthsFromNow.setMonth(now.getMonth() + 3);
-                return expiry > now && expiry <= threeMonthsFromNow;
+                return !Number.isNaN(expiry.getTime()) && expiry > now && expiry <= threeMonthsFromNow;
             }).length,
             icon: AlertTriangle,
             color: 'text-amber-500',
@@ -77,7 +78,7 @@ export function BatchStockPage() {
         },
         {
             label: 'Expired Items',
-            value: batches.filter((b) => new Date(b.expiry_date) <= new Date()).length,
+            value: batches.filter((b) => parseLocalDate(b.expiry_date) <= new Date()).length,
             icon: XCircle,
             color: 'text-rose-500',
             bg: 'bg-rose-50',
@@ -257,16 +258,16 @@ export function BatchStockPage() {
                                                         <div
                                                             className={cn(
                                                                 'w-fit px-3 py-1 rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5',
-                                                                new Date(batch.expiry_date) <
+                                                                parseLocalDate(batch.expiry_date) <
                                                                     new Date()
                                                                     ? 'bg-rose-50 text-rose-600 border border-rose-100'
                                                                     : 'bg-teal-50 text-teal-600 border border-teal-100',
                                                             )}
                                                         >
                                                             <Calendar size={12} />
-                                                            {new Date(
+                                                            {formatLocalDate(
                                                                 batch.expiry_date,
-                                                            ).toLocaleDateString()}
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">

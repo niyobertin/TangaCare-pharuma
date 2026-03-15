@@ -5,6 +5,7 @@ import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { Batch, Medicine } from '../../types/pharmacy';
+import { formatLocalDate, formatLocalDateTime, parseLocalDate } from '../../lib/date';
 
 const RISK_SOON_DAYS = 90;
 
@@ -94,13 +95,13 @@ export function MedicineDetailsPage() {
         soon.setDate(now.getDate() + RISK_SOON_DAYS);
 
         const nearExpiry = batches.filter((batch) => {
-            const expiryDate = batch.expiry_date ? new Date(batch.expiry_date) : null;
-            return expiryDate && expiryDate >= now && expiryDate <= soon;
+            const expiryDate = batch.expiry_date ? parseLocalDate(batch.expiry_date) : null;
+            return expiryDate && !Number.isNaN(expiryDate.getTime()) && expiryDate >= now && expiryDate <= soon;
         });
 
         const expired = batches.filter((batch) => {
-            const expiryDate = batch.expiry_date ? new Date(batch.expiry_date) : null;
-            return expiryDate && expiryDate < now;
+            const expiryDate = batch.expiry_date ? parseLocalDate(batch.expiry_date) : null;
+            return expiryDate && !Number.isNaN(expiryDate.getTime()) && expiryDate < now;
         });
 
         const reorderPoint = Number(medicine?.reorder_point ?? medicine?.min_stock_level ?? 0);
@@ -277,9 +278,7 @@ export function MedicineDetailsPage() {
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                                                 {batch.expiry_date
-                                                    ? new Date(
-                                                          batch.expiry_date,
-                                                      ).toLocaleDateString()
+                                                    ? formatLocalDate(batch.expiry_date)
                                                     : 'N/A'}
                                             </td>
                                             <td className="px-6 py-4 text-right font-black text-slate-800 dark:text-white">
@@ -296,9 +295,7 @@ export function MedicineDetailsPage() {
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                                                 {(batch as any).received_date
-                                                    ? new Date(
-                                                          (batch as any).received_date,
-                                                      ).toLocaleDateString()
+                                                    ? formatLocalDate((batch as any).received_date)
                                                     : 'N/A'}
                                             </td>
                                         </tr>
@@ -372,7 +369,7 @@ export function MedicineDetailsPage() {
                                             </td>
                                             <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                                                 {movement.created_at
-                                                    ? new Date(movement.created_at).toLocaleString()
+                                                    ? formatLocalDateTime(movement.created_at)
                                                     : 'N/A'}
                                             </td>
                                         </tr>

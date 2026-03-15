@@ -20,14 +20,31 @@ export const saleService = {
             responseType: 'blob',
         });
 
-        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const data = response.data as Blob;
+        if (!data || !(data instanceof Blob)) {
+            throw new Error('Invalid receipt response');
+        }
+        if (data.type === 'application/json' || data.size < 100) {
+            const text = await data.text();
+            let message = 'Failed to download receipt';
+            try {
+                const json = JSON.parse(text);
+                message = json?.message || json?.error || message;
+            } catch {
+                if (text) message = text;
+            }
+            throw new Error(message);
+        }
+
+        const blob = new Blob([data], { type: 'application/pdf' });
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `receipt_${id}.pdf`);
+        link.download = `receipt_SALE-${String(id).padStart(6, '0')}.pdf`;
+        link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
-        link.remove();
+        document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
     },
 

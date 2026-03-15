@@ -7,6 +7,7 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from '@tanstack/react-router';
+import { parseLocalDate } from '../../lib/date';
 
 interface Notification {
     id: number;
@@ -221,7 +222,7 @@ export const NotificationBell: React.FC = () => {
                                                     </p>
                                                     <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2">
                                                         {formatDistanceToNow(
-                                                            new Date(n.created_at),
+                                                            parseLocalDate(n.created_at),
                                                             { addSuffix: true },
                                                         )}
                                                     </span>

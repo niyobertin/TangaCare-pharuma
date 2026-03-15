@@ -23,6 +23,7 @@ import toast from 'react-hot-toast';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import tangaLogo from '../../assets/tanga-logo.png';
+import { formatLocalDate, formatLocalDateTime } from '../../lib/date';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -342,7 +343,7 @@ export function ViewOrderPage() {
                                             Date
                                         </span>
                                         <span className="text-sm font-bold text-healthcare-dark dark:text-white">
-                                            {new Date(order.order_date).toLocaleDateString()}
+                                            {formatLocalDate(order.order_date)}
                                         </span>
 
                                         <span className="text-xs font-semibold text-slate-500">
@@ -559,9 +560,9 @@ export function ViewOrderPage() {
                                                                     <div className="mt-1.5 flex items-center gap-1 text-[10px] text-slate-400 font-medium">
                                                                         <Info size={10} />
                                                                         Last ordered{' '}
-                                                                        {new Date(
+                                                                        {formatLocalDate(
                                                                             suggestion.last_order_date,
-                                                                        ).toLocaleDateString()}
+                                                                        )}
                                                                     </div>
                                                                 )}
                                                         </div>
@@ -919,9 +920,9 @@ export function ViewOrderPage() {
                                                         />
                                                     </div>
                                                     <span className="text-xs text-slate-400 whitespace-nowrap ml-2">
-                                                        {new Date(
+                                                        {formatLocalDateTime(
                                                             activity.created_at,
-                                                        ).toLocaleDateString()}
+                                                        )}
                                                     </span>
                                                 </div>
                                                 {expandedActivities.has(activity.id) && (

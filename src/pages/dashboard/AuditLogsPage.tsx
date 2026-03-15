@@ -7,6 +7,7 @@ import { useSearch } from '@tanstack/react-router';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { SkeletonTable } from '../../components/ui/SkeletonTable';
+import { formatLocalDate, parseLocalDate } from '../../lib/date';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -242,16 +243,12 @@ export function AuditLogsPage() {
                                                             <div className="flex flex-col">
                                                                 <span className="text-xs font-bold text-healthcare-dark">
                                                                     {log.created_at
-                                                                        ? new Date(
-                                                                              log.created_at,
-                                                                          ).toLocaleDateString()
+                                                                        ? formatLocalDate(log.created_at)
                                                                         : '—'}
                                                                 </span>
                                                                 <span className="text-[10px] font-medium text-slate-400">
                                                                     {log.created_at
-                                                                        ? new Date(
-                                                                              log.created_at,
-                                                                          ).toLocaleTimeString()
+                                                                        ? parseLocalDate(log.created_at).toLocaleTimeString()
                                                                         : ''}
                                                                 </span>
                                                             </div>

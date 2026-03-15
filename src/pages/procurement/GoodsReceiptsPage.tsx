@@ -9,6 +9,7 @@ import { SkeletonTable } from '../../components/ui/SkeletonTable';
 import { TableToolbar } from '../../components/ui/table/TableToolbar';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { formatLocalDateTime } from '../../lib/date';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -283,9 +284,7 @@ export function GoodsReceiptsPage() {
                                                     </td>
                                                     <td className="px-6 py-4 text-xs font-bold text-slate-500 whitespace-nowrap">
                                                         {row.received_date
-                                                            ? new Date(
-                                                                  row.received_date,
-                                                              ).toLocaleString()
+                                                            ? formatLocalDateTime(row.received_date)
                                                             : 'N/A'}
                                                     </td>
                                                     <td className="px-6 py-4">

@@ -3,6 +3,7 @@ import { useParams } from '@tanstack/react-router';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import api from '../../lib/api';
+import { parseLocalDate } from '../../lib/date';
 
 // Define types locally for now, or import if available
 interface PurchaseOrderItem {
@@ -201,7 +202,7 @@ export const PublicPurchaseOrder = () => {
                                 <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">To Supplier</span>
                                 <h3 className="font-bold text-slate-800 text-lg">{order.supplier?.name || 'Unknown supplier'}</h3>
                                 <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mt-4 mb-1">Date Sent</span>
-                                <p className="text-slate-700 font-medium">{format(new Date(order.order_date), 'MMMM dd, yyyy')}</p>
+                                <p className="text-slate-700 font-medium">{format(parseLocalDate(order.order_date), 'MMMM dd, yyyy')}</p>
                             </div>
                         </div>
 
@@ -387,7 +388,7 @@ export const PublicPurchaseOrder = () => {
                                                     activity.action === 'clarification_requested' ? 'bg-amber-400' : 'bg-slate-300'
                                                 }`}></div>
                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                                {format(new Date(activity.created_at), 'MMM dd, HH:mm')}
+                                                {format(parseLocalDate(activity.created_at), 'MMM dd, HH:mm')}
                                             </span>
                                             <p className="text-sm font-medium text-slate-800">
                                                 {activity.description}

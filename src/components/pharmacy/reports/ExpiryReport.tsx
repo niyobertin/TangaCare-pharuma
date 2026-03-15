@@ -12,6 +12,7 @@ import {
 import { pharmacyService } from '../../../services/pharmacy.service';
 import { SkeletonTable } from '../../ui/SkeletonTable';
 import { cn } from '../../../lib/utils';
+import { formatLocalDate } from '../../../lib/date';
 
 type ExpiryRisk = 'critical' | 'warning' | 'watch' | 'expired';
 
@@ -437,7 +438,7 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                                         Expiration Date
                                     </p>
                                     <p className="font-black text-sm text-rose-600 mt-1">
-                                        {new Date(traceResult.expiry_date).toLocaleDateString()}
+                                        {formatLocalDate(traceResult.expiry_date)}
                                     </p>
                                 </div>
                                 <div className="bg-white/80 dark:bg-slate-900/80 p-4 rounded-2xl border border-rose-100 dark:border-rose-900/20 shadow-sm">
@@ -498,14 +499,11 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
                                             </td>
                                             <td className="px-6 py-5">
                                                 <div className="font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
-                                                    {new Date(item.expiry_date).toLocaleDateString(
-                                                        'en-US',
-                                                        {
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            year: 'numeric',
-                                                        },
-                                                    )}
+                                                    {formatLocalDate(item.expiry_date, {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        year: 'numeric',
+                                                    })}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">

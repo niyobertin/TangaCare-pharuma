@@ -5,6 +5,7 @@ import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import type { StockVariance } from '../../types/pharmacy';
 import { VarianceStatus } from '../../types/pharmacy';
 import { format } from 'date-fns';
+import { parseLocalDate } from '../../lib/date';
 import {
     Scale,
     CheckCircle,
@@ -178,10 +179,10 @@ export function VarianceTrackingPage() {
                                         >
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-slate-900 dark:text-white">
-                                                    {format(new Date(v.created_at), 'MMM d, yyyy')}
+                                                    {format(parseLocalDate(v.created_at), 'MMM d, yyyy')}
                                                 </div>
                                                 <div className="text-xs text-slate-400">
-                                                    {format(new Date(v.created_at), 'p')}
+                                                    {format(parseLocalDate(v.created_at), 'p')}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">

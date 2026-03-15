@@ -29,6 +29,7 @@ import { StockTransferModal } from '../../components/inventory/StockTransferModa
 import { AddStockModal } from '../../components/inventory/AddStockModal';
 import { toast } from 'react-hot-toast';
 import { toSentenceCase } from '../../lib/text';
+import { formatLocalDate, parseLocalDate } from '../../lib/date';
 import { MedicineModal } from '../../components/inventory/MedicineModal';
 import { Pagination } from '../../components/ui/Pagination';
 import { TableToolbar } from '../../components/ui/table/TableToolbar';
@@ -482,8 +483,8 @@ export function InventoryPage() {
         const filtered = medicines.filter((med) => {
             const quantity = Number(med.stock_quantity || 0);
             const reorderPoint = Number(med.reorder_point ?? med.min_stock_level ?? 0);
-            const expiryDate = med.expiry_date ? new Date(med.expiry_date) : null;
-            const isExpired = !!expiryDate && expiryDate < now;
+            const expiryDate = med.expiry_date ? parseLocalDate(med.expiry_date) : null;
+            const isExpired = !!expiryDate && !Number.isNaN(expiryDate.getTime()) && expiryDate < now;
             const isExpiringSoon = !!expiryDate && expiryDate >= now && expiryDate <= in90Days;
             const isOutOfStock = quantity <= 0;
             const isLowStock =
@@ -529,8 +530,8 @@ export function InventoryPage() {
                     return Number(b.stock_quantity || 0) - Number(a.stock_quantity || 0);
                 case 'updated_desc':
                 default: {
-                    const left = new Date((a as any).updated_at || a.created_at || 0).getTime();
-                    const right = new Date((b as any).updated_at || b.created_at || 0).getTime();
+                    const left = parseLocalDate((a as any).updated_at || a.created_at || 0).getTime();
+                    const right = parseLocalDate((b as any).updated_at || b.created_at || 0).getTime();
                     return right - left;
                 }
             }
@@ -1032,12 +1033,12 @@ export function InventoryPage() {
                                             );
                                             const minLevel = Number(med.min_stock_level || 0);
                                             const expiryDate = med.expiry_date
-                                                ? new Date(med.expiry_date)
+                                                ? parseLocalDate(med.expiry_date)
                                                 : null;
                                             const now = new Date();
                                             const in90Days = new Date();
                                             in90Days.setDate(now.getDate() + 90);
-                                            const isExpired = !!expiryDate && expiryDate < now;
+                                            const isExpired = !!expiryDate && !Number.isNaN(expiryDate.getTime()) && expiryDate < now;
                                             const isExpiringSoon =
                                                 !!expiryDate &&
                                                 expiryDate >= now &&
@@ -1190,7 +1191,7 @@ export function InventoryPage() {
                                                                 )}
                                                             >
                                                                 {expiryDate
-                                                                    ? expiryDate.toLocaleDateString()
+                                                                    ? formatLocalDate(expiryDate)
                                                                     : 'N/A'}
                                                             </span>
                                                         </td>
@@ -1199,9 +1200,7 @@ export function InventoryPage() {
                                                         <td className="px-6 py-4 text-center whitespace-nowrap">
                                                             <span className="text-xs font-bold text-slate-500">
                                                                 {updatedAt
-                                                                    ? new Date(
-                                                                          updatedAt,
-                                                                      ).toLocaleDateString()
+                                                                    ? formatLocalDate(updatedAt)
                                                                     : 'N/A'}
                                                             </span>
                                                         </td>

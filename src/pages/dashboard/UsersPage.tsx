@@ -20,6 +20,7 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 import { userService, STAFF_ROLES, type CreateStaffPayload } from '../../services/user.service';
+import { formatLocalDate } from '../../lib/date';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import type { User, Organization } from '../../types/auth';
@@ -284,14 +285,11 @@ export function UsersPage() {
                                                 (f) => f.id === u.facility_id,
                                             );
                                             const joinedDate = u.created_at
-                                                ? new Date(u.created_at).toLocaleDateString(
-                                                      'en-US',
-                                                      {
-                                                          year: 'numeric',
-                                                          month: 'short',
-                                                          day: 'numeric',
-                                                      },
-                                                  )
+                                                ? formatLocalDate(u.created_at, {
+                                                      year: 'numeric',
+                                                      month: 'short',
+                                                      day: 'numeric',
+                                                  })
                                                 : '—';
                                             return (
                                                 <tr

@@ -3,6 +3,7 @@ import { X, CheckCircle2, Loader2, Package } from 'lucide-react';
 import { pharmacyService } from '../../services/pharmacy.service';
 import type { ProcurementOrder } from '../../types/pharmacy';
 import toast from 'react-hot-toast';
+import { parseLocalDate } from '../../lib/date';
 
 interface ReceiveOrderModalProps {
     isOpen: boolean;
@@ -198,7 +199,7 @@ export function ReceiveOrderModal({ isOpen, onClose, onSuccess, order }: Receive
 
         const nearExpiryCount = validItems.filter((item) => {
             if (Number(item.quantity_received || 0) <= 0) return false;
-            const expiry = new Date(item.expiry_date);
+            const expiry = parseLocalDate(item.expiry_date);
             const now = new Date();
             const diffDays = Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
             return diffDays >= 0 && diffDays <= 30;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { pharmacyService } from '../services/pharmacy.service';
 import type { Stock } from '../types/pharmacy';
 import { useAuth } from '../context/AuthContext';
+import { parseLocalDate } from '../lib/date';
 
 interface MedicineStockInfo {
     nearestExpiry: string | null;
@@ -38,11 +39,12 @@ export const useMedicineStock = (medicineId: number): MedicineStockInfo => {
                     .filter((stock: Stock) => {
                         if ((stock.quantity || 0) <= 0) return false;
                         if (!stock.batch?.expiry_date) return false;
-                        return new Date(stock.batch.expiry_date) > now;
+                        const expiry = parseLocalDate(stock.batch.expiry_date);
+                        return !Number.isNaN(expiry.getTime()) && expiry > now;
                     })
                     .sort((a: Stock, b: Stock) => {
-                        const aExpiry = new Date(a.batch!.expiry_date).getTime();
-                        const bExpiry = new Date(b.batch!.expiry_date).getTime();
+                        const aExpiry = parseLocalDate(a.batch!.expiry_date).getTime();
+                        const bExpiry = parseLocalDate(b.batch!.expiry_date).getTime();
                         return aExpiry - bExpiry;
                     });
 

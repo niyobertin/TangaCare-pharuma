@@ -4,7 +4,7 @@ import logo from '../../assets/tanga-logo.png';
 
 export function GlobalLoading() {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen w-full bg-slate-50 dark:bg-slate-950 transition-colors">
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center w-full min-h-full bg-slate-50 dark:bg-slate-950 transition-colors">
             <div className="relative">
                 <div className="absolute inset-0 bg-healthcare-primary/20 rounded-full blur-xl animate-pulse" />
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-xl relative z-10 border border-slate-100 dark:border-slate-800">

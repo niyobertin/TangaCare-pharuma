@@ -14,6 +14,7 @@ import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { settingsService } from '../../services/settings.service';
 import type { EffectiveSettingItem, SettingDefinition, SettingDomain } from '../../types/settings';
+import { formatLocalDateTime } from '../../lib/date';
 
 type ScopeTab = 'tenant' | 'branch' | 'user';
 
@@ -507,9 +508,9 @@ export function SettingsPage() {
                                                                                 </div>
                                                                                 {trailEntry.updated_at && (
                                                                                     <div className="text-[11px] text-slate-500 mt-1">
-                                                                                        {new Date(
+                                                                                        {formatLocalDateTime(
                                                                                             trailEntry.updated_at,
-                                                                                        ).toLocaleString()}
+                                                                                        )}
                                                                                     </div>
                                                                                 )}
                                                                             </div>

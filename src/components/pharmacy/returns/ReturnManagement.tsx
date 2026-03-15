@@ -13,6 +13,7 @@ import {
 import { pharmacyService } from '../../../services/pharmacy.service';
 import { SkeletonTable } from '../../ui/SkeletonTable';
 import { format } from 'date-fns';
+import { parseLocalDate } from '../../../lib/date';
 import type { CustomerReturn, ReturnStatus } from '../../../types/pharmacy';
 
 export const ReturnManagement = ({ facilityId }: { facilityId: number }) => {
@@ -205,12 +206,12 @@ export const ReturnManagement = ({ facilityId }: { facilityId: number }) => {
                                             <div className="flex flex-col">
                                                 <span className="text-slate-700 dark:text-slate-300 font-medium">
                                                     {format(
-                                                        new Date(ret.created_at),
+                                                        parseLocalDate(ret.created_at),
                                                         'MMM dd, yyyy',
                                                     )}
                                                 </span>
                                                 <span className="text-[10px] text-slate-400">
-                                                    {format(new Date(ret.created_at), 'HH:mm')}
+                                                    {format(parseLocalDate(ret.created_at), 'HH:mm')}
                                                 </span>
                                             </div>
                                         </td>

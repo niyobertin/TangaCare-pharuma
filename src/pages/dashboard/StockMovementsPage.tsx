@@ -13,6 +13,7 @@ import {
     normalizeStockMovementType,
 } from '../../lib/stockMovement';
 import { useTableViewState, type TableViewColumn } from '../../hooks/useTableViewState';
+import { formatLocalDateTime, parseLocalDate } from '../../lib/date';
 
 const STOCK_MOVEMENT_TABLE_COLUMNS: TableViewColumn[] = [
     { key: 'timestamp', label: 'Timestamp', hideable: false },
@@ -144,8 +145,8 @@ export function StockMovementsPage() {
         });
 
         return filtered.sort((a, b) => {
-            const timeA = new Date(a.created_at || 0).getTime();
-            const timeB = new Date(b.created_at || 0).getTime();
+            const timeA = parseLocalDate(a.created_at || 0).getTime();
+            const timeB = parseLocalDate(b.created_at || 0).getTime();
             const qtyA = Number(a.quantity_delta || 0);
             const qtyB = Number(b.quantity_delta || 0);
 
@@ -442,9 +443,7 @@ export function StockMovementsPage() {
                                                 {movementVisibleColumnSet.has('timestamp') && (
                                                     <td className="p-4 text-slate-600 dark:text-slate-400 whitespace-nowrap">
                                                         {row.created_at
-                                                            ? new Date(
-                                                                  row.created_at,
-                                                              ).toLocaleString()
+                                                            ? formatLocalDateTime(row.created_at)
                                                             : '—'}
                                                     </td>
                                                 )}

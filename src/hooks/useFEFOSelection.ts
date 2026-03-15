@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { parseLocalDate, formatLocalDate } from '../lib/date';
 
 export interface StockWithBatch {
     id: number;
@@ -75,8 +76,8 @@ export const useFEFOSelection = (
 
         // Sort by expiry date ascending (FEFO)
         const sorted = [...available].sort((a, b) => {
-            const aDate = a.batch?.expiry_date ? new Date(a.batch.expiry_date).getTime() : Infinity;
-            const bDate = b.batch?.expiry_date ? new Date(b.batch.expiry_date).getTime() : Infinity;
+            const aDate = a.batch?.expiry_date ? parseLocalDate(a.batch.expiry_date).getTime() : Infinity;
+            const bDate = b.batch?.expiry_date ? parseLocalDate(b.batch.expiry_date).getTime() : Infinity;
             return aDate - bDate;
         });
 
@@ -105,17 +106,13 @@ export const useFEFOSelection = (
     // Compute expiry metadata
     const daysUntilExpiry = selectedStock?.batch?.expiry_date
         ? Math.floor(
-              (new Date(selectedStock.batch.expiry_date).getTime() - Date.now()) /
+              (parseLocalDate(selectedStock.batch.expiry_date).getTime() - Date.now()) /
                   (1000 * 60 * 60 * 24),
           )
         : null;
 
     const expiryLabel = selectedStock?.batch?.expiry_date
-        ? `Exp ${new Date(selectedStock.batch.expiry_date).toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-          })}${daysUntilExpiry !== null ? ` (${daysUntilExpiry > 0 ? `${daysUntilExpiry} days` : 'TODAY'})` : ''}`
+        ? `Exp ${formatLocalDate(selectedStock.batch.expiry_date, { day: '2-digit', month: 'short', year: 'numeric' })}${daysUntilExpiry !== null ? ` (${daysUntilExpiry > 0 ? `${daysUntilExpiry} days` : 'TODAY'})` : ''}`
         : null;
 
     const isNearExpiry = daysUntilExpiry !== null && daysUntilExpiry >= 0 && daysUntilExpiry <= 30;

@@ -293,6 +293,7 @@ interface SidebarLinkProps {
     isCollapsed: boolean;
     children?: NavItem[];
     currentPath: string;
+    onNavigate?: () => void;
 }
 
 const SidebarLink: React.FC<SidebarLinkProps> = ({
@@ -302,6 +303,7 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
     isCollapsed,
     children,
     currentPath,
+    onNavigate,
 }) => {
     const hasChildren = children && children.length > 0;
     const shouldBeOpen =
@@ -321,6 +323,8 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
         if (hasChildren) {
             e.preventDefault();
             setIsOpen(!isOpen);
+        } else {
+            onNavigate?.();
         }
     };
 
@@ -366,6 +370,7 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
                             key={child.to}
                             to={child.to as any}
                             search={{} as any}
+                            onClick={() => onNavigate?.()}
                             activeProps={{
                                 className: 'text-healthcare-primary font-bold bg-blue-50',
                             }}
@@ -731,6 +736,7 @@ export function MainLayout() {
                 <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
                     <Link
                         to="/"
+                        onClick={() => setIsMobileMenuOpen(false)}
                         className={cn(
                             'flex items-center gap-3 px-4 py-2.5 w-full text-left text-healthcare-primary hover:bg-blue-50 rounded-xl transition-all group font-bold text-sm mb-4 border border-blue-100 shadow-sm',
                             isCollapsed && !isMobileMenuOpen && 'lg:justify-center lg:px-0',
@@ -759,6 +765,7 @@ export function MainLayout() {
                                     isCollapsed={isCollapsed && !isMobileMenuOpen}
                                     children={item.children}
                                     currentPath={location.pathname}
+                                    onNavigate={() => setIsMobileMenuOpen(false)}
                                 />
                             ))}
                         </div>
@@ -767,7 +774,10 @@ export function MainLayout() {
 
                 <div className="p-2 border-t border-blue-100">
                     <button
-                        onClick={handleLogout}
+                        onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            handleLogout();
+                        }}
                         className={cn(
                             'flex items-center gap-3 px-4 py-2.5 w-full text-left text-healthcare-danger hover:bg-red-50 rounded-lg transition-all group font-bold text-sm',
                             isCollapsed && !isMobileMenuOpen && 'lg:justify-center lg:px-0',

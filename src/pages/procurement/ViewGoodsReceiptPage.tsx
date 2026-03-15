@@ -5,6 +5,7 @@ import { pharmacyService } from '../../services/pharmacy.service';
 import type { GoodsReceipt } from '../../types/pharmacy';
 import toast from 'react-hot-toast';
 import tangaLogo from '../../assets/tanga-logo.png';
+import { formatLocalDate, formatLocalDateTime } from '../../lib/date';
 
 export function ViewGoodsReceiptPage() {
     const { receiptId } = useParams({ from: '/app/procurement/receipts/$receiptId' });
@@ -55,7 +56,7 @@ export function ViewGoodsReceiptPage() {
     if (!receipt) return null;
 
     const receivedDate = receipt.received_date
-        ? new Date(receipt.received_date).toLocaleString()
+        ? formatLocalDateTime(receipt.received_date)
         : 'N/A';
     const receivedBy =
         receipt.received_by?.first_name ||
@@ -243,11 +244,9 @@ export function ViewGoodsReceiptPage() {
                                             Number(item.quantity_received || 0) *
                                             Number(item.unit_cost || 0);
                                         const expiryDate = item.expiry_date
-                                            ? new Date(item.expiry_date).toLocaleDateString()
+                                            ? formatLocalDate(item.expiry_date)
                                             : item.batch?.expiry_date
-                                              ? new Date(
-                                                    item.batch.expiry_date,
-                                                ).toLocaleDateString()
+                                              ? formatLocalDate(item.batch.expiry_date)
                                               : '-';
                                         const batchNo =
                                             item.batch_number || item.batch?.batch_number || '-';

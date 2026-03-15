@@ -33,6 +33,7 @@ import { TableToolbar } from '../../components/ui/table/TableToolbar';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useTableViewState, type TableViewColumn } from '../../hooks/useTableViewState';
+import { formatLocalDate, parseLocalDate } from '../../lib/date';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -757,7 +758,7 @@ export function ProcurementPage() {
         const filteredRows = baseRows.filter((order) => {
             const orderStatus = String(order.status || '').toLowerCase();
             const expectedDelivery = order.expected_delivery_date
-                ? new Date(order.expected_delivery_date)
+                ? parseLocalDate(order.expected_delivery_date)
                 : null;
             const isOverdue =
                 !!expectedDelivery &&
@@ -774,10 +775,10 @@ export function ProcurementPage() {
         });
 
         return filteredRows.sort((a, b) => {
-            const orderDateA = new Date(a.order_date || 0).getTime();
-            const orderDateB = new Date(b.order_date || 0).getTime();
-            const expectedA = new Date(a.expected_delivery_date || 0).getTime();
-            const expectedB = new Date(b.expected_delivery_date || 0).getTime();
+            const orderDateA = parseLocalDate(a.order_date || 0).getTime();
+            const orderDateB = parseLocalDate(b.order_date || 0).getTime();
+            const expectedA = parseLocalDate(a.expected_delivery_date || 0).getTime();
+            const expectedB = parseLocalDate(b.expected_delivery_date || 0).getTime();
 
             switch (sortBy) {
                 case 'order_date_asc':
@@ -1124,9 +1125,9 @@ export function ProcurementPage() {
                                                                     </span>
                                                                     <span className="text-[10px] text-slate-400 font-bold mt-1">
                                                                         Date:{' '}
-                                                                        {new Date(
+                                                                        {formatLocalDate(
                                                                             order.order_date,
-                                                                        ).toLocaleDateString()}{' '}
+                                                                        )}{' '}
                                                                         • {order.items_count} Items
                                                                     </span>
                                                                 </div>
@@ -1165,7 +1166,7 @@ export function ProcurementPage() {
                                                                     className={cn(
                                                                         'text-xs font-bold',
                                                                         order.expected_delivery_date &&
-                                                                            new Date(
+                                                                            parseLocalDate(
                                                                                 order.expected_delivery_date,
                                                                             ) < new Date() &&
                                                                             ![
@@ -1179,9 +1180,9 @@ export function ProcurementPage() {
                                                                     )}
                                                                 >
                                                                     {order.expected_delivery_date
-                                                                        ? new Date(
+                                                                        ? formatLocalDate(
                                                                               order.expected_delivery_date,
-                                                                          ).toLocaleDateString()
+                                                                          )
                                                                         : 'Not set'}
                                                                 </span>
                                                             </td>
