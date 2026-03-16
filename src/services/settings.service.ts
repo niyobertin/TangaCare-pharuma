@@ -7,7 +7,49 @@ import type {
     SettingScopeType,
 } from '../types/settings';
 
+/** Flattened runtime config from backend: currency, tax, locale for UI display. */
+export interface RuntimeConfig {
+    currencyCode: string;
+    currencySymbol: string;
+    currencyDecimals: number;
+    /** Rounding mode (e.g. half_up). Single-currency; no exchange execution yet. */
+    currencyRoundingMode?: string;
+    maxDiscountPercent: number;
+    vatEnabled: boolean;
+    vatRate: number;
+    locale: string;
+    timezone: string;
+    dateFormat: string;
+    numberFormat: string;
+}
+
+export interface ComplianceStatus {
+    immutableLogsEnabled: boolean;
+    auditRetentionDays: number;
+    separationOfDutyEnforced: boolean;
+}
+
+export interface IntegrationsStatus {
+    ebm: { enabled: boolean; configured: boolean; provider: string };
+}
+
 export const settingsService = {
+    /** Single endpoint for UI: currency, tax, locale. Use for all display formatting. */
+    async getRuntimeConfig(): Promise<RuntimeConfig> {
+        const response = await api.get<{ data: RuntimeConfig }>('/pharmacy/settings/runtime-config');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getComplianceStatus(): Promise<ComplianceStatus> {
+        const response = await api.get<{ data: ComplianceStatus }>('/pharmacy/settings/compliance-status');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getIntegrationsStatus(): Promise<IntegrationsStatus> {
+        const response = await api.get<{ data: IntegrationsStatus }>('/pharmacy/settings/integrations-status');
+        return (response.data as any).data ?? response.data;
+    },
+
     async getDefinitions(domain?: SettingDomain): Promise<SettingDefinition[]> {
         const response = await api.get<any>('/pharmacy/settings/definitions', {
             params: domain ? { domain } : undefined,

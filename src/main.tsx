@@ -5,6 +5,7 @@ import { RouterProvider } from '@tanstack/react-router';
 import { queryClient } from './lib/query-client';
 import { router } from './routes/router';
 import { AuthProvider } from './context/AuthContext';
+import { RuntimeConfigProvider } from './context/RuntimeConfigContext';
 import { SocketProvider } from './context/SocketContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
@@ -18,10 +19,12 @@ createRoot(document.getElementById('root')!).render(
             <QueryClientProvider client={queryClient}>
                 <ThemeProvider>
                     <AuthProvider>
+                        <RuntimeConfigProvider>
                         <SocketProvider>
                             <Toaster position="top-right" reverseOrder={false} />
                             <RouterProvider router={router} />
                         </SocketProvider>
+                        </RuntimeConfigProvider>
                     </AuthProvider>
                 </ThemeProvider>
             </QueryClientProvider>

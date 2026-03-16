@@ -1,7 +1,9 @@
-import { X, Building2, MapPin, Phone, Mail } from 'lucide-react';
+import { X, Building2, MapPin, Phone, Mail, Settings } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import type { Organization, Facility } from '../../types/pharmacy';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { useAuth } from '../../context/AuthContext';
 
 interface OrganizationDetailsModalProps {
     organization: Organization;
@@ -9,6 +11,9 @@ interface OrganizationDetailsModalProps {
 }
 
 export function OrganizationDetailsModal({ organization, onClose }: OrganizationDetailsModalProps) {
+    const { user } = useAuth();
+    const role = (user?.role ?? '').toUpperCase();
+    const canEditOrg = ['SUPER_ADMIN', 'OWNER', 'FACILITY_ADMIN'].includes(role);
     const [facilities, setFacilities] = useState<Facility[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -88,7 +93,52 @@ export function OrganizationDetailsModal({ organization, onClose }: Organization
                                 {organization.is_active ? 'Active' : 'Inactive'}
                             </span>
                         </div>
+                        {organization.legal_name && (
+                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 md:col-span-2">
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                                    Legal name
+                                </span>
+                                <span className="font-semibold text-healthcare-dark">{organization.legal_name}</span>
+                            </div>
+                        )}
+                        {(organization.tax_registration_number || organization.business_license_number) && (
+                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 md:col-span-2 flex flex-wrap gap-4">
+                                {organization.tax_registration_number && (
+                                    <div>
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                                            Tax registration
+                                        </span>
+                                        <span className="font-semibold text-healthcare-dark font-mono text-sm">
+                                            {organization.tax_registration_number}
+                                        </span>
+                                    </div>
+                                )}
+                                {organization.business_license_number && (
+                                    <div>
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                                            Business license
+                                        </span>
+                                        <span className="font-semibold text-healthcare-dark font-mono text-sm">
+                                            {organization.business_license_number}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
+
+                    {canEditOrg && (
+                        <div className="flex justify-end">
+                            <Link
+                                to="/app/settings?section=organization"
+                                onClick={onClose}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-healthcare-primary/10 text-healthcare-primary hover:bg-healthcare-primary/20 font-bold text-sm transition-colors"
+                            >
+                                <Settings size={16} />
+                                Edit in Settings
+                            </Link>
+                        </div>
+                    )}
 
                     {}
                     <div>

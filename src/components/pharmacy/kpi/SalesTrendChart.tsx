@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { Calendar } from 'lucide-react';
 import { parseLocalDate } from '../../../lib/date';
+import { useRuntimeConfig } from '../../../context/RuntimeConfigContext';
 
 interface SalesTrendChartProps {
     data: Array<{ date: string; sales: number }>;
@@ -16,6 +17,7 @@ interface SalesTrendChartProps {
 }
 
 export const SalesTrendChart = ({ data, title = '30-Day Sales Trend' }: SalesTrendChartProps) => {
+    const { formatMoney, currencySymbol } = useRuntimeConfig();
     return (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
@@ -56,7 +58,7 @@ export const SalesTrendChart = ({ data, title = '30-Day Sales Trend' }: SalesTre
                             tickLine={false}
                             tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 700 }}
                             tickFormatter={(value) =>
-                                `RWF ${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
+                                `${currencySymbol} ${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`
                             }
                         />
                         <Tooltip
@@ -67,7 +69,7 @@ export const SalesTrendChart = ({ data, title = '30-Day Sales Trend' }: SalesTre
                                 fontSize: '12px',
                                 fontWeight: '700',
                             }}
-                            formatter={(value: any) => [`RWF ${value.toLocaleString()}`, 'Revenue']}
+                            formatter={(value: any) => [formatMoney(value), 'Revenue']}
                             labelFormatter={(label) =>
                                 parseLocalDate(label).toLocaleDateString('en-US', {
                                     day: 'numeric',

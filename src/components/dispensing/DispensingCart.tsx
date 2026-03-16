@@ -2,6 +2,7 @@ import React from 'react';
 import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import type { CartItem } from '../../types/pharmacy';
 import { toSentenceCase } from '../../lib/text';
+import { useRuntimeConfig } from '../../context/RuntimeConfigContext';
 
 interface DispensingCartProps {
     cart: CartItem[];
@@ -32,6 +33,8 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
     prescriptionRequired,
     readOnly = false,
 }) => {
+    const { formatMoney, vatRate } = useRuntimeConfig();
+
     if (cart.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center p-8 text-slate-400">
@@ -59,7 +62,7 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                                     {toSentenceCase(item.dosage_form)}
                                 </p>
                                 <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                                    RWF {Number(item.selling_price || 0).toLocaleString()} /{' '}
+                                    {formatMoney(item.selling_price)} /{' '}
                                     {toSentenceCase(item.unit)}
                                 </p>
                             </div>
@@ -157,17 +160,17 @@ export const DispensingCart: React.FC<DispensingCartProps> = ({
                 <div className="space-y-2">
                     <div className="flex justify-between text-xs text-slate-500 font-bold uppercase tracking-tight">
                         <span>Subtotal</span>
-                        <span>RWF {subtotal.toLocaleString()}</span>
+                        <span>{formatMoney(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-xs text-slate-500 font-bold uppercase tracking-tight">
                         <span>
-                            Tax ({subtotal > 0 ? ((tax / subtotal) * 100).toFixed(0) : 18}%)
+                            Tax ({subtotal > 0 ? ((tax / subtotal) * 100).toFixed(0) : Math.round(vatRate * 100)}%)
                         </span>
-                        <span>RWF {tax.toLocaleString()}</span>
+                        <span>{formatMoney(tax)}</span>
                     </div>
                     <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-100 dark:border-slate-800">
                         <span>Total</span>
-                        <span>RWF {total.toLocaleString()}</span>
+                        <span>{formatMoney(total)}</span>
                     </div>
                 </div>
 

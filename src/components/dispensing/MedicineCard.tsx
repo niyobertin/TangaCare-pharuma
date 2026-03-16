@@ -5,6 +5,7 @@ import { clsx } from 'clsx';
 import { useMedicineStock } from '../../hooks/useMedicineStock';
 import { toSentenceCase } from '../../lib/text';
 import { parseLocalDate, formatLocalDate } from '../../lib/date';
+import { useRuntimeConfig } from '../../context/RuntimeConfigContext';
 
 interface MedicineCardProps {
     medicine: Medicine;
@@ -21,6 +22,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
     isFindingAlternatives = false,
     readOnly = false,
 }) => {
+    const { formatMoney } = useRuntimeConfig();
     const { nearestExpiry, isLoading } = useMedicineStock(medicine.id);
     const sellingPrice = Number(medicine.selling_price || 0);
     const displayStrength = String(medicine.strength || '').toLowerCase();
@@ -75,7 +77,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({
                         </p>
                         <div className="mt-1 flex items-center gap-1.5">
                             <span className="text-sm font-black text-healthcare-primary">
-                                RWF {sellingPrice.toLocaleString()}
+                                {formatMoney(sellingPrice)}
                             </span>
                             <span className="text-[10px] text-slate-400 font-bold">
                                 / {displayUnit}

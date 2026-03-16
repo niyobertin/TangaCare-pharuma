@@ -1,5 +1,7 @@
+/**
+ * App config. Currency and VAT come from backend runtime config (useRuntimeConfig).
+ * Do not hardcode currency or tax here.
+ */
 export const APP_CONFIG = {
-    CURRENCY: 'RWF',
-    VAT_RATE: 0.18,
     DEFAULT_PAGE_LIMIT: 20,
-};
+} as const;

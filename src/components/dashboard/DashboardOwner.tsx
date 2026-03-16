@@ -20,6 +20,7 @@ import { SkeletonTable } from '../ui/SkeletonTable';
 import { cn } from '../../lib/utils';
 import { CreatePurchaseOrderModal } from '../inventory/CreatePurchaseOrderModal';
 import { AddStockModal } from '../inventory/AddStockModal';
+import { useRuntimeConfig } from '../../context/RuntimeConfigContext';
 
 interface DashboardOwnerProps {
     facilityId: number | null;
@@ -421,6 +422,7 @@ const StatCard: React.FC<{
     actionLabel?: string;
     onClick: () => void;
 }> = ({ title, value, isCurrency, trend, icon, gradient, actionLabel, onClick }) => {
+    const { formatMoney } = useRuntimeConfig();
     return (
         <button
             onClick={onClick}
@@ -438,7 +440,7 @@ const StatCard: React.FC<{
                 <div className="tc-stat-card-foot">
                     <div className="min-w-0 flex items-center gap-1.5">
                         <span className="tc-stat-card-value">
-                            {isCurrency ? `RWF ${value.toLocaleString()}` : value.toLocaleString()}
+                            {isCurrency ? formatMoney(value) : value.toLocaleString()}
                         </span>
                         {trend !== undefined && (
                             <span className="inline-flex items-center gap-0.5 rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-semibold">

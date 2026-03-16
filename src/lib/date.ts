@@ -23,32 +23,36 @@ export function parseLocalDate(
 }
 
 /**
- * Formats a date for display in the user's local timezone.
- * Uses the browser's locale and timezone (no server/timezone dependency).
+ * Formats a date for display.
+ * When locale/timeZone are provided (e.g. from useRuntimeConfig()), tenant settings apply;
+ * otherwise uses browser locale and timezone.
  */
 export function formatLocalDate(
     value: string | Date | number | null | undefined,
-    options: Intl.DateTimeFormatOptions = {},
+    options: Intl.DateTimeFormatOptions & { locale?: string; timeZone?: string } = {},
 ): string {
     const date = parseLocalDate(value);
     if (Number.isNaN(date.getTime())) return '—';
-    return date.toLocaleDateString(undefined, {
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        ...options,
+    const { locale, timeZone, ...rest } = options;
+    return date.toLocaleDateString(locale ?? undefined, {
+        timeZone: timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+        ...rest,
     });
 }
 
 /**
- * Formats a date and time for display in the user's local timezone.
+ * Formats a date and time for display.
+ * When locale/timeZone are provided (e.g. from useRuntimeConfig()), tenant settings apply.
  */
 export function formatLocalDateTime(
     value: string | Date | number | null | undefined,
-    options: Intl.DateTimeFormatOptions = {},
+    options: Intl.DateTimeFormatOptions & { locale?: string; timeZone?: string } = {},
 ): string {
     const date = parseLocalDate(value);
     if (Number.isNaN(date.getTime())) return '—';
-    return date.toLocaleString(undefined, {
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        ...options,
+    const { locale, timeZone, ...rest } = options;
+    return date.toLocaleString(locale ?? undefined, {
+        timeZone: timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+        ...rest,
     });
 }

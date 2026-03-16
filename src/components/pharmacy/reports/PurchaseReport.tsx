@@ -5,6 +5,7 @@ import { ShoppingCart, TrendingUp, Users, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseLocalDate } from '../../../lib/date';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useRuntimeConfig } from '../../../context/RuntimeConfigContext';
 
 interface PurchaseReportProps {
     facilityId?: number;
@@ -13,6 +14,7 @@ interface PurchaseReportProps {
 }
 
 export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseReportProps) {
+    const { formatMoney } = useRuntimeConfig();
     const [loading, setLoading] = useState(false);
     const [reportData, setReportData] = useState<any>(null);
 
@@ -69,7 +71,7 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                         </span>
                     </div>
                     <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tighter">
-                        RWF {reportData.summary.total_amount.toLocaleString()}
+                        {formatMoney(reportData.summary.total_amount)}
                     </h3>
                     <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
                         Procurement investment
@@ -103,7 +105,7 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                         </span>
                     </div>
                     <h3 className="text-2xl font-black text-slate-800 dark:text-white tracking-tighter">
-                        RWF {Math.round(reportData.summary.average_order_value).toLocaleString()}
+                        {formatMoney(Math.round(reportData.summary.average_order_value))}
                     </h3>
                     <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
                         Per purchase order
@@ -206,7 +208,7 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                                         </td>
                                         <td className="py-4 text-right">
                                             <p className="text-sm font-black text-slate-800 dark:text-white tracking-tighter">
-                                                RWF {item.total_amount.toLocaleString()}
+                                                {formatMoney(item.total_amount)}
                                             </p>
                                         </td>
                                     </tr>
@@ -281,7 +283,7 @@ export function PurchaseReport({ facilityId, startDate, endDate }: PurchaseRepor
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <p className="text-sm font-black text-slate-800 dark:text-white tracking-tighter">
-                                            RWF {po.total_amount.toLocaleString()}
+                                            {formatMoney(po.total_amount)}
                                         </p>
                                     </td>
                                 </tr>

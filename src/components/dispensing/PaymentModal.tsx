@@ -12,6 +12,7 @@ import {
 import { toast } from 'react-hot-toast';
 import type { SalePaymentMethod, InsuranceProvider } from '../../types/pharmacy';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { useRuntimeConfig } from '../../context/RuntimeConfigContext';
 
 interface Payment {
     id: string;
@@ -49,6 +50,7 @@ export function PaymentModal({
     onConfirm,
     isProcessing,
 }: PaymentModalProps) {
+    const { formatMoney } = useRuntimeConfig();
     const [payments, setPayments] = useState<Payment[]>([
         { id: '1', method: 'cash', amount: totalAmount },
     ]);
@@ -162,7 +164,7 @@ export function PaymentModal({
                         <p className="text-xs text-slate-500 font-bold">
                             Total Due:{' '}
                             <span className="text-healthcare-primary text-sm">
-                                {totalAmount.toLocaleString()} RWF
+                                {formatMoney(totalAmount)}
                             </span>
                         </p>
                     </div>
