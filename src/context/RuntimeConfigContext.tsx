@@ -26,7 +26,7 @@ interface RuntimeConfigContextType {
     /** Whether VAT is enabled for this tenant/branch. */
     vatEnabled: boolean;
     /** Rounding mode to use when displaying totals. */
-    currencyRoundingMode: string;
+    currencyRoundingMode?: string;
     locale: string;
     timezone: string;
     dateFormat: string;
@@ -151,7 +151,7 @@ export const RuntimeConfigProvider: React.FC<{ children: React.ReactNode }> = ({
             formatDateTime,
             formatNumber,
             currencyCode: c.currencyCode,
-            currencyRoundingMode: c.currencyRoundingMode,
+            currencyRoundingMode: c.currencyRoundingMode ?? 'half_up',
             locale: c.locale,
             timezone: c.timezone,
             dateFormat: c.dateFormat,
@@ -186,7 +186,7 @@ export function useRuntimeConfig(): RuntimeConfigContextType {
             formatDateTime: (value, options) => formatDateTimeWithConfig(value, defaultLocConfig, options),
             formatNumber: (value, options) => formatNumberWithConfig(value, defaultLocConfig, options),
             currencyCode: defaultConfig.currencyCode,
-            currencyRoundingMode: defaultConfig.currencyRoundingMode,
+            currencyRoundingMode: defaultConfig.currencyRoundingMode ?? 'half_up',
             currencySymbol: defaultConfig.currencySymbol,
             vatEnabled: defaultConfig.vatEnabled,
             locale: defaultConfig.locale,

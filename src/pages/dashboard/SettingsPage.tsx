@@ -10,7 +10,6 @@ import {
     Settings as SettingsIcon,
     ShieldCheck,
     UserCog,
-    Zap,
 } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { toast } from 'react-hot-toast';
@@ -402,6 +401,9 @@ export function SettingsPage() {
                                                   ? '/app/procurement/suppliers'
                                                   : '/app/users'
                                         }
+                                        // Preserve existing params and search when navigating; cast to satisfy TanStack Router types
+                                        params={((prev: any) => prev) as any}
+                                        search={((prev: any) => prev) as any}
                                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-healthcare-primary text-white font-bold text-sm hover:bg-teal-600 transition-colors"
                                     >
                                         <ExternalLink size={16} />

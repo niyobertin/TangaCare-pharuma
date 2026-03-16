@@ -38,7 +38,7 @@ export function SupplierModal({ isOpen, onClose, onSuccess, supplier }: Supplier
         handleSubmit,
         reset,
         formState: { errors },
-    } = useForm<SupplierFormData>({
+    } = useForm({
         resolver: yupResolver(supplierSchema),
         defaultValues: {
             name: '',

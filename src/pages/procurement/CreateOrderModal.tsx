@@ -31,7 +31,7 @@ const orderSchema = yup.object({
 
 export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) {
     const { user } = useAuth();
-    const { formatMoney, currencySymbol, vatRate, maxDiscountPercent } = useRuntimeConfig();
+    const { formatMoney, currencySymbol, vatRate } = useRuntimeConfig();
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [medicines, setMedicines] = useState<Medicine[]>([]);
     const [loadingData, setLoadingData] = useState(true);
@@ -97,9 +97,9 @@ export function CreateOrderModal({ onClose, onSuccess }: CreateOrderModalProps) 
     const subtotal = calculateTotal();
     const discountPercent = Number(watch('discount_percent') || 0);
     const discountAmount = subtotal * (discountPercent / 100);
-    const vatRate = Number(watch('vat_rate') || 0);
+    const vatRateField = Number(watch('vat_rate') || 0);
     const taxableBase = Math.max(0, subtotal - discountAmount);
-    const vatAmount = taxableBase * (vatRate / 100);
+    const vatAmount = taxableBase * (vatRateField / 100);
     const grandTotal = taxableBase + vatAmount;
     const hasCostAboveSelling = (watchItems || []).some((item) => {
         const medicine = medicineById.get(Number(item.medicine_id));

@@ -13,14 +13,6 @@ export interface LocalizationConfig {
 const DEFAULT_LOCALE = 'en-RW';
 const DEFAULT_TIMEZONE = 'Africa/Kigali';
 
-/** Map backend dateFormat token to Intl options or skeleton. */
-function getDateStyle(format: string): 'short' | 'medium' | 'long' | undefined {
-    if (format === 'DD/MM/YYYY') return 'short';
-    if (format === 'MM/DD/YYYY') return 'short';
-    if (format === 'YYYY-MM-DD') return 'short';
-    return 'short';
-}
-
 /**
  * Format a date for display using config locale and timezone.
  * Uses Intl.DateTimeFormat so tenant setting applies instead of browser-only.
