@@ -23,10 +23,30 @@ export interface RuntimeConfig {
     numberFormat: string;
 }
 
+export interface ComplianceStatus {
+    immutableLogsEnabled: boolean;
+    auditRetentionDays: number;
+    separationOfDutyEnforced: boolean;
+}
+
+export interface IntegrationsStatus {
+    ebm: { enabled: boolean; configured: boolean; provider: string };
+}
+
 export const settingsService = {
     /** Single endpoint for UI: currency, tax, locale. Use for all display formatting. */
     async getRuntimeConfig(): Promise<RuntimeConfig> {
         const response = await api.get<{ data: RuntimeConfig }>('/pharmacy/settings/runtime-config');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getComplianceStatus(): Promise<ComplianceStatus> {
+        const response = await api.get<{ data: ComplianceStatus }>('/pharmacy/settings/compliance-status');
+        return (response.data as any).data ?? response.data;
+    },
+
+    async getIntegrationsStatus(): Promise<IntegrationsStatus> {
+        const response = await api.get<{ data: IntegrationsStatus }>('/pharmacy/settings/integrations-status');
         return (response.data as any).data ?? response.data;
     },
 

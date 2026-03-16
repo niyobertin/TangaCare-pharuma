@@ -1,5 +1,8 @@
 export type SettingDomain =
     | 'organization_profile' // UI-only: shows org profile form in Settings
+    | 'link_facilities' // UI-only: link to facilities page
+    | 'link_suppliers' // UI-only: link to suppliers page
+    | 'link_roles' // UI-only: link to users/roles page
     | 'localization'
     | 'currency_pricing'
     | 'tax_fiscal'

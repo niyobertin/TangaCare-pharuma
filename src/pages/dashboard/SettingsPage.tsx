@@ -3,17 +3,20 @@ import { useLocation } from '@tanstack/react-router';
 import {
     Building2,
     ChevronRight,
+    ExternalLink,
     Globe2,
     Lock,
     Save,
     Settings as SettingsIcon,
     ShieldCheck,
     UserCog,
+    Zap,
 } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import { toast } from 'react-hot-toast';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
-import { settingsService } from '../../services/settings.service';
+import { settingsService, type ComplianceStatus, type IntegrationsStatus } from '../../services/settings.service';
 import type { EffectiveSettingItem, SettingDefinition, SettingDomain } from '../../types/settings';
 import { formatLocalDateTime } from '../../lib/date';
 import { OrganizationProfileForm } from '../../components/organization/OrganizationProfileForm';
@@ -45,44 +48,40 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     {
         id: 'organization',
         label: 'Organization',
-        description: 'Company profile, legal and tax identity.',
+        description: '',
         icon: Building2,
-        items: [{ domain: 'organization_profile', label: 'Organization profile' }],
+        items: [{ domain: 'organization_profile', label: 'Organization' }],
     },
     {
-        id: 'regulatory_finance',
-        label: 'Regulatory & Finance',
-        description: 'Localization, tax, fiscal integrations, and pricing guardrails.',
+        id: 'currency_tax_pricing',
+        label: 'Currency, Tax & Pricing',
+        description: '',
         icon: Globe2,
         items: [
-            { domain: 'localization', label: 'Localization' },
-            { domain: 'currency_pricing', label: 'Currency & Pricing' },
-            { domain: 'tax_fiscal', label: 'Tax & Fiscal' },
-            { domain: 'integrations', label: 'Integrations' },
+            { domain: 'currency_pricing', label: 'Currency & pricing' },
+            { domain: 'tax_fiscal', label: 'Tax & fiscal' },
         ],
     },
     {
-        id: 'inventory_operations',
-        label: 'Inventory & Operations',
-        description: 'Inventory policy, controlled medicine rules, alerts, and reporting defaults.',
+        id: 'inventory_rules',
+        label: 'Inventory Rules',
+        description: '',
         icon: Building2,
-        items: [
-            { domain: 'inventory_rules', label: 'Inventory Rules' },
-            { domain: 'controlled_medicines', label: 'Controlled Medicines' },
-            { domain: 'reporting', label: 'Reporting Defaults' },
-            { domain: 'notifications', label: 'Notifications' },
-        ],
+        items: [{ domain: 'inventory_rules', label: 'Inventory rules' }],
     },
     {
-        id: 'security_experience',
-        label: 'Security, Users & Experience',
-        description: 'Compliance controls and user experience preferences.',
+        id: 'roles_permissions',
+        label: 'Roles & Permissions',
+        description: '',
+        icon: UserCog,
+        items: [{ domain: 'link_roles', label: 'Roles & permissions' }],
+    },
+    {
+        id: 'prescription_compliance',
+        label: 'Prescription & Compliance',
+        description: '',
         icon: ShieldCheck,
-        items: [
-            { domain: 'compliance', label: 'Compliance' },
-            { domain: 'security', label: 'Security' },
-            { domain: 'ui_preferences', label: 'UI Preferences' },
-        ],
+        items: [{ domain: 'controlled_medicines', label: 'Prescription & compliance' }],
     },
 ];
 
@@ -157,6 +156,8 @@ export function SettingsPage() {
     const [effectiveItems, setEffectiveItems] = useState<EffectiveSettingItem[]>([]);
     const [expandedKey, setExpandedKey] = useState<string | null>(null);
     const [editing, setEditing] = useState<EditState | null>(null);
+    const [complianceStatus, setComplianceStatus] = useState<ComplianceStatus | null>(null);
+    const [integrationsStatus, setIntegrationsStatus] = useState<IntegrationsStatus | null>(null);
 
     const availableScopes = useMemo(
         () => ({
@@ -186,7 +187,14 @@ export function SettingsPage() {
     }, [activeScope, availableScopes]);
 
     const loadSettings = async () => {
-        if (activeDomain === 'organization_profile') return;
+        if (
+            activeDomain === 'organization_profile' ||
+            activeDomain === 'link_facilities' ||
+            activeDomain === 'link_suppliers' ||
+            activeDomain === 'link_roles'
+        ) {
+            return;
+        }
         setLoading(true);
         try {
             const context =
@@ -213,6 +221,22 @@ export function SettingsPage() {
     useEffect(() => {
         void loadSettings();
     }, [activeDomain, activeScope, tenantId, branchId, userId]);
+
+    useEffect(() => {
+        if (activeDomain === 'compliance') {
+            settingsService.getComplianceStatus().then(setComplianceStatus).catch(() => setComplianceStatus(null));
+        } else {
+            setComplianceStatus(null);
+        }
+    }, [activeDomain]);
+
+    useEffect(() => {
+        if (activeDomain === 'integrations') {
+            settingsService.getIntegrationsStatus().then(setIntegrationsStatus).catch(() => setIntegrationsStatus(null));
+        } else {
+            setIntegrationsStatus(null);
+        }
+    }, [activeDomain]);
 
     const effectiveByKey = useMemo(() => {
         return new Map(effectiveItems.map((item) => [item.key, item]));
@@ -362,8 +386,65 @@ export function SettingsPage() {
                                     <OrganizationProfileForm organizationId={tenantId} />
                                 )}
                             </>
+                        ) : activeDomain === 'link_facilities' || activeDomain === 'link_suppliers' || activeDomain === 'link_roles' ? (
+                            <div className="py-8">
+                                <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-6 bg-slate-50/50 dark:bg-slate-800/30">
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                                        {activeDomain === 'link_facilities' && 'Manage branches and facility-level settings from the Facilities page.'}
+                                        {activeDomain === 'link_suppliers' && 'Manage suppliers and partners from the Procurement area.'}
+                                        {activeDomain === 'link_roles' && 'Manage users and role assignments from the Users page.'}
+                                    </p>
+                                    <Link
+                                        to={
+                                            activeDomain === 'link_facilities'
+                                                ? '/app/facilities'
+                                                : activeDomain === 'link_suppliers'
+                                                  ? '/app/procurement/suppliers'
+                                                  : '/app/users'
+                                        }
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-healthcare-primary text-white font-bold text-sm hover:bg-teal-600 transition-colors"
+                                    >
+                                        <ExternalLink size={16} />
+                                        {activeDomain === 'link_facilities' && 'Open Facilities'}
+                                        {activeDomain === 'link_suppliers' && 'Open Suppliers'}
+                                        {activeDomain === 'link_roles' && 'Open Users & Roles'}
+                                    </Link>
+                                </div>
+                            </div>
                         ) : (
                             <>
+                        {(activeDomain === 'compliance' && complianceStatus) && (
+                            <div className="mb-6 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30">
+                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Compliance status</h3>
+                                <div className="flex flex-wrap gap-4 text-sm">
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                        Immutable logs: {complianceStatus.immutableLogsEnabled ? 'On' : 'Off'}
+                                    </span>
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                        Retention: {complianceStatus.auditRetentionDays} days
+                                    </span>
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                        Separation of duty: {complianceStatus.separationOfDutyEnforced ? 'Enforced' : 'Off'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                        {(activeDomain === 'integrations' && integrationsStatus) && (
+                            <div className="mb-6 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30">
+                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Integration status</h3>
+                                <div className="flex flex-wrap gap-4 text-sm">
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                        EBM: {integrationsStatus.ebm.enabled ? 'Enabled' : 'Disabled'}
+                                    </span>
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                        Configured: {integrationsStatus.ebm.configured ? 'Yes' : 'No'}
+                                    </span>
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                        Provider: {integrationsStatus.ebm.provider}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                         <div className="flex flex-wrap items-center gap-2 mb-4">
                             {(['tenant', 'branch', 'user'] as ScopeTab[]).map((scope) => {
                                 const disabled = !availableScopes[scope];
@@ -445,11 +526,6 @@ export function SettingsPage() {
                                                             <div className="text-[11px] text-slate-500 font-mono mt-0.5">
                                                                 {definition.key}
                                                             </div>
-                                                            {definition.description && (
-                                                                <p className="text-xs text-slate-500 mt-1 max-w-xl">
-                                                                    {definition.description}
-                                                                </p>
-                                                            )}
                                                         </td>
                                                         <td className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200">
                                                             {renderValue(
