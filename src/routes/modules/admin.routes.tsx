@@ -23,6 +23,38 @@ const FacilitySettingsPage = lazyNamed(
     'FacilitySettingsPage',
 );
 const PatientsPage = lazyNamed(() => import('../../pages/dashboard/PatientsPage'), 'PatientsPage');
+const BillingDashboardPage = lazyNamed(
+    () => import('../../pages/admin/billing/BillingDashboardPage'),
+    'BillingDashboardPage',
+);
+const BillingCustomersPage = lazyNamed(
+    () => import('../../pages/admin/billing/BillingCustomersPage'),
+    'BillingCustomersPage',
+);
+const BillingCustomerDetailsPage = lazyNamed(
+    () => import('../../pages/admin/billing/BillingCustomerDetailsPage'),
+    'BillingCustomerDetailsPage',
+);
+const BillingSubscriptionsPage = lazyNamed(
+    () => import('../../pages/admin/billing/BillingSubscriptionsPage'),
+    'BillingSubscriptionsPage',
+);
+const BillingPaymentsPage = lazyNamed(
+    () => import('../../pages/admin/billing/BillingPaymentsPage'),
+    'BillingPaymentsPage',
+);
+const BillingTrialsPage = lazyNamed(
+    () => import('../../pages/admin/billing/BillingTrialsPage'),
+    'BillingTrialsPage',
+);
+const BillingPlansPage = lazyNamed(
+    () => import('../../pages/admin/billing/BillingPlansPage'),
+    'BillingPlansPage',
+);
+const BillingGatewaysPage = lazyNamed(
+    () => import('../../pages/admin/billing/BillingGatewaysPage'),
+    'BillingGatewaysPage',
+);
 
 export const createAdminRoutes = (parentRoute: any) => {
     const organizationsRoute = createRoute({
@@ -100,6 +132,54 @@ export const createAdminRoutes = (parentRoute: any) => {
             ),
     });
 
+    const billingDashboardRoute = createRoute({
+        getParentRoute: () => parentRoute,
+        path: 'admin/billing/dashboard',
+        component: () => withRouteSuspense(<BillingDashboardPage />),
+    });
+
+    const billingCustomersRoute = createRoute({
+        getParentRoute: () => parentRoute,
+        path: 'admin/billing/customers',
+        component: () => withRouteSuspense(<BillingCustomersPage />),
+    });
+
+    const billingCustomerDetailsRoute = createRoute({
+        getParentRoute: () => parentRoute,
+        path: 'admin/billing/customers/$organizationId',
+        component: () => withRouteSuspense(<BillingCustomerDetailsPage />),
+    });
+
+    const billingSubscriptionsRoute = createRoute({
+        getParentRoute: () => parentRoute,
+        path: 'admin/billing/subscriptions',
+        component: () => withRouteSuspense(<BillingSubscriptionsPage />),
+    });
+
+    const billingPaymentsRoute = createRoute({
+        getParentRoute: () => parentRoute,
+        path: 'admin/billing/payments',
+        component: () => withRouteSuspense(<BillingPaymentsPage />),
+    });
+
+    const billingTrialsRoute = createRoute({
+        getParentRoute: () => parentRoute,
+        path: 'admin/billing/trials',
+        component: () => withRouteSuspense(<BillingTrialsPage />),
+    });
+
+    const billingPlansRoute = createRoute({
+        getParentRoute: () => parentRoute,
+        path: 'admin/billing/plans',
+        component: () => withRouteSuspense(<BillingPlansPage />),
+    });
+
+    const billingGatewaysRoute = createRoute({
+        getParentRoute: () => parentRoute,
+        path: 'admin/billing/gateways',
+        component: () => withRouteSuspense(<BillingGatewaysPage />),
+    });
+
     return [
         organizationsRoute,
         facilitiesRoute,
@@ -107,5 +187,13 @@ export const createAdminRoutes = (parentRoute: any) => {
         auditLogsRoute,
         facilitySettingsRoute,
         patientsRoute,
+        billingDashboardRoute,
+        billingCustomersRoute,
+        billingCustomerDetailsRoute,
+        billingSubscriptionsRoute,
+        billingPaymentsRoute,
+        billingTrialsRoute,
+        billingPlansRoute,
+        billingGatewaysRoute,
     ];
 };

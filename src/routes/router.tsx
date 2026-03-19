@@ -40,6 +40,11 @@ const PublicPurchaseOrder = lazyNamed(
 const OnboardingPage = lazyNamed(() => import('../pages/auth/OnboardingPage'), 'OnboardingPage');
 const AlertsPage = lazyNamed(() => import('../pages/dashboard/AlertsPage'), 'AlertsPage');
 const SettingsPage = lazyNamed(() => import('../pages/dashboard/SettingsPage'), 'SettingsPage');
+const BillingPage = lazyNamed(() => import('../pages/dashboard/BillingPage'), 'BillingPage');
+const SubscribeRedirectPage = lazyNamed(
+    () => import('../pages/marketing/SubscribeRedirectPage'),
+    'SubscribeRedirectPage',
+);
 
 const RootComponent = () => (
     <React.Fragment>
@@ -77,6 +82,12 @@ const docsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/docs',
     component: () => withRouteSuspense(<DocsPage />),
+});
+
+const subscribeRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/subscribe',
+    component: () => withRouteSuspense(<SubscribeRedirectPage />),
 });
 
 const privacyPolicyRoute = createRoute({
@@ -148,6 +159,12 @@ const onboardingRoute = createRoute({
     component: () => withRouteSuspense(<OnboardingPage />),
 });
 
+const billingRoute = createRoute({
+    getParentRoute: () => appLayoutRoute,
+    path: 'billing',
+    component: () => withRouteSuspense(<BillingPage />),
+});
+
 // Compose App Route Tree
 const appRouteTree = appLayoutRoute.addChildren([
     indexRoute,
@@ -155,6 +172,7 @@ const appRouteTree = appLayoutRoute.addChildren([
     employeeRoute,
     settingsRoute,
     onboardingRoute,
+    billingRoute,
     ...createInventoryRoutes(appLayoutRoute),
     ...createSalesRoutes(appLayoutRoute),
     ...createProcurementRoutes(appLayoutRoute),
@@ -190,6 +208,7 @@ const publicRouteTree = publicRoute.addChildren([publicPORoute]);
 const routeTree = rootRoute.addChildren([
     rootIndexRoute,
     docsRoute,
+    subscribeRoute,
     privacyPolicyRoute,
     termsOfUseRoute,
     loginFallbackRoute,

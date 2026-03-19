@@ -167,7 +167,7 @@ export function Hero() {
                     transition={{ duration: 0.6, delay: 0.1 }}
                     className="mt-10 pt-6 border-t border-slate-200/70 dark:border-zinc-800/80 flex flex-col sm:flex-row gap-3 justify-center"
                 >
-                    <Link to={'/auth/register' as any} search={{} as any}>
+                    <Link to={'/subscribe' as any} search={{} as any}>
                         <Button
                             size="lg"
                             className="h-12 px-7 rounded-full bg-teal-600 hover:bg-teal-700 text-white font-black text-sm shadow-lg shadow-teal-600/25 transition-all hover:scale-[1.02] active:scale-95 group"

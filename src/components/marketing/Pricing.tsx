@@ -119,7 +119,7 @@ export function Pricing() {
 
                             <div className="mt-10">
                                 <Link
-                                    to={plan.price === 'Custom' ? '/' : '/auth/register'}
+                                    to={plan.price === 'Custom' ? '/' : '/subscribe'}
                                     hash={plan.price === 'Custom' ? 'contact' : undefined}
                                 >
                                     <Button

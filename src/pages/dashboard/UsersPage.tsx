@@ -26,6 +26,7 @@ import { useAuth } from '../../context/AuthContext';
 import type { User, Organization } from '../../types/auth';
 import toast from 'react-hot-toast';
 import { SkeletonTable } from '../../components/ui/SkeletonTable';
+import { subscriptionService } from '../../services/subscription.service';
 
 const ROLE_LABELS: Record<string, string> = {
     facility_admin: 'Facility Admin',
@@ -50,6 +51,8 @@ export function UsersPage() {
     const [facilityFilter, setFacilityFilter] = useState<number | ''>('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
     const [roleFilter, setRoleFilter] = useState<string | 'all'>('all');
+    const [planLimits, setPlanLimits] = useState<any>(null);
+    const [isLimitsLoading, setIsLimitsLoading] = useState(false);
 
     const loadUsers = async () => {
         setIsLoading(true);
@@ -90,17 +93,36 @@ export function UsersPage() {
         return () => clearTimeout(timer);
     }, [page, search, facilityFilter, statusFilter, roleFilter, limit]);
 
+    useEffect(() => {
+        const loadLimits = async () => {
+            if (!authUser) return;
+            setIsLimitsLoading(true);
+            try {
+                const limits = await subscriptionService.getMyLimits();
+                setPlanLimits(limits);
+            } catch {
+                setPlanLimits(null);
+            } finally {
+                setIsLimitsLoading(false);
+            }
+        };
+
+        void loadLimits();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authUser?.organization_id]);
+
     const displayName = (u: User) =>
         [u.first_name ?? u.firstName, u.last_name ?? u.lastName].filter(Boolean).join(' ') ||
         u.email ||
         '—';
 
-    const canAddStaff =
+    const roleCanAddStaff =
         role === 'OWNER' ||
         role === 'SUPER_ADMIN' ||
         role === 'SUPER ADMIN' ||
         role === 'FACILITY_ADMIN' ||
         role === 'FACILITY ADMIN';
+    const limitsCanAddUsers = planLimits?.can_add_users ?? true;
     const currentUserId = authUser?.id ?? (authUser as any)?.userId ?? null;
 
     const canShowActions = (u: User) => {
@@ -122,14 +144,16 @@ export function UsersPage() {
                             Users
                         </h1>
                         <p className="text-sm text-slate-500 mt-1">
-                            {canAddStaff
+                            {roleCanAddStaff
                                 ? 'View and add staff with roles'
                                 : 'View users (by role permissions)'}
                         </p>
                     </div>
-                    {canAddStaff && (
+                    {roleCanAddStaff && (
                         <button
                             onClick={() => setShowAddModal(true)}
+                            disabled={!limitsCanAddUsers || isLimitsLoading}
+                            title={!limitsCanAddUsers ? 'User limit reached for your plan' : undefined}
                             className="flex items-center gap-2 px-4 py-2.5 bg-healthcare-primary text-white rounded-xl font-bold text-sm hover:bg-teal-600 transition-all shadow-md"
                         >
                             <Plus size={18} />

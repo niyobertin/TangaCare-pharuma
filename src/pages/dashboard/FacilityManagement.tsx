@@ -21,6 +21,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { subscriptionService } from '../../services/subscription.service';
 import type { Facility, CreateFacilityDto } from '../../types/pharmacy';
 import { StatsSkeleton } from '../../components/shared/Skeleton';
 import { SkeletonTable } from '../../components/ui/SkeletonTable';
@@ -320,6 +321,8 @@ export function FacilityManagementPage() {
     const [totalItems, setTotalItems] = useState(0);
     const [limit, setLimit] = useState(10);
     const [search, setSearch] = useState('');
+    const [planLimits, setPlanLimits] = useState<any>(null);
+    const [isLimitsLoading, setIsLimitsLoading] = useState(false);
 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
@@ -350,6 +353,24 @@ export function FacilityManagementPage() {
         return () => clearTimeout(timer);
     }, [page, limit, search]);
 
+    useEffect(() => {
+        const loadLimits = async () => {
+            if (!user) return;
+            setIsLimitsLoading(true);
+            try {
+                const limits = await subscriptionService.getMyLimits();
+                setPlanLimits(limits);
+            } catch {
+                setPlanLimits(null);
+            } finally {
+                setIsLimitsLoading(false);
+            }
+        };
+
+        void loadLimits();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.organization_id]);
+
     const handleCreate = async (data: Partial<CreateFacilityDto>) => {
         setActionLoading(true);
         try {
@@ -371,6 +392,7 @@ export function FacilityManagementPage() {
     };
 
     const safeFacilities = Array.isArray(facilities) ? facilities : [];
+    const limitsCanAddFacilities = planLimits?.can_add_facilities ?? true;
 
     const stats = [
         {
@@ -427,7 +449,9 @@ export function FacilityManagementPage() {
                     {user?.role?.toString()?.toLowerCase() !== 'auditor' && (
                         <button
                             onClick={() => setIsCreateOpen(true)}
-                            className="px-5 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] flex items-center gap-2"
+                            disabled={!limitsCanAddFacilities || isLimitsLoading}
+                            title={!limitsCanAddFacilities ? 'Facility limit reached for your plan' : undefined}
+                            className="px-5 py-2.5 bg-healthcare-primary text-white rounded-xl font-black text-xs hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Plus size={16} /> Register New Facility
                         </button>

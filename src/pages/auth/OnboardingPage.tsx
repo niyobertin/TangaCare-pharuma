@@ -1,14 +1,15 @@
-import { useState } from 'react';
-import { Building2, Users, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Building2, Users, ArrowRight, CheckCircle2, Smartphone } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { subscriptionService, type PaymentMethodPreference, type SubscriptionPlanCode } from '../../services/subscription.service';
 import toast from 'react-hot-toast';
 
 export function OnboardingPage() {
     const { user, refreshProfile } = useAuth();
     const navigate = useNavigate();
-    const [step, setStep] = useState<'selection' | 'create_org'>('selection');
+    const [step, setStep] = useState<'selection' | 'create_org' | 'subscription'>('selection');
     const [submitting, setSubmitting] = useState(false);
 
     // Form states for organization creation
@@ -22,6 +23,51 @@ export function OnboardingPage() {
     const [facilityType, setFacilityType] = useState<'pharmacy_shop' | 'hospital' | 'clinic'>(
         'pharmacy_shop',
     );
+
+    // Subscription checkout states (during onboarding)
+    const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanCode>('starter');
+    const [paymentMethodPreference, setPaymentMethodPreference] =
+        useState<PaymentMethodPreference>('mtn_momo');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [subscriptionSubmitting, setSubscriptionSubmitting] = useState(false);
+    const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+
+    const planOptions: Array<{
+        code: SubscriptionPlanCode;
+        title: string;
+        priceLabel: string;
+        description: string;
+    }> = [
+        { code: 'starter', title: 'Starter', priceLabel: 'RWF 35,000 / month', description: 'Great for new pharmacies.' },
+        { code: 'pro', title: 'Pro', priceLabel: 'RWF 75,000 / month', description: 'For growing teams and branches.' },
+        { code: 'business', title: 'Business', priceLabel: 'RWF 100,000 / month', description: 'Advanced inventory + reports.' },
+        { code: 'enterprise', title: 'Enterprise', priceLabel: 'Custom', description: 'Tailored for multi-location operations.' },
+    ];
+
+    useEffect(() => {
+        if (!user) return;
+        const prefill = (user as any)?.phone_number || (user as any)?.phoneNumber || '';
+        if (prefill) setPhoneNumber(prefill);
+    }, [user]);
+
+    useEffect(() => {
+        if (step !== 'subscription') return;
+
+        const load = async () => {
+            try {
+                const limits = await subscriptionService.getMyLimits();
+                setSubscriptionStatus(limits?.status ?? null);
+                if (['trialing', 'active'].includes(limits?.status)) {
+                    navigate({ to: '/app' });
+                }
+            } catch {
+                // If limits fetch fails, still allow the user to start a trial.
+                setSubscriptionStatus(null);
+            }
+        };
+
+        void load();
+    }, [step]);
 
     const handleCreateOrg = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -40,7 +86,19 @@ export function OnboardingPage() {
 
             toast.success('Organization and first facility created successfully!');
             await refreshProfile();
-            navigate({ to: '/app' });
+
+            // Continue into subscription checkout if org is not yet trialing/active
+            try {
+                const limits = await subscriptionService.getMyLimits();
+                const status = limits?.status;
+                if (['trialing', 'active'].includes(status)) {
+                    navigate({ to: '/app' });
+                } else {
+                    setStep('subscription');
+                }
+            } catch {
+                setStep('subscription');
+            }
         } catch (error: any) {
             toast.error(error?.response?.data?.message || 'Failed to setup organization');
         } finally {
@@ -109,7 +167,8 @@ export function OnboardingPage() {
         );
     }
 
-    return (
+    if (step === 'create_org') {
+        return (
         <div className="min-h-[80vh] flex flex-col items-center justify-center p-6">
             <div className="max-w-2xl w-full">
                 <button
@@ -255,6 +314,172 @@ export function OnboardingPage() {
                             )}
                         </button>
                     </form>
+                </div>
+            </div>
+        </div>
+        );
+    }
+
+    // step === 'subscription'
+    return (
+        <div className="min-h-[80vh] flex flex-col items-center justify-center p-6">
+            <div className="max-w-4xl w-full">
+                <button
+                    onClick={() => setStep('create_org')}
+                    className="flex items-center gap-2 text-slate-500 hover:text-healthcare-primary transition-colors font-bold mb-8 text-sm uppercase tracking-widest"
+                >
+                    <ArrowRight className="rotate-180" size={18} /> Back to Setup
+                </button>
+
+                <div className="glass-card p-10 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl">
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="w-12 h-12 bg-healthcare-primary/10 rounded-xl flex items-center justify-center">
+                            <Smartphone className="text-healthcare-primary" size={24} />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-black text-healthcare-dark dark:text-white tracking-tight">
+                                Choose your subscription
+                            </h2>
+                            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
+                                Start with a 7-day free trial
+                            </p>
+                        </div>
+                    </div>
+
+                    {subscriptionStatus && ['trialing', 'active'].includes(subscriptionStatus) ? (
+                        <div className="flex flex-col items-center justify-center py-10">
+                            <CheckCircle2 className="text-healthcare-primary" size={28} />
+                            <p className="mt-4 text-slate-600 dark:text-slate-300 font-bold">
+                                Subscription already active. Redirecting...
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {planOptions.map((p) => (
+                                    <button
+                                        key={p.code}
+                                        type="button"
+                                        onClick={() => setSelectedPlan(p.code)}
+                                        className={[
+                                            'text-left p-5 rounded-2xl border-2 transition-all cursor-pointer',
+                                            selectedPlan === p.code
+                                                ? 'border-healthcare-primary/50 bg-healthcare-primary/5'
+                                                : 'border-slate-200 dark:border-slate-700 hover:border-healthcare-primary/30 bg-white dark:bg-slate-900',
+                                        ].join(' ')}
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <div className="text-lg font-black text-healthcare-dark dark:text-white">
+                                                    {p.title}
+                                                </div>
+                                                <div className="text-xs font-bold text-slate-500 mt-1">
+                                                    {p.description}
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-sm font-black text-healthcare-primary">
+                                                    {p.priceLabel}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="text-sm font-black text-healthcare-dark dark:text-white">
+                                    Payment method
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethodPreference('mtn_momo')}
+                                        className={[
+                                            'text-left p-5 rounded-2xl border-2 transition-all cursor-pointer',
+                                            paymentMethodPreference === 'mtn_momo'
+                                                ? 'border-healthcare-primary/50 bg-healthcare-primary/5'
+                                                : 'border-slate-200 dark:border-slate-700 hover:border-healthcare-primary/30 bg-white dark:bg-slate-900',
+                                        ].join(' ')}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Smartphone size={20} className="text-healthcare-primary" />
+                                            <div className="font-black">MTN MoMo</div>
+                                        </div>
+                                        <div className="text-xs text-slate-500 font-bold mt-2">
+                                            Pay via MTN Mobile Money
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMethodPreference('mobile_money')}
+                                        className={[
+                                            'text-left p-5 rounded-2xl border-2 transition-all cursor-pointer',
+                                            paymentMethodPreference === 'mobile_money'
+                                                ? 'border-healthcare-primary/50 bg-healthcare-primary/5'
+                                                : 'border-slate-200 dark:border-slate-700 hover:border-healthcare-primary/30 bg-white dark:bg-slate-900',
+                                        ].join(' ')}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Smartphone size={20} className="text-healthcare-primary" />
+                                            <div className="font-black">Mobile Money</div>
+                                        </div>
+                                        <div className="text-xs text-slate-500 font-bold mt-2">
+                                            Pay via mobile money provider (non-MTN)
+                                        </div>
+                                    </button>
+                                </div>
+                                {/* Card is intentionally hidden until we add another payment gateway */}
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+                                    Mobile Money phone number *
+                                </label>
+                                <input
+                                    required
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    placeholder="e.g. 0783 001 000"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-sm focus:border-healthcare-primary outline-none transition-all"
+                                />
+                                <p className="text-xs text-slate-500 font-bold">
+                                    We will use this number for Paypack cash-in when your trial ends.
+                                </p>
+                            </div>
+
+                            <button
+                                disabled={subscriptionSubmitting || !selectedPlan || !phoneNumber.trim()}
+                                onClick={async () => {
+                                    setSubscriptionSubmitting(true);
+                                    const normalizedPhone = phoneNumber.replace(/\s+/g, '').replace(/-/g, '');
+                                    try {
+                                        await subscriptionService.startSubscription({
+                                            plan_code: selectedPlan,
+                                            phone_number: normalizedPhone,
+                                            payment_method_preference: paymentMethodPreference,
+                                        });
+                                        toast.success('Trial started. We will charge automatically after 7 days.');
+                                        await refreshProfile();
+                                        navigate({ to: '/app' });
+                                    } catch (error: any) {
+                                        toast.error(error?.response?.data?.message || 'Failed to start trial');
+                                    } finally {
+                                        setSubscriptionSubmitting(false);
+                                    }
+                                }}
+                                className="w-full py-4 bg-healthcare-primary text-white rounded-2xl font-black text-sm hover:bg-teal-700 transition-all shadow-lg active:scale-[0.98] disabled:opacity-50"
+                                type="button"
+                            >
+                                {subscriptionSubmitting ? (
+                                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin mx-auto" />
+                                ) : (
+                                    'Start free trial'
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -114,7 +114,7 @@ export function Navbar() {
                                     Log in
                                 </Button>
                             </Link>
-                            <Link to={'/auth/register' as any} search={{} as any}>
+                            <Link to={'/subscribe' as any} search={{} as any}>
                                 <Button className="shadow-xl shadow-teal-600/20 bg-teal-600 hover:bg-teal-700 text-white rounded-full px-6 font-bold h-9 text-xs transition-all hover:scale-105 active:scale-95">
                                     Get Started
                                 </Button>
@@ -211,7 +211,7 @@ export function Navbar() {
                                             </Button>
                                         </Link>
                                         <Link
-                                            to={'/auth/register' as any}
+                                            to={'/subscribe' as any}
                                             search={{} as any}
                                             onClick={() => setIsMobileMenuOpen(false)}
                                             className="block w-full"
