@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { RequirePermission } from '../components/auth/RequirePermission';
 import { PERMISSIONS } from '../types/auth';
 import { lazyNamed, withRouteSuspense } from './lazy';
+import { WhatsAppFloatingButton } from '../components/shared/WhatsAppFloatingButton';
 
 // Modular Route Creators
 import { createInventoryRoutes } from './modules/inventory.routes';
@@ -41,6 +42,7 @@ const OnboardingPage = lazyNamed(() => import('../pages/auth/OnboardingPage'), '
 const AlertsPage = lazyNamed(() => import('../pages/dashboard/AlertsPage'), 'AlertsPage');
 const SettingsPage = lazyNamed(() => import('../pages/dashboard/SettingsPage'), 'SettingsPage');
 const BillingPage = lazyNamed(() => import('../pages/dashboard/BillingPage'), 'BillingPage');
+const CheckoutPage = lazyNamed(() => import('../pages/marketing/CheckoutPage'), 'CheckoutPage');
 const SubscribeRedirectPage = lazyNamed(
     () => import('../pages/marketing/SubscribeRedirectPage'),
     'SubscribeRedirectPage',
@@ -48,6 +50,7 @@ const SubscribeRedirectPage = lazyNamed(
 
 const RootComponent = () => (
     <React.Fragment>
+        <WhatsAppFloatingButton />
         <Outlet />
     </React.Fragment>
 );
@@ -88,6 +91,20 @@ const subscribeRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/subscribe',
     component: () => withRouteSuspense(<SubscribeRedirectPage />),
+});
+
+const checkoutRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/checkout',
+    component: () => withRouteSuspense(<CheckoutPage />),
+    validateSearch: (search: Record<string, unknown>) => {
+        return z
+            .object({
+                plan: z.enum(['starter', 'pro', 'business', 'enterprise', 'test']).optional(),
+                mode: z.enum(['purchase', 'renew']).optional(),
+            })
+            .parse(search);
+    },
 });
 
 const privacyPolicyRoute = createRoute({
@@ -209,6 +226,7 @@ const routeTree = rootRoute.addChildren([
     rootIndexRoute,
     docsRoute,
     subscribeRoute,
+    checkoutRoute,
     privacyPolicyRoute,
     termsOfUseRoute,
     loginFallbackRoute,

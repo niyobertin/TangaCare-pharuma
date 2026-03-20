@@ -21,6 +21,7 @@ import { cn } from '../../lib/utils';
 import { CreatePurchaseOrderModal } from '../inventory/CreatePurchaseOrderModal';
 import { AddStockModal } from '../inventory/AddStockModal';
 import { useRuntimeConfig } from '../../context/RuntimeConfigContext';
+import { subscriptionService } from '../../services/subscription.service';
 
 interface DashboardOwnerProps {
     facilityId: number | null;
@@ -42,6 +43,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     const [criticalAlerts, setCriticalAlerts] = useState<Alert[]>([]);
     const [topStockMedicines, setTopStockMedicines] = useState<TopStockMedicine[]>([]);
     const [topSelling, setTopSelling] = useState<Array<{ name: string; value: number }>>([]);
+    const [expirationWarning, setExpirationWarning] = useState<any | null>(null);
     const [kpiLoading, setKpiLoading] = useState(true);
     const [panelLoading, setPanelLoading] = useState(true);
     const [isLowStockPOModalOpen, setIsLowStockPOModalOpen] = useState(false);
@@ -55,6 +57,22 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     const [dateRange, setDateRange] = useState<DateRange>('7days');
     const [startDate, setStartDate] = useState<string>(format(startOfToday(), 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState<string>(format(endOfToday(), 'yyyy-MM-dd'));
+
+    useEffect(() => {
+        let cancelled = false;
+        const loadWarning = async () => {
+            try {
+                const warning = await subscriptionService.getExpirationWarning();
+                if (!cancelled) setExpirationWarning(warning);
+            } catch {
+                if (!cancelled) setExpirationWarning(null);
+            }
+        };
+        void loadWarning();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     useEffect(() => {
         let cancelled = false;
@@ -200,6 +218,41 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
 
     return (
         <div className="space-y-6 p-4 min-h-screen bg-[#F8FAFC] text-[#111827] dark:bg-slate-950 dark:text-slate-100">
+            {(expirationWarning?.isExpiringSoon || expirationWarning?.isExpired) && (
+                <div
+                    className={cn(
+                        'rounded-2xl border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3',
+                        expirationWarning?.isExpired
+                            ? 'border-rose-300 bg-rose-50 dark:border-rose-800 dark:bg-rose-950/30'
+                            : 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30',
+                    )}
+                >
+                    <div>
+                        <p className="text-sm font-black">
+                            {expirationWarning?.isExpired ? 'Subscription expired' : 'Subscription expiring soon'}
+                        </p>
+                        <p className="text-sm text-slate-600 dark:text-slate-300">
+                            {expirationWarning?.planName || 'Current plan'}{' '}
+                            {expirationWarning?.isExpired
+                                ? 'has expired. Renew now to restore full access.'
+                                : `expires in ${expirationWarning?.daysLeft} day(s).`}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigate({
+                                to: '/checkout' as any,
+                                search: { mode: 'renew' } as any,
+                            } as any)
+                        }
+                        className="px-4 py-2.5 rounded-xl bg-healthcare-primary text-white font-bold text-sm"
+                    >
+                        Renew now
+                    </button>
+                </div>
+            )}
+
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-[#FFFFFF] dark:bg-slate-900 p-4 rounded-2xl shadow-sm">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-[#DBEAFE] dark:bg-blue-900/40 rounded-xl">

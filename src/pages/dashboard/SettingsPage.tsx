@@ -130,16 +130,21 @@ export function SettingsPage() {
         ? new URLSearchParams(location.search).get('section')
         : null;
     const openOrganizationProfile = sectionParam === 'organization';
+    const openRolesPermissions = sectionParam === 'roles_permissions' || sectionParam === 'roles';
 
     const tenantId = Number(organizationId ?? user?.organization_id ?? 0) || undefined;
     const branchId = Number(facilityId ?? user?.facility_id ?? 0) || undefined;
     const userId = Number(user?.id ?? 0) || undefined;
 
     const orgGroup = SETTINGS_GROUPS.find((g) => g.id === 'organization');
-    const defaultGroupId = openOrganizationProfile && orgGroup ? 'organization' : SETTINGS_GROUPS[0].id;
-    const defaultDomain: SettingDomain = openOrganizationProfile && orgGroup
-        ? 'organization_profile'
-        : SETTINGS_GROUPS[0].items[0].domain;
+    const rolesGroup = SETTINGS_GROUPS.find((g) => g.id === 'roles_permissions');
+    const defaultGroupId = openRolesPermissions && rolesGroup ? rolesGroup.id : openOrganizationProfile && orgGroup ? orgGroup.id : SETTINGS_GROUPS[0].id;
+    const defaultDomain: SettingDomain =
+        openRolesPermissions && rolesGroup
+            ? rolesGroup.items[0].domain
+            : openOrganizationProfile && orgGroup
+              ? 'organization_profile'
+              : SETTINGS_GROUPS[0].items[0].domain;
 
     const [activeGroupId, setActiveGroupId] = useState<string>(defaultGroupId);
     const activeGroup = useMemo(

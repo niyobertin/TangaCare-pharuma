@@ -9,6 +9,7 @@ export function VerifyOtpPage() {
     const search = useSearch({ from: '/auth/verify-otp' }) as any;
     const email = search.email;
     const type = search.type || 'reset';
+    const redirectTo = search.redirect as string | undefined;
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -87,7 +88,10 @@ export function VerifyOtpPage() {
                     navigate({ to: '/auth/set-password' as any, search: {} as any });
                 } else {
                     toast.success('Account verified! Please login.');
-                    navigate({ to: '/auth/login' as any, search: {} as any });
+                    navigate({
+                        to: '/auth/login' as any,
+                        search: redirectTo ? ({ redirect: redirectTo } as any) : ({} as any),
+                    });
                 }
             } else {
                 await authService.verifyResetOtp(email, otpValue);
@@ -159,7 +163,10 @@ export function VerifyOtpPage() {
                     type="button"
                     onClick={() => {
                         if (type === 'register') {
-                            navigate({ to: '/auth/register' as any, search: {} as any });
+                            navigate({
+                                to: '/auth/register' as any,
+                                search: redirectTo ? ({ redirect: redirectTo } as any) : ({} as any),
+                            });
                         } else {
                             navigate({ to: '/auth/forgot-password' as any, search: {} as any });
                         }

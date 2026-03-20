@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from '@tanstack/react-router';
+import { Navigate, useNavigate, useSearch } from '@tanstack/react-router';
 import { Lock, Mail, Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -13,6 +13,8 @@ type LoginForm = yup.InferType<typeof loginSchema>;
 export function LoginPage() {
     const { login, isAuthenticated } = useAuth();
     const navigate = useNavigate();
+    const searchParams = useSearch({ from: '/auth/login' }) as any;
+    const redirectTo = searchParams?.redirect as string | undefined;
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -29,6 +31,11 @@ export function LoginPage() {
         try {
             await login(data);
             toast.success('Welcome back to TangaCare!');
+            if (redirectTo) {
+                window.location.href = redirectTo;
+                return;
+            }
+            navigate({ to: '/app' as any, search: {} as any });
         } catch (err: any) {
             const message =
                 err.response?.data?.message ||
@@ -39,7 +46,12 @@ export function LoginPage() {
         }
     };
 
-    if (isAuthenticated) return <Navigate to={'/app' as any} search={{} as any} />;
+    if (isAuthenticated) {
+        if (redirectTo) {
+            return <Navigate to={redirectTo as any} search={{} as any} />;
+        }
+        return <Navigate to={'/app' as any} search={{} as any} />;
+    }
 
     return (
         <>
@@ -65,6 +77,7 @@ export function LoginPage() {
                 setShowPassword={setShowPassword}
                 onSubmit={onSubmit}
                 navigate={navigate}
+                redirectTo={redirectTo}
             />
         </>
     );
@@ -79,6 +92,7 @@ function LoginFormContent({
     setShowPassword,
     onSubmit,
     navigate,
+    redirectTo,
 }: {
     loading: boolean;
     register: any;
@@ -88,6 +102,7 @@ function LoginFormContent({
     setShowPassword: (v: boolean) => void;
     onSubmit: (data: LoginForm) => Promise<void>;
     navigate: any;
+    redirectTo?: string;
 }) {
     return (
         <form
@@ -184,7 +199,12 @@ function LoginFormContent({
                     Don't have an account?{' '}
                     <button
                         type="button"
-                        onClick={() => navigate({ to: '/auth/register' as any, search: {} as any })}
+                        onClick={() =>
+                            navigate({
+                                to: '/auth/register' as any,
+                                search: redirectTo ? ({ redirect: redirectTo } as any) : ({} as any),
+                            })
+                        }
                         className="font-bold text-healthcare-primary hover:underline ml-1"
                     >
                         Register

@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router';
 
 const plans = [
     {
+        code: 'starter',
         name: 'Starter',
         price: '35,000',
         description: 'Perfect for small clinics and independent pharmacies.',
@@ -16,6 +17,7 @@ const plans = [
         ],
     },
     {
+        code: 'pro',
         name: 'Pro',
         price: '75,000',
         description: 'For growing pharmacies needing advanced analytics.',
@@ -30,6 +32,7 @@ const plans = [
         ],
     },
     {
+        code: 'business',
         name: 'Business',
         price: '100,000',
         description: 'For established pharmacies with multiple locations.',
@@ -43,6 +46,19 @@ const plans = [
         ],
     },
     {
+        code: 'test',
+        name: 'Test Plan',
+        price: '100',
+        description: 'Low-cost sandbox plan for payment flow testing.',
+        features: [
+            'For QA and payment testing',
+            'Single-user test scope',
+            'Checkout and renewal flow validation',
+            'Webhook confirmation testing',
+        ],
+    },
+    {
+        code: 'enterprise',
         name: 'Enterprise',
         price: 'Custom',
         description: 'Tailored for hospital networks and chains.',
@@ -119,7 +135,8 @@ export function Pricing() {
 
                             <div className="mt-10">
                                 <Link
-                                    to={plan.price === 'Custom' ? '/' : '/subscribe'}
+                                    to={plan.price === 'Custom' ? '/' : '/checkout'}
+                                    search={plan.price === 'Custom' ? undefined : { plan: plan.code, mode: 'purchase' } as any}
                                     hash={plan.price === 'Custom' ? 'contact' : undefined}
                                 >
                                     <Button

@@ -48,6 +48,7 @@ export const createAuthRoutes = (parentRoute: any, _rootRoute: any) => {
                 .object({
                     role: z.string().optional(),
                     inviteCode: z.string().optional(),
+                    redirect: z.string().optional(),
                 })
                 .parse(search);
         },
@@ -67,6 +68,8 @@ export const createAuthRoutes = (parentRoute: any, _rootRoute: any) => {
             return z
                 .object({
                     email: z.string().optional(),
+                    type: z.string().optional(),
+                    redirect: z.string().optional(),
                 })
                 .parse(search);
         },

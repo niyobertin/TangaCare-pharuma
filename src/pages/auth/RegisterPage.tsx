@@ -15,6 +15,7 @@ export function RegisterPage() {
     const { register: registerUser, isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const searchParams = useSearch({ from: '/auth/register' }) as any;
+    const redirectTo = searchParams?.redirect as string | undefined;
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -26,7 +27,10 @@ export function RegisterPage() {
         resolver: yupResolver(registerSchema) as any,
     });
 
-    if (isAuthenticated) return <Navigate to={'/app' as any} search={{} as any} />;
+    if (isAuthenticated) {
+        if (redirectTo) return <Navigate to={redirectTo as any} search={{} as any} />;
+        return <Navigate to={'/app' as any} search={{} as any} />;
+    }
 
     const onSubmit = async (data: RegisterForm) => {
         setLoading(true);
@@ -43,7 +47,7 @@ export function RegisterPage() {
             toast.success('Registration successful! Please verify your email.');
             navigate({
                 to: '/auth/verify-otp' as any,
-                search: { email: data.email, type: 'register' } as any,
+                search: { email: data.email, type: 'register', ...(redirectTo ? { redirect: redirectTo } : {}) } as any,
                 params: {} as any,
             });
         } catch (err: any) {
@@ -163,7 +167,12 @@ export function RegisterPage() {
             <div className="text-center">
                 <button
                     type="button"
-                    onClick={() => navigate({ to: '/auth/login' as any, search: {} as any })}
+                    onClick={() =>
+                        navigate({
+                            to: '/auth/login' as any,
+                            search: redirectTo ? ({ redirect: redirectTo } as any) : ({} as any),
+                        })
+                    }
                     className="text-xs font-bold text-healthcare-primary hover:underline flex items-center justify-center mx-auto gap-1"
                 >
                     <ChevronLeft size={16} /> Back to login

@@ -1,16 +1,13 @@
 import { useEffect } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 export function SubscribeRedirectPage() {
     const navigate = useNavigate();
+    const searchParams = useSearch({ from: '/subscribe' }) as any;
 
     useEffect(() => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            navigate({ to: '/app/billing' as any, search: {} as any, replace: true } as any);
-        } else {
-            navigate({ to: '/auth/register' as any, search: {} as any, replace: true } as any);
-        }
+        const plan = searchParams?.plan_code || 'starter';
+        navigate({ to: '/checkout' as any, search: { plan, mode: 'purchase' } as any, replace: true } as any);
     }, [navigate]);
 
     return <div className="p-6 text-sm text-slate-500">Redirecting to subscription...</div>;
