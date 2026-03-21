@@ -13,7 +13,6 @@ import { PERMISSIONS } from '../types/auth';
 import { lazyNamed, withRouteSuspense } from './lazy';
 import { WhatsAppFloatingButton } from '../components/shared/WhatsAppFloatingButton';
 
-// Modular Route Creators
 import { createInventoryRoutes } from './modules/inventory.routes';
 import { createAuthRoutes } from './modules/auth.routes';
 import { createSalesRoutes } from './modules/sales.routes';
@@ -125,7 +124,6 @@ const loginFallbackRoute = createRoute({
     component: () => <Navigate to={'/auth/login' as any} search={{} as any} />,
 });
 
-// App Layout
 const appLayoutRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/app',
@@ -182,7 +180,6 @@ const billingRoute = createRoute({
     component: () => withRouteSuspense(<BillingPage />),
 });
 
-// Compose App Route Tree
 const appRouteTree = appLayoutRoute.addChildren([
     indexRoute,
     alertsRoute,
@@ -197,7 +194,6 @@ const appRouteTree = appLayoutRoute.addChildren([
     ...createAnalyticsRoutes(appLayoutRoute),
 ]);
 
-// Auth Layout
 const authLayoutRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/auth',
@@ -221,7 +217,6 @@ const publicPORoute = createRoute({
 
 const publicRouteTree = publicRoute.addChildren([publicPORoute]);
 
-// Final Route Tree
 const routeTree = rootRoute.addChildren([
     rootIndexRoute,
     docsRoute,

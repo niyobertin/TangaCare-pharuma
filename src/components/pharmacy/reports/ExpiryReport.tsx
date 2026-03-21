@@ -36,8 +36,6 @@ interface ExpiryRow extends ExpiryItem {
     status: 'expiring_soon' | 'expired';
 }
 
-const DAY_OPTIONS = [30, 60, 90] as const;
-
 const getRiskBadge = (risk: ExpiryRisk) => {
     if (risk === 'expired') {
         return {
@@ -98,11 +96,11 @@ const resolveAction = (item: ExpiryRow): string => {
 
 interface ExpiryReportProps {
     facilityId?: number;
+    /** Expiry window in days (controlled from Reports page toolbar). */
     selectedDays?: number;
-    onDaysChange?: (days: number) => void;
 }
 
-export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryReportProps) {
+export function ExpiryReport({ facilityId, selectedDays }: ExpiryReportProps) {
     const [localDays, setLocalDays] = useState(30);
     const [reloadKey, setReloadKey] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -114,14 +112,6 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
     const [traceResult, setTraceResult] = useState<any | null>(null);
     const [traceLoading, setTraceLoading] = useState(false);
     const days = localDays;
-
-    const updateDays = (nextDays: number) => {
-        if (!DAY_OPTIONS.includes(nextDays as (typeof DAY_OPTIONS)[number])) return;
-        setLocalDays(nextDays);
-        onDaysChange?.(nextDays);
-        // Force fresh fetch on every click, including when same day is re-selected.
-        setReloadKey((prev) => prev + 1);
-    };
 
     useEffect(() => {
         if (selectedDays != null && selectedDays !== localDays) {
@@ -243,11 +233,7 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
         return (
             <div className="space-y-6">
                 <div className="flex justify-between items-center mb-8">
-                    <div className="space-y-2">
-                        <div className="h-6 w-48 bg-slate-200 animate-pulse rounded"></div>
-                        <div className="h-3 w-32 bg-slate-100 animate-pulse rounded"></div>
-                    </div>
-                    <div className="h-10 w-64 bg-slate-200 animate-pulse rounded-xl"></div>
+                    <div className="h-6 w-56 bg-slate-200 animate-pulse rounded"></div>
                 </div>
                 <SkeletonTable
                     rows={10}
@@ -283,33 +269,14 @@ export function ExpiryReport({ facilityId, selectedDays, onDaysChange }: ExpiryR
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                    <h2 className="text-xl font-black text-healthcare-dark dark:text-white uppercase tracking-tight flex items-center gap-2">
-                        <Clock className="text-rose-500" />
-                        Expiry Risk Analysis
-                    </h2>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
-                        Batch-level expiry risk and actions
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                    {DAY_OPTIONS.map((d) => (
-                        <button
-                            key={d}
-                            onClick={() => updateDays(d)}
-                            className={cn(
-                                'px-4 py-1.5 rounded-lg text-xs font-black transition-all uppercase tracking-tight',
-                                days === d
-                                    ? 'bg-white dark:bg-slate-700 text-healthcare-primary shadow-sm ring-1 ring-slate-200 dark:ring-slate-600'
-                                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200',
-                            )}
-                        >
-                            {d} Days
-                        </button>
-                    ))}
-                </div>
+            <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-xl font-black text-healthcare-dark dark:text-white uppercase tracking-tight flex items-center gap-2">
+                    <Clock className="text-rose-500 shrink-0" />
+                    Expiry Risk Analysis
+                </h2>
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    ({days}d window)
+                </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

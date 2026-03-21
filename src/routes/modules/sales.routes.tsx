@@ -2,8 +2,6 @@ import { createRoute } from '@tanstack/react-router';
 import { RequirePermission } from '../../components/auth/RequirePermission';
 import { PERMISSIONS } from '../../types/auth';
 import { lazyNamed, withRouteSuspense } from '../lazy';
-// import React from 'react';
-
 const DispensingPage = lazyNamed(
     () => import('../../pages/dashboard/DispensingPage'),
     'DispensingPage',

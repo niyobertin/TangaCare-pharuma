@@ -18,7 +18,6 @@ import { PerformanceChart } from '../../components/pharmacy/PerformanceChart';
 import { TaxSummaryTable } from '../../components/pharmacy/TaxSummaryTable';
 import { format, subDays } from 'date-fns';
 import { cn } from '../../lib/utils';
-import { useNavigate } from '@tanstack/react-router';
 import { formatLocalDate, parseLocalDate } from '../../lib/date';
 
 import { ReorderSuggestions } from '../../components/pharmacy/reports/ReorderSuggestions';
@@ -39,36 +38,22 @@ export interface ReportsPageProps {
     defaultTab?: string;
 }
 
-type ReportGroupKey = 'operations' | 'inventory-intelligence' | 'business-compliance';
-
-const REPORT_TAB_GROUPS: Array<{
-    key: ReportGroupKey;
-    label: string;
-    tabs: readonly string[];
-}> = [
-    {
-        key: 'operations',
-        label: 'Operations',
-        tabs: ['sales', 'stock', 'low-stock', 'movement', 'purchase'],
-    },
-    {
-        key: 'inventory-intelligence',
-        label: 'Inventory Intelligence',
-        tabs: [
-            'expiry',
-            'near-expiry-actions',
-            'fast-moving',
-            'demand-forecast',
-            'forecast-reorder',
-            'par',
-        ],
-    },
-    {
-        key: 'business-compliance',
-        label: 'Business & Compliance',
-        tabs: ['performance', 'customer', 'tax'],
-    },
-];
+const VALID_REPORT_TABS = new Set([
+    'sales',
+    'stock',
+    'low-stock',
+    'movement',
+    'purchase',
+    'expiry',
+    'near-expiry-actions',
+    'fast-moving',
+    'demand-forecast',
+    'forecast-reorder',
+    'par',
+    'performance',
+    'customer',
+    'tax',
+]);
 
 const SUBTAB_ALIASES: Record<string, string> = {
     returns: 'sales',
@@ -90,31 +75,23 @@ function normalizeSubtab(tab: string): string {
     return SUBTAB_ALIASES[key] || key;
 }
 
-function groupForTab(tab: string): ReportGroupKey {
-    const normalized = normalizeSubtab(tab);
-    if (normalized === 'operations') return 'operations';
-    if (normalized === 'inventory-intelligence') return 'inventory-intelligence';
-    if (normalized === 'business-compliance') return 'business-compliance';
-
-    const group = REPORT_TAB_GROUPS.find((item) => item.tabs.includes(normalized));
-    return group?.key || 'operations';
+function resolveReportTab(defaultTab: string): string {
+    const n = normalizeSubtab(defaultTab);
+    if (n === 'operations') return 'sales';
+    if (n === 'inventory-intelligence') return 'expiry';
+    if (n === 'business-compliance') return 'performance';
+    if (VALID_REPORT_TABS.has(n)) return n;
+    return 'sales';
 }
 
-function defaultSubtabForGroup(group: ReportGroupKey): string {
-    if (group === 'inventory-intelligence') return 'expiry';
-    if (group === 'business-compliance') return 'performance';
-    return 'stock';
-}
+const EXPIRY_WINDOW_PRESETS = [30, 60, 90, 120, 180] as const;
+const NEAR_EXPIRY_HORIZON_PRESETS = [30, 45, 60, 90, 100, 110, 120, 180, 365] as const;
 
 export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
     const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const { user, facilityId } = useAuth();
     const effectiveFacilityId = facilityId ?? user?.facility_id;
-    const navigate = useNavigate();
-
-    const [activeGroup, setActiveGroup] = useState<ReportGroupKey>(groupForTab(defaultTab));
-    const [preferredSubtab, setPreferredSubtab] = useState<string>(normalizeSubtab(defaultTab));
 
     const SUBTAB_LABELS: Record<string, string> = {
         sales: 'Sales',
@@ -133,39 +110,20 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         tax: 'Tax',
     };
 
-    useEffect(() => {
-        setActiveGroup(groupForTab(defaultTab));
-        setPreferredSubtab(normalizeSubtab(defaultTab));
-    }, [defaultTab]);
-
-    const activeGroupConfig = useMemo(
-        () => REPORT_TAB_GROUPS.find((group) => group.key === activeGroup) || REPORT_TAB_GROUPS[0],
-        [activeGroup],
-    );
-    const activeSubtabs = activeGroupConfig.tabs;
-    const normalizedPreferredSubtab = normalizeSubtab(preferredSubtab);
-    const resolvedTab = activeSubtabs.includes(normalizedPreferredSubtab)
-        ? normalizedPreferredSubtab
-        : defaultSubtabForGroup(activeGroup);
+    const resolvedTab = useMemo(() => resolveReportTab(defaultTab), [defaultTab]);
 
     const [expiryDays, setExpiryDays] = useState(30);
-    const routeForSubtab = (tab: string): string => {
-        if (tab === 'sales') return '/app/analytics/sales';
-        if (tab === 'stock') return '/app/analytics/inventory';
-        if (tab === 'low-stock') return '/app/analytics/low-stock';
-        if (tab === 'expiry') return '/app/analytics/recall';
-        if (tab === 'movement') return '/app/analytics/movement';
-        if (tab === 'fast-moving') return '/app/analytics/fast-moving';
-        if (tab === 'demand-forecast') return '/app/analytics/demand-forecast';
-        if (tab === 'forecast-reorder') return '/app/analytics/forecast-reorder';
-        if (tab === 'near-expiry-actions') return '/app/analytics/near-expiry-actions';
-        if (tab === 'par') return '/app/analytics/par';
-        if (tab === 'purchase') return '/app/analytics/procurement';
-        if (tab === 'performance') return '/app/analytics/performance';
-        if (tab === 'customer') return '/app/analytics/loyalty';
-        if (tab === 'tax') return '/app/analytics/tax';
-        return '/app/analytics/inventory';
-    };
+    const [nearExpiryActionDays, setNearExpiryActionDays] = useState(90);
+
+    const expiryWindowSelectOptions = useMemo(() => {
+        const merged = new Set<number>([...EXPIRY_WINDOW_PRESETS, expiryDays]);
+        return Array.from(merged).sort((a, b) => a - b);
+    }, [expiryDays]);
+
+    const nearExpiryHorizonSelectOptions = useMemo(() => {
+        const merged = new Set<number>([...NEAR_EXPIRY_HORIZON_PRESETS, nearExpiryActionDays]);
+        return Array.from(merged).sort((a, b) => a - b);
+    }, [nearExpiryActionDays]);
 
     const getExportType = (
         tab: string,
@@ -185,7 +143,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         | 'customer'
         | 'tax'
         | null => {
-        if (['sales'].includes(tab)) return 'sales';
+        if (tab === 'sales') return 'sales';
         if (tab === 'stock') return 'stock';
         if (tab === 'low-stock') return 'low-stock';
         if (tab === 'expiry') return 'expiry';
@@ -226,7 +184,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             params.horizon_days = 30;
         }
         if (exportType === 'near-expiry-actions') {
-            params.horizon_days = 90;
+            params.horizon_days = nearExpiryActionDays;
         }
         if (exportType === 'par') {
             params.status = 'pending';
@@ -256,13 +214,65 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
             requireFacility
         >
             <div className="p-6 space-y-6 animate-in fade-in duration-500">
-                {/* ── H-9 Tab Bar ───────────────────────────────────────────── */}
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <h1 className="text-2xl font-black text-healthcare-dark dark:text-white uppercase tracking-tight">
-                        Reports
-                    </h1>
-                    {/* Export buttons stay at the top right */}
-                    <div className="flex gap-2">
+                <div className="flex w-full flex-wrap items-center justify-between gap-3">
+                    <div className="flex min-w-0 flex-wrap items-center gap-3">
+                        <h1 className="flex shrink-0 flex-wrap items-baseline gap-x-2 gap-y-1 text-2xl font-black uppercase tracking-tight text-healthcare-dark dark:text-white">
+                            <span>Reports</span>
+                            <span className="text-slate-400 dark:text-slate-500">·</span>
+                            <span className="text-healthcare-primary dark:text-blue-300">
+                                {SUBTAB_LABELS[resolvedTab] || resolvedTab}
+                            </span>
+                        </h1>
+                        {resolvedTab === 'expiry' && (
+                            <label className="flex shrink-0 items-center gap-2">
+                                <span className="whitespace-nowrap text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                                    Near days
+                                </span>
+                                <select
+                                    value={String(expiryDays)}
+                                    onChange={(e) => {
+                                        const raw = parseInt(e.target.value, 10);
+                                        const n = Number.isFinite(raw)
+                                            ? Math.min(730, Math.max(1, raw))
+                                            : 30;
+                                        setExpiryDays(n);
+                                    }}
+                                    className="h-[42px] min-w-[120px] shrink-0 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black uppercase tracking-wider text-slate-700 focus:outline-none focus:ring-2 focus:ring-healthcare-primary/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                    {expiryWindowSelectOptions.map((d) => (
+                                        <option key={d} value={d}>
+                                            {d} days
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                        )}
+                        {resolvedTab === 'near-expiry-actions' && (
+                            <label className="flex shrink-0 items-center gap-2">
+                                <span className="whitespace-nowrap text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                                    Near days
+                                </span>
+                                <select
+                                    value={String(nearExpiryActionDays)}
+                                    onChange={(e) => {
+                                        const raw = parseInt(e.target.value, 10);
+                                        const n = Number.isFinite(raw)
+                                            ? Math.min(730, Math.max(1, raw))
+                                            : 90;
+                                        setNearExpiryActionDays(n);
+                                    }}
+                                    className="h-[42px] min-w-[120px] shrink-0 rounded-xl border border-slate-200 bg-white px-3 text-xs font-black uppercase tracking-wider text-slate-700 focus:outline-none focus:ring-2 focus:ring-healthcare-primary/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                    {nearExpiryHorizonSelectOptions.map((d) => (
+                                        <option key={d} value={d}>
+                                            {d} days
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                        )}
+                    </div>
+                    <div className="ml-auto flex shrink-0 gap-2">
                         <button
                             onClick={() => handleExport('excel')}
                             disabled={!canExport}
@@ -289,38 +299,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         </button>
                     </div>
                 </div>
-
-                {activeSubtabs.length > 1 && (
-                    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 whitespace-nowrap mb-2">
-                            {activeGroupConfig.label}
-                        </p>
-                        <div className="overflow-x-auto">
-                            <div className="flex gap-2 min-w-max">
-                                {activeSubtabs.map((subtab) => (
-                                    <button
-                                        key={subtab}
-                                        onClick={() => {
-                                            setPreferredSubtab(subtab);
-                                            navigate({
-                                                to: routeForSubtab(subtab) as any,
-                                                search: {} as any,
-                                            });
-                                        }}
-                                        className={cn(
-                                            'px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-colors',
-                                            resolvedTab === subtab
-                                                ? 'bg-healthcare-primary text-white'
-                                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700',
-                                        )}
-                                    >
-                                        {SUBTAB_LABELS[subtab] || subtab}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* Date / day pickers (conditionally shown) */}
                 {['sales', 'tax', 'performance', 'purchase'].includes(resolvedTab) && (
@@ -363,7 +341,10 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         <DemandForecastReport facilityId={effectiveFacilityId} />
                     )}
                     {resolvedTab === 'near-expiry-actions' && (
-                        <NearExpiryActionsReport facilityId={effectiveFacilityId} />
+                        <NearExpiryActionsReport
+                            facilityId={effectiveFacilityId}
+                            horizonDays={nearExpiryActionDays}
+                        />
                     )}
                     {resolvedTab === 'forecast-reorder' && (
                         <ForecastReorderReport facilityId={effectiveFacilityId} />
@@ -372,11 +353,7 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                         <ParReplenishmentReport facilityId={effectiveFacilityId} />
                     )}
                     {resolvedTab === 'expiry' && (
-                        <ExpiryReport
-                            facilityId={effectiveFacilityId}
-                            selectedDays={expiryDays}
-                            onDaysChange={setExpiryDays}
-                        />
+                        <ExpiryReport facilityId={effectiveFacilityId} selectedDays={expiryDays} />
                     )}
                     {resolvedTab === 'movement' && (
                         <div className="-mx-6 -my-6">
@@ -412,10 +389,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         </ProtectedRoute>
     );
 }
-
-// Reuse other existing functions but with simplified styles if needed
-// ... (omitting full re-write of PerformanceReports, LoyaltyReports, TaxReports, etc. to save space,
-//      but they will be included in the final file)
 
 function PerformanceReports({
     facilityId,
@@ -643,7 +616,6 @@ function TaxReports({
                 totalTaxable={taxData?.total_taxable_amount || 0}
                 totalVat={taxData?.total_vat_amount || 0}
             />
-            {/* Regulatory register could go here */}
         </div>
     );
 }
@@ -1023,9 +995,7 @@ function SalesReports({
                 <CreateReturnModal
                     sale={selectedSale}
                     onClose={() => setIsReturnModalOpen(false)}
-                    onSuccess={() => {
-                        /* refresh */
-                    }}
+                    onSuccess={() => {}}
                 />
             )}
         </div>

@@ -5,10 +5,14 @@ import { SkeletonTable } from '../../ui/SkeletonTable';
 
 interface NearExpiryActionsReportProps {
     facilityId?: number;
+    /** Look-ahead window in days (controlled from Reports toolbar). */
+    horizonDays?: number;
 }
 
-export function NearExpiryActionsReport({ facilityId }: NearExpiryActionsReportProps) {
-    const [horizonDays, setHorizonDays] = useState(90);
+export function NearExpiryActionsReport({
+    facilityId,
+    horizonDays: horizonDaysProp = 90,
+}: NearExpiryActionsReportProps) {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState<any | null>(null);
 
@@ -19,7 +23,7 @@ export function NearExpiryActionsReport({ facilityId }: NearExpiryActionsReportP
             try {
                 const result = await pharmacyService.getNearExpiryActions({
                     facilityId,
-                    horizon_days: horizonDays,
+                    horizon_days: horizonDaysProp,
                 });
                 setData(result);
             } finally {
@@ -27,7 +31,7 @@ export function NearExpiryActionsReport({ facilityId }: NearExpiryActionsReportP
             }
         };
         load();
-    }, [facilityId, horizonDays]);
+    }, [facilityId, horizonDaysProp]);
 
     const rows = useMemo(() => (Array.isArray(data?.items) ? data.items : []), [data]);
 
@@ -48,24 +52,14 @@ export function NearExpiryActionsReport({ facilityId }: NearExpiryActionsReportP
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                    <AlertTriangle size={16} className="text-rose-500" />
-                    <h3 className="text-sm font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">
-                        Near-Expiry Action Plan
-                    </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                    <select
-                        value={String(horizonDays)}
-                        onChange={(e) => setHorizonDays(Number(e.target.value))}
-                        className="px-2 py-1 rounded-md text-[11px] font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                    >
-                        <option value="45">Horizon: 45d</option>
-                        <option value="90">Horizon: 90d</option>
-                        <option value="120">Horizon: 120d</option>
-                    </select>
-                </div>
+            <div className="flex flex-wrap items-center gap-2">
+                <AlertTriangle size={16} className="text-rose-500" />
+                <h3 className="text-sm font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">
+                    Near-Expiry Action Plan
+                </h3>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    ({horizonDaysProp}d horizon)
+                </span>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">

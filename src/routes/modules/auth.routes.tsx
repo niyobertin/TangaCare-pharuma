@@ -1,8 +1,6 @@
 import { createRoute, Navigate } from '@tanstack/react-router';
 import { lazyNamed, withRouteSuspense } from '../lazy';
 import { z } from 'zod';
-// import React from 'react';
-
 const LoginPage = lazyNamed(() => import('../../pages/auth/LoginPage'), 'LoginPage');
 const RegisterPage = lazyNamed(() => import('../../pages/auth/RegisterPage'), 'RegisterPage');
 const ForgotPasswordPage = lazyNamed(

@@ -2,8 +2,6 @@ import { createRoute, Navigate } from '@tanstack/react-router';
 import { RequirePermission } from '../../components/auth/RequirePermission';
 import { PERMISSIONS } from '../../types/auth';
 import { lazyNamed, withRouteSuspense } from '../lazy';
-// import React from 'react';
-
 const InventoryPage = lazyNamed(
     () => import('../../pages/dashboard/InventoryPage'),
     'InventoryPage',
@@ -37,7 +35,6 @@ const ReorderDashboardPage = lazyNamed(
     'ReorderDashboardPage',
 );
 
-// This will be attached to the appLayoutRoute in the main router
 export const createInventoryRoutes = (parentRoute: any) => {
     const inventoryRoute = createRoute({
         getParentRoute: () => parentRoute,

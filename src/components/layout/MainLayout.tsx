@@ -54,6 +54,7 @@ interface NavItem {
     allowedRoles?: string[];
     allowedPermissions?: string[];
     children?: NavItem[];
+    subsection?: string;
 }
 
 interface NavSection {
@@ -218,7 +219,7 @@ const NAV_SECTIONS: NavSection[] = [
         label: 'Reports',
         items: [
             {
-                to: '/app/analytics/operations',
+                to: '/app/analytics/sales',
                 icon: FileText,
                 label: 'Reports',
                 allowedRoles: [
@@ -233,27 +234,108 @@ const NAV_SECTIONS: NavSection[] = [
                 allowedPermissions: ['reports:read', 'audit:read'],
                 children: [
                     {
-                        to: '/app/analytics/operations',
+                        to: '/app/analytics/sales',
                         icon: FileText,
-                        label: 'Operations',
+                        label: 'Sales',
+                        subsection: 'Operations',
                         allowedPermissions: ['reports:read'],
                     },
                     {
-                        to: '/app/analytics/intelligence',
+                        to: '/app/analytics/inventory',
                         icon: FileText,
-                        label: 'Inventory Intelligence',
+                        label: 'Stock',
+                        subsection: 'Operations',
                         allowedPermissions: ['reports:read'],
                     },
                     {
-                        to: '/app/analytics/compliance',
+                        to: '/app/analytics/low-stock',
                         icon: FileText,
-                        label: 'Business & Compliance',
+                        label: 'Low Stock',
+                        subsection: 'Operations',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/movement',
+                        icon: FileText,
+                        label: 'Movements',
+                        subsection: 'Operations',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/procurement',
+                        icon: FileText,
+                        label: 'Purchase',
+                        subsection: 'Operations',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/recall',
+                        icon: FileText,
+                        label: 'Expiry',
+                        subsection: 'Inventory Intelligence',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/near-expiry-actions',
+                        icon: FileText,
+                        label: 'Near-Expiry Actions',
+                        subsection: 'Inventory Intelligence',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/fast-moving',
+                        icon: FileText,
+                        label: 'Fast / Slow',
+                        subsection: 'Inventory Intelligence',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/demand-forecast',
+                        icon: FileText,
+                        label: 'Demand Forecast',
+                        subsection: 'Inventory Intelligence',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/forecast-reorder',
+                        icon: FileText,
+                        label: 'Forecast Reorder',
+                        subsection: 'Inventory Intelligence',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/par',
+                        icon: FileText,
+                        label: 'PAR Replenishment',
+                        subsection: 'Inventory Intelligence',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/performance',
+                        icon: FileText,
+                        label: 'Performance',
+                        subsection: 'Business & Compliance',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/loyalty',
+                        icon: FileText,
+                        label: 'Customers',
+                        subsection: 'Business & Compliance',
+                        allowedPermissions: ['reports:read'],
+                    },
+                    {
+                        to: '/app/analytics/tax',
+                        icon: FileText,
+                        label: 'Tax',
+                        subsection: 'Business & Compliance',
                         allowedPermissions: ['reports:read'],
                     },
                     {
                         to: '/app/audit-logs',
                         icon: FileText,
                         label: 'Audit Logs',
+                        subsection: 'Audit',
                         allowedPermissions: ['audit:read'],
                     },
                 ],
@@ -435,20 +517,31 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
             </Link>
             {!isCollapsed && isOpen && hasChildren && (
                 <div className="ml-9 mt-1 space-y-1 border-l-2 border-blue-100 pl-2">
-                    {children.map((child) => (
-                        <Link
-                            key={child.to}
-                            to={child.to as any}
-                            search={{} as any}
-                            onClick={() => onNavigate?.()}
-                            activeProps={{
-                                className: 'text-healthcare-primary font-bold bg-blue-50',
-                            }}
-                            className="block px-3 py-2 text-sm text-slate-600 hover:text-healthcare-primary hover:bg-blue-50 rounded-md transition-colors whitespace-nowrap"
-                        >
-                            {child.label}
-                        </Link>
-                    ))}
+                    {children.map((child, index) => {
+                        const prevSub = index > 0 ? children[index - 1]?.subsection : undefined;
+                        const showSubsection =
+                            Boolean(child.subsection) && child.subsection !== prevSub;
+                        return (
+                            <div key={child.to}>
+                                {showSubsection && (
+                                    <div className="px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                                        {child.subsection}
+                                    </div>
+                                )}
+                                <Link
+                                    to={child.to as any}
+                                    search={{} as any}
+                                    onClick={() => onNavigate?.()}
+                                    activeProps={{
+                                        className: 'text-healthcare-primary font-bold bg-blue-50 dark:bg-blue-950/40',
+                                    }}
+                                    className="block px-3 py-2 text-sm text-slate-600 hover:text-healthcare-primary hover:bg-blue-50 dark:hover:bg-slate-800 rounded-md transition-colors whitespace-nowrap"
+                                >
+                                    {child.label}
+                                </Link>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
         </div>

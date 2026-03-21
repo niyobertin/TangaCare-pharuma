@@ -2,8 +2,6 @@ import { createRoute, Navigate } from '@tanstack/react-router';
 import { RequirePermission } from '../../components/auth/RequirePermission';
 import { PERMISSIONS } from '../../types/auth';
 import { lazyNamed, withRouteSuspense } from '../lazy';
-// import { ReorderDashboardPage } from '../../pages/dashboard/ReorderDashboardPage';
-// import React from 'react';
 
 const ProcurementLayout = lazyNamed(
     () => import('../../pages/procurement/ProcurementLayout'),

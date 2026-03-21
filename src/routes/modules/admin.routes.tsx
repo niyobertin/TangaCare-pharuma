@@ -3,7 +3,6 @@ import { RequirePermission } from '../../components/auth/RequirePermission';
 import { PERMISSIONS } from '../../types/auth';
 import { lazyNamed, withRouteSuspense } from '../lazy';
 import { z } from 'zod';
-// import React from 'react';
 
 const OrganizationsPage = lazyNamed(
     () => import('../../pages/organizations/OrganizationsPage'),

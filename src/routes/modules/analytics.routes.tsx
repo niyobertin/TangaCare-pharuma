@@ -2,7 +2,6 @@ import { createRoute, Outlet, Navigate } from '@tanstack/react-router';
 import { RequirePermission } from '../../components/auth/RequirePermission';
 import { PERMISSIONS } from '../../types/auth';
 import { lazyNamed, withRouteSuspense } from '../lazy';
-// import React from 'react';
 
 const ReportsPage = lazyNamed(() => import('../../pages/dashboard/ReportsPage'), 'ReportsPage');
 
@@ -24,26 +23,35 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
         path: '/',
         component: () => {
             const Nav = Navigate as any;
-            return <Nav to="/app/analytics/operations" search={{}} />;
+            return <Nav to="/app/analytics/sales" search={{}} />;
         },
     });
 
     const analyticsOperationsRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'operations',
-        component: () => withRouteSuspense(<ReportsPage defaultTab="operations" />),
+        component: () => {
+            const Nav = Navigate as any;
+            return <Nav to="/app/analytics/sales" search={{}} />;
+        },
     });
 
     const analyticsIntelligenceRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'intelligence',
-        component: () => withRouteSuspense(<ReportsPage defaultTab="inventory-intelligence" />),
+        component: () => {
+            const Nav = Navigate as any;
+            return <Nav to="/app/analytics/recall" search={{}} />;
+        },
     });
 
     const analyticsComplianceRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'compliance',
-        component: () => withRouteSuspense(<ReportsPage defaultTab="business-compliance" />),
+        component: () => {
+            const Nav = Navigate as any;
+            return <Nav to="/app/analytics/performance" search={{}} />;
+        },
     });
 
     const analyticsSalesRoute = createRoute({
