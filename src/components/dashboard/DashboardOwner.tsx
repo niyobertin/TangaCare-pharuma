@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     AlertTriangle,
     ArrowRight,
@@ -29,6 +30,24 @@ interface DashboardOwnerProps {
 
 type DateRange = 'today' | '7days' | '30days' | 'custom';
 
+function getKpiDateRange(
+    dateRange: DateRange,
+    startDate: string,
+    endDate: string,
+): { start: string; end: string } {
+    let start = format(startOfToday(), 'yyyy-MM-dd');
+    let end = format(endOfToday(), 'yyyy-MM-dd');
+    if (dateRange === '7days') {
+        start = format(subDays(new Date(), 7), 'yyyy-MM-dd');
+    } else if (dateRange === '30days') {
+        start = format(subDays(new Date(), 30), 'yyyy-MM-dd');
+    } else if (dateRange === 'custom') {
+        start = startDate;
+        end = endDate;
+    }
+    return { start, end };
+}
+
 interface TopStockMedicine {
     id: number;
     name: string;
@@ -36,16 +55,16 @@ interface TopStockMedicine {
     quantity: number;
 }
 
+interface DashboardOwnerPanels {
+    lowStock: ReorderSuggestion[];
+    criticalAlerts: Alert[];
+    topStockMedicines: TopStockMedicine[];
+    topSelling: Array<{ name: string; value: number }>;
+}
+
 export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) => {
     const navigate = useNavigate();
-    const [summary, setSummary] = useState<DashboardSummary | null>(null);
-    const [lowStock, setLowStock] = useState<ReorderSuggestion[]>([]);
-    const [criticalAlerts, setCriticalAlerts] = useState<Alert[]>([]);
-    const [topStockMedicines, setTopStockMedicines] = useState<TopStockMedicine[]>([]);
-    const [topSelling, setTopSelling] = useState<Array<{ name: string; value: number }>>([]);
-    const [expirationWarning, setExpirationWarning] = useState<any | null>(null);
-    const [kpiLoading, setKpiLoading] = useState(true);
-    const [panelLoading, setPanelLoading] = useState(true);
+    const queryClient = useQueryClient();
     const [isLowStockPOModalOpen, setIsLowStockPOModalOpen] = useState(false);
     const [isLowStockAddStockOpen, setIsLowStockAddStockOpen] = useState(false);
     const [selectedLowStockItem, setSelectedLowStockItem] = useState<{
@@ -58,29 +77,24 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
     const [startDate, setStartDate] = useState<string>(format(startOfToday(), 'yyyy-MM-dd'));
     const [endDate, setEndDate] = useState<string>(format(endOfToday(), 'yyyy-MM-dd'));
 
-    useEffect(() => {
-        let cancelled = false;
-        const loadWarning = async () => {
+    const { data: expirationWarning = null } = useQuery({
+        queryKey: ['subscription-expiration-warning'],
+        queryFn: async () => {
             try {
-                const warning = await subscriptionService.getExpirationWarning();
-                if (!cancelled) setExpirationWarning(warning);
+                return await subscriptionService.getExpirationWarning();
             } catch {
-                if (!cancelled) setExpirationWarning(null);
+                return null;
             }
-        };
-        void loadWarning();
-        return () => {
-            cancelled = true;
-        };
-    }, []);
+        },
+        staleTime: 60_000,
+    });
 
-    useEffect(() => {
-        let cancelled = false;
-        const loadPanels = async () => {
-            setPanelLoading(true);
+    const { data: panelsData, isLoading: panelLoading } = useQuery({
+        queryKey: ['dashboard-owner-panels', facilityId],
+        queryFn: async (): Promise<DashboardOwnerPanels> => {
             try {
                 const [reorderData, alertsData, topSellingRows, stockData] = await Promise.all([
-                    pharmacyService.getReorderSuggestions(facilityId as any),
+                    pharmacyService.getReorderSuggestions(facilityId),
                     pharmacyService.getAlerts({
                         facility_id: facilityId || undefined,
                         status: 'active',
@@ -94,10 +108,7 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                     }),
                 ]);
 
-                if (cancelled) return;
-
                 const lowStockRows = Array.isArray(reorderData) ? reorderData.slice(0, 5) : [];
-                setLowStock(lowStockRows);
 
                 const alerts = Array.isArray(alertsData.data) ? alertsData.data : [];
                 const criticalRows = alerts
@@ -109,9 +120,6 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                             item.type === 'low_stock',
                     )
                     .slice(0, 5);
-                setCriticalAlerts(criticalRows.length > 0 ? criticalRows : alerts.slice(0, 5));
-
-                setTopSelling(Array.isArray(topSellingRows) ? topSellingRows.slice(0, 5) : []);
 
                 const stockRows = Array.isArray(stockData.data) ? (stockData.data as Stock[]) : [];
                 const grouped = new Map<number, TopStockMedicine>();
@@ -133,87 +141,59 @@ export const DashboardOwner: React.FC<DashboardOwnerProps> = ({ facilityId }) =>
                     }
                 }
 
-                setTopStockMedicines(
-                    Array.from(grouped.values())
+                return {
+                    lowStock: lowStockRows,
+                    criticalAlerts:
+                        criticalRows.length > 0 ? criticalRows : alerts.slice(0, 5),
+                    topStockMedicines: Array.from(grouped.values())
                         .sort((a, b) => b.quantity - a.quantity)
                         .slice(0, 5),
-                );
+                    topSelling: Array.isArray(topSellingRows) ? topSellingRows.slice(0, 5) : [],
+                };
             } catch (error) {
                 console.error('Failed to load dashboard panels:', error);
-                if (!cancelled) {
-                    setLowStock([]);
-                    setCriticalAlerts([]);
-                    setTopStockMedicines([]);
-                    setTopSelling([]);
-                }
-            } finally {
-                if (!cancelled) setPanelLoading(false);
+                return {
+                    lowStock: [],
+                    criticalAlerts: [],
+                    topStockMedicines: [],
+                    topSelling: [],
+                };
             }
-        };
+        },
+    });
 
-        loadPanels();
+    const lowStock = panelsData?.lowStock ?? [];
+    const criticalAlerts = panelsData?.criticalAlerts ?? [];
+    const topStockMedicines = panelsData?.topStockMedicines ?? [];
+    const topSelling = panelsData?.topSelling ?? [];
 
-        return () => {
-            cancelled = true;
-        };
-    }, [facilityId]);
-
-    useEffect(() => {
-        let cancelled = false;
-        const loadKpis = async () => {
-            let start = format(startOfToday(), 'yyyy-MM-dd');
-            let end = format(endOfToday(), 'yyyy-MM-dd');
-
-            if (dateRange === '7days') {
-                start = format(subDays(new Date(), 7), 'yyyy-MM-dd');
-            } else if (dateRange === '30days') {
-                start = format(subDays(new Date(), 30), 'yyyy-MM-dd');
-            } else if (dateRange === 'custom') {
-                start = startDate;
-                end = endDate;
-            }
-
-            setKpiLoading(true);
+    const { data: summary, isLoading: kpiLoading } = useQuery({
+        queryKey: ['dashboard-owner-kpis', facilityId, dateRange, startDate, endDate],
+        queryFn: async (): Promise<DashboardSummary | null> => {
+            const { start, end } = getKpiDateRange(dateRange, startDate, endDate);
             try {
                 const [kpis, summaryData] = await Promise.all([
-                    pharmacyService.getComprehensiveKPIs(facilityId as any, {
+                    pharmacyService.getComprehensiveKPIs(facilityId, {
                         start_date: start,
                         end_date: end,
                     }),
-                    pharmacyService.getDashboardSummary(facilityId as any),
+                    pharmacyService.getDashboardSummary(facilityId),
                 ]);
-
-                if (cancelled) return;
-
-                setSummary({
+                return {
                     ...summaryData,
                     today: kpis,
-                });
+                };
             } catch (error) {
                 console.error('Failed to load KPI summary:', error);
-                if (!cancelled) setSummary(null);
-            } finally {
-                if (!cancelled) setKpiLoading(false);
+                return null;
             }
-        };
-
-        loadKpis();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [dateRange, startDate, endDate, facilityId]);
+        },
+    });
 
     const kpis = summary?.today;
 
-    const refreshLowStock = async () => {
-        try {
-            const reorderData = await pharmacyService.getReorderSuggestions(facilityId as any);
-            const lowStockRows = Array.isArray(reorderData) ? reorderData.slice(0, 5) : [];
-            setLowStock(lowStockRows);
-        } catch (error) {
-            console.error('Failed to refresh low stock rows:', error);
-        }
+    const refreshLowStock = () => {
+        void queryClient.invalidateQueries({ queryKey: ['dashboard-owner-panels', facilityId] });
     };
 
     return (

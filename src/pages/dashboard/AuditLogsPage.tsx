@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Clock, User, Download, Eye, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
+import { PERMISSIONS } from '../../types/auth';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { useSearch } from '@tanstack/react-router';
@@ -98,18 +99,7 @@ export function AuditLogsPage() {
     const totalPages = Math.ceil(total / limit) || 1;
 
     return (
-        <ProtectedRoute
-            allowedRoles={[
-                'SUPER_ADMIN',
-                'FACILITY_ADMIN',
-                'OWNER',
-                'AUDITOR',
-                'ADMIN',
-                'PHARMACIST',
-                'STORE_MANAGER',
-            ]}
-            requireFacility
-        >
+        <ProtectedRoute requiredPermissions={[PERMISSIONS.AUDIT_READ]} requireFacility>
             <div className="p-5 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="space-y-1">

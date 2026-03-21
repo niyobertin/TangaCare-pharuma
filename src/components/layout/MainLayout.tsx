@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Outlet, Link, useNavigate, useLocation } from '@tanstack/react-router';
 import {
     BarChart3,
@@ -28,6 +29,7 @@ import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
 import { GlobalLoading } from '../ui/GlobalLoading';
 import { isSuperAdmin } from '../../types/auth';
+import { userHasPermission } from '../../lib/rolePermissions';
 import type { GlobalSearchResultItem, GlobalSearchResults } from '../../types/pharmacy';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -144,7 +146,7 @@ const NAV_SECTIONS: NavSection[] = [
                 children: [
                     { to: '/app/inventory', icon: Package, label: 'Medicines' },
                     { to: '/app/stock', icon: Database, label: 'Batches' },
-                    { to: '/app/analytics/recall', icon: Bell, label: 'Expiry Monitoring' },
+                    { to: '/app/analytics/recall', icon: Bell, label: 'Expiry monitoring & recalls' },
                     { to: '/app/analytics/low-stock', icon: Bell, label: 'Low Stock' },
                     { to: '/app/stocktaking', icon: Database, label: 'Stock Adjustments' },
                     { to: '/app/stock-movements', icon: Database, label: 'Stock Movements' },
@@ -169,6 +171,7 @@ const NAV_SECTIONS: NavSection[] = [
                     'AUDITOR',
                     'ADMIN',
                 ],
+                allowedPermissions: ['procurement:read'],
                 children: [
                     { to: '/app/procurement/suppliers', icon: Factory, label: 'Suppliers' },
                     { to: '/app/procurement/orders', icon: ShoppingCart, label: 'Purchase Orders' },
@@ -199,7 +202,12 @@ const NAV_SECTIONS: NavSection[] = [
                 ],
                 children: [
                     { to: '/app/dispensing', icon: Zap, label: 'Dispensing' },
-                    { to: '/app/patients', icon: Users, label: 'Customers' },
+                    {
+                        to: '/app/patients',
+                        icon: Users,
+                        label: 'Customers',
+                        allowedPermissions: ['patients:read'],
+                    },
                     { to: '/app/insurance', icon: ShieldCheck, label: 'Insurance' },
                 ],
             },
@@ -222,23 +230,31 @@ const NAV_SECTIONS: NavSection[] = [
                     'AUDITOR',
                     'ADMIN',
                 ],
-                allowedPermissions: ['reports:read'],
+                allowedPermissions: ['reports:read', 'audit:read'],
                 children: [
-                    { to: '/app/analytics/operations', icon: FileText, label: 'Operations' },
+                    {
+                        to: '/app/analytics/operations',
+                        icon: FileText,
+                        label: 'Operations',
+                        allowedPermissions: ['reports:read'],
+                    },
                     {
                         to: '/app/analytics/intelligence',
                         icon: FileText,
                         label: 'Inventory Intelligence',
+                        allowedPermissions: ['reports:read'],
                     },
                     {
                         to: '/app/analytics/compliance',
                         icon: FileText,
                         label: 'Business & Compliance',
+                        allowedPermissions: ['reports:read'],
                     },
                     {
-                        to: '/app/analytics/audit-logs',
+                        to: '/app/audit-logs',
                         icon: FileText,
                         label: 'Audit Logs',
+                        allowedPermissions: ['audit:read'],
                     },
                 ],
             },
@@ -464,35 +480,38 @@ export function MainLayout() {
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [globalSearchQuery, setGlobalSearchQuery] = useState('');
-    const [globalSearchLoading, setGlobalSearchLoading] = useState(false);
     const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
-    const [globalSearchResults, setGlobalSearchResults] = useState<GlobalSearchResults>(
-        EMPTY_GLOBAL_SEARCH_RESULTS,
-    );
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const globalSearchRef = useRef<HTMLDivElement | null>(null);
 
     const location = useLocation();
     const effectiveFacilityId = facilityId ?? user?.facility_id ?? undefined;
 
     const isItemAllowed = (item: NavItem): boolean => {
-        if (
-            item.allowedPermissions &&
-            !item.allowedPermissions.some((perm) => user?.permissions?.includes(perm))
-        ) {
-            return false;
+        if (isSuperAdmin(user?.role)) {
+            return true;
         }
 
-        if (item.allowedRoles) {
-            const userRole = (user?.role || '').toString().toUpperCase();
-            const hasRole = item.allowedRoles.some(
+        const hasPermGate = !!item.allowedPermissions?.length;
+        const hasRoleGate = !!item.allowedRoles?.length;
+
+        const permOk =
+            !hasPermGate ||
+            item.allowedPermissions!.some((perm) => userHasPermission(user, perm));
+
+        const userRole = (user?.role || '').toString().toUpperCase();
+        const roleOk =
+            !hasRoleGate ||
+            !!item.allowedRoles!.some(
                 (role) =>
                     role.toUpperCase() === userRole ||
                     role.toUpperCase().replace('_', ' ') === userRole.replace('_', ' '),
             );
-            if (!hasRole) return false;
-        }
 
-        return true;
+        if (hasPermGate && hasRoleGate) {
+            return permOk || roleOk;
+        }
+        return permOk && roleOk;
     };
 
     const filteredSections = useMemo(() => {
@@ -509,7 +528,7 @@ export function MainLayout() {
                 items,
             };
         }).filter((section) => section.items.length > 0);
-    }, [user?.permissions, user?.role]);
+    }, [user]);
 
     const handleLogout = () => {
         logout();
@@ -564,145 +583,49 @@ export function MainLayout() {
     }, []);
 
     useEffect(() => {
-        const query = globalSearchQuery.trim();
-        if (query.length < 2) {
-            setGlobalSearchResults(EMPTY_GLOBAL_SEARCH_RESULTS);
-            setGlobalSearchLoading(false);
+        const timer = window.setTimeout(() => {
+            setDebouncedSearchQuery(globalSearchQuery.trim());
+        }, 400);
+        return () => window.clearTimeout(timer);
+    }, [globalSearchQuery]);
+
+    const { data: searchQueryData, isFetching: globalSearchLoading } = useQuery({
+        queryKey: [
+            'pharmacy-global-search',
+            organizationId ?? user?.organization_id ?? 0,
+            effectiveFacilityId ?? 0,
+            debouncedSearchQuery,
+        ],
+        queryFn: () => pharmacyService.globalSearch({ q: debouncedSearchQuery, limit: 5 }),
+        enabled: debouncedSearchQuery.length >= 2 && !!user,
+        staleTime: 30_000,
+    });
+
+    const globalSearchResults: GlobalSearchResults = useMemo(() => {
+        if (debouncedSearchQuery.length < 2) {
+            return EMPTY_GLOBAL_SEARCH_RESULTS;
+        }
+        return searchQueryData ?? EMPTY_GLOBAL_SEARCH_RESULTS;
+    }, [debouncedSearchQuery, searchQueryData]);
+
+    useEffect(() => {
+        if (debouncedSearchQuery.length < 2) {
+            setGlobalSearchOpen(false);
+        }
+    }, [debouncedSearchQuery]);
+
+    useEffect(() => {
+        if (debouncedSearchQuery.length < 2 || !searchQueryData) {
             return;
         }
-
-        let cancelled = false;
-        const timer = setTimeout(async () => {
-            setGlobalSearchLoading(true);
-            try {
-                const [
-                    medicinesResponse,
-                    suppliersResponse,
-                    purchaseOrdersResponse,
-                    movementsResponse,
-                ] = await Promise.all([
-                    pharmacyService.getMedicines({
-                        search: query,
-                        limit: 5,
-                        ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
-                    }),
-                    pharmacyService.getSuppliers({
-                        search: query,
-                        limit: 5,
-                    }),
-                    pharmacyService.getProcurementOrders({
-                        search: query,
-                        limit: 5,
-                        ...(effectiveFacilityId ? { facility_id: effectiveFacilityId } : {}),
-                    }),
-                    effectiveFacilityId
-                        ? pharmacyService.getStockMovements({
-                              facilityId: effectiveFacilityId,
-                              search: query,
-                              limit: 8,
-                              page: 1,
-                          })
-                        : Promise.resolve({ data: [] as any[] }),
-                ]);
-
-                if (cancelled) return;
-
-                const movementRows = Array.isArray((movementsResponse as any).data)
-                    ? (movementsResponse as any).data
-                    : [];
-                const lowerQuery = query.toLowerCase();
-                const batchMap = new Map<string, GlobalSearchResultItem>(
-                    movementRows
-                        .filter((row: any) =>
-                            String(
-                                row.batch_number || row.batch?.batch_number || row.batch_code || '',
-                            )
-                                .toLowerCase()
-                                .includes(lowerQuery),
-                        )
-                        .map((row: any) => {
-                            const batchNumber = String(
-                                row.batch_number || row.batch?.batch_number || row.batch_code || '',
-                            );
-                            return [
-                                batchNumber,
-                                {
-                                    id: batchNumber,
-                                    label: batchNumber,
-                                    meta: String(
-                                        row.medicine_name || row.medicine?.name || 'Batch result',
-                                    ),
-                                    to: '/app/stock',
-                                },
-                            ] as [string, GlobalSearchResultItem];
-                        }),
-                );
-                const uniqueBatches = Array.from(batchMap.values()).slice(0, 5);
-
-                setGlobalSearchResults({
-                    medicines: (medicinesResponse.data || []).slice(0, 5).map((medicine: any) => ({
-                        id: String(medicine.id),
-                        label: String(medicine.name || 'Unknown medicine'),
-                        meta: String(
-                            medicine.generic_name ||
-                                medicine.code ||
-                                medicine.category?.name ||
-                                'Medicine',
-                        ),
-                        to: `/app/inventory/${medicine.id}`,
-                    })),
-                    batches: uniqueBatches,
-                    suppliers: (suppliersResponse.data || []).slice(0, 5).map((supplier: any) => ({
-                        id: String(supplier.id),
-                        label: String(supplier.name || 'Unknown supplier'),
-                        meta: String(supplier.contact_person || supplier.phone || 'Supplier'),
-                        to: '/app/procurement/suppliers',
-                    })),
-                    purchaseOrders: (purchaseOrdersResponse.data || [])
-                        .slice(0, 5)
-                        .map((order: any) => ({
-                            id: String(order.id),
-                            label: `PO-${String(order.id).padStart(4, '0')}`,
-                            meta: String(
-                                order.supplier?.name ||
-                                    order.status ||
-                                    order.order_number ||
-                                    'Purchase order',
-                            ),
-                            to: `/app/procurement/orders/${order.id}`,
-                        })),
-                    stockMovements: movementRows.slice(0, 5).map((movement: any) => ({
-                        id: String(movement.id),
-                        label: String(
-                            movement.medicine_name ||
-                                movement.medicine?.name ||
-                                movement.reference ||
-                                'Stock movement',
-                        ),
-                        meta: String(
-                            movement.movement_subtype ||
-                                movement.movement_type ||
-                                movement.reference ||
-                                'Movement',
-                        ),
-                        to: '/app/stock-movements',
-                    })),
-                });
-                setGlobalSearchOpen(true);
-            } catch (error) {
-                if (!cancelled) {
-                    setGlobalSearchResults(EMPTY_GLOBAL_SEARCH_RESULTS);
-                }
-            } finally {
-                if (!cancelled) setGlobalSearchLoading(false);
-            }
-        }, 250);
-
-        return () => {
-            cancelled = true;
-            clearTimeout(timer);
-        };
-    }, [globalSearchQuery, effectiveFacilityId]);
+        const count = Object.values(searchQueryData).reduce<number>(
+            (n, arr) => n + (Array.isArray(arr) ? arr.length : 0),
+            0,
+        );
+        if (count > 0) {
+            setGlobalSearchOpen(true);
+        }
+    }, [debouncedSearchQuery, searchQueryData]);
 
     const globalSearchResultCount = useMemo(
         () =>

@@ -8,6 +8,7 @@ import {
 } from '../types/auth';
 import { authService } from '../services/auth.service';
 import { pharmacyService } from '../services/pharmacy.service';
+import { getEffectivePermissions } from '../lib/rolePermissions';
 
 const ORG_KEY = 'selected_organization_id';
 const FACILITY_KEY = 'selected_facility_id';
@@ -301,8 +302,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const can = useCallback(
         (permission: string) => {
             const u = user;
-            if (!u?.permissions || !Array.isArray(u.permissions)) return false;
-            return u.permissions.includes(permission);
+            if (!u) return false;
+            if (isSuperAdmin(u.role) || u.role?.toString().toUpperCase() === 'OWNER') return true;
+            return getEffectivePermissions(u).includes(permission);
         },
         [user],
     );

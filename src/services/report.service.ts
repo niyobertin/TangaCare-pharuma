@@ -84,7 +84,13 @@ export const reportService = {
 
     async getSalesReport(
         facilityId: number,
-        params?: { start_date?: string; end_date?: string },
+        params?: {
+            start_date?: string;
+            end_date?: string;
+            /** Omit heavy per-line `transactions` array (aggregates only). */
+            summary_only?: boolean;
+            include_transactions?: boolean;
+        },
     ): Promise<any> {
         const response = await api.get<any>(`/pharmacy/reports/sales-summary/${facilityId}`, {
             params,
@@ -318,6 +324,71 @@ export const reportService = {
         const fileName = `${type}_report_${timestamp}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
 
         link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+    },
+
+    async createReportExportJob(body: {
+        type: string;
+        format: string;
+        [key: string]: unknown;
+    }): Promise<{
+        id: string;
+        status: string;
+        poll_url: string;
+        download_url: string;
+    }> {
+        const response = await api.post<{ data: Record<string, unknown> }>(
+            '/pharmacy/reports/export-jobs',
+            body,
+        );
+        const row = (response.data as any).data ?? response.data;
+        return row as {
+            id: string;
+            status: string;
+            poll_url: string;
+            download_url: string;
+        };
+    },
+
+    async getReportExportJob(jobId: string): Promise<{
+        id: string;
+        status: string;
+        report_type: string;
+        format: string;
+        error_message: string | null;
+        created_at: string;
+        completed_at: string | null;
+    }> {
+        const response = await api.get<{ data: Record<string, unknown> }>(
+            `/pharmacy/reports/export-jobs/${jobId}`,
+        );
+        const row = (response.data as any).data ?? response.data;
+        return row as {
+            id: string;
+            status: string;
+            report_type: string;
+            format: string;
+            error_message: string | null;
+            created_at: string;
+            completed_at: string | null;
+        };
+    },
+
+    /** Triggers a browser download when the job completed successfully (Excel). */
+    async downloadReportExportJob(jobId: string, fileName?: string): Promise<void> {
+        const response = await api.get(`/pharmacy/reports/export-jobs/${jobId}/download`, {
+            responseType: 'blob',
+        });
+        const blob = new Blob([response.data], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', fileName || `export_${jobId}.xlsx`);
         document.body.appendChild(link);
         link.click();
         link.remove();

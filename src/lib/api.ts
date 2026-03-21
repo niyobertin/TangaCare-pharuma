@@ -41,8 +41,10 @@ api.interceptors.response.use(
                         },
                     );
 
-                    const { accessToken } = response.data.data.tokens;
+                    const { accessToken, refreshToken: newRefresh } = response.data.data;
+                    if (!accessToken) throw new Error('No access token in refresh response');
                     localStorage.setItem('access_token', accessToken);
+                    if (newRefresh) localStorage.setItem('refresh_token', newRefresh);
 
                     originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                     return api(originalRequest);

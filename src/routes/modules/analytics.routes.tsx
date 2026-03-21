@@ -11,7 +11,9 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
         getParentRoute: () => parentRoute,
         path: 'analytics',
         component: () => (
-            <RequirePermission permission={PERMISSIONS.REPORTS_READ}>
+            <RequirePermission
+                permissions={[PERMISSIONS.REPORTS_READ, PERMISSIONS.AUDIT_READ]}
+            >
                 <Outlet />
             </RequirePermission>
         ),
@@ -146,7 +148,10 @@ export const createAnalyticsRoutes = (parentRoute: any) => {
     const analyticsAuditLogsRoute = createRoute({
         getParentRoute: () => analyticsRoute,
         path: 'audit-logs',
-        component: () => withRouteSuspense(<ReportsPage defaultTab="audit-logs" />),
+        component: () => {
+            const Nav = Navigate as any;
+            return <Nav to="/app/audit-logs" search={{}} replace />;
+        },
     });
 
     return [

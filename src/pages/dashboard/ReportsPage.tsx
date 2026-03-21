@@ -31,7 +31,6 @@ import { DemandForecastReport } from '../../components/pharmacy/reports/DemandFo
 import { NearExpiryActionsReport } from '../../components/pharmacy/reports/NearExpiryActionsReport';
 import { ForecastReorderReport } from '../../components/pharmacy/reports/ForecastReorderReport';
 import { ParReplenishmentReport } from '../../components/pharmacy/reports/ParReplenishmentReport';
-import { AuditLogsPage } from './AuditLogsPage';
 import { StockMovementsPage } from './StockMovementsPage';
 import type { Medicine } from '../../types/pharmacy';
 import { toast } from 'react-hot-toast';
@@ -67,7 +66,7 @@ const REPORT_TAB_GROUPS: Array<{
     {
         key: 'business-compliance',
         label: 'Business & Compliance',
-        tabs: ['performance', 'customer', 'tax', 'audit-logs'],
+        tabs: ['performance', 'customer', 'tax'],
     },
 ];
 
@@ -132,7 +131,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         performance: 'Performance',
         customer: 'Customers',
         tax: 'Tax',
-        'audit-logs': 'Audit Logs',
     };
 
     useEffect(() => {
@@ -166,7 +164,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         if (tab === 'performance') return '/app/analytics/performance';
         if (tab === 'customer') return '/app/analytics/loyalty';
         if (tab === 'tax') return '/app/analytics/tax';
-        if (tab === 'audit-logs') return '/app/analytics/audit-logs';
         return '/app/analytics/inventory';
     };
 
@@ -187,7 +184,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         | 'performance'
         | 'customer'
         | 'tax'
-        | 'audit-logs'
         | null => {
         if (['sales'].includes(tab)) return 'sales';
         if (tab === 'stock') return 'stock';
@@ -203,7 +199,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
         if (tab === 'performance') return 'performance';
         if (tab === 'customer') return 'customer';
         if (tab === 'tax') return 'tax';
-        if (tab === 'audit-logs') return 'audit-logs';
         return null;
     };
 
@@ -411,11 +406,6 @@ export function ReportsPage({ defaultTab = 'sales' }: ReportsPageProps) {
                             startDate={startDate}
                             endDate={endDate}
                         />
-                    )}
-                    {resolvedTab === 'audit-logs' && (
-                        <div className="-mx-6 -my-6">
-                            <AuditLogsPage />
-                        </div>
                     )}
                 </div>
             </div>

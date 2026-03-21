@@ -126,7 +126,7 @@ export const createAdminRoutes = (parentRoute: any) => {
         path: 'patients',
         component: () =>
             withRouteSuspense(
-                <RequirePermission permissions={[PERMISSIONS.USERS_READ, PERMISSIONS.USERS_MANAGE]}>
+                <RequirePermission permission={PERMISSIONS.PATIENTS_READ}>
                     <PatientsPage />
                 </RequirePermission>,
             ),

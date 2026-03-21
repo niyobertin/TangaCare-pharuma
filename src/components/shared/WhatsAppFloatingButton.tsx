@@ -11,7 +11,7 @@ export function WhatsAppFloatingButton() {
             target="_blank"
             rel="noreferrer"
             aria-label="Chat with us on WhatsApp"
-            className="fixed z-[60] bottom-5 right-5 rounded-full bg-[#22c55e] text-white w-12 h-12 flex items-center justify-center shadow-lg hover:brightness-95 transition-all"
+            className="fixed z-[60] bottom-8 left-5 rounded-full bg-[#22c55e] text-white w-12 h-12 flex items-center justify-center shadow-lg hover:brightness-95 transition-all"
         >
             <MessageCircle size={22} />
         </a>

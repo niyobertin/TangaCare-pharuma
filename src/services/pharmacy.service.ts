@@ -7,6 +7,7 @@ import { facilityService } from './facility.service';
 import { patientService } from './patient.service';
 import { insuranceService } from './insurance.service';
 import { settingsService } from './settings.service';
+import { dashboardSearchService } from './dashboard-search.service';
 
 /**
  * Pharmacy Service Facade
@@ -41,6 +42,8 @@ export const pharmacyService = {
 
     // Settings Service
     ...settingsService,
+
+    ...dashboardSearchService,
 };
 
 export default pharmacyService;

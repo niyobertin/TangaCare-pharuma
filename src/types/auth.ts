@@ -54,6 +54,7 @@ export const PERMISSIONS = {
     USERS_READ: 'users:read',
     FACILITY_READ: 'facility:read',
     PRICING_READ: 'pricing:read',
+    PATIENTS_READ: 'patients:read',
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

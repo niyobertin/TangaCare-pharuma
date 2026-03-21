@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, User, Phone, MapPin, Calendar, History, Edit } from 'lucide-react';
-import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { CreatePatientModal } from '../../components/patients/CreatePatientModal';
 import { format } from 'date-fns';
@@ -22,17 +21,6 @@ export const PatientsPage: React.FC = () => {
     const totalPages = data?.meta.totalPages || 1;
 
     return (
-        <ProtectedRoute
-            allowedRoles={[
-                'ADMIN',
-                'SUPER_ADMIN',
-                'FACILITY_ADMIN',
-                'PHARMACIST',
-                'STORE_MANAGER',
-                'OWNER',
-                'CASHIER',
-            ]}
-        >
             <div className="space-y-6 h-full flex flex-col">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
@@ -256,6 +244,5 @@ export const PatientsPage: React.FC = () => {
                     />
                 )}
             </div>
-        </ProtectedRoute>
     );
 };

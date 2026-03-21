@@ -65,10 +65,10 @@ const rootRoute = createRootRoute({
                     The page you are looking for does not exist.
                 </p>
                 <button
-                    onClick={() => (window.location.href = '/')}
+                    onClick={() => (window.location.href = '/app')}
                     className="px-6 py-2 bg-healthcare-primary text-white rounded-lg text-xs font-black hover:bg-teal-700 transition-all shadow-md"
                 >
-                    Go Dashboard
+                    Go to app
                 </button>
             </div>
         </div>
