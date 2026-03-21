@@ -134,7 +134,14 @@ export function UsersPage() {
 
     return (
         <ProtectedRoute
-            allowedRoles={['OWNER', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'AUDITOR']}
+            allowedRoles={[
+                'SUPER_ADMIN',
+                'SUPER ADMIN',
+                'OWNER',
+                'FACILITY_ADMIN',
+                'FACILITY ADMIN',
+                'AUDITOR',
+            ]}
             requireFacility
         >
             <div className="h-full flex flex-col p-6 bg-slate-50/50 dark:bg-slate-900">

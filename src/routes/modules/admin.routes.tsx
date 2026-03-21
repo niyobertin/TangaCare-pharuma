@@ -138,6 +138,12 @@ export const createAdminRoutes = (parentRoute: any) => {
         component: () => withRouteSuspense(<BillingDashboardPage />),
     });
 
+    const adminDashboardRoute = createRoute({
+        getParentRoute: () => parentRoute,
+        path: 'admin/dashboard',
+        component: () => withRouteSuspense(<BillingDashboardPage />),
+    });
+
     const billingCustomersRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'admin/billing/customers',
@@ -188,6 +194,7 @@ export const createAdminRoutes = (parentRoute: any) => {
         facilitySettingsRoute,
         patientsRoute,
         billingDashboardRoute,
+        adminDashboardRoute,
         billingCustomersRoute,
         billingCustomerDetailsRoute,
         billingSubscriptionsRoute,

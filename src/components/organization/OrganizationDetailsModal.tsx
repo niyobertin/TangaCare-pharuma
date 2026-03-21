@@ -4,6 +4,8 @@ import { Link } from '@tanstack/react-router';
 import type { Organization, Facility } from '../../types/pharmacy';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { useAuth } from '../../context/AuthContext';
+import { isSuperAdmin } from '../../types/auth';
+import { adminBillingService } from '../../services/admin-billing.service';
 
 interface OrganizationDetailsModalProps {
     organization: Organization;
@@ -13,9 +15,13 @@ interface OrganizationDetailsModalProps {
 export function OrganizationDetailsModal({ organization, onClose }: OrganizationDetailsModalProps) {
     const { user } = useAuth();
     const role = (user?.role ?? '').toUpperCase();
-    const canEditOrg = ['SUPER_ADMIN', 'OWNER', 'FACILITY_ADMIN'].includes(role);
+    const isSuperAdminUser = isSuperAdmin(user?.role);
+    const canEditOrg = isSuperAdminUser || ['OWNER', 'FACILITY_ADMIN'].includes(role);
     const [facilities, setFacilities] = useState<Facility[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const [billingLoading, setBillingLoading] = useState(false);
+    const [billingData, setBillingData] = useState<any>(null);
 
     useEffect(() => {
         const loadFacilities = async () => {
@@ -38,6 +44,47 @@ export function OrganizationDetailsModal({ organization, onClose }: Organization
             loadFacilities();
         }
     }, [organization.id]);
+
+    useEffect(() => {
+        const loadBilling = async () => {
+            if (!organization.id || !isSuperAdminUser) return;
+            setBillingLoading(true);
+            try {
+                const result = await adminBillingService.getCustomerByOrganizationId(organization.id);
+                setBillingData(result);
+            } catch (error) {
+                console.error('Failed to load organization billing performance', error);
+                setBillingData(null);
+            } finally {
+                setBillingLoading(false);
+            }
+        };
+
+        void loadBilling();
+    }, [organization.id, isSuperAdminUser]);
+
+    const formatRwf = (value: any) => `RWF ${Number(value || 0).toLocaleString()}`;
+    const payments = billingData?.payments || [];
+    const successfulPayments = payments.filter((p: any) => p.status === 'success');
+    const failedPaymentsCount = payments.filter((p: any) => p.status === 'failed').length;
+
+    const totalRevenue = successfulPayments.reduce((acc: number, p: any) => acc + (p.amount_rwf || 0), 0);
+    const revenueThisMonth = (() => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+        return successfulPayments.reduce((acc: number, p: any) => {
+            const paidAt = p.paid_at ? new Date(p.paid_at).getTime() : null;
+            return paidAt && paidAt >= start ? acc + (p.amount_rwf || 0) : acc;
+        }, 0);
+    })();
+
+    const planName =
+        billingData?.subscription?.subscription_plan?.name ??
+        billingData?.subscription?.subscription_plan?.plan_code ??
+        null;
+    const subscriptionStatus = billingData?.subscription?.status ?? null;
+    const nextBillingAt = billingData?.subscription?.next_billing_at ?? null;
+    const pendingPlanChange = billingData?.pendingPlanChange ?? null;
 
     return (
         <div
@@ -121,6 +168,68 @@ export function OrganizationDetailsModal({ organization, onClose }: Organization
                                         <span className="font-semibold text-healthcare-dark font-mono text-sm">
                                             {organization.business_license_number}
                                         </span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {isSuperAdminUser && (
+                            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 md:col-span-2">
+                                <h3 className="text-sm font-black text-healthcare-dark uppercase tracking-wider mb-3">
+                                    Organization Performance
+                                </h3>
+                                {billingLoading ? (
+                                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                                        <span className="inline-block w-4 h-4 border-2 border-healthcare-primary/20 border-t-healthcare-primary rounded-full animate-spin" />
+                                        Loading...
+                                    </div>
+                                ) : !billingData?.subscription ? (
+                                    <p className="text-sm text-slate-500">No subscription data.</p>
+                                ) : (
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between gap-4">
+                                            <span className="text-slate-500">Plan</span>
+                                            <span className="font-bold">{planName || '—'}</span>
+                                        </div>
+                                        <div className="flex justify-between gap-4">
+                                            <span className="text-slate-500">Status</span>
+                                            <span className="font-bold">{subscriptionStatus || '—'}</span>
+                                        </div>
+                                        <div className="flex justify-between gap-4">
+                                            <span className="text-slate-500">Next billing</span>
+                                            <span className="font-bold">
+                                                {nextBillingAt ? new Date(nextBillingAt).toLocaleDateString() : '—'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between gap-4">
+                                            <span className="text-slate-500">Revenue (this month)</span>
+                                            <span className="font-bold">{formatRwf(revenueThisMonth)}</span>
+                                        </div>
+                                        <div className="flex justify-between gap-4">
+                                            <span className="text-slate-500">Total successful revenue</span>
+                                            <span className="font-bold">{formatRwf(totalRevenue)}</span>
+                                        </div>
+                                        <div className="flex justify-between gap-4">
+                                            <span className="text-slate-500">Failed payments</span>
+                                            <span className="font-bold">{failedPaymentsCount}</span>
+                                        </div>
+
+                                        {pendingPlanChange && (
+                                            <div className="pt-2 text-xs text-slate-500 border-t border-slate-200 dark:border-slate-700">
+                                                Pending change:{' '}
+                                                <span className="font-bold">
+                                                    {pendingPlanChange.from_plan?.plan_code || pendingPlanChange.from_plan?.name || '—'} →
+                                                    {pendingPlanChange.to_plan?.plan_code || pendingPlanChange.to_plan?.name || '—'}
+                                                </span>{' '}
+                                                <span className="italic">
+                                                    (
+                                                    {pendingPlanChange.effective_date
+                                                        ? new Date(pendingPlanChange.effective_date).toLocaleDateString()
+                                                        : '—'}
+                                                    )
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

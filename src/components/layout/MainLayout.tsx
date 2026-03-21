@@ -22,6 +22,7 @@ import {
     ArrowLeft,
     ShieldCheck,
     Receipt,
+    UserCog,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -37,6 +38,8 @@ import { CreateFacilityModal } from '../facility/CreateFacilityModal';
 import { SetupPharmacyModal } from '../facility/SetupPharmacyModal';
 import { JoinOrganizationModal } from '../facility/JoinOrganizationModal';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { adminOrganizationsService } from '../../services/admin-organizations.service';
+import { toast } from 'react-hot-toast';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -90,8 +93,6 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: BarChart3,
                 label: 'Dashboard',
                 allowedRoles: [
-                    'SUPER_ADMIN',
-                    'SUPER ADMIN',
                     'FACILITY_ADMIN',
                     'FACILITY ADMIN',
                     'OWNER',
@@ -108,7 +109,6 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: Bell,
                 label: 'Alerts',
                 allowedRoles: [
-                    'SUPER_ADMIN',
                     'FACILITY_ADMIN',
                     'FACILITY ADMIN',
                     'OWNER',
@@ -130,7 +130,6 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: Package,
                 label: 'Inventory',
                 allowedRoles: [
-                    'SUPER_ADMIN',
                     'FACILITY_ADMIN',
                     'FACILITY ADMIN',
                     'OWNER',
@@ -162,7 +161,6 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: ShoppingCart,
                 label: 'Procurement',
                 allowedRoles: [
-                    'SUPER_ADMIN',
                     'FACILITY_ADMIN',
                     'FACILITY ADMIN',
                     'OWNER',
@@ -189,7 +187,6 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: Zap,
                 label: 'Sales & Dispensing',
                 allowedRoles: [
-                    'SUPER_ADMIN',
                     'FACILITY_ADMIN',
                     'FACILITY ADMIN',
                     'OWNER',
@@ -217,8 +214,6 @@ const NAV_SECTIONS: NavSection[] = [
                 icon: FileText,
                 label: 'Reports',
                 allowedRoles: [
-                    'SUPER_ADMIN',
-                    'SUPER ADMIN',
                     'FACILITY_ADMIN',
                     'FACILITY ADMIN',
                     'OWNER',
@@ -240,6 +235,11 @@ const NAV_SECTIONS: NavSection[] = [
                         icon: FileText,
                         label: 'Business & Compliance',
                     },
+                    {
+                        to: '/app/analytics/audit-logs',
+                        icon: FileText,
+                        label: 'Audit Logs',
+                    },
                 ],
             },
         ],
@@ -252,14 +252,14 @@ const NAV_SECTIONS: NavSection[] = [
                 to: '/app/organizations',
                 icon: Building2,
                 label: 'Organizations',
-                allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN'],
+                allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER'],
                 allowedPermissions: ['organization:manage'],
             },
             {
                 to: '/app/facilities',
                 icon: Factory,
                 label: 'Branches',
-                allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'OWNER', 'AUDITOR'],
+                allowedRoles: ['OWNER', 'AUDITOR'],
                 allowedPermissions: ['facility:read', 'facility:manage'],
             },
             {
@@ -280,12 +280,18 @@ const NAV_SECTIONS: NavSection[] = [
                 to: '/app/settings',
                 icon: Settings,
                 label: 'Settings',
-                allowedRoles: ['SUPER_ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'OWNER', 'ADMIN'],
+                allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'OWNER', 'ADMIN'],
             },
             {
-                to: '/app/admin/billing/dashboard',
+                to: '/app/settings?section=roles_permissions',
+                icon: UserCog,
+                label: 'Roles & Permissions',
+                allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'OWNER', 'ADMIN'],
+            },
+            {
+                to: '/app/admin/dashboard',
                 icon: Receipt,
-                label: 'Billing Dashboard',
+                label: 'Admin Dashboard',
                 allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN'],
             },
             {
@@ -328,7 +334,7 @@ const NAV_SECTIONS: NavSection[] = [
                 to: '/app/billing',
                 icon: Receipt,
                 label: 'Billing',
-                allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN'],
+                allowedRoles: ['OWNER'],
             },
         ],
     },
@@ -523,9 +529,11 @@ export function MainLayout() {
 
     const normalizedRole = (user?.role || '').toLowerCase().replace(/[\s_]+/g, '');
 
-    const isOwnerOrAdmin = ['owner', 'superadmin', 'facilityadmin'].includes(normalizedRole);
+    const isOwnerOrAdmin = ['owner', 'facilityadmin'].includes(normalizedRole);
 
-    const needsOnboarding = !hasOrganization && (isOwnerOrAdmin || normalizedRole === 'user');
+    // Super admins should never be forced through organization onboarding.
+    const needsOnboarding =
+        !isSuperAdminUser && !hasOrganization && (isOwnerOrAdmin || normalizedRole === 'user');
 
     const isUnassignedAdmin =
         hasOrganization &&
@@ -999,9 +1007,50 @@ export function MainLayout() {
                                                             key={org.id}
                                                             type="button"
                                                             onClick={() => {
-                                                                setOrganization(org.id);
-                                                                setSwitcherOpen(false);
-                                                                refreshProfile();
+                                                                const run = async () => {
+                                                                    setSwitcherOpen(false);
+                                                                    if (isSuperAdminUser) {
+                                                                        try {
+                                                                            // Issue a scoped JWT containing organizationId
+                                                                            // so scopeMiddleware allows org-scoped admin pages.
+                                                                            const result =
+                                                                                await adminOrganizationsService.impersonateOrganization(org.id);
+
+                                                                            const tokens = result?.tokens;
+                                                                            const ctx = result?.context;
+
+                                                                            if (tokens?.accessToken) {
+                                                                                localStorage.setItem(
+                                                                                    'access_token',
+                                                                                    tokens.accessToken,
+                                                                                );
+                                                                            }
+                                                                            if (tokens?.refreshToken) {
+                                                                                localStorage.setItem(
+                                                                                    'refresh_token',
+                                                                                    tokens.refreshToken,
+                                                                                );
+                                                                            }
+
+                                                                            setOrganization(ctx?.organizationId ?? org.id);
+                                                                            if (ctx?.facilityId) {
+                                                                                setFacility(ctx.facilityId);
+                                                                            } else {
+                                                                                setFacility(null);
+                                                                            }
+                                                                            await refreshProfile();
+                                                                        } catch (e) {
+                                                                            console.error('Impersonation failed:', e);
+                                                                            toast.error('Failed to switch organization context for Super Admin');
+                                                                        }
+                                                                        return;
+                                                                    }
+
+                                                                    setOrganization(org.id);
+                                                                    refreshProfile();
+                                                                };
+
+                                                                void run();
                                                             }}
                                                             className={`w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100 ${organizationId === org.id ? 'text-healthcare-primary bg-blue-50' : 'text-slate-700'}`}
                                                         >
