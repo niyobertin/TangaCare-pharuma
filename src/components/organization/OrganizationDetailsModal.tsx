@@ -1,6 +1,5 @@
-import { X, Building2, MapPin, Phone, Mail, Settings } from 'lucide-react';
+import { X, Building2, MapPin, Phone, Mail } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Link } from '@tanstack/react-router';
 import type { Organization, Facility } from '../../types/pharmacy';
 import { pharmacyService } from '../../services/pharmacy.service';
 import { useAuth } from '../../context/AuthContext';
@@ -14,9 +13,7 @@ interface OrganizationDetailsModalProps {
 
 export function OrganizationDetailsModal({ organization, onClose }: OrganizationDetailsModalProps) {
     const { user } = useAuth();
-    const role = (user?.role ?? '').toUpperCase();
     const isSuperAdminUser = isSuperAdmin(user?.role);
-    const canEditOrg = isSuperAdminUser || ['OWNER', 'FACILITY_ADMIN'].includes(role);
     const [facilities, setFacilities] = useState<Facility[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -236,18 +233,7 @@ export function OrganizationDetailsModal({ organization, onClose }: Organization
                         )}
                     </div>
 
-                    {canEditOrg && (
-                        <div className="flex justify-end">
-                            <Link
-                                to="/app/settings?section=organization"
-                                onClick={onClose}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-healthcare-primary/10 text-healthcare-primary hover:bg-healthcare-primary/20 font-bold text-sm transition-colors"
-                            >
-                                <Settings size={16} />
-                                Edit in Settings
-                            </Link>
-                        </div>
-                    )}
+                    {/* Settings editing removed */}
 
                     {}
                     <div>

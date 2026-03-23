@@ -17,10 +17,6 @@ const AuditLogsPage = lazyNamed(
     () => import('../../pages/dashboard/AuditLogsPage'),
     'AuditLogsPage',
 );
-const FacilitySettingsPage = lazyNamed(
-    () => import('../../pages/dashboard/FacilitySettingsPage'),
-    'FacilitySettingsPage',
-);
 const PatientsPage = lazyNamed(() => import('../../pages/dashboard/PatientsPage'), 'PatientsPage');
 const BillingDashboardPage = lazyNamed(
     () => import('../../pages/admin/billing/BillingDashboardPage'),
@@ -109,17 +105,6 @@ export const createAdminRoutes = (parentRoute: any) => {
         },
     });
 
-    const facilitySettingsRoute = createRoute({
-        getParentRoute: () => parentRoute,
-        path: 'facility/$facilityId/settings',
-        component: () =>
-            withRouteSuspense(
-                <RequirePermission permission={PERMISSIONS.FACILITY_MANAGE}>
-                    <FacilitySettingsPage />
-                </RequirePermission>,
-            ),
-    });
-
     const patientsRoute = createRoute({
         getParentRoute: () => parentRoute,
         path: 'patients',
@@ -190,7 +175,6 @@ export const createAdminRoutes = (parentRoute: any) => {
         facilitiesRoute,
         usersRoute,
         auditLogsRoute,
-        facilitySettingsRoute,
         patientsRoute,
         billingDashboardRoute,
         adminDashboardRoute,

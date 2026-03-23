@@ -39,7 +39,6 @@ const PublicPurchaseOrder = lazyNamed(
 );
 const OnboardingPage = lazyNamed(() => import('../pages/auth/OnboardingPage'), 'OnboardingPage');
 const AlertsPage = lazyNamed(() => import('../pages/dashboard/AlertsPage'), 'AlertsPage');
-const SettingsPage = lazyNamed(() => import('../pages/dashboard/SettingsPage'), 'SettingsPage');
 const BillingPage = lazyNamed(() => import('../pages/dashboard/BillingPage'), 'BillingPage');
 const CheckoutPage = lazyNamed(() => import('../pages/marketing/CheckoutPage'), 'CheckoutPage');
 const SubscribeRedirectPage = lazyNamed(
@@ -162,12 +161,6 @@ const employeeRoute = createRoute({
     component: () => <Navigate to={'/app/users' as any} search={{} as any} />,
 });
 
-const settingsRoute = createRoute({
-    getParentRoute: () => appLayoutRoute,
-    path: 'settings',
-    component: () => withRouteSuspense(<SettingsPage />),
-});
-
 const onboardingRoute = createRoute({
     getParentRoute: () => appLayoutRoute,
     path: 'onboarding',
@@ -184,7 +177,6 @@ const appRouteTree = appLayoutRoute.addChildren([
     indexRoute,
     alertsRoute,
     employeeRoute,
-    settingsRoute,
     onboardingRoute,
     billingRoute,
     ...createInventoryRoutes(appLayoutRoute),

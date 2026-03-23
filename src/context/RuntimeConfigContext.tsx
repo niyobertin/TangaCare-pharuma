@@ -1,12 +1,25 @@
 import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { settingsService, type RuntimeConfig } from '../services/settings.service';
 import {
     formatDateWithConfig,
     formatDateTimeWithConfig,
     formatNumberWithConfig,
     type LocalizationConfig,
 } from '../lib/localization';
+
+interface RuntimeConfig {
+    currencyCode: string;
+    currencySymbol: string;
+    currencyDecimals: number;
+    currencyRoundingMode?: string;
+    maxDiscountPercent: number;
+    vatEnabled: boolean;
+    vatRate: number;
+    locale: string;
+    timezone: string;
+    dateFormat: string;
+    numberFormat: string;
+}
 
 interface RuntimeConfigContextType {
     /** Flattened config from backend (currency, tax, locale). */
@@ -96,15 +109,9 @@ export const RuntimeConfigProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         setIsLoading(true);
         setError(null);
-        try {
-            const data = await settingsService.getRuntimeConfig();
-            setConfig(data);
-        } catch (err) {
-            setError(err instanceof Error ? err : new Error(String(err)));
-            setConfig(defaultConfig);
-        } finally {
-            setIsLoading(false);
-        }
+        // Settings runtime-config endpoint removed; use built-in defaults.
+        setConfig(defaultConfig);
+        setIsLoading(false);
     }, [isAuthenticated, organizationId, facilityId]);
 
     useEffect(() => {

@@ -13,11 +13,8 @@ import {
     ChevronRight,
     AlertCircle,
     Trash2,
-    Edit2,
-    UserPlus,
     Search,
 } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 import { pharmacyService } from '../../services/pharmacy.service';
@@ -312,7 +309,6 @@ const FacilityModal = ({
 
 export function FacilityManagementPage() {
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [facilities, setFacilities] = useState<Facility[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedType, setSelectedType] = useState('All');
@@ -618,19 +614,9 @@ export function FacilityManagementPage() {
                                                     className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
                                                 >
                                                     <td className="px-6 py-4 text-center">
-                                                        <button
-                                                            onClick={() =>
-                                                                navigate({
-                                                                    to: '/app/facility/$facilityId/settings' as any,
-                                                                    params: {
-                                                                        facilityId: String(f.id),
-                                                                    } as any,
-                                                                })
-                                                            }
-                                                            className="text-xs lg:text-sm font-bold text-healthcare-primary hover:underline"
-                                                        >
+                                                        <span className="text-xs lg:text-sm font-bold text-healthcare-primary">
                                                             #{f.id}
-                                                        </button>
+                                                        </span>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-4">
@@ -700,23 +686,9 @@ export function FacilityManagementPage() {
                                                                 )}
                                                                 {!f.facility_admin &&
                                                                     !f.admin_name && (
-                                                                        <button
-                                                                            onClick={() =>
-                                                                                navigate({
-                                                                                    to: '/app/facility/$facilityId/settings' as any,
-                                                                                    params: {
-                                                                                        facilityId:
-                                                                                            String(
-                                                                                                f.id,
-                                                                                            ),
-                                                                                    } as any,
-                                                                                    search: {} as any,
-                                                                                })
-                                                                            }
-                                                                            className="text-[10px] text-healthcare-primary hover:underline text-left mt-0.5"
-                                                                        >
-                                                                            Assign
-                                                                        </button>
+                                                                        <span className="text-[10px] text-slate-400 mt-0.5">
+                                                                            No Admin
+                                                                        </span>
                                                                     )}
                                                             </div>
                                                         </div>
@@ -747,40 +719,6 @@ export function FacilityManagementPage() {
                                                         {user?.role?.toString()?.toLowerCase() !==
                                                             'auditor' && (
                                                             <div className="flex items-center justify-end gap-2">
-                                                                <button
-                                                                    onClick={() =>
-                                                                        navigate({
-                                                                            to: '/app/facility/$facilityId/settings' as any,
-                                                                            params: {
-                                                                                facilityId: String(
-                                                                                    f.id,
-                                                                                ),
-                                                                            } as any,
-                                                                            search: {} as any,
-                                                                        })
-                                                                    }
-                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors tooltip"
-                                                                    title="Assign Admin"
-                                                                >
-                                                                    <UserPlus size={16} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() =>
-                                                                        navigate({
-                                                                            to: '/app/facility/$facilityId/settings' as any,
-                                                                            params: {
-                                                                                facilityId: String(
-                                                                                    f.id,
-                                                                                ),
-                                                                            } as any,
-                                                                            search: {} as any,
-                                                                        })
-                                                                    }
-                                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors tooltip"
-                                                                    title="Edit Facility"
-                                                                >
-                                                                    <Edit2 size={16} />
-                                                                </button>
                                                                 <button
                                                                     onClick={() =>
                                                                         handleDelete(f.id)

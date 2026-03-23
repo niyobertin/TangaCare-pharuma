@@ -23,7 +23,6 @@ import {
     ArrowLeft,
     ShieldCheck,
     Receipt,
-    UserCog,
 } from 'lucide-react';
 import logo from '../../assets/tanga-logo.png';
 import { useAuth } from '../../context/AuthContext';
@@ -373,18 +372,6 @@ const NAV_SECTIONS: NavSection[] = [
                     'AUDITOR',
                 ],
                 allowedPermissions: ['users:read', 'users:manage'],
-            },
-            {
-                to: '/app/settings',
-                icon: Settings,
-                label: 'Settings',
-                allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'OWNER', 'ADMIN'],
-            },
-            {
-                to: '/app/settings?section=roles_permissions',
-                icon: UserCog,
-                label: 'Roles & Permissions',
-                allowedRoles: ['SUPER_ADMIN', 'SUPER ADMIN', 'FACILITY_ADMIN', 'FACILITY ADMIN', 'OWNER', 'ADMIN'],
             },
             {
                 to: '/app/admin/dashboard',

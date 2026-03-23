@@ -6,7 +6,6 @@ import { reportService } from './report.service';
 import { facilityService } from './facility.service';
 import { patientService } from './patient.service';
 import { insuranceService } from './insurance.service';
-import { settingsService } from './settings.service';
 import { dashboardSearchService } from './dashboard-search.service';
 
 /**
@@ -39,9 +38,6 @@ export const pharmacyService = {
 
     // Insurance Service
     ...insuranceService,
-
-    // Settings Service
-    ...settingsService,
 
     ...dashboardSearchService,
 };
