@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { Grid, List, Plus, Settings, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Grid, List, Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -255,27 +255,6 @@ export function FacilitiesPage() {
                                         key={facility.id}
                                         className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-slate-100 dark:border-slate-700 relative group"
                                     >
-                                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {role !== 'AUDITOR' && (
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        navigate({
-                                                            to: '/app/facility/$facilityId/settings' as any,
-                                                            params: {
-                                                                facilityId: String(facility.id),
-                                                            } as any,
-                                                            search: {} as any,
-                                                        });
-                                                    }}
-                                                    className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg text-slate-500 hover:text-healthcare-primary transition-colors shadow-sm"
-                                                    title="Configure Facility"
-                                                >
-                                                    <Settings size={18} />
-                                                </button>
-                                            )}
-                                        </div>
-
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="w-12 h-12 bg-healthcare-primary/10 rounded-xl flex items-center justify-center">
                                                 <span className="text-2xl">🏥</span>
@@ -353,29 +332,15 @@ export function FacilitiesPage() {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    {role === 'AUDITOR' ? (
-                                                        <span className="font-bold text-slate-400">
-                                                            #{facility.id}
-                                                        </span>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() =>
-                                                                navigate({
-                                                                    to: '/app/facility/$facilityId/settings' as any,
-                                                                    params: {
-                                                                        facilityId: String(
-                                                                            facility.id,
-                                                                        ),
-                                                                    } as any,
-                                                                    search: {} as any,
-                                                                })
-                                                            }
-                                                            className="font-bold text-healthcare-primary hover:underline"
-                                                            title="View Details"
-                                                        >
-                                                            #{facility.id}
-                                                        </button>
-                                                    )}
+                                                    <span
+                                                        className={
+                                                            role === 'AUDITOR'
+                                                                ? 'font-bold text-slate-400'
+                                                                : 'font-bold text-healthcare-primary'
+                                                        }
+                                                    >
+                                                        #{facility.id}
+                                                    </span>
                                                 </td>
                                                 {(role === 'SUPER_ADMIN' ||
                                                     role === 'SUPER ADMIN' ||
@@ -416,27 +381,7 @@ export function FacilitiesPage() {
                                                         {facility.phone}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    {role !== 'AUDITOR' && (
-                                                        <button
-                                                            onClick={() =>
-                                                                navigate({
-                                                                    to: '/app/facility/$facilityId/settings' as any,
-                                                                    params: {
-                                                                        facilityId: String(
-                                                                            facility.id,
-                                                                        ),
-                                                                    } as any,
-                                                                    search: {} as any,
-                                                                })
-                                                            }
-                                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-healthcare-primary transition-colors"
-                                                            title="Configure"
-                                                        >
-                                                            <Settings size={18} />
-                                                        </button>
-                                                    )}
-                                                </td>
+                                                <td className="px-6 py-4 text-right" />
                                             </tr>
                                         ))}
                                     </tbody>
